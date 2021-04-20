@@ -414,11 +414,11 @@ let delete_dna_version_hash = client.call("dnas", "storage", "delete_dna_version
 ```
 
 
-#### `create_dna_chunk( { sequence: {...}, bytes: SerializedBytes } ) -> (EntryHash, DnaVersionInfo)`
+#### `create_dna_chunk( { sequence: {...}, bytes: SerializedBytes } ) -> EntryHash`
 Create DNA version
 
 ```javascript
-let [dna_chunk1_hash, dna_info] = client.call("dnas", "storage", "create_dna_chunk", {
+let dna_chunk1_hash = client.call("dnas", "storage", "create_dna_chunk", {
     "sequence": {
         "position": 1,
         "length": 73,
@@ -439,7 +439,7 @@ let [dna_chunk1_hash, dna_info] = client.call("dnas", "storage", "create_dna_chu
     "subtitle": String,
     "description": String,
     "thumbnail_image": EntryHash,
-    "designer": AgentPubKey,
+    "architect": AgentPubKey,
     "maintained_by": {
         "name": String,
         "website": String,
@@ -556,7 +556,7 @@ DNAs
     "title": String,
     "subtitle": String,
     "thumbnail_image": SerializedBytes,
-    "designer": AgentPubKey,
+    "architect": AgentPubKey,
     "categories": [
         String,
         ...
@@ -570,7 +570,7 @@ DNAs
     "title": "Spider Solitaire",
     "subtitle": "The popular classic card game",
     "thumbnail_image": Uint8Array(10392) [121, 111, 117,  32,  99,  97, 110,  39, ...],
-    "designer": Uint8Array(39) [132, 32, 36, 246, 137, 10, 220, 57, ...],
+    "architect": Uint8Array(39) [132, 32, 36, 246, 137, 10, 220, 57, ...],
     "categories": [ "Card Games", "Games" ],
 }
 ```
@@ -584,7 +584,7 @@ DNAs
     "subtitle": String,
     "description": String,
     "thumbnail_image": SerializedBytes,
-    "designer": AgentPubKey,
+    "architect": AgentPubKey,
     "maintained_by": {
         "name": String,
         "website": String,
@@ -603,7 +603,7 @@ DNAs
     "subtitle": "The popular classic card game",
     "description": "Play the #1 classic Spider Solitaire for Free! ...",
     "thumbnail_image": Uint8Array(10392) [121, 111, 117,  32,  99,  97, 110,  39, ...],
-    "designer": Uint8Array(39) [132, 32, 36, 246, 137, 10, 220, 57, ...],
+    "architect": Uint8Array(39) [132, 32, 36, 246, 137, 10, 220, 57, ...],
     "maintained_by": {
         "name": "Open Games Collective",
         "website": "https://open-games.example",
