@@ -439,6 +439,7 @@ let dna_chunk1_hash = client.call("dnas", "storage", "create_dna_chunk", {
     "subtitle": String,
     "description": String,
     "thumbnail_image": EntryHash,
+    "published_at": Time,
     "architect": AgentPubKey,
     "maintained_by": {
         "name": String,
@@ -455,10 +456,11 @@ let dna_chunk1_hash = client.call("dnas", "storage", "create_dna_chunk", {
 
 ```javascript
 {
+    "for_happ": EntryHash,
     "name": String,
     "description": String,
-    "for_happ": EntryHash,
     "manifest_version": Integer,
+    "published_at": Time,
     "cells": [{
         "nick": String,
         "provisioning": ?{
@@ -484,7 +486,8 @@ let dna_chunk1_hash = client.call("dnas", "storage", "create_dna_chunk", {
 {
     "name": String,
     "description": String,
-    "developer": {
+    "published_at": Time,
+    "developer": ?{
         "name": String,
         "website": String,
     },
@@ -525,7 +528,7 @@ let dna_chunk1_hash = client.call("dnas", "storage", "create_dna_chunk", {
         "position": Integer,
         "length": Integer,
     },
-    "bytes": SerializedBytes,
+    "bytes": SerializedBytes, // max length 10,485,760
 }
 ```
 
@@ -556,6 +559,7 @@ DNAs
     "title": String,
     "subtitle": String,
     "thumbnail_image": SerializedBytes,
+    "published_at": Time,
     "architect": AgentPubKey,
     "categories": [
         String,
@@ -570,6 +574,7 @@ DNAs
     "title": "Spider Solitaire",
     "subtitle": "The popular classic card game",
     "thumbnail_image": Uint8Array(10392) [121, 111, 117,  32,  99,  97, 110,  39, ...],
+    "published_at": 1618855430,
     "architect": Uint8Array(39) [132, 32, 36, 246, 137, 10, 220, 57, ...],
     "categories": [ "Card Games", "Games" ],
 }
@@ -584,6 +589,7 @@ DNAs
     "subtitle": String,
     "description": String,
     "thumbnail_image": SerializedBytes,
+    "published_at": Time,
     "architect": AgentPubKey,
     "maintained_by": {
         "name": String,
@@ -601,8 +607,9 @@ DNAs
 {
     "title": "Spider Solitaire",
     "subtitle": "The popular classic card game",
-    "description": "Play the #1 classic Spider Solitaire for Free! ...",
+    "description": "Play the #1 classic Spider Solitaire for Free! ...xo",
     "thumbnail_image": Uint8Array(10392) [121, 111, 117,  32,  99,  97, 110,  39, ...],
+    "published_at": 1618855430,
     "architect": Uint8Array(39) [132, 32, 36, 246, 137, 10, 220, 57, ...],
     "maintained_by": {
         "name": "Open Games Collective",
@@ -620,10 +627,11 @@ DNAs
     "name": String,
     "description": String,
     "manifest_version": Integer,
+    "published_at": Time,
     "cells": [{
         "nick": String,
         "dna": {
-            "entry_id": Array(32),
+            "entry_id": Array(39),
         },
     }],
 }
@@ -635,6 +643,7 @@ DNAs
     "name": "Beta 1.0",
     "description": "First beta release",
     "manifest_version": 1,
+    "published_at": 1618855430,
     "cells": [{
         "nick": "game-turns",
         "dna": {
@@ -653,6 +662,7 @@ DNAs
     "description": String,
     "for_happ": AppSummary,
     "manifest_version": Integer,
+    "published_at": Time,
     "cells": [{
         "nick": String,
         "provisioning": ?{
@@ -660,11 +670,11 @@ DNAs
             "deferred": Boolean,
         },
         "dna": {
-            "entry_id": Array(32),
+            "entry_id": Array(39),
             "url": ?String,
             "uuid": ?String,
             "overridable": Boolean,
-            "version": ?Array<Array(32)>,
+            "version": ?Array<Array(39)>,
             "clone_limit": ?Integer,
             "properties": ?,
         },
@@ -678,6 +688,7 @@ DNAs
     "name": "Beta 1.0",
     "description": "First beta release",
     "manifest_version": 1,
+    "published_at": 1618855430,
     "cells": [{
         "nick": "game-turns",
         "dna": {
@@ -701,8 +712,9 @@ DNAs
 {
     "name": String,
     "description": String,
-    "developer": String,
-    "deprecation": Boolean,
+    "published_at": Time,
+    "developer": ?String,
+    "deprecation": ?Boolean,
 }
 ```
 
@@ -711,6 +723,7 @@ DNAs
 {
     "name": "Game Turns",
     "description": "A tool for turn-based games to track the order of player actions",
+    "published_at": 1618855430,
     "developer": "Open Games Collective",
 }
 ```
@@ -722,6 +735,7 @@ DNAs
 {
     "name": String,
     "description": String,
+    "published_at": Time,
     "developer": {
         "name": String,
         "website": String,
@@ -740,6 +754,7 @@ DNAs
 {
     "name": "Game Turns",
     "description": "A tool for turn-based games to track the order of player actions",
+    "published_at": 1618855430,
     "developer": {
         "name": "Open Games Collective",
         "website": "https://github.com/open-games-collective/",

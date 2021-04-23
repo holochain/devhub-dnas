@@ -1,0 +1,19 @@
+[package]
+name = "storage"
+version = "0.1.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "storage"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hdk = "0.0.100"
+holo_hash = "0.0.2-alpha.1"
+
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = { version = "1.0", features = ["preserve_order"] }
+derive_more = "0.99"
+thiserror = "1.0"
