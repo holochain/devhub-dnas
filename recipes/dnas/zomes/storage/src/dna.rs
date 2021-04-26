@@ -2,6 +2,16 @@ use hdk::prelude::*;
 
 use crate::constants::{ TAG_DNA };
 use crate::entry_types::{ DnaEntry, EntityInfo, DeprecationNotice };
+use crate::errors::{ RuntimeError };
+
+
+fn fetch_entry(addr: EntryHash) -> ExternResult<(HeaderHash, Element)> {
+    match get(addr, GetOptions::latest())? {
+        Some(element) => Ok((element.header_address().to_owned(), element)),
+        None => Err(WasmError::from(RuntimeError::EntryNotFound)),
+    }
+}
+
 
 
 #[derive(Debug, Deserialize)]
@@ -35,7 +45,7 @@ fn create_dna(input: DnaInput) -> ExternResult<(EntryHash, DnaEntry)> {
     let entry_hash = hash_entry(&dna)?;
     let pubkey = agent_info()?.agent_initial_pubkey;
 
-    debug!("Linking pubkey ({}) to manifest: {}", pubkey, entry_hash );
+    debug!("Linking pubkey ({}) to DNA: {}", pubkey, entry_hash );
     create_link(
 	pubkey.into(),
 	entry_hash.clone(),
@@ -43,6 +53,21 @@ fn create_dna(input: DnaInput) -> ExternResult<(EntryHash, DnaEntry)> {
     )?;
 
     Ok( (entry_hash, dna) )
+}
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct GetDnaInput {
+    pub addr: EntryHash,
+}
+
+#[hdk_extern]
+fn get_dna(input: GetDnaInput) -> ExternResult<DnaEntry> {
+    debug!("Get DNA: {}", input.addr );
+    let (_, element) = fetch_entry(input.addr)?;
+
+    DnaEntry::try_from(element)
 }
 
 
@@ -64,7 +89,7 @@ fn get_my_dnas(_:()) -> ExternResult<Vec<Option<DnaEntry>>> {
     let links = get_my_dna_links()?;
 
     let dnas: Vec<Option<DnaEntry>> = links.into_iter()
-	.map(|link| get(link.target, GetOptions::content()))
+	.map(|link| get(link.target, GetOptions::latest()))
 	.map(|element_or_err| match element_or_err {
 	    Err(e) => Err(e),
 	    Ok(None) => Ok(None),
@@ -74,7 +99,7 @@ fn get_my_dnas(_:()) -> ExternResult<Vec<Option<DnaEntry>>> {
 			return Ok(Some(dna))
 		    }
 		}
-		Err(WasmError::Guest(format!("Failed to recover DnaEntry from: {:?}", element)))
+		Err(WasmError::from(RuntimeError::DeserializationError(element)))
 	    },
 	})
 	.collect::<ExternResult<_>>()?;

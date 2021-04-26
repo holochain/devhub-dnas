@@ -76,7 +76,7 @@ fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<Vec<Option<DnaVe
     let links = get_version_links(input.for_dna)?;
 
     let versions: Vec<Option<DnaVersionEntry>> = links.into_iter()
-	.map(|link| get(link.target, GetOptions::content()))
+	.map(|link| get(link.target, GetOptions::latest()))
 	.map(|element_or_err| match element_or_err {
 	    Err(e) => Err(e),
 	    Ok(None) => Ok(None),

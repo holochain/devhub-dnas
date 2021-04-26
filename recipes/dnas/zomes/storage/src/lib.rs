@@ -3,16 +3,15 @@ mod dna;
 mod dnaversions;
 mod dnachunks;
 
+mod errors;
 mod constants;
 mod entry_types;
 
 use hdk::prelude::*;
-use entry_types::{ AppEntry, ManifestEntry, DnaEntry, DnaVersionEntry, DnaChunkEntry };
+use entry_types::{ DnaEntry, DnaVersionEntry, DnaChunkEntry };
 
 
 entry_defs![
-    AppEntry::entry_def(),
-    ManifestEntry::entry_def(),
     DnaEntry::entry_def(),
     DnaVersionEntry::entry_def(),
     DnaChunkEntry::entry_def()

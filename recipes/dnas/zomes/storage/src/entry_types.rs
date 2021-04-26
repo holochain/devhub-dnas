@@ -1,129 +1,15 @@
 
-use std::collections::HashMap;
 use hdk::prelude::*;
-// use hdk::hash_path::path::Component;
+use crate::errors::{ RuntimeError };
 
 
-#[hdk_entry(id = "app_entry", visibility="public")]
-#[derive(Clone)]
-pub struct AppEntry {
-    pub title: String,
-    pub subtitle: String,
-    pub description: String,
-    pub thumbnail_image: SerializedBytes,
-    pub published_at: u64,
-    pub architect: SerializedBytes, //AgentPubKey,
-    pub maintained_by: EntityInfo,
-    pub categories: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EntityInfo {
     pub name: String,
 
     // optional
     pub website: Option<String>,
 }
-
-// Summary
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AppSummary {
-    pub title: String,
-    pub subtitle: String,
-    pub thumbnail_image: SerializedBytes,
-    pub published_at: u64,
-    pub architect: SerializedBytes, //AgentPubKey,
-    pub categories: Vec<String>,
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AppInfo {
-    pub title: String,
-    pub subtitle: String,
-    pub description: String,
-    pub thumbnail_image: SerializedBytes,
-    pub published_at: u64,
-    pub architect: SerializedBytes, //AgentPubKey,
-    pub maintained_by: EntityInfo,
-    pub categories: Vec<String>,
-}
-
-
-
-
-#[hdk_entry(id = "manifest_entry", visibility="public")]
-pub struct ManifestEntry {
-    pub for_happ: EntryHash,
-    pub name: String,
-    pub description: String,
-    pub manifest_version: u64,
-    pub published_at: u64,
-    pub cells: Vec<CellSlot>
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CellSlot {
-    pub nick: String,
-    pub dna: CellSlotDnaConfig,
-
-    // optional
-    pub provisioning: Option<ProvisioningConfig>,
-}
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CellSlotSummary {
-    pub nick: String,
-    pub dna: CellSlotDnaConfigSummary,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ProvisioningConfig {
-    pub strategy: String,
-
-    // optional
-    pub deferred: Option<bool>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CellSlotDnaConfig {
-    pub entry_id: EntryHash,
-    pub overrideable: bool,
-
-    // optional
-    pub url: Option<String>,
-    pub uuid: Option<String>,
-    pub version: Option<Vec<EntryHash>>,
-    pub clone_limit: Option<u64>,
-    pub properties: Option<HashMap<String,String>>,
-}
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CellSlotDnaConfigSummary {
-    pub entry_id: EntryHash,
-}
-
-// Summary
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ManifestSummary {
-    pub name: String,
-    pub description: String,
-    pub manifest_version: u64,
-    pub published_at: u64,
-    pub cells: Vec<CellSlotSummary>
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ManifestInfo {
-    pub for_happ: AppSummary,
-    pub name: String,
-    pub description: String,
-    pub manifest_version: u64,
-    pub published_at: u64,
-    pub cells: Vec<CellSlot>
-}
-
-
-
 
 #[hdk_entry(id = "dna_entry", visibility="public")]
 pub struct DnaEntry {
@@ -162,11 +48,61 @@ pub struct DnaInfo {
     pub name: String,
     pub description: String,
     pub published_at: u64,
-    pub developer: EntityInfo,
 
     // optional
+    pub developer: Option<EntityInfo>,
     pub deprecation: Option<DeprecationNotice>,
 }
+
+impl DnaEntry {
+    fn to_info(self) -> DnaInfo {
+	self.into()
+    }
+
+    fn to_summary(self) -> DnaSummary {
+	self.into()
+    }
+}
+
+impl TryFrom<Element> for DnaEntry {
+    type Error = WasmError;
+    fn try_from(element: Element) -> Result<Self, Self::Error> {
+	element.entry()
+	    .to_app_option::<Self>()?
+	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
+    }
+}
+
+impl From<DnaEntry> for DnaInfo {
+    fn from(dna: DnaEntry) -> Self {
+	DnaInfo {
+	    name: dna.name,
+	    description: dna.description,
+	    published_at: dna.published_at,
+	    developer: dna.developer,
+	    deprecation: dna.deprecation,
+	}
+    }
+}
+
+impl From<DnaEntry> for DnaSummary {
+    fn from(dna: DnaEntry) -> Self {
+	DnaSummary {
+	    name: dna.name,
+	    description: dna.description,
+	    published_at: dna.published_at,
+	    developer: match dna.developer {
+		Some(dev) => Some(dev.name),
+		None => None,
+	    },
+	    deprecation: match dna.deprecation {
+		Some(_) => Some(true),
+		None => None,
+	    },
+	}
+    }
+}
+
 
 
 
@@ -230,85 +166,40 @@ pub struct SequencePosition {
 }
 
 
-impl AppEntry {
-    fn to_info(self) -> AppInfo {
-	self.into()
-    }
-
-    fn to_summary(self) -> AppSummary {
-	self.into()
-    }
-}
-
-impl From<AppEntry> for AppInfo {
-    fn from(app: AppEntry) -> AppInfo {
-	AppInfo {
-	    title: app.title,
-	    subtitle: app.subtitle,
-	    description: app.description,
-	    thumbnail_image: app.thumbnail_image,
-	    published_at: app.published_at,
-	    architect: app.architect,
-	    maintained_by: app.maintained_by,
-	    categories: app.categories,
-	}
-    }
-}
-
-impl From<AppEntry> for AppSummary {
-    fn from(app: AppEntry) -> AppSummary {
-	AppSummary {
-	    title: app.title,
-	    subtitle: app.subtitle,
-	    thumbnail_image: app.thumbnail_image,
-	    published_at: app.published_at,
-	    architect: app.architect,
-	    categories: app.categories,
-	}
-    }
-}
-
 
 #[cfg(test)]
 pub mod tests {
     use super::*;
 
-    fn create_appentry() -> crate::AppEntry {
-	crate::AppEntry {
-	    title: String::from("Spider Solitaire"),
-	    subtitle: String::from("The popular classic card game"),
-	    description: String::from("Play the #1 classic Spider Solitaire for Free! ..."),
-	    thumbnail_image: vec![1,2,3,4],
+    fn create_dnaentry() -> crate::DnaEntry {
+	crate::DnaEntry {
+	    name: String::from("Game Turns"),
+	    description: String::from("A tool for turn-based games to track the order of player actions"),
 	    published_at: 1618855430,
-	    architect: vec![ // AgentPubKey
-		222, 230,  91, 220,  87,
-		73, 244, 141, 250,  32, 140, 128, 205,
-		112, 181, 107,  91, 249, 202,  54, 137,
-		100, 234, 127, 172, 207,  41, 187, 205,
-		51, 186,  86
-	    ],
-	    maintained_by: EntityInfo {
+
+	    // optional
+	    developer: Some(EntityInfo {
 		name: String::from("Open Games Collective"),
-		website: Some(String::from("https://open-games.example")),
-	    },
-	    categories: vec![],
+		website: Some(String::from("https://github.com/open-games-collective/")),
+	    }),
+	    deprecation: None,
 	}
     }
 
     #[test]
     ///
-    fn app_to_summary_test() {
-	let app1 = create_appentry();
-	let app2 = create_appentry();
+    fn dna_to_summary_test() {
+	let dna1 = create_dnaentry();
+	let dna2 = create_dnaentry();
 
-	assert_eq!(app1.title, "Spider Solitaire");
+	assert_eq!(dna1.name, "Game Turns");
 
-	let app_info = app1.to_info();
+	let dna_info = dna1.to_info();
 
-	assert_eq!(app_info.title, "Spider Solitaire");
+	assert_eq!(dna_info.name, "Game Turns");
 
-	let app_summary = app2.to_summary();
+	let dna_summary = dna2.to_summary();
 
-	assert_eq!(app_summary.title, "Spider Solitaire");
+	assert_eq!(dna_summary.name, "Game Turns");
     }
 }

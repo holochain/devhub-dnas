@@ -32,6 +32,12 @@ const orchestrator		= new Orchestrator({
     },
 });
 
+
+const dna_input			= {
+    "name": "Game Turns",
+    "description": "A tool for turn-based games to track the order of player actions",
+};
+
 orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     const [a_and_b_conductor]	= await scenario.players([ conductorConfig ]);
     const [
@@ -53,11 +59,18 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     log.info("Agent info 'alice': %s", jsonraw(a_agent_info) );
     log.info("Agent ID 'alice': %s", a_agent_info.agent_initial_pubkey.toString("base64") );
 
-    let [dna_hash, dna]			= await alice_devhub.call(storage_zome, "create_dna", {
-	"name": "Game Turns",
-	"description": "A tool for turn-based games to track the order of player actions",
-    });
-    log.normal("New DNA (metadata): %s -> %s", b64(dna_hash), jsonraw(dna) );
+    let [dna_hash, new_entry]		= await alice_devhub.call(storage_zome, "create_dna", dna_input );
+    log.normal("New DNA (metadata): %s -> %s", b64(dna_hash), jsonraw(new_entry) );
+
+    {
+	// Check the created entry
+	let dna_info			= await alice_devhub.call(storage_zome, "get_dna", {
+	    "addr": dna_hash,
+	});
+	expect( dna_info.name		).to.equal( dna_input.name );
+	expect( dna_info.description	).to.equal( dna_input.description );
+    }
+
 
     const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.dna") );
     log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
