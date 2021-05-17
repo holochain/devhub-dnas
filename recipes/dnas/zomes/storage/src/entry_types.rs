@@ -1,5 +1,7 @@
 
 use hdk::prelude::*;
+
+use crate::utils;
 use crate::errors::{ RuntimeError };
 
 
@@ -11,7 +13,7 @@ pub struct EntityInfo {
     pub website: Option<String>,
 }
 
-#[hdk_entry(id = "dna_entry", visibility="public")]
+#[hdk_entry(id = "dna", visibility="public")]
 pub struct DnaEntry {
     pub name: String,
     pub description: String,
@@ -27,7 +29,16 @@ pub struct DeprecationNotice {
     pub message: String,
 
     // optional
-    pub recommended_alternatives: Option<EntryHash>,
+    pub recommended_alternatives: Option<HeaderHash>,
+}
+
+impl DeprecationNotice {
+    pub fn new(message: String) -> Self {
+	Self {
+	    message: message,
+	    recommended_alternatives: None,
+	}
+    }
 }
 
 // Summary
@@ -55,11 +66,11 @@ pub struct DnaInfo {
 }
 
 impl DnaEntry {
-    fn to_info(self) -> DnaInfo {
+    pub fn to_info(self) -> DnaInfo {
 	self.into()
     }
 
-    fn to_summary(self) -> DnaSummary {
+    pub fn to_summary(self) -> DnaSummary {
 	self.into()
     }
 }
@@ -107,7 +118,7 @@ impl From<DnaEntry> for DnaSummary {
 
 
 
-#[hdk_entry(id = "dna_version_entry", visibility="public")]
+#[hdk_entry(id = "dna_version", visibility="public")]
 pub struct DnaVersionEntry {
     pub for_dna: EntryHash,
     pub version: u64,
@@ -129,7 +140,7 @@ pub struct DnaVersionSummary {
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionInfo {
-    pub for_dna: DnaSummary,
+    pub for_dna: Option<DnaSummary>,
     pub version: u64,
     pub published_at: u64,
     pub file_size: u64,
@@ -150,10 +161,63 @@ pub struct DnaPackage {
     pub changelog: String,
 }
 
+impl DnaVersionEntry {
+    pub fn to_info(self) -> DnaVersionInfo {
+	self.into()
+    }
+
+    pub fn to_summary(self) -> DnaVersionSummary {
+	self.into()
+    }
+}
+
+impl TryFrom<Element> for DnaVersionEntry {
+    type Error = WasmError;
+    fn try_from(element: Element) -> Result<Self, Self::Error> {
+	element.entry()
+	    .to_app_option::<Self>()?
+	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
+    }
+}
+
+impl From<DnaVersionEntry> for DnaVersionInfo {
+    fn from(version: DnaVersionEntry) -> Self {
+	let mut dna_summary : Option<DnaSummary> = None;
+
+	if let Some((_,element)) = utils::fetch_entry_latest( version.for_dna ).ok() {
+	    dna_summary = match DnaEntry::try_from( element ) {
+		Ok(dna) => Some(dna.to_summary()),
+		Err(_) => None,
+	    };
+	};
+
+	DnaVersionInfo {
+	    for_dna: dna_summary,
+	    version: version.version,
+	    published_at: version.published_at,
+	    file_size: version.file_size,
+	    contributors: version.contributors,
+	    changelog: version.changelog,
+	    chunk_addresses: version.chunk_addresses,
+	}
+    }
+}
+
+impl From<DnaVersionEntry> for DnaVersionSummary {
+    fn from(version: DnaVersionEntry) -> Self {
+	DnaVersionSummary {
+	    version: version.version,
+	    published_at: version.published_at,
+	    file_size: version.file_size,
+	}
+    }
+}
 
 
 
-#[hdk_entry(id = "dna_chunk_entry", visibility="public")]
+
+
+#[hdk_entry(id = "dna_chunk", visibility="public")]
 pub struct DnaChunkEntry {
     pub sequence: SequencePosition,
     pub bytes: SerializedBytes,
@@ -164,6 +228,19 @@ pub struct SequencePosition {
     pub position: u64,
     pub length: u64,
 }
+
+
+
+
+#[hdk_extern]
+fn validate_create_entry_dna(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
+    if let Ok(_dna) = DnaEntry::try_from( validate_data.element ) {
+	return Ok(ValidateCallbackResult::Valid);
+    }
+
+    Ok(ValidateCallbackResult::Invalid("DNA entry is not right".to_string()))
+}
+
 
 
 

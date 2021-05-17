@@ -2,3 +2,4 @@ bundled/*.happ
 bundled/*/*.dna
 recipes/*/target
 tests/node_modules
+tests/test.dna

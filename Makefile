@@ -50,8 +50,9 @@ test-unit:
 unit-%:
 	RUST_BACKTRACE=1 cargo test $* \
 	    -- --nocapture
-
-test-dnas-debug:	tests/node_modules $(DNA)
+tests/test.dna:
+	cp $(DNA) $@
+test-dnas-debug:	tests/node_modules $(DNA) tests/test.dna
 	cd tests; \
 	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_dnas.js
 

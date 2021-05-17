@@ -1,7 +1,8 @@
 use hdk::prelude::*;
 
-use crate::constants::{ TAG_DNAVERSION };
-use crate::entry_types::{ DnaVersionEntry };
+use crate::utils;
+use crate::constants::{ TAG_DNAVERSION, TAG_UPDATE };
+use crate::entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary };
 
 
 #[derive(Debug, Deserialize)]
@@ -18,7 +19,7 @@ pub struct DnaVersionInput {
 }
 
 #[hdk_extern]
-fn create_dna_version(input: DnaVersionInput) -> ExternResult<(EntryHash, DnaVersionEntry)> {
+fn create_dna_version(input: DnaVersionInput) -> ExternResult<(EntryHash, DnaVersionInfo)> {
     debug!("Creating DNA version ({}) for DNA: {}", input.version, input.for_dna );
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
@@ -41,18 +42,37 @@ fn create_dna_version(input: DnaVersionInput) -> ExternResult<(EntryHash, DnaVer
 	},
     };
 
-    create_entry(&version)?;
+    let header_hash = create_entry(&version)?;
+    debug!("Created new DNA Version via header ({})", header_hash );
+
     let entry_hash = hash_entry(&version)?;
 
-    debug!("Linking DNA ({:?}) to manifest: {:?}", input.for_dna, entry_hash );
+    debug!("Linking DNA ({}) to manifest: {}", input.for_dna, entry_hash );
     create_link(
 	input.for_dna,
 	entry_hash.clone(),
 	LinkTag::new(*TAG_DNAVERSION)
     )?;
 
-    Ok( (entry_hash, version) )
+    Ok( (entry_hash, version.to_info()) )
 }
+
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct GetDnaVersionInput {
+    pub addr: EntryHash,
+}
+
+#[hdk_extern]
+fn get_dna_version(input: GetDnaVersionInput) -> ExternResult<DnaVersionInfo> {
+    debug!("Get DNA Version: {}", input.addr );
+    let (_, element) = utils::fetch_entry_latest(input.addr)?;
+
+    Ok(DnaVersionEntry::try_from(element)?.to_info())
+}
+
 
 
 
@@ -66,29 +86,94 @@ fn get_version_links(dna: EntryHash) -> ExternResult<Vec<Link>> {
     Ok(all_links)
 }
 
+
 #[derive(Debug, Deserialize)]
 pub struct GetDnaVersionsInput {
     pub for_dna: EntryHash,
 }
 
 #[hdk_extern]
-fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<Vec<Option<DnaVersionEntry>>> {
+fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<Vec<DnaVersionSummary>> {
     let links = get_version_links(input.for_dna)?;
 
-    let versions: Vec<Option<DnaVersionEntry>> = links.into_iter()
-	.map(|link| get(link.target, GetOptions::latest()))
-	.map(|element_or_err| match element_or_err {
-	    Err(e) => Err(e),
-	    Ok(None) => Ok(None),
-	    Ok(Some(element)) => {
-		if let element::ElementEntry::Present( entry ) = element.entry() {
-		    if let Ok(version) = DnaVersionEntry::try_from(entry) {
-			return Ok(Some(version))
-		    }
-		}
-		Err(WasmError::Guest(format!("Failed to recover DnaVersionEntry from: {:?}", element)))
-	    },
+    let versions = links.into_iter()
+	.filter_map(|link| {
+	    utils::fetch_entry_latest(link.target).ok()
 	})
-	.collect::<ExternResult<_>>()?;
-    Ok(versions)
+	.filter_map(|(_, element)| {
+	    DnaVersionEntry::try_from( element ).ok()
+	})
+	.map(|dna_version| {
+	    dna_version.to_summary()
+	})
+	.collect();
+    Ok( versions )
+}
+
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateDnaVersionInput {
+    pub addr: EntryHash,
+    pub properties: DnaVersionUpdateOptions
+}
+#[derive(Debug, Deserialize)]
+pub struct DnaVersionUpdateOptions {
+    pub changelog: Option<String>,
+    pub contributors: Option<Vec<String>>,
+}
+
+#[hdk_extern]
+fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<(EntryHash, DnaVersionInfo)> {
+    debug!("Updating DNA Version: {}", input.addr );
+    let (header, element) = utils::fetch_entry_latest(input.addr.clone())?;
+    let current_version = DnaVersionEntry::try_from( element )?;
+
+    let version = DnaVersionEntry {
+	for_dna: current_version.for_dna,
+	version: current_version.version,
+	published_at: current_version.published_at,
+	file_size: current_version.file_size,
+	chunk_addresses: current_version.chunk_addresses,
+	changelog: match input.properties.changelog {
+	    None => current_version.changelog,
+	    Some(v) => v,
+	},
+	contributors: match input.properties.contributors {
+	    None => current_version.contributors,
+	    Some(v) => v,
+	},
+    };
+
+    update_entry(header, &version)?;
+    let entry_hash = hash_entry(&version)?;
+
+    debug!("Linking original ({}) to DNA Version: {}", input.addr, entry_hash );
+    create_link(
+	input.addr,
+	entry_hash.clone(),
+	LinkTag::new(TAG_UPDATE)
+    )?;
+
+    Ok( (entry_hash, version.to_info()) )
+}
+
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct DeleteDnaVersionInput {
+    pub addr: EntryHash,
+}
+
+#[hdk_extern]
+fn delete_dna_version(input: DeleteDnaVersionInput) -> ExternResult<HeaderHash> {
+    debug!("Delete DNA Version: {}", input.addr );
+    let (header, _) = utils::fetch_entry(input.addr.clone())?;
+
+    let delete_header = delete_entry(header.clone())?;
+    debug!("Deleted DNA Version create {} via header ({})", header, delete_header );
+
+    Ok( header )
 }

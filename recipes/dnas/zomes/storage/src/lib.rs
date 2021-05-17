@@ -6,6 +6,7 @@ mod dnachunks;
 mod errors;
 mod constants;
 mod entry_types;
+mod utils;
 
 use hdk::prelude::*;
 use entry_types::{ DnaEntry, DnaVersionEntry, DnaChunkEntry };

@@ -76,6 +76,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
 
     let chunk_size			= (2**20 /*1 megabyte*/) * 2;
+    let dna_version_hash;
     {
 	let chunk_hashes		= [];
 	let chunk_count			= Math.ceil( dna_bytes.length / chunk_size );
@@ -100,6 +101,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	    "chunk_addresses": chunk_hashes,
 	});
 	log.normal("New DNA version: %s -> %s", b64(version_hash), jsonraw(version) );
+	dna_version_hash		= version_hash;
     }
 
     const bigdna_bytes			= Buffer.concat( Array(5).fill(dna_bytes) );
@@ -134,8 +136,9 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     let dna_versions			= await alice_devhub.call(storage_zome, "get_dna_versions", {
 	"for_dna": dna_hash,
     });
+    console.log( jsonraw(dna_versions) );
     log.normal("Version list (%s): %s", dna_versions.length, json(dna_versions.map(v => {
-	return `DnaVersion { version: ${v.version}, file_size: ${v.file_size}, chunks: (${v.chunk_addresses.length})[..] }`;
+	return `DnaVersion { version: ${v.version}, file_size: ${v.file_size}, published_at: ${v.published_at} }`;
     })) );
 
     expect( dna_versions		).to.have.length( 2 );
@@ -147,6 +150,83 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     })) );
 
     expect( dnas			).to.have.length( 1 );
+
+    {
+	// Update DNA
+	const developer_info		= {
+	    "name": "Open Games Collective",
+	    "website": "https://github.com/open-games-collective/",
+	};
+	let [updated_dna_hash, dna]	= await alice_devhub.call(storage_zome, "update_dna", {
+	    "addr": dna_hash,
+	    "properties": {
+		"developer": developer_info,
+	    }
+	});
+	log.normal("Updated DNA (metadata): %s -> %s", b64(updated_dna_hash), jsonraw(dna) );
+
+	let dna_info			= await alice_devhub.call(storage_zome, "get_dna", {
+	    "addr": dna_hash,
+	});
+	console.log( dna_info );
+	expect( dna_info.developer.name	).to.equal( developer_info.name );
+    }
+
+    {
+	// Update DNA Version
+	const properties		= {
+	    "changelog": "# Changelog\nFeatures\n...",
+            "contributors": [
+		"kevin@open-games.example",
+		"stuart@open-games.example",
+		"bob@open-games.example",
+            ],
+	};
+	let [updated_dna_version_hash, dna_version]	= await alice_devhub.call(storage_zome, "update_dna_version", {
+	    "addr": dna_version_hash,
+	    "properties": properties,
+	});
+	log.normal("Updated DNA Version (metadata): %s -> %s", b64(updated_dna_version_hash), jsonraw(dna_version) );
+
+	let dna_version_info		= await alice_devhub.call(storage_zome, "get_dna_version", {
+	    "addr": dna_version_hash,
+	});
+	console.log( dna_version_info );
+	expect( dna_version_info.changelog	).to.equal( properties.changelog );
+	expect( dna_version_info.contributors	).to.have.length( 3 );
+    }
+
+    {
+	// Unpublish DNA Version
+	let deleted_dna_version_hash	= await alice_devhub.call(storage_zome, "delete_dna_version", {
+	    "addr": dna_version_hash,
+	});
+	log.normal("Deleted DNA Version hash: %s", b64(deleted_dna_version_hash) );
+
+	let less_dna_versions		= await alice_devhub.call(storage_zome, "get_dna_versions", {
+	    "for_dna": dna_hash,
+	});
+	expect( less_dna_versions	).to.have.length( 1 );
+    }
+
+    {
+	// Deprecate DNA
+	let deprecation_notice		= "No longer maintained";
+	let [deprecated_dna_hash, dna]	= await alice_devhub.call(storage_zome, "deprecate_dna", {
+	    "addr": dna_hash,
+	    "message": deprecation_notice,
+	});
+	log.normal("Deprecated DNA (metadata): %s -> %s", b64(deprecated_dna_hash), jsonraw(dna) );
+
+	let dna_info			= await alice_devhub.call(storage_zome, "get_dna", {
+	    "addr": dna_hash,
+	});
+	console.log( dna_info );
+	expect( dna_info.deprecation.message	).to.equal( deprecation_notice );
+
+	let less_dnas			= await alice_devhub.call(storage_zome, "get_my_dnas", null);
+	expect( less_dnas		).to.have.length( 0 );
+    }
 });
 
 orchestrator.run();
