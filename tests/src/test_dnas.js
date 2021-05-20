@@ -133,23 +133,29 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	log.normal("New DNA version: %s -> %s", b64(version_hash), jsonraw(version) );
     }
 
-    let dna_versions			= await alice_devhub.call(storage_zome, "get_dna_versions", {
-	"for_dna": dna_hash,
-    });
-    console.log( jsonraw(dna_versions) );
-    log.normal("Version list (%s): %s", dna_versions.length, json(dna_versions.map(v => {
-	return `DnaVersion { version: ${v.version}, file_size: ${v.file_size}, published_at: ${v.published_at} }`;
-    })) );
+    {
+	let dna_versions		= await alice_devhub.call(storage_zome, "get_dna_versions", {
+	    "for_dna": dna_hash,
+	});
+	console.log( jsonraw(dna_versions) );
 
-    expect( dna_versions		).to.have.length( 2 );
+	log.normal("Version list (%s): %s", dna_versions.length, json(dna_versions.map(([_,v]) => {
+	    return `DnaVersion { version: ${v.version}, file_size: ${v.file_size}, published_at: ${v.published_at} }`;
+	})) );
 
+	expect( dna_versions		).to.have.length( 2 );
+    }
 
-    let dnas				= await alice_devhub.call(storage_zome, "get_my_dnas", null);
-    log.normal("DNA list (%s): %s", dnas.length, json(dnas.map(v => {
-	return `Dna { name: ${v.name}, published_at: ${v.published_at} }`;
-    })) );
+    {
+	let dnas			= await alice_devhub.call(storage_zome, "get_my_dnas", null);
+	console.log( jsonraw(dnas) );
 
-    expect( dnas			).to.have.length( 1 );
+	log.normal("DNA list (%s): %s", dnas.length, json(dnas.map(([_,dna]) => {
+	    return `Dna { name: ${dna.name}, published_at: ${dna.published_at} }`;
+	})) );
+
+	expect( dnas			).to.have.length( 1 );
+    }
 
     {
 	// Update DNA
@@ -203,10 +209,10 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	});
 	log.normal("Deleted DNA Version hash: %s", b64(deleted_dna_version_hash) );
 
-	let less_dna_versions		= await alice_devhub.call(storage_zome, "get_dna_versions", {
+	let dna_versions		= await alice_devhub.call(storage_zome, "get_dna_versions", {
 	    "for_dna": dna_hash,
 	});
-	expect( less_dna_versions	).to.have.length( 1 );
+	expect( dna_versions		).to.have.length( 1 );
     }
 
     {
@@ -224,8 +230,8 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	console.log( dna_info );
 	expect( dna_info.deprecation.message	).to.equal( deprecation_notice );
 
-	let less_dnas			= await alice_devhub.call(storage_zome, "get_my_dnas", null);
-	expect( less_dnas		).to.have.length( 0 );
+	let dnas			= await alice_devhub.call(storage_zome, "get_my_dnas", null);
+	expect( dnas			).to.have.length( 0 );
     }
 });
 

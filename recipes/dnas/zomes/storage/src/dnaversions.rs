@@ -93,18 +93,21 @@ pub struct GetDnaVersionsInput {
 }
 
 #[hdk_extern]
-fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<Vec<DnaVersionSummary>> {
+fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<Vec<(EntryHash, DnaVersionSummary)>> {
     let links = get_version_links(input.for_dna)?;
 
     let versions = links.into_iter()
 	.filter_map(|link| {
-	    utils::fetch_entry_latest(link.target).ok()
+	    match utils::fetch_entry_latest(link.target.clone()) {
+		Ok((_, element)) => Some((link.target, element)),
+		Err(_) => None
+	    }
 	})
-	.filter_map(|(_, element)| {
-	    DnaVersionEntry::try_from( element ).ok()
-	})
-	.map(|dna_version| {
-	    dna_version.to_summary()
+	.filter_map(|(hash, element)| {
+	    match DnaVersionEntry::try_from( element ) {
+		Err(_) => None,
+		Ok(version) => Some(( hash, version.to_summary() )),
+	    }
 	})
 	.collect();
     Ok( versions )

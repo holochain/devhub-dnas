@@ -77,14 +77,17 @@ fn get_my_dna_links() -> ExternResult<Vec<Link>> {
 }
 
 #[hdk_extern]
-fn get_my_dnas(_:()) -> ExternResult<Vec<DnaSummary>> {
+fn get_my_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
     let links = get_my_dna_links()?;
 
     let dnas = links.into_iter()
 	.filter_map(|link| {
-	    utils::fetch_entry_latest(link.target).ok()
+	    match utils::fetch_entry_latest(link.target.clone()) {
+		Ok((_, element)) => Some((link.target, element)),
+		Err(_) => None
+	    }
 	})
-	.filter_map(|(_, element)| {
+	.filter_map(|(hash, element)| {
 	    match DnaEntry::try_from( element ) {
 		Err(_) => None,
 		Ok(dna) => {
@@ -92,7 +95,7 @@ fn get_my_dnas(_:()) -> ExternResult<Vec<DnaSummary>> {
 			None
 		    }
 		    else {
-			Some(dna.to_summary())
+			Some((hash, dna.to_summary()))
 		    }
 		}
 	    }
