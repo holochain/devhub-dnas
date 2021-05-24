@@ -44,7 +44,7 @@ fn create_dna(input: DnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
 	LinkTag::new(*TAG_DNA)
     )?;
 
-    Ok( (entry_hash, dna.to_info()) )
+    Ok( (entry_hash.clone(), dna.to_info( entry_hash )) )
 }
 
 
@@ -57,9 +57,9 @@ pub struct GetDnaInput {
 #[hdk_extern]
 fn get_dna(input: GetDnaInput) -> ExternResult<DnaInfo> {
     debug!("Get DNA: {}", input.addr );
-    let (_, element) = utils::fetch_entry_latest(input.addr)?;
+    let (_, element) = utils::fetch_entry_latest(input.addr.clone())?;
 
-    Ok(DnaEntry::try_from(element)?.to_info())
+    Ok(DnaEntry::try_from(element)?.to_info( input.addr ))
 }
 
 
@@ -95,7 +95,7 @@ fn get_my_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
 			None
 		    }
 		    else {
-			Some((hash, dna.to_summary()))
+			Some((hash.clone(), dna.to_summary( hash )))
 		    }
 		}
 	    }
@@ -151,12 +151,12 @@ fn update_dna(input: UpdateDnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
 
     debug!("Linking original ({}) to DNA: {}", input.addr, entry_hash );
     create_link(
-	input.addr,
+	input.addr.clone(),
 	entry_hash.clone(),
 	LinkTag::new(TAG_UPDATE)
     )?;
 
-    Ok( (entry_hash, dna.to_info()) )
+    Ok( (entry_hash, dna.to_info( input.addr )) )
 }
 
 
@@ -187,10 +187,10 @@ fn deprecate_dna(input: DeprecateDnaInput) -> ExternResult<(EntryHash, DnaInfo)>
 
     debug!("Linking original ({}) to DNA: {}", input.addr, entry_hash );
     create_link(
-	input.addr,
+	input.addr.clone(),
 	entry_hash.clone(),
 	LinkTag::new(TAG_UPDATE)
     )?;
 
-    Ok( (entry_hash, dna.to_info()) )
+    Ok( (entry_hash, dna.to_info( input.addr )) )
 }

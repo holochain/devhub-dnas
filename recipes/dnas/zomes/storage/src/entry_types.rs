@@ -44,6 +44,7 @@ impl DeprecationNotice {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaSummary {
+    pub id: EntryHash,
     pub name: String,
     pub description: String,
     pub published_at: u64,
@@ -56,6 +57,7 @@ pub struct DnaSummary {
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaInfo {
+    pub id: EntryHash,
     pub name: String,
     pub description: String,
     pub published_at: u64,
@@ -66,12 +68,32 @@ pub struct DnaInfo {
 }
 
 impl DnaEntry {
-    pub fn to_info(self) -> DnaInfo {
-	self.into()
+    pub fn to_info(self, id: EntryHash) -> DnaInfo {
+	DnaInfo {
+	    id: id,
+	    name: self.name,
+	    description: self.description,
+	    published_at: self.published_at,
+	    developer: self.developer,
+	    deprecation: self.deprecation,
+	}
     }
 
-    pub fn to_summary(self) -> DnaSummary {
-	self.into()
+    pub fn to_summary(self, id: EntryHash) -> DnaSummary {
+	DnaSummary {
+	    id: id,
+	    name: self.name,
+	    description: self.description,
+	    published_at: self.published_at,
+	    developer: match self.developer {
+		Some(dev) => Some(dev.name),
+		None => None,
+	    },
+	    deprecation: match self.deprecation {
+		Some(_) => Some(true),
+		None => None,
+	    },
+	}
     }
 }
 
@@ -81,36 +103,6 @@ impl TryFrom<Element> for DnaEntry {
 	element.entry()
 	    .to_app_option::<Self>()?
 	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
-    }
-}
-
-impl From<DnaEntry> for DnaInfo {
-    fn from(dna: DnaEntry) -> Self {
-	DnaInfo {
-	    name: dna.name,
-	    description: dna.description,
-	    published_at: dna.published_at,
-	    developer: dna.developer,
-	    deprecation: dna.deprecation,
-	}
-    }
-}
-
-impl From<DnaEntry> for DnaSummary {
-    fn from(dna: DnaEntry) -> Self {
-	DnaSummary {
-	    name: dna.name,
-	    description: dna.description,
-	    published_at: dna.published_at,
-	    developer: match dna.developer {
-		Some(dev) => Some(dev.name),
-		None => None,
-	    },
-	    deprecation: match dna.deprecation {
-		Some(_) => Some(true),
-		None => None,
-	    },
-	}
     }
 }
 
@@ -132,6 +124,7 @@ pub struct DnaVersionEntry {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionSummary {
+    pub id: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub file_size: u64,
@@ -140,6 +133,7 @@ pub struct DnaVersionSummary {
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionInfo {
+    pub id: EntryHash,
     pub for_dna: Option<DnaSummary>,
     pub version: u64,
     pub published_at: u64,
@@ -162,12 +156,35 @@ pub struct DnaPackage {
 }
 
 impl DnaVersionEntry {
-    pub fn to_info(self) -> DnaVersionInfo {
-	self.into()
+    pub fn to_info(self, id: EntryHash) -> DnaVersionInfo {
+	let mut dna_summary : Option<DnaSummary> = None;
+
+	if let Some((_,element)) = utils::fetch_entry_latest( self.for_dna.clone() ).ok() {
+	    dna_summary = match DnaEntry::try_from( element ) {
+		Ok(dna) => Some(dna.to_summary( self.for_dna )),
+		Err(_) => None,
+	    };
+	};
+
+	DnaVersionInfo {
+	    id: id,
+	    for_dna: dna_summary,
+	    version: self.version,
+	    published_at: self.published_at,
+	    file_size: self.file_size,
+	    contributors: self.contributors,
+	    changelog: self.changelog,
+	    chunk_addresses: self.chunk_addresses,
+	}
     }
 
-    pub fn to_summary(self) -> DnaVersionSummary {
-	self.into()
+    pub fn to_summary(self, id: EntryHash) -> DnaVersionSummary {
+	DnaVersionSummary {
+	    id: id,
+	    version: self.version,
+	    published_at: self.published_at,
+	    file_size: self.file_size,
+	}
     }
 }
 
@@ -177,39 +194,6 @@ impl TryFrom<Element> for DnaVersionEntry {
 	element.entry()
 	    .to_app_option::<Self>()?
 	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
-    }
-}
-
-impl From<DnaVersionEntry> for DnaVersionInfo {
-    fn from(version: DnaVersionEntry) -> Self {
-	let mut dna_summary : Option<DnaSummary> = None;
-
-	if let Some((_,element)) = utils::fetch_entry_latest( version.for_dna ).ok() {
-	    dna_summary = match DnaEntry::try_from( element ) {
-		Ok(dna) => Some(dna.to_summary()),
-		Err(_) => None,
-	    };
-	};
-
-	DnaVersionInfo {
-	    for_dna: dna_summary,
-	    version: version.version,
-	    published_at: version.published_at,
-	    file_size: version.file_size,
-	    contributors: version.contributors,
-	    changelog: version.changelog,
-	    chunk_addresses: version.chunk_addresses,
-	}
-    }
-}
-
-impl From<DnaVersionEntry> for DnaVersionSummary {
-    fn from(version: DnaVersionEntry) -> Self {
-	DnaVersionSummary {
-	    version: version.version,
-	    published_at: version.published_at,
-	    file_size: version.file_size,
-	}
     }
 }
 
@@ -247,6 +231,7 @@ fn validate_create_entry_dna(validate_data: ValidateData) -> ExternResult<Valida
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use rand::Rng;
 
     fn create_dnaentry() -> crate::DnaEntry {
 	crate::DnaEntry {
@@ -266,16 +251,18 @@ pub mod tests {
     #[test]
     ///
     fn dna_to_summary_test() {
+	let bytes = rand::thread_rng().gen::<[u8; 32]>();
+	let hash = EntryHash::from_raw_32( bytes.to_vec() );
 	let dna1 = create_dnaentry();
 	let dna2 = create_dnaentry();
 
 	assert_eq!(dna1.name, "Game Turns");
 
-	let dna_info = dna1.to_info();
+	let dna_info = dna1.to_info( hash.clone() );
 
 	assert_eq!(dna_info.name, "Game Turns");
 
-	let dna_summary = dna2.to_summary();
+	let dna_summary = dna2.to_summary( hash.clone() );
 
 	assert_eq!(dna_summary.name, "Game Turns");
     }

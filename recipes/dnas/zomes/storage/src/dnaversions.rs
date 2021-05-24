@@ -54,7 +54,7 @@ fn create_dna_version(input: DnaVersionInput) -> ExternResult<(EntryHash, DnaVer
 	LinkTag::new(*TAG_DNAVERSION)
     )?;
 
-    Ok( (entry_hash, version.to_info()) )
+    Ok( (entry_hash.clone(), version.to_info( entry_hash )) )
 }
 
 
@@ -68,9 +68,9 @@ pub struct GetDnaVersionInput {
 #[hdk_extern]
 fn get_dna_version(input: GetDnaVersionInput) -> ExternResult<DnaVersionInfo> {
     debug!("Get DNA Version: {}", input.addr );
-    let (_, element) = utils::fetch_entry_latest(input.addr)?;
+    let (_, element) = utils::fetch_entry_latest(input.addr.clone())?;
 
-    Ok(DnaVersionEntry::try_from(element)?.to_info())
+    Ok(DnaVersionEntry::try_from(element)?.to_info( input.addr ))
 }
 
 
@@ -106,7 +106,7 @@ fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<Vec<(EntryHash, 
 	.filter_map(|(hash, element)| {
 	    match DnaVersionEntry::try_from( element ) {
 		Err(_) => None,
-		Ok(version) => Some(( hash, version.to_summary() )),
+		Ok(version) => Some(( hash.clone(), version.to_summary(hash) )),
 	    }
 	})
 	.collect();
@@ -154,12 +154,12 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<(EntryHash, 
 
     debug!("Linking original ({}) to DNA Version: {}", input.addr, entry_hash );
     create_link(
-	input.addr,
+	input.addr.clone(),
 	entry_hash.clone(),
 	LinkTag::new(TAG_UPDATE)
     )?;
 
-    Ok( (entry_hash, version.to_info()) )
+    Ok( (entry_hash, version.to_info(input.addr)) )
 }
 
 
