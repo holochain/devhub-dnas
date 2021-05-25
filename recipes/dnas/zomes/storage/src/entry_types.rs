@@ -213,6 +213,15 @@ pub struct SequencePosition {
     pub length: u64,
 }
 
+impl TryFrom<Element> for DnaChunkEntry {
+    type Error = WasmError;
+    fn try_from(element: Element) -> Result<Self, Self::Error> {
+	element.entry()
+	    .to_app_option::<Self>()?
+	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
+    }
+}
+
 
 
 
