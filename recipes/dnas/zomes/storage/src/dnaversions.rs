@@ -125,6 +125,7 @@ pub struct UpdateDnaVersionInput {
 pub struct DnaVersionUpdateOptions {
     pub changelog: Option<String>,
     pub contributors: Option<Vec<String>>,
+    pub published_at: Option<u64>,
 }
 
 #[hdk_extern]
@@ -136,7 +137,10 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<(EntryHash, 
     let version = DnaVersionEntry {
 	for_dna: current_version.for_dna,
 	version: current_version.version,
-	published_at: current_version.published_at,
+	published_at: match input.properties.published_at {
+	    None => current_version.published_at,
+	    Some(v) => v,
+	},
 	file_size: current_version.file_size,
 	chunk_addresses: current_version.chunk_addresses,
 	changelog: match input.properties.changelog {
