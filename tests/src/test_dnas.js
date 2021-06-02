@@ -8,6 +8,7 @@ const fs			= require('fs');
 const expect			= require('chai').expect;
 const { Orchestrator,
 	Config }		= require('@holochain/tryorama');
+const Identicon			= require('identicon.js');
 
 const { json, jsonraw,
 	b64 }			= require('./utils.js');
@@ -59,6 +60,36 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     log.info("Agent info 'alice': %s", jsonraw(a_agent_info) );
     log.info("Agent ID 'alice': %s", a_agent_info.agent_initial_pubkey.toString("base64") );
 
+    let profile_hash;
+    let profile_input			= {
+	"name": "Zed Shaw",
+	"avatar_image": b64( (new Identicon(a_agent_info.agent_initial_pubkey.toString("hex"))).toString() ),
+    };
+
+    {
+	let [hash, profile_info]	= await alice_devhub.call(storage_zome, "create_profile", profile_input );
+	log.normal("Set Developer profile: %s -> %s", b64(hash), jsonraw(profile_info) );
+
+	expect( profile_info.name	).to.equal( profile_input.name );
+
+	profile_hash			= hash;
+    }
+
+    {
+	let profile_update_input	= {
+	    "email": "zed.shaw@example.com",
+	    "website": "zedshaw.example.com",
+	};
+	let [hash, profile_info]	= await alice_devhub.call(storage_zome, "update_profile", {
+	    "addr": profile_hash,
+	    "properties": profile_update_input,
+	});
+	log.normal("Updated Developer profile: %s -> %s", b64(hash), jsonraw(profile_info) );
+
+	expect( profile_info.name	).to.equal( profile_input.name );
+	expect( profile_info.email	).to.equal( profile_update_input.email );
+    }
+
     let [dna_hash, new_entry]		= await alice_devhub.call(storage_zome, "create_dna", dna_input );
     log.normal("New DNA (metadata): %s -> %s", b64(dna_hash), jsonraw(new_entry) );
 
@@ -72,7 +103,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     }
 
 
-    const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.dna") );
+    const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../tiny.dna") );
     log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
 
     let chunk_size			= (2**20 /*1 megabyte*/) * 2;
@@ -159,14 +190,11 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 
     {
 	// Update DNA
-	const developer_info		= {
-	    "name": "Open Games Collective",
-	    "website": "https://github.com/open-games-collective/",
-	};
+	const dna_name			= "Game Turns (new)";
 	let [updated_dna_hash, dna]	= await alice_devhub.call(storage_zome, "update_dna", {
 	    "addr": dna_hash,
 	    "properties": {
-		"developer": developer_info,
+		"name": dna_name,
 	    }
 	});
 	log.normal("Updated DNA (metadata): %s -> %s", b64(updated_dna_hash), jsonraw(dna) );
@@ -175,7 +203,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	    "addr": dna_hash,
 	});
 	console.log( dna_info );
-	expect( dna_info.developer.name	).to.equal( developer_info.name );
+	expect( dna_info.name		).to.equal( dna_name );
     }
 
     {

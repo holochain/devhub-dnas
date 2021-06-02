@@ -5,23 +5,65 @@ use crate::utils;
 use crate::errors::{ RuntimeError };
 
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct EntityInfo {
+#[hdk_entry(id = "profile", visibility="public")]
+pub struct ProfileEntry {
     pub name: String,
-
-    // optional
-    pub website: Option<String>,
+    pub email: String,
+    pub avatar_image: SerializedBytes,
+    pub website: String,
 }
+
+// Full
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProfileInfo {
+    pub id: EntryHash,
+    pub name: String,
+    pub email: String,
+    pub avatar_image: SerializedBytes,
+    pub website: String,
+}
+
+impl ProfileEntry {
+    pub fn to_info(self, id: EntryHash) -> ProfileInfo {
+	ProfileInfo {
+	    id: id,
+	    name: self.name,
+	    email: self.email,
+	    website: self.website,
+	    avatar_image: self.avatar_image,
+	}
+    }
+}
+
+impl TryFrom<Element> for ProfileEntry {
+    type Error = WasmError;
+    fn try_from(element: Element) -> Result<Self, Self::Error> {
+	element.entry()
+	    .to_app_option::<Self>()?
+	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
+    }
+}
+
+
+
 
 #[hdk_entry(id = "dna", visibility="public")]
 pub struct DnaEntry {
     pub name: String,
     pub description: String,
+    pub icon: SerializedBytes,
     pub published_at: u64,
+    pub last_updated: u64,
+    pub developer: DeveloperProfileLocation,
 
     // optional
-    pub developer: Option<EntityInfo>,
+    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeveloperProfileLocation {
+    pub pubkey: AgentPubKey,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -48,9 +90,9 @@ pub struct DnaSummary {
     pub name: String,
     pub description: String,
     pub published_at: u64,
+    pub developer: AgentPubKey,
 
     // optional
-    pub developer: Option<String>,
     pub deprecation: Option<bool>,
 }
 
@@ -61,9 +103,9 @@ pub struct DnaInfo {
     pub name: String,
     pub description: String,
     pub published_at: u64,
+    pub developer: DeveloperProfileLocation,
 
     // optional
-    pub developer: Option<EntityInfo>,
     pub deprecation: Option<DeprecationNotice>,
 }
 
@@ -85,10 +127,7 @@ impl DnaEntry {
 	    name: self.name,
 	    description: self.description,
 	    published_at: self.published_at,
-	    developer: match self.developer {
-		Some(dev) => Some(dev.name),
-		None => None,
-	    },
+	    developer: self.developer.pubkey,
 	    deprecation: match self.deprecation {
 		Some(_) => Some(true),
 		None => None,
@@ -243,16 +282,21 @@ pub mod tests {
     use rand::Rng;
 
     fn create_dnaentry() -> crate::DnaEntry {
+	let bytes = rand::thread_rng().gen::<[u8; 32]>();
+	let hash = EntryHash::from_raw_32( bytes.to_vec() );
+
 	crate::DnaEntry {
 	    name: String::from("Game Turns"),
 	    description: String::from("A tool for turn-based games to track the order of player actions"),
+	    icon: SerializedBytes::try_from(()).unwrap(),
 	    published_at: 1618855430,
+	    last_updated: 1618855430,
 
 	    // optional
-	    developer: Some(EntityInfo {
-		name: String::from("Open Games Collective"),
-		website: Some(String::from("https://github.com/open-games-collective/")),
-	    }),
+	    collaborators: None,
+	    developer: DeveloperProfileLocation {
+		pubkey: hash.into(),
+	    },
 	    deprecation: None,
 	}
     }

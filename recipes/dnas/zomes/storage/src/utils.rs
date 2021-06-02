@@ -3,6 +3,20 @@ use hdk::prelude::*;
 use crate::constants::{ TAG_UPDATE };
 use crate::errors::{ RuntimeError };
 
+pub fn find_latest_link(links: Vec<Link>) -> ExternResult<Option<Link>> {
+    Ok(links
+       .into_iter()
+       .fold(None, |latest: Option<Link>, link: Link| match latest {
+	   Some(latest) => {
+	       if link.timestamp > latest.timestamp {
+		   Some(link)
+	       } else {
+		   Some(latest)
+	       }
+	   },
+	   None => Some(link),
+       }))
+}
 
 pub fn fetch_entry_latest(addr: EntryHash) -> ExternResult<(HeaderHash, Element)> {
     //
@@ -23,27 +37,13 @@ pub fn fetch_entry_latest(addr: EntryHash) -> ExternResult<(HeaderHash, Element)
     let update_links = get_links(addr.clone(), Some(LinkTag::new(TAG_UPDATE)))?.into_inner();
 
     if update_links.len() > 0 {
-	let latest_link = update_links
-	    .into_iter()
-	    .fold(None, |latest: Option<Link>, link| match latest {
-                Some(latest) => {
-                    if link.timestamp > latest.timestamp {
-                        Some(link)
-                    } else {
-                        Some(latest)
-                    }
-                }
-                None => Some(link),
-            });
+	let latest_link = find_latest_link( update_links )?;
 
 	if let Some(link) = latest_link {
 	    let result = get(link.target, GetOptions::latest())?;
 
 	    if let Some(v) = result {
 		element = v;
-	    }
-	    else {
-		return Err(WasmError::from(RuntimeError::EntryNotFound));
 	    }
 	}
     }

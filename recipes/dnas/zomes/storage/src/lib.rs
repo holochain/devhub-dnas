@@ -1,4 +1,5 @@
 
+mod profile;
 mod dna;
 mod dnaversions;
 mod dnachunks;
@@ -9,10 +10,11 @@ mod entry_types;
 mod utils;
 
 use hdk::prelude::*;
-use entry_types::{ DnaEntry, DnaVersionEntry, DnaChunkEntry };
+use entry_types::{ ProfileEntry, DnaEntry, DnaVersionEntry, DnaChunkEntry };
 
 
 entry_defs![
+    ProfileEntry::entry_def(),
     DnaEntry::entry_def(),
     DnaVersionEntry::entry_def(),
     DnaChunkEntry::entry_def()
