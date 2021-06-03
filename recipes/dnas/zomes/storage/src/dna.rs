@@ -16,7 +16,6 @@ pub struct DnaInput {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub collaborators: Option<Vec<(AgentPubKey, String)>>,
-    pub deprecation: Option<DeprecationNotice>,
 }
 
 #[hdk_extern]
@@ -27,24 +26,24 @@ fn create_dna(input: DnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
     let dna = DnaEntry {
 	name: input.name,
 	description: input.description,
-	icon: SerializedBytes::try_from(()).unwrap(),
+	icon: input.icon,
 	published_at: match input.published_at {
 	    None => {
 		sys_time()?.as_millis() as u64
 	    },
 	    Some(t) => t,
 	},
-	last_updated: match input.published_at {
+	last_updated: match input.last_updated {
 	    None => {
 		sys_time()?.as_millis() as u64
 	    },
 	    Some(t) => t,
 	},
-	collaborators: None,
+	collaborators: input.collaborators,
 	developer: DeveloperProfileLocation {
 	    pubkey: pubkey.clone(),
 	},
-	deprecation: input.deprecation,
+	deprecation: None,
     };
 
     let _header_hash = create_entry(&dna)?;
@@ -117,6 +116,34 @@ fn get_my_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
     Ok(dnas)
 }
 
+#[hdk_extern]
+fn get_my_deprecated_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
+    let links = get_my_dna_links()?;
+
+    let dnas = links.into_iter()
+	.filter_map(|link| {
+	    match utils::fetch_entry_latest(link.target.clone()) {
+		Ok((_, element)) => Some((link.target, element)),
+		Err(_) => None
+	    }
+	})
+	.filter_map(|(hash, element)| {
+	    match DnaEntry::try_from( element ) {
+		Err(_) => None,
+		Ok(dna) => {
+		    if let Some(_) = dna.deprecation {
+			Some((hash.clone(), dna.to_summary( hash )))
+		    }
+		    else {
+			None
+		    }
+		}
+	    }
+	})
+	.collect();
+    Ok(dnas)
+}
+
 
 
 
@@ -129,7 +156,10 @@ pub struct UpdateDnaInput {
 pub struct DnaUpdateOptions {
     pub name: Option<String>,
     pub description: Option<String>,
+    pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
+    pub last_updated: Option<u64>,
+    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
 }
 
 #[hdk_extern]
@@ -147,13 +177,24 @@ fn update_dna(input: UpdateDnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
 	    None => current_dna.description,
 	    Some(v) => v,
 	},
-	icon: current_dna.icon,
+	icon: match input.properties.icon {
+	    None => current_dna.icon,
+	    x => x,
+	},
 	published_at: match input.properties.published_at {
 	    None => current_dna.published_at,
 	    Some(v) => v,
 	},
-	last_updated: current_dna.last_updated,
-	collaborators: None,
+	last_updated: match input.properties.last_updated {
+	    None => {
+		sys_time()?.as_millis() as u64
+	    },
+	    Some(v) => v,
+	},
+	collaborators: match input.properties.collaborators {
+	    None => current_dna.collaborators,
+	    x => x,
+	},
 	developer: current_dna.developer,
 	deprecation: current_dna.deprecation,
     };

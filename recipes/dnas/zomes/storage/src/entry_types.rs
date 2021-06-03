@@ -5,6 +5,9 @@ use crate::utils;
 use crate::errors::{ RuntimeError };
 
 
+//
+// Profile Entry
+//
 #[hdk_entry(id = "profile", visibility="public")]
 pub struct ProfileEntry {
     pub name: String,
@@ -47,16 +50,19 @@ impl TryFrom<Element> for ProfileEntry {
 
 
 
+//
+// DNA Entry
+//
 #[hdk_entry(id = "dna", visibility="public")]
 pub struct DnaEntry {
     pub name: String,
     pub description: String,
-    pub icon: SerializedBytes,
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
 
     // optional
+    pub icon: Option<SerializedBytes>,
     pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
@@ -90,9 +96,11 @@ pub struct DnaSummary {
     pub name: String,
     pub description: String,
     pub published_at: u64,
+    pub last_updated: u64,
     pub developer: AgentPubKey,
 
     // optional
+    pub icon: Option<SerializedBytes>,
     pub deprecation: Option<bool>,
 }
 
@@ -103,9 +111,12 @@ pub struct DnaInfo {
     pub name: String,
     pub description: String,
     pub published_at: u64,
+    pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
 
     // optional
+    pub icon: Option<SerializedBytes>,
+    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
 
@@ -115,8 +126,11 @@ impl DnaEntry {
 	    id: id,
 	    name: self.name,
 	    description: self.description,
+	    icon: self.icon,
 	    published_at: self.published_at,
+	    last_updated: self.last_updated,
 	    developer: self.developer,
+	    collaborators: self.collaborators,
 	    deprecation: self.deprecation,
 	}
     }
@@ -126,7 +140,9 @@ impl DnaEntry {
 	    id: id,
 	    name: self.name,
 	    description: self.description,
+	    icon: self.icon,
 	    published_at: self.published_at,
+	    last_updated: self.last_updated,
 	    developer: self.developer.pubkey,
 	    deprecation: match self.deprecation {
 		Some(_) => Some(true),
@@ -149,13 +165,17 @@ impl TryFrom<Element> for DnaEntry {
 
 
 
+//
+// DNA Version Entry
+//
 #[hdk_entry(id = "dna_version", visibility="public")]
 pub struct DnaVersionEntry {
     pub for_dna: EntryHash,
     pub version: u64,
     pub published_at: u64,
+    pub last_updated: u64,
     pub file_size: u64,
-    pub contributors: Vec<String>,
+    pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
     pub chunk_addresses: Vec<EntryHash>,
 }
@@ -166,6 +186,7 @@ pub struct DnaVersionSummary {
     pub id: EntryHash,
     pub version: u64,
     pub published_at: u64,
+    pub last_updated: u64,
     pub file_size: u64,
 }
 
@@ -176,22 +197,11 @@ pub struct DnaVersionInfo {
     pub for_dna: Option<DnaSummary>,
     pub version: u64,
     pub published_at: u64,
+    pub last_updated: u64,
     pub file_size: u64,
-    pub contributors: Vec<String>,
+    pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
     pub chunk_addresses: Vec<EntryHash>,
-}
-
-// Package
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DnaPackage {
-    pub for_dna: DnaSummary,
-    pub version: u64,
-    pub published_at: u64,
-    pub file_size: u64,
-    pub bytes: SerializedBytes,
-    pub contributors: Vec<String>,
-    pub changelog: String,
 }
 
 impl DnaVersionEntry {
@@ -210,6 +220,7 @@ impl DnaVersionEntry {
 	    for_dna: dna_summary,
 	    version: self.version,
 	    published_at: self.published_at,
+	    last_updated: self.last_updated,
 	    file_size: self.file_size,
 	    contributors: self.contributors,
 	    changelog: self.changelog,
@@ -222,6 +233,7 @@ impl DnaVersionEntry {
 	    id: id,
 	    version: self.version,
 	    published_at: self.published_at,
+	    last_updated: self.last_updated,
 	    file_size: self.file_size,
 	}
     }
@@ -240,6 +252,9 @@ impl TryFrom<Element> for DnaVersionEntry {
 
 
 
+//
+// DNA Chunk Entry
+//
 #[hdk_entry(id = "dna_chunk", visibility="public")]
 pub struct DnaChunkEntry {
     pub sequence: SequencePosition,
@@ -288,7 +303,7 @@ pub mod tests {
 	crate::DnaEntry {
 	    name: String::from("Game Turns"),
 	    description: String::from("A tool for turn-based games to track the order of player actions"),
-	    icon: SerializedBytes::try_from(()).unwrap(),
+	    icon: Some(SerializedBytes::try_from(()).unwrap()),
 	    published_at: 1618855430,
 	    last_updated: 1618855430,
 

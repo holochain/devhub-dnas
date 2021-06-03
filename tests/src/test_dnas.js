@@ -43,8 +43,8 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     const [a_and_b_conductor]	= await scenario.players([ conductorConfig ]);
     const [
 	[ alice_devhub_happ ],
-	[ bobbo_devhub_happ ],
-	[ candy_devhub_happ ],
+	[ bobby_devhub_happ ],
+	[ carol_devhub_happ ],
     ]				= await a_and_b_conductor.installAgentsHapps([
 	agent_0_happs,
 	agent_1_happs,
@@ -52,18 +52,20 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     ]);
 
     const alice_devhub			= alice_devhub_happ.cells[0];
-    const bobbo_devhub			= bobbo_devhub_happ.cells[0];
-    const candy_devhub			= candy_devhub_happ.cells[0];
+    const bobby_devhub			= bobby_devhub_happ.cells[0];
+    const carol_devhub			= carol_devhub_happ.cells[0];
 
 
     let a_agent_info			= await alice_devhub.call(storage_zome, "whoami", null);
     log.info("Agent info 'alice': %s", jsonraw(a_agent_info) );
     log.info("Agent ID 'alice': %s", a_agent_info.agent_initial_pubkey.toString("base64") );
+    let b_agent_info			= await bobby_devhub.call(storage_zome, "whoami", null);
+    let c_agent_info			= await carol_devhub.call(storage_zome, "whoami", null);
 
     let profile_hash;
     let profile_input			= {
 	"name": "Zed Shaw",
-	"avatar_image": b64( (new Identicon(a_agent_info.agent_initial_pubkey.toString("hex"))).toString() ),
+	"avatar_image": b64( (new Identicon(a_agent_info.agent_initial_pubkey.toString("hex"), 10)).toString() ),
     };
 
     {
@@ -73,6 +75,32 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	expect( profile_info.name	).to.equal( profile_input.name );
 
 	profile_hash			= hash;
+    }
+
+    {
+	let header_hash			= await alice_devhub.call(storage_zome, "follow_developer", {
+	    "agent": b_agent_info.agent_initial_pubkey,
+	});
+	log.normal("Following link hash: %s", b64(header_hash) );
+
+	await alice_devhub.call(storage_zome, "follow_developer", {
+	    "agent": c_agent_info.agent_initial_pubkey,
+	});
+
+	let following			= await alice_devhub.call(storage_zome, "get_following", null );
+	log.normal("Following developers: %s", jsonraw(following) );
+
+	expect( following		).to.have.length( 2 );
+
+	let delete_hash			= await alice_devhub.call(storage_zome, "unfollow_developer", {
+	    "agent": c_agent_info.agent_initial_pubkey,
+	});
+	log.normal("Unfollowing link hash: %s", b64(delete_hash) );
+
+	let updated_following		= await alice_devhub.call(storage_zome, "get_following", null );
+	log.normal("Following developers: %s", jsonraw(following) );
+
+	expect( updated_following	).to.have.length( 1 );
     }
 
     {
@@ -211,9 +239,9 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	const properties		= {
 	    "changelog": "# Changelog\nFeatures\n...",
             "contributors": [
-		"kevin@open-games.example",
-		"stuart@open-games.example",
-		"bob@open-games.example",
+		[ "kevin@open-games.example", null ],
+		[ "stuart@open-games.example", b_agent_info.agent_initial_pubkey ],
+		[ "bob@open-games.example", c_agent_info.agent_initial_pubkey ],
             ],
 	};
 	let [updated_dna_version_hash, dna_version]	= await alice_devhub.call(storage_zome, "update_dna_version", {
@@ -260,6 +288,17 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 
 	let dnas			= await alice_devhub.call(storage_zome, "get_my_dnas", null);
 	expect( dnas			).to.have.length( 0 );
+    }
+
+    {
+	let dnas			= await alice_devhub.call(storage_zome, "get_my_deprecated_dnas", null);
+	console.log( jsonraw(dnas) );
+
+	log.normal("Deprecated DNA list (%s): %s", dnas.length, json(dnas.map(([_,dna]) => {
+	    return `Dna { name: ${dna.name}, published_at: ${dna.published_at} }`;
+	})) );
+
+	expect( dnas			).to.have.length( 1 );
     }
 });
 

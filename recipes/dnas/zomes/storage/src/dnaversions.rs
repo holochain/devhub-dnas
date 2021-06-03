@@ -14,8 +14,9 @@ pub struct DnaVersionInput {
 
     // optional
     pub changelog: Option<String>,
-    pub contributors: Option<Vec<String>>,
+    pub contributors: Option<Vec<(String, Option<AgentPubKey>)>>,
     pub published_at: Option<u64>,
+    pub last_updated: Option<u64>,
 }
 
 #[hdk_extern]
@@ -35,6 +36,12 @@ fn create_dna_version(input: DnaVersionInput) -> ExternResult<(EntryHash, DnaVer
 	    Some(c) => c,
 	},
 	published_at: match input.published_at {
+	    None => {
+		sys_time()?.as_millis() as u64
+	    },
+	    Some(t) => t,
+	},
+	last_updated: match input.published_at {
 	    None => {
 		sys_time()?.as_millis() as u64
 	    },
@@ -124,8 +131,9 @@ pub struct UpdateDnaVersionInput {
 #[derive(Debug, Deserialize)]
 pub struct DnaVersionUpdateOptions {
     pub changelog: Option<String>,
-    pub contributors: Option<Vec<String>>,
+    pub contributors: Option<Vec<(String, Option<AgentPubKey>)>>,
     pub published_at: Option<u64>,
+    pub last_updated: Option<u64>,
 }
 
 #[hdk_extern]
@@ -140,6 +148,12 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<(EntryHash, 
 	published_at: match input.properties.published_at {
 	    None => current_version.published_at,
 	    Some(v) => v,
+	},
+	last_updated: match input.properties.last_updated {
+	    None => {
+		sys_time()?.as_millis() as u64
+	    },
+	    Some(t) => t,
 	},
 	file_size: current_version.file_size,
 	chunk_addresses: current_version.chunk_addresses,

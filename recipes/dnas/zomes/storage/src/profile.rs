@@ -1,7 +1,7 @@
 use hdk::prelude::*;
 
 use crate::utils;
-use crate::constants::{ TAG_PROFILE, TAG_UPDATE };
+use crate::constants::{ TAG_PROFILE, TAG_UPDATE, TAG_FOLLOW };
 use crate::entry_types::{ ProfileEntry, ProfileInfo };
 
 
@@ -127,4 +127,66 @@ fn update_profile(input: UpdateProfileInput) -> ExternResult<(EntryHash, Profile
     )?;
 
     Ok( (entry_hash, profile.to_info( input.addr )) )
+}
+
+
+
+//
+// Following
+//
+#[derive(Debug, Deserialize)]
+pub struct FollowInput {
+    pub agent: AgentPubKey,
+}
+
+#[hdk_extern]
+fn follow_developer(input: FollowInput) -> ExternResult<HeaderHash> {
+    let pubkey = agent_info()?.agent_initial_pubkey;
+    debug!("Creating follow link from this agent ({}) to agent: {}", pubkey, input.agent );
+
+    let header_hash = create_link(
+	pubkey.into(),
+	input.agent.clone().into(),
+	LinkTag::new(TAG_FOLLOW)
+    )?;
+
+    Ok( header_hash )
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct UnfollowInput {
+    pub agent: AgentPubKey,
+}
+
+#[hdk_extern]
+fn unfollow_developer(input: UnfollowInput) -> ExternResult<Option<HeaderHash>> {
+    let maybe_link = get_following(())?
+	.into_iter()
+	.find(|link| link.target == EntryHash::from(input.agent.clone()));
+
+    Ok(match maybe_link {
+	Some(link) => {
+	    debug!("Deleting follow link to agent: {}", input.agent );
+
+	    let header_hash = delete_link( link.create_link_hash )?;
+
+	    Some(header_hash)
+	},
+	None => None,
+    })
+}
+
+
+#[hdk_extern]
+fn get_following(_:()) -> ExternResult<Vec<Link>> {
+    let pubkey = agent_info()?.agent_initial_pubkey;
+
+    debug!("Getting Profile links for Agent: {}", pubkey );
+    let all_links: Vec<Link> = get_links(
+        pubkey.into(),
+	Some(LinkTag::new(TAG_FOLLOW))
+    )?.into();
+
+    Ok(all_links)
 }
