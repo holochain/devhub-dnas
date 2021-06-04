@@ -78,6 +78,22 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     }
 
     {
+	let a_profile			= await alice_devhub.call(storage_zome, "get_profile", {} );
+	log.normal("Alice profile: %s", jsonraw(a_profile) );
+
+	let failed			= false;
+	try {
+	    let b_profile		= await bobby_devhub.call(storage_zome, "get_profile", {} );
+	    log.normal("Bobby profile: %s", jsonraw(b_profile) );
+	} catch (err) {
+	    failed			= true;
+
+	    expect( err.data.data	).to.have.string("has not been created yet");
+	}
+	expect( failed			).to.be.true;
+    }
+
+    {
 	let header_hash			= await alice_devhub.call(storage_zome, "follow_developer", {
 	    "agent": b_agent_info.agent_initial_pubkey,
 	});
@@ -214,6 +230,11 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	})) );
 
 	expect( dnas			).to.have.length( 1 );
+
+	let b_dnas			= await alice_devhub.call(storage_zome, "get_dnas", {
+	    "agent": b_agent_info.agent_initial_pubkey,
+	});
+	expect( b_dnas			).to.have.length( 0 );
     }
 
     {

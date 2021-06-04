@@ -76,8 +76,11 @@ fn get_dna(input: GetDnaInput) -> ExternResult<DnaInfo> {
 
 
 
-fn get_my_dna_links() -> ExternResult<Vec<Link>> {
-    let pubkey = agent_info()?.agent_initial_pubkey;
+fn get_dna_links(maybe_pubkey: Option<AgentPubKey>) -> ExternResult<Vec<Link>> {
+    let pubkey = match maybe_pubkey {
+	None => agent_info()?.agent_initial_pubkey,
+	Some(agent) => agent,
+    };
 
     debug!("Getting DNA links for Agent: {}", pubkey );
     let all_links: Vec<Link> = get_links(
@@ -90,7 +93,7 @@ fn get_my_dna_links() -> ExternResult<Vec<Link>> {
 
 #[hdk_extern]
 fn get_my_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
-    let links = get_my_dna_links()?;
+    let links = get_dna_links(None)?;
 
     let dnas = links.into_iter()
 	.filter_map(|link| {
@@ -118,7 +121,7 @@ fn get_my_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
 
 #[hdk_extern]
 fn get_my_deprecated_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
-    let links = get_my_dna_links()?;
+    let links = get_dna_links(None)?;
 
     let dnas = links.into_iter()
 	.filter_map(|link| {
@@ -143,6 +146,40 @@ fn get_my_deprecated_dnas(_:()) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
 	.collect();
     Ok(dnas)
 }
+
+#[derive(Debug, Deserialize)]
+pub struct GetDnasInput {
+    pub agent: Option<AgentPubKey>,
+}
+
+#[hdk_extern]
+fn get_dnas(input: GetDnasInput) -> ExternResult<Vec<(EntryHash, DnaSummary)>> {
+    let links = get_dna_links( input.agent )?;
+
+    let dnas = links.into_iter()
+	.filter_map(|link| {
+	    match utils::fetch_entry_latest(link.target.clone()) {
+		Ok((_, element)) => Some((link.target, element)),
+		Err(_) => None
+	    }
+	})
+	.filter_map(|(hash, element)| {
+	    match DnaEntry::try_from( element ) {
+		Err(_) => None,
+		Ok(dna) => {
+		    if let Some(_) = dna.deprecation {
+			None
+		    }
+		    else {
+			Some((hash.clone(), dna.to_summary( hash )))
+		    }
+		}
+	    }
+	})
+	.collect();
+    Ok(dnas)
+}
+
 
 
 

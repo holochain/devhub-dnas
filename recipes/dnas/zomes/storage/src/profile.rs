@@ -48,10 +48,14 @@ fn create_profile(input: ProfileInput) -> ExternResult<(EntryHash, ProfileInfo)>
 }
 
 
+#[derive(Debug, Deserialize)]
+pub struct GetProfileInput {
+    pub agent: Option<AgentPubKey>,
+}
 
 #[hdk_extern]
-fn get_profile(_:()) -> ExternResult<ProfileInfo> {
-    if let Some(link) = utils::find_latest_link( get_profile_links()? )? {
+fn get_profile(input: GetProfileInput) -> ExternResult<ProfileInfo> {
+    if let Some(link) = utils::find_latest_link( get_profile_links( input.agent )? )? {
 	debug!("Get Profile: {}", link.target );
 	let (_, element) = utils::fetch_entry_latest(link.target.clone())?;
 
@@ -64,8 +68,11 @@ fn get_profile(_:()) -> ExternResult<ProfileInfo> {
 
 
 
-fn get_profile_links() -> ExternResult<Vec<Link>> {
-    let pubkey = agent_info()?.agent_initial_pubkey;
+fn get_profile_links(maybe_pubkey: Option<AgentPubKey> ) -> ExternResult<Vec<Link>> {
+    let pubkey = match maybe_pubkey {
+	None => agent_info()?.agent_initial_pubkey,
+	Some(agent) => agent,
+    };
 
     debug!("Getting Profile links for Agent: {}", pubkey );
     let all_links: Vec<Link> = get_links(
