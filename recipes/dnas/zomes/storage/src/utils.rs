@@ -57,3 +57,14 @@ pub fn fetch_entry(addr: EntryHash) -> ExternResult<(HeaderHash, Element)> {
         None => Err(WasmError::from(RuntimeError::EntryNotFound)),
     }
 }
+
+pub fn fetch_entity(id: EntryHash) -> ExternResult<(EntryHash, EntryHash, Element)> {
+    let (_, element) = fetch_entry_latest( id.clone() )?;
+
+    let address = element
+	.header()
+	.entry_hash()
+	.ok_or(WasmError::from(RuntimeError::EntryNotFound))?;
+
+    Ok( (id, address.to_owned(), element) )
+}

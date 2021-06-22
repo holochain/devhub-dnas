@@ -1,4 +1,4 @@
-use hdk::prelude::{WasmError, Element};
+use hdk::prelude::*;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -8,6 +8,9 @@ pub enum RuntimeError {
 
     #[error("Failed to deserialize entry: {0:?}")]
     DeserializationError(Element),
+
+    #[error("Deserialized entry did not match entry hash: {0:?}")]
+    DeserializationWrongEntryTypeError(EntryHash, EntryHash),
 }
 
 impl From<RuntimeError> for WasmError  {

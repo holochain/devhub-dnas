@@ -4,9 +4,10 @@ mod dna;
 mod dnaversions;
 mod dnachunks;
 
-mod errors;
 mod constants;
+mod errors;
 mod entry_types;
+mod reply_types;
 mod utils;
 
 use hdk::prelude::*;

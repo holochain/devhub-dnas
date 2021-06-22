@@ -5,6 +5,11 @@ use crate::utils;
 use crate::errors::{ RuntimeError };
 
 
+pub trait EntryModel {
+    fn get_type(&self) -> String;
+}
+
+
 //
 // Profile Entry
 //
@@ -24,6 +29,11 @@ pub struct ProfileInfo {
     pub email: String,
     pub avatar_image: SerializedBytes,
     pub website: String,
+}
+impl EntryModel for ProfileInfo {
+    fn get_type(&self) -> String {
+	"info".into()
+    }
 }
 
 impl ProfileEntry {
@@ -92,7 +102,6 @@ impl DeprecationNotice {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaSummary {
-    pub id: EntryHash,
     pub name: String,
     pub description: String,
     pub published_at: u64,
@@ -103,11 +112,15 @@ pub struct DnaSummary {
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<bool>,
 }
+impl EntryModel for DnaSummary {
+    fn get_type(&self) -> String {
+	"summary".into()
+    }
+}
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaInfo {
-    pub id: EntryHash,
     pub name: String,
     pub description: String,
     pub published_at: u64,
@@ -119,11 +132,15 @@ pub struct DnaInfo {
     pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
+impl EntryModel for DnaInfo {
+    fn get_type(&self) -> String {
+	"info".into()
+    }
+}
 
 impl DnaEntry {
-    pub fn to_info(self, id: EntryHash) -> DnaInfo {
+    pub fn to_info(self) -> DnaInfo {
 	DnaInfo {
-	    id: id,
 	    name: self.name,
 	    description: self.description,
 	    icon: self.icon,
@@ -135,9 +152,8 @@ impl DnaEntry {
 	}
     }
 
-    pub fn to_summary(self, id: EntryHash) -> DnaSummary {
+    pub fn to_summary(self) -> DnaSummary {
 	DnaSummary {
-	    id: id,
 	    name: self.name,
 	    description: self.description,
 	    icon: self.icon,
@@ -155,9 +171,19 @@ impl DnaEntry {
 impl TryFrom<Element> for DnaEntry {
     type Error = WasmError;
     fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
+	let entry = element.entry()
 	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
+	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element.clone())))?;
+
+	let entry_hash = hash_entry(&entry)?;
+	let expected_hash = element.header().entry_hash().unwrap().to_owned();
+
+	debug!("DnaEntry::try_from: {} == {}", entry_hash, expected_hash );
+	if entry_hash == expected_hash {
+	    Ok( entry )
+	} else {
+	    Err(WasmError::from(RuntimeError::DeserializationWrongEntryTypeError(entry_hash, expected_hash)))
+	}
     }
 }
 
@@ -189,6 +215,11 @@ pub struct DnaVersionSummary {
     pub last_updated: u64,
     pub file_size: u64,
 }
+impl EntryModel for DnaVersionSummary {
+    fn get_type(&self) -> String {
+	"summary".into()
+    }
+}
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
@@ -203,6 +234,11 @@ pub struct DnaVersionInfo {
     pub changelog: String,
     pub chunk_addresses: Vec<EntryHash>,
 }
+impl EntryModel for DnaVersionInfo {
+    fn get_type(&self) -> String {
+	"info".into()
+    }
+}
 
 impl DnaVersionEntry {
     pub fn to_info(self, id: EntryHash) -> DnaVersionInfo {
@@ -210,7 +246,7 @@ impl DnaVersionEntry {
 
 	if let Some((_,element)) = utils::fetch_entry_latest( self.for_dna.clone() ).ok() {
 	    dna_summary = match DnaEntry::try_from( element ) {
-		Ok(dna) => Some(dna.to_summary( self.for_dna )),
+		Ok(dna) => Some(dna.to_summary()),
 		Err(_) => None,
 	    };
 	};
