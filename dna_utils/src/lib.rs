@@ -1,7 +1,14 @@
-use hdk::prelude::*;
 
-use crate::constants::{ TAG_UPDATE };
-use crate::errors::{ RuntimeError };
+mod errors;
+
+use hdk::prelude::*;
+use hc_dna_reply_types::{ Entity };
+
+pub use errors::{ RuntimeError };
+
+
+pub const TAG_UPDATE: &'static str = "update";
+
 
 pub fn find_latest_link(links: Vec<Link>) -> ExternResult<Option<Link>> {
     Ok(links
@@ -58,13 +65,44 @@ pub fn fetch_entry(addr: EntryHash) -> ExternResult<(HeaderHash, Element)> {
     }
 }
 
-pub fn fetch_entity(id: EntryHash) -> ExternResult<(EntryHash, EntryHash, Element)> {
-    let (_, element) = fetch_entry_latest( id.clone() )?;
+pub fn fetch_entity(id: EntryHash) -> ExternResult<Entity<Element>> {
+    let (header_hash, element) = fetch_entry_latest( id.clone() )?;
 
     let address = element
 	.header()
 	.entry_hash()
 	.ok_or(WasmError::from(RuntimeError::EntryNotFound))?;
 
-    Ok( (id, address.to_owned(), element) )
+    Ok(Entity {
+	id: id,
+	header: header_hash,
+	address: address.to_owned(),
+	ctype: String::from("element"),
+	content: element,
+    })
+}
+
+#[macro_export]
+macro_rules! try_from_element {
+    ( $( $struct:ident ),* ) => {
+	$(
+	    impl TryFrom<&Element> for $struct {
+		type Error = WasmError;
+		fn try_from(element: &Element) -> Result<Self, Self::Error> {
+		    let entry = element.entry()
+			.to_app_option::<Self>()?
+			.ok_or(WasmError::from(hc_dna_utils::RuntimeError::DeserializationError(element.clone())))?;
+
+		    let entry_hash = hash_entry(&entry)?;
+		    let expected_hash = element.header().entry_hash().unwrap().clone();
+
+		    if entry_hash == expected_hash {
+			Ok( entry )
+		    } else {
+			Err(WasmError::from(hc_dna_utils::RuntimeError::DeserializationWrongEntryTypeError(entry_hash, expected_hash)))
+		    }
+		}
+	    }
+	)*
+    };
 }

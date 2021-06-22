@@ -1,13 +1,6 @@
-
 use hdk::prelude::*;
-
-use crate::utils;
-use crate::errors::{ RuntimeError };
-
-
-pub trait EntryModel {
-    fn get_type(&self) -> String;
-}
+use hc_dna_reply_types::{ EntryModel };
+use hc_dna_utils as utils;
 
 
 //
@@ -20,6 +13,7 @@ pub struct ProfileEntry {
     pub avatar_image: SerializedBytes,
     pub website: String,
 }
+utils::try_from_element![ ProfileEntry ];
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
@@ -48,15 +42,6 @@ impl ProfileEntry {
     }
 }
 
-impl TryFrom<Element> for ProfileEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
-    }
-}
-
 
 
 
@@ -76,6 +61,7 @@ pub struct DnaEntry {
     pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
+utils::try_from_element![ DnaEntry ];
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DeveloperProfileLocation {
@@ -168,26 +154,6 @@ impl DnaEntry {
     }
 }
 
-impl TryFrom<Element> for DnaEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	let entry = element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element.clone())))?;
-
-	let entry_hash = hash_entry(&entry)?;
-	let expected_hash = element.header().entry_hash().unwrap().to_owned();
-
-	debug!("DnaEntry::try_from: {} == {}", entry_hash, expected_hash );
-	if entry_hash == expected_hash {
-	    Ok( entry )
-	} else {
-	    Err(WasmError::from(RuntimeError::DeserializationWrongEntryTypeError(entry_hash, expected_hash)))
-	}
-    }
-}
-
-
 
 
 
@@ -205,6 +171,7 @@ pub struct DnaVersionEntry {
     pub changelog: String,
     pub chunk_addresses: Vec<EntryHash>,
 }
+utils::try_from_element![ DnaVersionEntry ];
 
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
@@ -245,7 +212,7 @@ impl DnaVersionEntry {
 	let mut dna_summary : Option<DnaSummary> = None;
 
 	if let Some((_,element)) = utils::fetch_entry_latest( self.for_dna.clone() ).ok() {
-	    dna_summary = match DnaEntry::try_from( element ) {
+	    dna_summary = match DnaEntry::try_from( &element ) {
 		Ok(dna) => Some(dna.to_summary()),
 		Err(_) => None,
 	    };
@@ -275,15 +242,6 @@ impl DnaVersionEntry {
     }
 }
 
-impl TryFrom<Element> for DnaVersionEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
-    }
-}
-
 
 
 
@@ -296,6 +254,7 @@ pub struct DnaChunkEntry {
     pub sequence: SequencePosition,
     pub bytes: SerializedBytes,
 }
+utils::try_from_element![ DnaChunkEntry ];
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SequencePosition {
@@ -303,21 +262,12 @@ pub struct SequencePosition {
     pub length: u64,
 }
 
-impl TryFrom<Element> for DnaChunkEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
-    }
-}
-
 
 
 
 #[hdk_extern]
 fn validate_create_entry_dna(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
-    if let Ok(_dna) = DnaEntry::try_from( validate_data.element ) {
+    if let Ok(_dna) = DnaEntry::try_from( &validate_data.element ) {
 	return Ok(ValidateCallbackResult::Valid);
     }
 
@@ -355,18 +305,16 @@ pub mod tests {
     #[test]
     ///
     fn dna_to_summary_test() {
-	let bytes = rand::thread_rng().gen::<[u8; 32]>();
-	let hash = EntryHash::from_raw_32( bytes.to_vec() );
 	let dna1 = create_dnaentry();
 	let dna2 = create_dnaentry();
 
 	assert_eq!(dna1.name, "Game Turns");
 
-	let dna_info = dna1.to_info( hash.clone() );
+	let dna_info = dna1.to_info();
 
 	assert_eq!(dna_info.name, "Game Turns");
 
-	let dna_summary = dna2.to_summary( hash.clone() );
+	let dna_summary = dna2.to_summary();
 
 	assert_eq!(dna_summary.name, "Game Turns");
     }

@@ -9,7 +9,7 @@ const expect				= require('chai').expect;
 const { Orchestrator,
 	Config }			= require('@holochain/tryorama');
 const Identicon				= require('identicon.js');
-const { HoloHash }			= require('@whi/holo-hash');
+const { HoloHash, EntryHash }		= require('@whi/holo-hash');
 const Essence				= require('@whi/essence');
 const json				= require('@whi/json');
 
@@ -48,9 +48,12 @@ function define_hidden_prop ( obj, key, value ) {
 function Entity ( data ) {
     let content				= data.content;
 
-    define_hidden_prop( content, "$id",		data.id );
-    define_hidden_prop( content, "$address",	data.address );
-    define_hidden_prop( content, "$addr",	data.address );
+    let $id				= new EntryHash(data.id);
+    let $addr				= new EntryHash(data.address);
+
+    define_hidden_prop( content, "$id",		$id );
+    define_hidden_prop( content, "$address",	$addr );
+    define_hidden_prop( content, "$addr",	$addr );
 
     return content;
 }
@@ -58,7 +61,7 @@ function Entity ( data ) {
 function Collection ( data ) {
     let entities			= data.items.map(item => Entity( item ) );
 
-    define_hidden_prop( data, "$base", data.base );
+    define_hidden_prop( data, "$base", new EntryHash(data.base) );
 
     return entities;
 }
@@ -197,8 +200,9 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	expect( profile_info.email	).to.equal( profile_update_input.email );
     }
 
-    let [dna_hash, new_entry]		= await alice_devhub.call(storage_zome, "create_dna", dna_input );
-    log.normal("New DNA (metadata): %s -> %s", b64(dna_hash), json.debug(new_entry) );
+    let new_entry			= await callZome( alice_devhub, "create_dna", dna_input );
+    let dna_hash			= new_entry.$id;
+    log.normal("New DNA (metadata): %s -> %s", String(dna_hash), json.debug(new_entry) );
 
     {
 	// Check the created entry
@@ -306,13 +310,13 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     {
 	// Update DNA
 	const dna_name			= "Game Turns (new)";
-	let [updated_dna_hash, dna]	= await alice_devhub.call(storage_zome, "update_dna", {
+	let dna				= await callZome( alice_devhub, "update_dna", {
 	    "addr": dna_hash,
 	    "properties": {
 		"name": dna_name,
 	    }
 	});
-	log.normal("Updated DNA (metadata): %s -> %s", b64(updated_dna_hash), json.debug(dna) );
+	log.normal("Updated DNA (metadata): %s -> %s", String(dna.$addr), json.debug(dna) );
 
 	let dna_info			= await callZome( alice_devhub, "get_dna", {
 	    "addr": dna_hash,
@@ -362,11 +366,11 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     {
 	// Deprecate DNA
 	let deprecation_notice		= "No longer maintained";
-	let [deprecated_dna_hash, dna]	= await alice_devhub.call(storage_zome, "deprecate_dna", {
+	let dna				= await callZome( alice_devhub, "deprecate_dna", {
 	    "addr": dna_hash,
 	    "message": deprecation_notice,
 	});
-	log.normal("Deprecated DNA (metadata): %s -> %s", b64(deprecated_dna_hash), json.debug(dna) );
+	log.normal("Deprecated DNA (metadata): %s -> %s", String(dna.$addr), json.debug(dna) );
 
 	let dna_info			= await callZome( alice_devhub, "get_dna", {
 	    "addr": dna_hash,

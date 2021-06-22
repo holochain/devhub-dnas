@@ -1,6 +1,8 @@
 use hdk::prelude::*;
 
-use crate::entry_types::{ EntryModel };
+pub trait EntryModel {
+    fn get_type(&self) -> String;
+}
 
 #[derive(Debug, Serialize)]
 pub struct EssencePackage<T, M> {
@@ -10,37 +12,34 @@ pub struct EssencePackage<T, M> {
     metadata: Option<M>,
     payload: T,
 }
-type Package<T, M> = EssencePackage<T, M>;
+
 
 #[derive(Debug, Serialize)]
 pub struct EntityMetadata {
     composition: String,
 }
+type Package<T> = EssencePackage<T, EntityMetadata>;
 
 
 #[derive(Debug, Serialize)]
 pub struct Entity<T> {
     pub id: EntryHash,
+    pub header: HeaderHash,
     pub address: EntryHash,
     #[serde(rename = "type")]
     pub ctype: String,
     pub content: T,
 }
-pub type ReplyWithSingle<T> = Package<Entity<T>, EntityMetadata>;
 
-impl<T> ReplyWithSingle<T> where T: EntryModel {
-    pub fn success (id: EntryHash, addr: EntryHash, content: T) -> Self {
-	EssencePackage {
-	    rtype: String::from("success"),
-	    metadata: Some(EntityMetadata {
-		composition: String::from("single"),
-	    }),
-	    payload: Entity {
-		id: id,
-		address: addr,
-		ctype: content.get_type(),
-		content: content,
-	    },
+impl<T> Entity<T> {
+    pub fn replace_content<M>(&self, content: M) -> Entity<M>
+    where M: EntryModel {
+	Entity {
+	    id: self.id.to_owned(),
+	    header: self.header.to_owned(),
+	    address: self.address.to_owned(),
+	    ctype: content.get_type(),
+	    content: content,
 	}
     }
 }
@@ -50,10 +49,27 @@ pub struct EntityCollection<T> {
     pub base: EntryHash,
     pub items: Vec<Entity<T>>,
 }
-pub type ReplyWithCollection<T> = Package<EntityCollection<T>, EntityMetadata>;
+
+
+
+pub type ReplyWithSingle<T> = Package<Entity<T>>;
+
+impl<T> ReplyWithSingle<T> where T: EntryModel {
+    pub fn new (entity: Entity<T>) -> Self {
+	EssencePackage {
+	    rtype: String::from("success"),
+	    metadata: Some(EntityMetadata {
+		composition: String::from("single"),
+	    }),
+	    payload: entity,
+	}
+    }
+}
+
+pub type ReplyWithCollection<T> = Package<EntityCollection<T>>;
 
 impl<T> ReplyWithCollection<T> {
-    pub fn success (base: EntryHash, entities: Vec<Entity<T>>) -> Self {
+    pub fn new (base: EntryHash, entities: Vec<Entity<T>>) -> Self {
 	EssencePackage {
 	    rtype: String::from("success"),
 	    metadata: Some(EntityMetadata {

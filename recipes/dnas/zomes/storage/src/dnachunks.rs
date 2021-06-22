@@ -1,6 +1,6 @@
 use hdk::prelude::*;
+use hc_dna_utils as utils;
 
-use crate::utils;
 use crate::entry_types::{ DnaChunkEntry };
 
 
@@ -24,5 +24,5 @@ fn get_dna_chunk(input: GetDnaChunksInput) -> ExternResult<DnaChunkEntry> {
     debug!("Get DNA Chunk: {}", input.addr );
     let (_, element) = utils::fetch_entry_latest(input.addr.clone())?;
 
-    Ok(DnaChunkEntry::try_from(element)?)
+    Ok(DnaChunkEntry::try_from(&element)?)
 }

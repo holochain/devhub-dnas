@@ -1,7 +1,7 @@
 use hdk::prelude::*;
+use hc_dna_utils as utils;
 
-use crate::utils;
-use crate::constants::{ TAG_PROFILE, TAG_UPDATE, TAG_FOLLOW };
+use crate::constants::{ TAG_PROFILE, TAG_FOLLOW };
 use crate::entry_types::{ ProfileEntry, ProfileInfo };
 
 
@@ -59,7 +59,7 @@ fn get_profile(input: GetProfileInput) -> ExternResult<ProfileInfo> {
 	debug!("Get Profile: {}", link.target );
 	let (_, element) = utils::fetch_entry_latest(link.target.clone())?;
 
-	Ok(ProfileEntry::try_from(element)?.to_info( link.target ))
+	Ok(ProfileEntry::try_from(&element)?.to_info( link.target ))
     }
     else {
 	Err(WasmError::Guest("Agent Profile has not been created yet".into()))
@@ -102,7 +102,7 @@ pub struct ProfileUpdateOptions {
 fn update_profile(input: UpdateProfileInput) -> ExternResult<(EntryHash, ProfileInfo)> {
     debug!("Updating Profile: {}", input.addr );
     let (header, element) = utils::fetch_entry_latest(input.addr.clone())?;
-    let current_profile = ProfileEntry::try_from( element )?;
+    let current_profile = ProfileEntry::try_from( &element )?;
 
     let profile = ProfileEntry {
 	name: match input.properties.name {
@@ -130,7 +130,7 @@ fn update_profile(input: UpdateProfileInput) -> ExternResult<(EntryHash, Profile
     create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
-	LinkTag::new(TAG_UPDATE)
+	LinkTag::new(utils::TAG_UPDATE)
     )?;
 
     Ok( (entry_hash, profile.to_info( input.addr )) )

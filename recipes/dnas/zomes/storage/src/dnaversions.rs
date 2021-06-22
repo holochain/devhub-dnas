@@ -1,7 +1,7 @@
 use hdk::prelude::*;
+use hc_dna_utils as utils;
 
-use crate::utils;
-use crate::constants::{ TAG_DNAVERSION, TAG_UPDATE };
+use crate::constants::{ TAG_DNAVERSION };
 use crate::entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary };
 
 
@@ -77,7 +77,7 @@ fn get_dna_version(input: GetDnaVersionInput) -> ExternResult<DnaVersionInfo> {
     debug!("Get DNA Version: {}", input.addr );
     let (_, element) = utils::fetch_entry_latest(input.addr.clone())?;
 
-    Ok(DnaVersionEntry::try_from(element)?.to_info( input.addr ))
+    Ok(DnaVersionEntry::try_from(&element)?.to_info( input.addr ))
 }
 
 
@@ -111,7 +111,7 @@ fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<Vec<(EntryHash, 
 	    }
 	})
 	.filter_map(|(hash, element)| {
-	    match DnaVersionEntry::try_from( element ) {
+	    match DnaVersionEntry::try_from( &element ) {
 		Err(_) => None,
 		Ok(version) => Some(( hash.clone(), version.to_summary(hash) )),
 	    }
@@ -140,7 +140,7 @@ pub struct DnaVersionUpdateOptions {
 fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<(EntryHash, DnaVersionInfo)> {
     debug!("Updating DNA Version: {}", input.addr );
     let (header, element) = utils::fetch_entry_latest(input.addr.clone())?;
-    let current_version = DnaVersionEntry::try_from( element )?;
+    let current_version = DnaVersionEntry::try_from( &element )?;
 
     let version = DnaVersionEntry {
 	for_dna: current_version.for_dna,
@@ -174,7 +174,7 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<(EntryHash, 
     create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
-	LinkTag::new(TAG_UPDATE)
+	LinkTag::new(utils::TAG_UPDATE)
     )?;
 
     Ok( (entry_hash, version.to_info(input.addr)) )

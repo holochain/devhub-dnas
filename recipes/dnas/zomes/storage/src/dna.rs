@@ -1,9 +1,9 @@
 use hdk::prelude::*;
+use hc_dna_reply_types::{ ReplyWithSingle, ReplyWithCollection, Entity, EntryModel };
+use hc_dna_utils as utils;
 
-use crate::utils;
-use crate::constants::{ TAG_DNA, TAG_UPDATE };
-use crate::reply_types::{ ReplyWithSingle, ReplyWithCollection, Entity };
-use crate::entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice, EntryModel };
+use crate::constants::{ TAG_DNA };
+use crate::entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice };
 
 
 
@@ -20,7 +20,7 @@ pub struct DnaInput {
 }
 
 #[hdk_extern]
-fn create_dna(input: DnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
+fn create_dna(input: DnaInput) -> ExternResult<ReplyWithSingle<DnaInfo>> {
     debug!("Creating DNA: {}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
 
@@ -47,7 +47,7 @@ fn create_dna(input: DnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
 	deprecation: None,
     };
 
-    let _header_hash = create_entry(&dna)?;
+    let header_hash = create_entry(&dna)?;
     let entry_hash = hash_entry(&dna)?;
 
     debug!("Linking pubkey ({}) to DNA: {}", pubkey, entry_hash );
@@ -57,7 +57,15 @@ fn create_dna(input: DnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
 	LinkTag::new(*TAG_DNA)
     )?;
 
-    Ok( (entry_hash.clone(), dna.to_info()) )
+    let info = dna.to_info();
+
+    Ok( ReplyWithSingle::new(Entity {
+	id: entry_hash.clone(),
+	address: entry_hash,
+	header: header_hash,
+	ctype: info.get_type(),
+	content: info,
+    }) )
 }
 
 
@@ -71,27 +79,29 @@ pub struct GetDnaInput {
 #[hdk_extern]
 fn get_dna(input: GetDnaInput) -> ExternResult<ReplyWithSingle<DnaInfo>> {
     debug!("Get DNA: {}", input.addr );
-    let (id, addr, element) = utils::fetch_entity(input.addr)?;
-    let content = DnaEntry::try_from(element)?.to_info();
+    let entity = utils::fetch_entity(input.addr)?;
+    let info = DnaEntry::try_from(&entity.content)?.to_info();
 
-    Ok( ReplyWithSingle::success( id, addr, content ) )
+    Ok( ReplyWithSingle::new(
+	entity.replace_content( info )
+    ))
 }
 
 
 
 fn get_dna_links(maybe_pubkey: Option<AgentPubKey>) -> ExternResult<(EntryHash, Vec<Link>)> {
-    let pubkey = match maybe_pubkey {
+    let base : EntryHash = match maybe_pubkey {
 	None => agent_info()?.agent_initial_pubkey,
 	Some(agent) => agent,
-    };
+    }.into();
 
-    debug!("Getting DNA links for Agent: {}", pubkey );
+    debug!("Getting DNA links for Agent entry: {}", base );
     let all_links: Vec<Link> = get_links(
-        pubkey.clone().into(),
+        base.clone(),
 	Some(LinkTag::new(*TAG_DNA))
     )?.into();
 
-    Ok( (EntryHash::from(pubkey), all_links) )
+    Ok( (base, all_links) )
 }
 
 #[hdk_extern]
@@ -121,25 +131,19 @@ fn get_dnas(input: GetDnasInput) -> ExternResult<ReplyWithCollection<DnaSummary>
 	.filter_map(|link| {
 	    utils::fetch_entity(link.target).ok()
 	})
-	.filter_map(|(id, addr, element)| {
+	.filter_map(|entity| {
 	    let mut answer : Option<Entity<DnaSummary>> = None;
 
-	    if let Some(dna) = DnaEntry::try_from(element).ok() {
+	    if let Some(dna) = DnaEntry::try_from(&entity.content).ok() {
 		if dna.deprecation.is_none() {
-		    let content = dna.to_summary();
-		    answer.replace(Entity {
-			id: id,
-			address: addr,
-			ctype: content.get_type(),
-			content: content,
-		    });
+		    answer.replace( entity.replace_content( dna.to_summary() ) );
 		}
 	    }
 
 	    answer
 	})
 	.collect();
-    Ok( ReplyWithCollection::success( base, dnas ) )
+    Ok( ReplyWithCollection::new( base, dnas ) )
 }
 
 #[hdk_extern]
@@ -150,25 +154,19 @@ fn get_deprecated_dnas(input: GetDnasInput) -> ExternResult<ReplyWithCollection<
 	.filter_map(|link| {
 	    utils::fetch_entity(link.target).ok()
 	})
-	.filter_map(|(id, addr, element)| {
+	.filter_map(|entity| {
 	    let mut answer : Option<Entity<DnaSummary>> = None;
 
-	    if let Some(dna) = DnaEntry::try_from(element).ok() {
+	    if let Some(dna) = DnaEntry::try_from(&entity.content).ok() {
 		if dna.deprecation.is_some() {
-		    let content = dna.to_summary();
-		    answer.replace(Entity {
-			id: id,
-			address: addr,
-			ctype: content.get_type(),
-			content: content,
-		    });
+		    answer.replace( entity.replace_content( dna.to_summary() ) );
 		}
 	    }
 
 	    answer
 	})
 	.collect();
-    Ok( ReplyWithCollection::success( base, dnas ) )
+    Ok( ReplyWithCollection::new( base, dnas ) )
 }
 
 
@@ -190,10 +188,10 @@ pub struct DnaUpdateOptions {
 }
 
 #[hdk_extern]
-fn update_dna(input: UpdateDnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
+fn update_dna(input: UpdateDnaInput) -> ExternResult<ReplyWithSingle<DnaInfo>> {
     debug!("Updating DNA: {}", input.addr );
-    let (header, element) = utils::fetch_entry_latest(input.addr.clone())?;
-    let current_dna = DnaEntry::try_from( element )?;
+    let entity = utils::fetch_entity(input.addr.clone())?;
+    let current_dna = DnaEntry::try_from( &entity.content )?;
 
     let dna = DnaEntry {
 	name: match input.properties.name {
@@ -226,17 +224,19 @@ fn update_dna(input: UpdateDnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
 	deprecation: current_dna.deprecation,
     };
 
-    update_entry(header, &dna)?;
+    update_entry(entity.header.clone(), &dna)?;
     let entry_hash = hash_entry(&dna)?;
 
     debug!("Linking original ({}) to DNA: {}", input.addr, entry_hash );
     create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
-	LinkTag::new(TAG_UPDATE)
+	LinkTag::new(utils::TAG_UPDATE)
     )?;
 
-    Ok( (entry_hash, dna.to_info()) )
+    Ok(ReplyWithSingle::new(
+	entity.replace_content( dna.to_info() )
+    ))
 }
 
 
@@ -249,10 +249,10 @@ pub struct DeprecateDnaInput {
 }
 
 #[hdk_extern]
-fn deprecate_dna(input: DeprecateDnaInput) -> ExternResult<(EntryHash, DnaInfo)> {
+fn deprecate_dna(input: DeprecateDnaInput) -> ExternResult<ReplyWithSingle<DnaInfo>> {
     debug!("Deprecating DNA: {}", input.addr );
-    let (header, element) = utils::fetch_entry_latest(input.addr.clone())?;
-    let current_dna = DnaEntry::try_from( element )?;
+    let entity = utils::fetch_entity(input.addr.clone())?;
+    let current_dna = DnaEntry::try_from( &entity.content )?;
 
     let dna = DnaEntry {
 	name: current_dna.name,
@@ -265,15 +265,17 @@ fn deprecate_dna(input: DeprecateDnaInput) -> ExternResult<(EntryHash, DnaInfo)>
 	deprecation: Some(DeprecationNotice::new( input.message )),
     };
 
-    update_entry(header, &dna)?;
+    update_entry(entity.header.clone(), &dna)?;
     let entry_hash = hash_entry(&dna)?;
 
     debug!("Linking original ({}) to DNA: {}", input.addr, entry_hash );
     create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
-	LinkTag::new(TAG_UPDATE)
+	LinkTag::new(utils::TAG_UPDATE)
     )?;
 
-    Ok( (entry_hash, dna.to_info()) )
+    Ok( ReplyWithSingle::new(
+	entity.replace_content( dna.to_info() )
+    ))
 }

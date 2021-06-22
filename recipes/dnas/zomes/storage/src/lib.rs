@@ -5,10 +5,7 @@ mod dnaversions;
 mod dnachunks;
 
 mod constants;
-mod errors;
 mod entry_types;
-mod reply_types;
-mod utils;
 
 use hdk::prelude::*;
 use entry_types::{ ProfileEntry, DnaEntry, DnaVersionEntry, DnaChunkEntry };
