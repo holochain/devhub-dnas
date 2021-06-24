@@ -55,6 +55,10 @@ tests/test.dna:
 test-dnas-debug:	tests/node_modules $(DNA) tests/test.dna
 	cd tests; \
 	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_dnas.js
+test-crates:
+	cd essence_payloads; cargo test
+	cd devhub_types; cargo test
+	cd dna_utils; cargo test
 
 
 #

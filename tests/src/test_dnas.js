@@ -9,7 +9,9 @@ const expect				= require('chai').expect;
 const { Orchestrator,
 	Config }			= require('@holochain/tryorama');
 const Identicon				= require('identicon.js');
-const { HoloHash, EntryHash }		= require('@whi/holo-hash');
+const { HoloHash,
+	EntryHash,
+	HeaderHash }			= require('@whi/holo-hash');
 const Essence				= require('@whi/essence');
 const json				= require('@whi/json');
 
@@ -50,20 +52,22 @@ function Entity ( data ) {
 
     let $id				= new EntryHash(data.id);
     let $addr				= new EntryHash(data.address);
+    let $header				= new HeaderHash(data.header);
 
     define_hidden_prop( content, "$id",		$id );
     define_hidden_prop( content, "$address",	$addr );
     define_hidden_prop( content, "$addr",	$addr );
+    define_hidden_prop( content, "$header",	$header );
 
     return content;
 }
 
 function Collection ( data ) {
-    let entities			= data.items.map(item => Entity( item ) );
+    let collection			= data.items;
 
     define_hidden_prop( data, "$base", new EntryHash(data.base) );
 
-    return entities;
+    return collection;
 }
 
 function Result ( msg, strict = false ) {
@@ -82,10 +86,17 @@ function Result ( msg, strict = false ) {
     let payload				= pack.value();
     let composition			= pack.metadata('composition');
 
+    if ( composition === undefined )
+	return payload;
+
     log.debug("Parsed msg value (composition: %s): %s", composition, typeof payload );
-    if ( composition === "single" )
+    if ( composition === "entity" )
 	return Entity( payload );
-    else if ( composition === "collection" )
+    else if ( composition === "entity_collection" )
+	return Collection( payload ).map(item => Entity( item ) );
+    else if ( composition === "value" )
+	return payload;
+    else if ( composition === "value_collection" )
 	return Collection( payload );
     else
 	throw new Error(`Unknown composition: ${composition}`);
@@ -135,21 +146,21 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     };
 
     {
-	let [hash, profile_info]	= await alice_devhub.call(storage_zome, "create_profile", profile_input );
-	log.normal("Set Developer profile: %s -> %s", b64(hash), json.debug(profile_info) );
+	let profile_info		= await callZome( alice_devhub, "create_profile", profile_input );
+	log.normal("Set Developer profile: %s -> %s", String(profile_info.$addr), json.debug(profile_info) );
 
 	expect( profile_info.name	).to.equal( profile_input.name );
 
-	profile_hash			= hash;
+	profile_hash			= profile_info.$id;
     }
 
     {
-	let a_profile			= await alice_devhub.call(storage_zome, "get_profile", {} );
+	let a_profile			= await callZome( alice_devhub, "get_profile", {} );
 	log.normal("Alice profile: %s", json.debug(a_profile) );
 
 	let failed			= false;
 	try {
-	    let b_profile		= await bobby_devhub.call(storage_zome, "get_profile", {} );
+	    let b_profile		= await callZome( bobby_devhub, "get_profile", {} );
 	    log.normal("Bobby profile: %s", json.debug(b_profile) );
 	} catch (err) {
 	    failed			= true;
@@ -160,26 +171,26 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     }
 
     {
-	let header_hash			= await alice_devhub.call(storage_zome, "follow_developer", {
+	let header_hash			= await callZome( alice_devhub, "follow_developer", {
 	    "agent": b_agent_info.agent_initial_pubkey,
 	});
 	log.normal("Following link hash: %s", b64(header_hash) );
 
-	await alice_devhub.call(storage_zome, "follow_developer", {
+	await callZome( alice_devhub, "follow_developer", {
 	    "agent": c_agent_info.agent_initial_pubkey,
 	});
 
-	let following			= await alice_devhub.call(storage_zome, "get_following", null );
+	let following			= await callZome( alice_devhub, "get_following", null );
 	log.normal("Following developers: %s", json.debug(following) );
 
 	expect( following		).to.have.length( 2 );
 
-	let delete_hash			= await alice_devhub.call(storage_zome, "unfollow_developer", {
+	let delete_hash			= await callZome( alice_devhub, "unfollow_developer", {
 	    "agent": c_agent_info.agent_initial_pubkey,
 	});
 	log.normal("Unfollowing link hash: %s", b64(delete_hash) );
 
-	let updated_following		= await alice_devhub.call(storage_zome, "get_following", null );
+	let updated_following		= await callZome( alice_devhub, "get_following", null );
 	log.normal("Following developers: %s", json.debug(following) );
 
 	expect( updated_following	).to.have.length( 1 );
@@ -190,11 +201,11 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	    "email": "zed.shaw@example.com",
 	    "website": "zedshaw.example.com",
 	};
-	let [hash, profile_info]	= await alice_devhub.call(storage_zome, "update_profile", {
+	let profile_info		= await callZome( alice_devhub, "update_profile", {
 	    "addr": profile_hash,
 	    "properties": profile_update_input,
 	});
-	log.normal("Updated Developer profile: %s -> %s", b64(hash), json.debug(profile_info) );
+	log.normal("Updated Developer profile: %s -> %s", String(profile_info.$addr), json.debug(profile_info) );
 
 	expect( profile_info.name	).to.equal( profile_input.name );
 	expect( profile_info.email	).to.equal( profile_update_input.email );

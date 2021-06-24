@@ -4,4 +4,5 @@ tests/node_modules
 tests/test.dna
 recipes/*/target
 dna_utils/target
-dna_reply_types/target
+essence_payloads/target
+devhub_types/target

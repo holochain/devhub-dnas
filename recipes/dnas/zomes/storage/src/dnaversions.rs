@@ -1,4 +1,5 @@
 use hdk::prelude::*;
+// use hc_dna_reply_types::{ ReplyWithSingle, ReplyWithCollection, Entity, EntryModel };
 use hc_dna_utils as utils;
 
 use crate::constants::{ TAG_DNAVERSION };
@@ -58,7 +59,7 @@ fn create_dna_version(input: DnaVersionInput) -> ExternResult<(EntryHash, DnaVer
     create_link(
 	input.for_dna,
 	entry_hash.clone(),
-	LinkTag::new(*TAG_DNAVERSION)
+	LinkTag::new(TAG_DNAVERSION)
     )?;
 
     Ok( (entry_hash.clone(), version.to_info( entry_hash )) )
@@ -87,7 +88,7 @@ fn get_version_links(dna: EntryHash) -> ExternResult<Vec<Link>> {
     debug!("Getting version links for DNA: {}", dna );
     let all_links: Vec<Link> = get_links(
         dna,
-	Some(LinkTag::new(*TAG_DNAVERSION))
+	Some(LinkTag::new(TAG_DNAVERSION))
     )?.into();
 
     Ok(all_links)

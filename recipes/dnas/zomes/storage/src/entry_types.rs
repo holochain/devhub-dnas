@@ -1,5 +1,5 @@
+use devhub_types::{ EntryModel };
 use hdk::prelude::*;
-use hc_dna_reply_types::{ EntryModel };
 use hc_dna_utils as utils;
 
 
@@ -18,7 +18,6 @@ utils::try_from_element![ ProfileEntry ];
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProfileInfo {
-    pub id: EntryHash,
     pub name: String,
     pub email: String,
     pub avatar_image: SerializedBytes,
@@ -31,9 +30,8 @@ impl EntryModel for ProfileInfo {
 }
 
 impl ProfileEntry {
-    pub fn to_info(self, id: EntryHash) -> ProfileInfo {
+    pub fn to_info(self) -> ProfileInfo {
 	ProfileInfo {
-	    id: id,
 	    name: self.name,
 	    email: self.email,
 	    website: self.website,

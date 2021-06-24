@@ -2,7 +2,7 @@
 mod errors;
 
 use hdk::prelude::*;
-use hc_dna_reply_types::{ Entity };
+use devhub_types::{ Entity };
 
 pub use errors::{ RuntimeError };
 

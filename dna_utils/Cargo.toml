@@ -9,6 +9,6 @@ name = "hc_dna_utils"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_dna_reply_types = {path = "../dna_reply_types"}
+devhub_types = {path = "../devhub_types"}
 hdk = "0.0.100"
 thiserror = "1.0"
