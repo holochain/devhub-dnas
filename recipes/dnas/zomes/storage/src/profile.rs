@@ -2,6 +2,7 @@ use devhub_types::{ Entity, Collection, DevHubResponse, EntityResponse, Collecti
 		    ENTITY_MD, VALUE_MD, VALUE_COLLECTION_MD };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
+use hc_dna_utils::safe_unwrap;
 
 use crate::constants::{ TAG_PROFILE, TAG_FOLLOW };
 use crate::entry_types::{ ProfileEntry, ProfileInfo };
@@ -69,11 +70,11 @@ fn get_profile(input: GetProfileInput) -> ExternResult<EntityResponse<ProfileInf
 
     if let Some(link) = utils::find_latest_link( links )? {
 	debug!("Get Profile: {}", link.target );
-	let entity = utils::fetch_entity(link.target)?;
+	let entity = safe_unwrap!( utils::fetch_entity( &link.target ) );
 	let info = ProfileEntry::try_from(&entity.content)?.to_info();
 
 	Ok( EntityResponse::success(
-	    entity.replace_content( info ), ENTITY_MD
+	    entity.new_content( info ), ENTITY_MD
 	))
     }
     else {
@@ -116,7 +117,7 @@ pub struct ProfileUpdateOptions {
 #[hdk_extern]
 fn update_profile(input: UpdateProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
     debug!("Updating Profile: {}", input.addr );
-    let entity = utils::fetch_entity(input.addr.clone())?;
+    let entity = utils::fetch_entity( &input.addr )?;
     let current_profile = ProfileEntry::try_from( &entity.content )?;
 
     let profile = ProfileEntry {
@@ -149,7 +150,7 @@ fn update_profile(input: UpdateProfileInput) -> ExternResult<EntityResponse<Prof
     )?;
 
     Ok(EntityResponse::success(
-	entity.replace_content( profile.to_info() ), ENTITY_MD
+	entity.new_content( profile.to_info() ), ENTITY_MD
     ))
 }
 
@@ -187,8 +188,8 @@ pub struct UnfollowInput {
 fn unfollow_developer(input: UnfollowInput) -> ExternResult<DevHubResponse<Option<HeaderHash>>> {
     let links = match get_following(())? {
 	DevHubResponse::Success(resp) => resp.payload.items,
-	DevHubResponse::Error(resp) => {
-	    return Ok( DevHubResponse::Error(resp) );
+	DevHubResponse::Failure(resp) => {
+	    return Ok( DevHubResponse::Failure(resp) );
 	}
     };
 

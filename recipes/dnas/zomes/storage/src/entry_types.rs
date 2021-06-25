@@ -174,7 +174,6 @@ utils::try_from_element![ DnaVersionEntry ];
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionSummary {
-    pub id: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -189,7 +188,6 @@ impl EntryModel for DnaVersionSummary {
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionInfo {
-    pub id: EntryHash,
     pub for_dna: Option<DnaSummary>,
     pub version: u64,
     pub published_at: u64,
@@ -206,7 +204,7 @@ impl EntryModel for DnaVersionInfo {
 }
 
 impl DnaVersionEntry {
-    pub fn to_info(self, id: EntryHash) -> DnaVersionInfo {
+    pub fn to_info(self) -> DnaVersionInfo {
 	let mut dna_summary : Option<DnaSummary> = None;
 
 	if let Some((_,element)) = utils::fetch_entry_latest( self.for_dna.clone() ).ok() {
@@ -217,7 +215,6 @@ impl DnaVersionEntry {
 	};
 
 	DnaVersionInfo {
-	    id: id,
 	    for_dna: dna_summary,
 	    version: self.version,
 	    published_at: self.published_at,
@@ -229,9 +226,8 @@ impl DnaVersionEntry {
 	}
     }
 
-    pub fn to_summary(self, id: EntryHash) -> DnaVersionSummary {
+    pub fn to_summary(self) -> DnaVersionSummary {
 	DnaVersionSummary {
-	    id: id,
 	    version: self.version,
 	    published_at: self.published_at,
 	    last_updated: self.last_updated,
@@ -247,6 +243,12 @@ impl DnaVersionEntry {
 //
 // DNA Chunk Entry
 //
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SequencePosition {
+    pub position: u64,
+    pub length: u64,
+}
+
 #[hdk_entry(id = "dna_chunk", visibility="public")]
 pub struct DnaChunkEntry {
     pub sequence: SequencePosition,
@@ -254,10 +256,10 @@ pub struct DnaChunkEntry {
 }
 utils::try_from_element![ DnaChunkEntry ];
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SequencePosition {
-    pub position: u64,
-    pub length: u64,
+impl EntryModel for DnaChunkEntry {
+    fn get_type(&self) -> String {
+	"info".into()
+    }
 }
 
 

@@ -8,14 +8,13 @@
   "license": "ISC",
   "dependencies": {
     "@holochain/tryorama": "^0.4.1",
+    "@whi/essence": "^0.1.0",
+    "@whi/holo-hash": "^0.1.2",
     "@whi/json": "^0.1.2",
     "@whi/stdlog": "^0.3.4",
     "chai": "^4.3.4",
     "identicon.js": "^2.3.3",
     "tape": "^5.2.2"
   },
-  "devDependencies": {
-    "@whi/essence": "file:../../js-essence",
-    "@whi/holo-hash": "^0.1.2"
-  }
+  "devDependencies": {}
 }

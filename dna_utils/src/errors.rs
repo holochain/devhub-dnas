@@ -2,7 +2,10 @@ use hdk::prelude::*;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum RuntimeError {
+pub enum UtilsError {
+    #[error("HDK raised error: {0:?}")]
+    HDKError(WasmError),
+
     #[error("Entry not found")]
     EntryNotFound,
 
@@ -13,8 +16,16 @@ pub enum RuntimeError {
     DeserializationWrongEntryTypeError(EntryHash, EntryHash),
 }
 
-impl From<RuntimeError> for WasmError  {
-    fn from(error: RuntimeError) -> Self {
+impl From<UtilsError> for WasmError  {
+    fn from(error: UtilsError) -> Self {
         WasmError::Guest(format!("{}", error))
     }
 }
+
+impl Into<UtilsError> for WasmError  {
+    fn into(self) -> UtilsError {
+        UtilsError::HDKError(self)
+    }
+}
+
+pub type UtilsResult<T> = Result<T, UtilsError>;

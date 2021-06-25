@@ -4,11 +4,13 @@ mod dna;
 mod dnaversions;
 mod dnachunks;
 
+mod errors;
 mod constants;
 mod entry_types;
 
 use hdk::prelude::*;
 use entry_types::{ ProfileEntry, DnaEntry, DnaVersionEntry, DnaChunkEntry };
+use devhub_types::{ DevHubResponse, VALUE_MD };
 
 
 entry_defs![
@@ -26,6 +28,6 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 
 #[hdk_extern]
-fn whoami(_: ()) -> ExternResult<AgentInfo> {
-    Ok(agent_info()?)
+fn whoami(_: ()) -> ExternResult<DevHubResponse<AgentInfo>> {
+    Ok( DevHubResponse::success( agent_info()?, VALUE_MD ) )
 }

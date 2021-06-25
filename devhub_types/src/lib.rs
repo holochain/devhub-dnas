@@ -40,7 +40,7 @@ pub struct Entity<T> {
 }
 
 impl<T> Entity<T> {
-    pub fn replace_content<M>(&self, content: M) -> Entity<M>
+    pub fn new_content<M>(&self, content: M) -> Entity<M>
     where M: EntryModel {
 	Entity {
 	    id: self.id.to_owned(),
@@ -49,6 +49,18 @@ impl<T> Entity<T> {
 	    ctype: content.get_type(),
 	    content: content,
 	}
+    }
+
+    pub fn update_header(mut self, hash: HeaderHash) -> Self {
+	self.header = hash;
+
+	self
+    }
+
+    pub fn update_address(mut self, hash: EntryHash) -> Self {
+	self.address = hash;
+
+	self
     }
 }
 
@@ -61,8 +73,20 @@ pub struct Collection<T> {
 }
 
 
-
 pub type DevHubResponse<T> = EssenceResponse<T, Metadata, ()>;
+
+pub struct Reply<T, E>( DevHubResponse<T>, E )
+where
+    E: std::error::Error;
+
+impl<T, E> Reply<T, E>
+where
+    E: std::error::Error {
+
+    pub fn new(payload: Result<T, E>) -> DevHubResponse<T> {
+	EssenceResponse::new(payload, ENTITY_MD, None )
+    }
+}
 
 pub type CollectionResponse<T> = DevHubResponse<Collection<T>>;
 

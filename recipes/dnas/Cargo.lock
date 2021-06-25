@@ -129,7 +129,6 @@ version = "0.1.0"
 dependencies = [
  "hdk",
  "serde",
- "serde_json",
 ]
 
 [[package]]

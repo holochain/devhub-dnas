@@ -17,7 +17,7 @@ pub struct ErrorPayload {
     pub kind: String,
     pub error: String,
     pub message: String,
-    pub stack: Option<Vec<String>>,
+    pub stack: Vec<String>,
 }
 
 impl<T: std::error::Error> From<&T> for ErrorPayload {
@@ -29,7 +29,7 @@ impl<T: std::error::Error> From<&T> for ErrorPayload {
 	    kind: kind,
 	    error: name,
 	    message: format!("{}", error),
-	    stack: None,
+	    stack: vec![],
 	}
     }
 }
@@ -43,10 +43,26 @@ pub type ErrorEssencePackage<M> = EssencePackage<ErrorPayload, M>;
 #[serde(rename_all = "lowercase")]
 pub enum EssenceResponse<P, PM, EM> {
     Success(EssencePackage<P, PM>),
-    Error(ErrorEssencePackage<EM>),
+    Failure(ErrorEssencePackage<EM>),
 }
 
+
 impl<P, PM, EM> EssenceResponse<P, PM, EM> {
+    pub fn new<E>(payload: Result<P, E>, success_metadata: Option<PM>, error_metadata: Option<EM>, ) -> Self
+    where
+	E: std::error::Error {
+	match payload {
+	    Ok(data) => EssenceResponse::Success(EssencePackage {
+		metadata: success_metadata,
+		payload: data,
+	    }),
+	    Err(error) => EssenceResponse::Failure(EssencePackage {
+		metadata: error_metadata,
+		payload: ErrorPayload::from( &error ),
+	    }),
+	}
+    }
+
     pub fn success(payload: P, metadata: Option<PM>) -> Self {
 	EssenceResponse::Success(EssencePackage {
 	    metadata: metadata,
@@ -55,13 +71,12 @@ impl<P, PM, EM> EssenceResponse<P, PM, EM> {
     }
 
     pub fn error(error: ErrorPayload, metadata: Option<EM>) -> Self {
-	EssenceResponse::Error(EssencePackage {
+	EssenceResponse::Failure(EssencePackage {
 	    metadata: metadata,
 	    payload: error,
 	})
     }
 }
-
 
 
 #[cfg(test)]
@@ -110,7 +125,7 @@ pub mod tests {
   "kind": "AppError",
   "error": "BadInput",
   "message": "This is so bad input: This is so bad...",
-  "stack": null
+  "stack": []
 }"#));
 	println!("{:?}", error );
     }
@@ -138,7 +153,7 @@ pub mod tests {
   "kind": "MyError",
   "error": "MyError",
   "message": "This is so bad...",
-  "stack": null
+  "stack": []
 }"#));
 	println!("{:?}", error );
     }
