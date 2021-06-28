@@ -3,8 +3,13 @@ use hdk::prelude::*;
 pub use essence::{ EssencePackage, ErrorEssencePackage, EssenceResponse, ErrorPayload };
 
 
+#[derive(Debug, Serialize)]
+pub struct EntityType {
+    pub name: &'static str,
+    pub model: &'static str,
+}
 pub trait EntryModel {
-    fn get_type(&self) -> String;
+    fn get_type(&self) -> EntityType;
 }
 
 
@@ -35,7 +40,7 @@ pub struct Entity<T> {
     pub header: HeaderHash,
     pub address: EntryHash,
     #[serde(rename = "type")]
-    pub ctype: String,
+    pub ctype: EntityType,
     pub content: T,
 }
 

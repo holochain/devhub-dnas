@@ -2,9 +2,8 @@ use devhub_types::{ Entity, Collection, EntityResponse, EntityCollectionResponse
 		    ENTITY_MD, ENTITY_COLLECTION_MD };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
-use hc_dna_utils::safe_unwrap;
+use hc_dna_utils::catch;
 
-use crate::errors::{ AppError };
 use crate::constants::{ TAG_DNA };
 use crate::entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice };
 
@@ -74,8 +73,8 @@ pub struct GetDnaInput {
 #[hdk_extern]
 fn get_dna(input: GetDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
     debug!("Get DNA: {}", input.addr );
-    let entity = safe_unwrap!( utils::fetch_entity( &input.addr ), AppError::EntryNotFound(&input.addr) );
-    let info = DnaEntry::try_from(&entity.content)?.to_info();
+    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let info = catch!( DnaEntry::try_from(&entity.content) ).to_info();
 
     Ok( EntityResponse::success(
 	entity.new_content( info ), ENTITY_MD
@@ -120,7 +119,7 @@ pub struct GetDnasInput {
 
 #[hdk_extern]
 fn get_dnas(input: GetDnasInput) -> ExternResult<EntityCollectionResponse<DnaSummary>> {
-    let (base, links) = get_dna_links( input.agent.clone() )?;
+    let (base, links) = catch!( get_dna_links( input.agent.clone() ) );
 
     let dnas = links.into_iter()
 	.filter_map(|link| {
@@ -146,7 +145,7 @@ fn get_dnas(input: GetDnasInput) -> ExternResult<EntityCollectionResponse<DnaSum
 
 #[hdk_extern]
 fn get_deprecated_dnas(input: GetDnasInput) -> ExternResult<EntityCollectionResponse<DnaSummary>> {
-    let (base, links) = get_dna_links( input.agent.clone() )?;
+    let (base, links) = catch!( get_dna_links( input.agent.clone() ) );
 
     let dnas = links.into_iter()
 	.filter_map(|link| {
@@ -195,8 +194,8 @@ pub struct DnaUpdateOptions {
 #[hdk_extern]
 fn update_dna(input: UpdateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
     debug!("Updating DNA: {}", input.addr );
-    let entity = utils::fetch_entity( &input.addr )?;
-    let current_dna = DnaEntry::try_from( &entity.content )?;
+    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let current_dna = catch!( DnaEntry::try_from( &entity.content ) );
 
     let dna = DnaEntry {
 	name: input.properties.name
@@ -215,15 +214,15 @@ fn update_dna(input: UpdateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
 	deprecation: current_dna.deprecation,
     };
 
-    let header_hash = update_entry(entity.header.clone(), &dna)?;
-    let entry_hash = hash_entry(&dna)?;
+    let header_hash = catch!( update_entry(entity.header.clone(), &dna) );
+    let entry_hash = catch!( hash_entry(&dna) );
 
     debug!("Linking original ({}) to DNA: {}", input.addr, entry_hash );
-    create_link(
+    catch!( create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
 	LinkTag::new(utils::TAG_UPDATE)
-    )?;
+    ) );
 
     Ok(EntityResponse::success(
 	entity.new_content( dna.to_info() )
@@ -245,8 +244,8 @@ pub struct DeprecateDnaInput {
 #[hdk_extern]
 fn deprecate_dna(input: DeprecateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
     debug!("Deprecating DNA: {}", input.addr );
-    let entity = utils::fetch_entity( &input.addr )?;
-    let current_dna = DnaEntry::try_from( &entity.content )?;
+    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let current_dna = catch!( DnaEntry::try_from( &entity.content ) );
 
     let dna = DnaEntry {
 	name: current_dna.name,
@@ -259,15 +258,15 @@ fn deprecate_dna(input: DeprecateDnaInput) -> ExternResult<EntityResponse<DnaInf
 	deprecation: Some(DeprecationNotice::new( input.message )),
     };
 
-    let header_hash = update_entry(entity.header.clone(), &dna)?;
-    let entry_hash = hash_entry(&dna)?;
+    let header_hash = catch!( update_entry(entity.header.clone(), &dna) );
+    let entry_hash = catch!( hash_entry(&dna) );
 
     debug!("Linking original ({}) to DNA: {}", input.addr, entry_hash );
-    create_link(
+    catch!( create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
 	LinkTag::new(utils::TAG_UPDATE)
-    )?;
+    ) );
 
     Ok(EntityResponse::success(
 	entity.new_content( dna.to_info() )

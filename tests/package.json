@@ -9,6 +9,7 @@
   "dependencies": {
     "@holochain/tryorama": "^0.4.1",
     "@whi/essence": "^0.1.0",
+    "@whi/hc-dna-response-types": "file:../../js-hc-dna-response-types",
     "@whi/holo-hash": "^0.1.2",
     "@whi/json": "^0.1.2",
     "@whi/stdlog": "^0.3.4",

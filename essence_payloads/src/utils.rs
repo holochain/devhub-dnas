@@ -36,7 +36,7 @@ pub fn struct_name<T: std::fmt::Debug>(v: &T) -> String {
 
     split_left( &repr, "(" ).unwrap_or(
 	split_left( &repr, " {" ).unwrap_or(
-	    "Error".to_string()
+	    repr
 	)
     )
 }

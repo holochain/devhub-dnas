@@ -9,10 +9,9 @@ const expect				= require('chai').expect;
 const { Orchestrator,
 	Config }			= require('@holochain/tryorama');
 const Identicon				= require('identicon.js');
-const { HoloHash,
-	EntryHash,
-	HeaderHash }			= require('@whi/holo-hash');
+const { HoloHash }			= require('@whi/holo-hash');
 const { Translator }			= require('@whi/essence');
+const { Result }			= require('@whi/hc-dna-response-types');
 const json				= require('@whi/json');
 
 const { b64 }				= require('./utils.js');
@@ -28,8 +27,8 @@ const agent_1_happs			= [ devhub_bundle ];
 const agent_2_happs			= [ devhub_bundle ];
 
 const delay				= ms => new Promise(f => setTimeout(f,ms));
-const Interpreter			= new Translator(["AppError", "DNAError", "UserError"], {
-    "rm_stack_lines": 3,
+const Interpreter			= new Translator(["AppError", "UtilsError", "DNAError", "UserError"], {
+    "rm_stack_lines": 2,
 });
 
 
@@ -41,56 +40,9 @@ const orchestrator			= new Orchestrator({
 });
 
 
-function define_hidden_prop ( obj, key, value ) {
-    Object.defineProperty( obj, key, {
-	"value": value,
-	"writable": false,
-	"enumerable": false,
-	"configurable": false,
-    });
-}
-
-function Entity ( data ) {
-    let content				= data.content;
-
-    let $id				= new EntryHash(data.id);
-    let $addr				= new EntryHash(data.address);
-    let $header				= new HeaderHash(data.header);
-
-    define_hidden_prop( content, "$id",		$id );
-    define_hidden_prop( content, "$address",	$addr );
-    define_hidden_prop( content, "$addr",	$addr );
-    define_hidden_prop( content, "$header",	$header );
-
-    return content;
-}
-
-function Collection ( data ) {
-    let collection			= data.items;
-
-    define_hidden_prop( data, "$base", new EntryHash(data.base) );
-
-    return collection;
-}
-
-function Result ( composition, payload ) {
-    if ( composition === undefined )
-	return payload;
-
-    log.debug("Parsed msg value (composition: %s): %s", composition, typeof payload );
-    if ( composition === "entity" )
-	return Entity( payload );
-    else if ( composition === "entity_collection" )
-	return Collection( payload ).map(item => Entity( item ) );
-    else if ( composition === "value" )
-	return payload;
-    else if ( composition === "value_collection" )
-	return Collection( payload );
-    else
-	throw new Error(`Unknown composition: ${composition}`);
-}
 
 async function callZome ( client, fn_name, args ) {
+    log.normal("Calling conductor: %s->%s( %s )", storage_zome, fn_name, Object.keys(args || {}).join(", ") )
     let response			= await client.call(storage_zome, fn_name, args );
 
     log.silly("Call Zome FULL Response: %s", json.debug(response, 4, (k,v) => {
@@ -104,8 +56,10 @@ async function callZome ( client, fn_name, args ) {
     let pack				= Interpreter.parse( response );
     let payload				= pack.value();
 
-    if ( payload instanceof Error )
+    if ( payload instanceof Error ) {
+	console.error("Throwing error package:", payload );
 	throw payload;
+    }
 
     let composition			= pack.metadata('composition');
 
@@ -168,7 +122,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	} catch (err) {
 	    failed			= true;
 
-	    expect( err.data.data	).to.have.string("has not been created yet");
+	    expect( String(err)		).to.have.string("CustomError: Agent Profile has not been created yet");
 	}
 	expect( failed			).to.be.true;
     }
@@ -192,6 +146,8 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	    "agent": c_agent_info.agent_initial_pubkey,
 	});
 	log.normal("Unfollowing link hash: %s", b64(delete_hash) );
+
+	await delay(100);
 
 	let updated_following		= await callZome( alice_devhub, "get_following", null );
 	log.normal("Following developers: %s", json.debug(following) );
@@ -427,8 +383,8 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	} catch (err) {
 	    console.error("Controlled failure:", err.toJSON() );
 
-	    expect( err.kind		).to.equal( "AppError" );
-	    expect( err.name		).to.equal( "EntryNotFound" );
+	    expect( err.kind		).to.equal( "UtilsError" );
+	    expect( err.name		).to.equal( "EntryNotFoundError" );
 	    expect( err.message		).to.have.string( "Entry not found for address: " );
 
 	    failed			= true;

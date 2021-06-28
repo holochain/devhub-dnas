@@ -2,7 +2,7 @@
 mod errors;
 
 use hdk::prelude::*;
-use devhub_types::{ Entity };
+use devhub_types::{ Entity, EntityType };
 
 pub use errors::{ UtilsResult, UtilsError };
 
@@ -35,7 +35,7 @@ pub fn fetch_entry_latest(addr: EntryHash) -> UtilsResult<(HeaderHash, Element)>
     let result = get(addr.clone(), GetOptions::latest())
 	.map_err(UtilsError::HDKError)?;
 
-    let mut element = result.ok_or(UtilsError::EntryNotFound)?;
+    let mut element = result.ok_or(UtilsError::EntryNotFoundError(addr.clone()))?;
 
     let update_links = get_links(addr.clone(), Some(LinkTag::new(TAG_UPDATE)))
 	.map_err(UtilsError::HDKError)?.into_inner();
@@ -57,10 +57,10 @@ pub fn fetch_entry_latest(addr: EntryHash) -> UtilsResult<(HeaderHash, Element)>
 }
 
 pub fn fetch_entry(addr: EntryHash) -> UtilsResult<(HeaderHash, Element)> {
-    match get(addr, GetOptions::latest())
+    match get(addr.clone(), GetOptions::latest())
 	.map_err(UtilsError::HDKError)? {
         Some(element) => Ok((element.header_address().to_owned(), element)),
-        None => Err(UtilsError::EntryNotFound),
+        None => Err(UtilsError::EntryNotFoundError(addr.clone())),
     }
 }
 
@@ -70,13 +70,16 @@ pub fn fetch_entity(id: &EntryHash) -> UtilsResult<Entity<Element>> {
     let address = element
 	.header()
 	.entry_hash()
-	.ok_or(UtilsError::EntryNotFound)?;
+	.ok_or(UtilsError::EntryNotFoundError(id.clone()))?;
 
     Ok(Entity {
 	id: id.clone(),
 	header: header_hash,
 	address: address.to_owned(),
-	ctype: String::from("element"),
+	ctype: EntityType {
+	    name: "element",
+	    model: "entry",
+	},
 	content: element,
     })
 }
@@ -86,20 +89,21 @@ macro_rules! try_from_element {
     ( $( $struct:ident ),* ) => {
 	$(
 	    impl TryFrom<&Element> for $struct {
-		type Error = WasmError;
+		type Error = hc_dna_utils::UtilsError;
 
 		fn try_from(element: &Element) -> Result<Self, Self::Error> {
 		    let entry = element.entry()
-			.to_app_option::<Self>()?
-			.ok_or( WasmError::from(hc_dna_utils::UtilsError::DeserializationError(element.clone())) )?;
+			.to_app_option::<Self>().map_err( |e| hc_dna_utils::UtilsError::HDKError( hdk::prelude::WasmError::Serialize(e) ) )?
+			.ok_or( hc_dna_utils::UtilsError::DeserializationError(element.clone()) )?;
 
-		    let entry_hash = hash_entry(&entry)?;
+		    let entry_hash = hash_entry(&entry)
+			.map_err( |e| hc_dna_utils::UtilsError::HDKError(e) )?;
 		    let expected_hash = element.header().entry_hash().unwrap().clone();
 
 		    if entry_hash == expected_hash {
 			Ok( entry )
 		    } else {
-			Err(WasmError::from(hc_dna_utils::UtilsError::DeserializationWrongEntryTypeError(entry_hash, expected_hash)))
+			Err( hc_dna_utils::UtilsError::DeserializationWrongEntryTypeError(entry_hash, expected_hash) )
 		    }
 		}
 	    }
@@ -108,7 +112,7 @@ macro_rules! try_from_element {
 }
 
 #[macro_export]
-macro_rules! safe_unwrap {
+macro_rules! catch { // could change to "trap", "snare", or "capture"
     ( $r:expr ) => {
 	match $r {
 	    Ok(x) => x,

@@ -6,8 +6,8 @@ pub enum UtilsError {
     #[error("HDK raised error: {0:?}")]
     HDKError(WasmError),
 
-    #[error("Entry not found")]
-    EntryNotFound,
+    #[error("Entry not found for address: {0:?}")]
+    EntryNotFoundError(EntryHash),
 
     #[error("Failed to deserialize entry: {0:?}")]
     DeserializationError(Element),

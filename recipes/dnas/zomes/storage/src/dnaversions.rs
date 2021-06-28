@@ -2,9 +2,8 @@ use devhub_types::{ Entity, Collection, EntityResponse, EntityCollectionResponse
 		    ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
-use hc_dna_utils::safe_unwrap;
+use hc_dna_utils::catch;
 
-use crate::errors::{ AppError };
 use crate::constants::{ TAG_DNAVERSION };
 use crate::entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary };
 
@@ -36,20 +35,20 @@ fn create_dna_version(input: DnaVersionInput) -> ExternResult<EntityResponse<Dna
 	contributors: input.contributors
 	    .unwrap_or( vec![] ),
 	published_at: input.published_at
-	    .unwrap_or( sys_time()?.as_millis() as u64 ),
+	    .unwrap_or( catch!( sys_time() ).as_millis() as u64 ),
 	last_updated: input.last_updated
-	    .unwrap_or( sys_time()?.as_millis() as u64 ),
+	    .unwrap_or( catch!( sys_time() ).as_millis() as u64 ),
     };
 
-    let header_hash = create_entry(&version)?;
-    let entry_hash = hash_entry(&version)?;
+    let header_hash = catch!( create_entry(&version) );
+    let entry_hash = catch!( hash_entry(&version) );
 
     debug!("Linking DNA ({}) to manifest: {}", input.for_dna, entry_hash );
-    create_link(
+    catch!( create_link(
 	input.for_dna,
 	entry_hash.clone(),
 	LinkTag::new(TAG_DNAVERSION)
-    )?;
+    ) );
 
     let info = version.to_info();
 
@@ -73,8 +72,8 @@ pub struct GetDnaVersionInput {
 #[hdk_extern]
 fn get_dna_version(input: GetDnaVersionInput) -> ExternResult<EntityResponse<DnaVersionInfo>> {
     debug!("Get DNA Version: {}", input.addr );
-    let entity = safe_unwrap!( utils::fetch_entity( &input.addr ), AppError::EntryNotFound(&input.addr) );
-    let info = DnaVersionEntry::try_from(&entity.content)?.to_info();
+    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let info = catch!( DnaVersionEntry::try_from(&entity.content) ).to_info();
 
     Ok( EntityResponse::success(
 	entity.new_content( info ), ENTITY_MD
@@ -102,7 +101,7 @@ pub struct GetDnaVersionsInput {
 
 #[hdk_extern]
 fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<EntityCollectionResponse<DnaVersionSummary>> {
-    let links = get_version_links(input.for_dna.clone())?;
+    let links = catch!( get_version_links(input.for_dna.clone()) );
 
     let versions = links.into_iter()
 	.filter_map(|link| {
@@ -147,8 +146,8 @@ pub struct DnaVersionUpdateOptions {
 #[hdk_extern]
 fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<EntityResponse<DnaVersionInfo>> {
     debug!("Updating DNA Version: {}", input.addr );
-    let entity = utils::fetch_entity( &input.addr )?;
-    let current_version = DnaVersionEntry::try_from( &entity.content )?;
+    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let current_version = catch!( DnaVersionEntry::try_from( &entity.content ) );
 
     let version = DnaVersionEntry {
 	for_dna: current_version.for_dna,
@@ -159,7 +158,7 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<EntityRespon
 	},
 	last_updated: match input.properties.last_updated {
 	    None => {
-		sys_time()?.as_millis() as u64
+		catch!( sys_time() ).as_millis() as u64
 	    },
 	    Some(t) => t,
 	},
@@ -175,15 +174,15 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<EntityRespon
 	},
     };
 
-    let header_hash = update_entry(entity.header.clone(), &version)?;
-    let entry_hash = hash_entry(&version)?;
+    let header_hash = catch!( update_entry(entity.header.clone(), &version) );
+    let entry_hash = catch!( hash_entry(&version) );
 
     debug!("Linking original ({}) to DNA Version: {}", input.addr, entry_hash );
-    create_link(
+    catch!( create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
 	LinkTag::new(utils::TAG_UPDATE)
-    )?;
+    ) );
 
     Ok(EntityResponse::success(
 	entity.new_content( version.to_info() )
@@ -204,9 +203,9 @@ pub struct DeleteDnaVersionInput {
 #[hdk_extern]
 fn delete_dna_version(input: DeleteDnaVersionInput) -> ExternResult<DevHubResponse<HeaderHash>> {
     debug!("Delete DNA Version: {}", input.addr );
-    let (header, _) = utils::fetch_entry(input.addr.clone())?;
+    let (header, _) = catch!( utils::fetch_entry(input.addr.clone()) );
 
-    let delete_header = delete_entry(header.clone())?;
+    let delete_header = catch!( delete_entry(header.clone()) );
     debug!("Deleted DNA Version create {} via header ({})", header, delete_header );
 
     Ok( DevHubResponse::success( header, VALUE_MD ) )

@@ -1,4 +1,4 @@
-use devhub_types::{ EntryModel };
+use devhub_types::{ EntryModel, EntityType };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
 
@@ -24,8 +24,11 @@ pub struct ProfileInfo {
     pub website: String,
 }
 impl EntryModel for ProfileInfo {
-    fn get_type(&self) -> String {
-	"info".into()
+    fn get_type(&self) -> EntityType {
+	EntityType {
+	    name: "profile",
+	    model: "info",
+	}
     }
 }
 
@@ -97,8 +100,11 @@ pub struct DnaSummary {
     pub deprecation: Option<bool>,
 }
 impl EntryModel for DnaSummary {
-    fn get_type(&self) -> String {
-	"summary".into()
+    fn get_type(&self) -> EntityType {
+	EntityType {
+	    name: "dna",
+	    model: "summary",
+	}
     }
 }
 
@@ -117,8 +123,11 @@ pub struct DnaInfo {
     pub deprecation: Option<DeprecationNotice>,
 }
 impl EntryModel for DnaInfo {
-    fn get_type(&self) -> String {
-	"info".into()
+    fn get_type(&self) -> EntityType {
+	EntityType {
+	    name: "dna",
+	    model: "info",
+	}
     }
 }
 
@@ -180,8 +189,11 @@ pub struct DnaVersionSummary {
     pub file_size: u64,
 }
 impl EntryModel for DnaVersionSummary {
-    fn get_type(&self) -> String {
-	"summary".into()
+    fn get_type(&self) -> EntityType {
+	EntityType {
+	    name: "dna_version",
+	    model: "summary",
+	}
     }
 }
 
@@ -198,8 +210,11 @@ pub struct DnaVersionInfo {
     pub chunk_addresses: Vec<EntryHash>,
 }
 impl EntryModel for DnaVersionInfo {
-    fn get_type(&self) -> String {
-	"info".into()
+    fn get_type(&self) -> EntityType {
+	EntityType {
+	    name: "dna_version",
+	    model: "info",
+	}
     }
 }
 
@@ -257,8 +272,11 @@ pub struct DnaChunkEntry {
 utils::try_from_element![ DnaChunkEntry ];
 
 impl EntryModel for DnaChunkEntry {
-    fn get_type(&self) -> String {
-	"info".into()
+    fn get_type(&self) -> EntityType {
+	EntityType {
+	    name: "dna_chunk",
+	    model: "info",
+	}
     }
 }
 

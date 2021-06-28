@@ -2,8 +2,9 @@ use devhub_types::{ Entity, Collection, DevHubResponse, EntityResponse, Collecti
 		    ENTITY_MD, VALUE_MD, VALUE_COLLECTION_MD };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
-use hc_dna_utils::safe_unwrap;
+use hc_dna_utils::catch;
 
+use crate::errors::{ AppError };
 use crate::constants::{ TAG_PROFILE, TAG_FOLLOW };
 use crate::entry_types::{ ProfileEntry, ProfileInfo };
 
@@ -22,7 +23,7 @@ pub struct ProfileInput {
 #[hdk_extern]
 fn create_profile(input: ProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
     debug!("Creating Profile: {}", input.name );
-    let pubkey = agent_info()?.agent_initial_pubkey;
+    let pubkey = catch!( agent_info() ).agent_initial_pubkey;
 
     let profile = ProfileEntry {
 	name: input.name,
@@ -37,15 +38,15 @@ fn create_profile(input: ProfileInput) -> ExternResult<EntityResponse<ProfileInf
 	avatar_image: input.avatar_image,
     };
 
-    let header_hash = create_entry(&profile)?;
-    let entry_hash = hash_entry(&profile)?;
+    let header_hash = catch!( create_entry(&profile) );
+    let entry_hash = catch!( hash_entry(&profile) );
 
     debug!("Linking pubkey ({}) to Profile: {}", pubkey, entry_hash );
-    create_link(
+    catch!( create_link(
 	pubkey.into(),
 	entry_hash.clone(),
 	LinkTag::new(TAG_PROFILE)
-    )?;
+    ) );
 
     let info = profile.to_info();
 
@@ -66,19 +67,20 @@ pub struct GetProfileInput {
 
 #[hdk_extern]
 fn get_profile(input: GetProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
-    let (_, links) = get_profile_links( input.agent )?;
+    let (_, links) = catch!( get_profile_links( input.agent ) );
 
-    if let Some(link) = utils::find_latest_link( links )? {
+    if let Some(link) = catch!( utils::find_latest_link( links ) ) {
 	debug!("Get Profile: {}", link.target );
-	let entity = safe_unwrap!( utils::fetch_entity( &link.target ) );
-	let info = ProfileEntry::try_from(&entity.content)?.to_info();
+	let entity = catch!( utils::fetch_entity( &link.target ) );
+	let info = catch!( ProfileEntry::try_from(&entity.content) ).to_info();
 
 	Ok( EntityResponse::success(
 	    entity.new_content( info ), ENTITY_MD
 	))
     }
     else {
-	Err(WasmError::Guest("Agent Profile has not been created yet".into()))
+	let error = &AppError::CustomError("Agent Profile has not been created yet");
+	Ok( EntityResponse::error( error.into(), None) )
     }
 }
 
@@ -117,8 +119,8 @@ pub struct ProfileUpdateOptions {
 #[hdk_extern]
 fn update_profile(input: UpdateProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
     debug!("Updating Profile: {}", input.addr );
-    let entity = utils::fetch_entity( &input.addr )?;
-    let current_profile = ProfileEntry::try_from( &entity.content )?;
+    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let current_profile = catch!( ProfileEntry::try_from( &entity.content ) );
 
     let profile = ProfileEntry {
 	name: match input.properties.name {
@@ -139,18 +141,20 @@ fn update_profile(input: UpdateProfileInput) -> ExternResult<EntityResponse<Prof
 	},
     };
 
-    update_entry(entity.header.clone(), &profile)?;
-    let entry_hash = hash_entry(&profile)?;
+    let header_hash = catch!( update_entry(entity.header.clone(), &profile) );
+    let entry_hash = catch!( hash_entry(&profile) );
 
     debug!("Linking original ({}) to Profile: {}", input.addr, entry_hash );
-    create_link(
+    catch!( create_link(
 	input.addr.clone(),
 	entry_hash.clone(),
 	LinkTag::new(utils::TAG_UPDATE)
-    )?;
+    ) );
 
     Ok(EntityResponse::success(
-	entity.new_content( profile.to_info() ), ENTITY_MD
+	entity.new_content( profile.to_info() )
+	    .update_header( header_hash )
+	    .update_address( entry_hash ), ENTITY_MD
     ))
 }
 
@@ -166,14 +170,14 @@ pub struct FollowInput {
 
 #[hdk_extern]
 fn follow_developer(input: FollowInput) -> ExternResult<DevHubResponse<HeaderHash>> {
-    let pubkey = agent_info()?.agent_initial_pubkey;
+    let pubkey = catch!( agent_info() ).agent_initial_pubkey;
     debug!("Creating follow link from this agent ({}) to agent: {}", pubkey, input.agent );
 
-    let header_hash = create_link(
+    let header_hash = catch!( create_link(
 	pubkey.into(),
 	input.agent.clone().into(),
 	LinkTag::new(TAG_FOLLOW)
-    )?;
+    ) );
 
     Ok( DevHubResponse::success( header_hash, VALUE_MD ) )
 }
@@ -186,7 +190,7 @@ pub struct UnfollowInput {
 
 #[hdk_extern]
 fn unfollow_developer(input: UnfollowInput) -> ExternResult<DevHubResponse<Option<HeaderHash>>> {
-    let links = match get_following(())? {
+    let links = match catch!( get_following(()) ) {
 	DevHubResponse::Success(resp) => resp.payload.items,
 	DevHubResponse::Failure(resp) => {
 	    return Ok( DevHubResponse::Failure(resp) );
@@ -201,7 +205,7 @@ fn unfollow_developer(input: UnfollowInput) -> ExternResult<DevHubResponse<Optio
     if let Some(link) = maybe_link {
 	debug!("Deleting follow link to agent: {}", input.agent );
 
-	let header_hash = delete_link( link.create_link_hash )?;
+	let header_hash = catch!( delete_link( link.create_link_hash ) );
 
 	maybe_header.replace(header_hash);
     }
@@ -212,13 +216,13 @@ fn unfollow_developer(input: UnfollowInput) -> ExternResult<DevHubResponse<Optio
 
 #[hdk_extern]
 fn get_following(_:()) -> ExternResult<CollectionResponse<Link>> {
-    let base : EntryHash = agent_info()?.agent_initial_pubkey.into();
+    let base : EntryHash = catch!( agent_info() ).agent_initial_pubkey.into();
 
     debug!("Getting Profile links for Agent: {}", base );
-    let all_links: Vec<Link> = get_links(
+    let all_links: Vec<Link> = catch!( get_links(
         base.clone(),
 	Some(LinkTag::new(TAG_FOLLOW))
-    )?.into();
+    ) ).into();
 
     Ok( CollectionResponse::success(Collection {
 	base: base,
