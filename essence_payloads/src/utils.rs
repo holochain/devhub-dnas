@@ -34,6 +34,10 @@ pub fn struct_name<T: std::fmt::Debug>(v: &T) -> String {
     println!("Struct name from: {:?}", v );
     let repr = format!("{:?}", v );
 
+    if &repr[..1] == "[" {
+	return "Error".into();
+    }
+
     split_left( &repr, "(" ).unwrap_or(
 	split_left( &repr, " {" ).unwrap_or(
 	    repr

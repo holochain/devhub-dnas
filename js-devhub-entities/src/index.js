@@ -1,11 +1,11 @@
 
+const HoloHashLib			= require('@whi/holo-hash');
+const EntityArchitectLib		= require('@whi/entity-architect');
+
 const { Architecture,
 	EntityType,
-	Entity,
-	HoloHash,
 	EntryHash,
-	HeaderHash,
-	AgentPubKey }			= require('@whi/entity-architect');
+	AgentPubKey }			= EntityArchitectLib;
 
 
 const Profile				= new EntityType("profile");
@@ -76,4 +76,7 @@ module.exports = {
     Dna,
     DnaVersion,
     DnaChunk,
+
+    "EntityArchitect": EntityArchitectLib,
+    "HoloHashes": HoloHashLib,
 };

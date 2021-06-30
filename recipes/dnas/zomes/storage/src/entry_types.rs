@@ -1,4 +1,4 @@
-use devhub_types::{ EntryModel, EntityType };
+use devhub_types::{ EntryModel, EntityType, Entity };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
 
@@ -25,10 +25,7 @@ pub struct ProfileInfo {
 }
 impl EntryModel for ProfileInfo {
     fn get_type(&self) -> EntityType {
-	EntityType {
-	    name: "profile",
-	    model: "info",
-	}
+	EntityType::new( "profile", "info" )
     }
 }
 
@@ -101,10 +98,7 @@ pub struct DnaSummary {
 }
 impl EntryModel for DnaSummary {
     fn get_type(&self) -> EntityType {
-	EntityType {
-	    name: "dna",
-	    model: "summary",
-	}
+	EntityType::new( "dna", "summary" )
     }
 }
 
@@ -124,10 +118,7 @@ pub struct DnaInfo {
 }
 impl EntryModel for DnaInfo {
     fn get_type(&self) -> EntityType {
-	EntityType {
-	    name: "dna",
-	    model: "info",
-	}
+	EntityType::new( "dna", "info" )
     }
 }
 
@@ -190,17 +181,14 @@ pub struct DnaVersionSummary {
 }
 impl EntryModel for DnaVersionSummary {
     fn get_type(&self) -> EntityType {
-	EntityType {
-	    name: "dna_version",
-	    model: "summary",
-	}
+	EntityType::new( "dna_version", "summary" )
     }
 }
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionInfo {
-    pub for_dna: Option<DnaSummary>,
+    pub for_dna: Option<Entity<DnaSummary>>,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -211,26 +199,22 @@ pub struct DnaVersionInfo {
 }
 impl EntryModel for DnaVersionInfo {
     fn get_type(&self) -> EntityType {
-	EntityType {
-	    name: "dna_version",
-	    model: "info",
-	}
+	EntityType::new( "dna_version", "info" )
     }
 }
 
 impl DnaVersionEntry {
     pub fn to_info(self) -> DnaVersionInfo {
-	let mut dna_summary : Option<DnaSummary> = None;
+	let mut dna_entity : Option<Entity<DnaSummary>> = None;
 
-	if let Some((_,element)) = utils::fetch_entry_latest( self.for_dna.clone() ).ok() {
-	    dna_summary = match DnaEntry::try_from( &element ) {
-		Ok(dna) => Some(dna.to_summary()),
-		Err(_) => None,
-	    };
+	if let Some(entity) = utils::fetch_entity( &self.for_dna ).ok() {
+	    if let Some(dna_entry) = DnaEntry::try_from( &entity.content ).ok() {
+		dna_entity = Some( entity.new_content( dna_entry.to_summary() ) );
+	    }
 	};
 
 	DnaVersionInfo {
-	    for_dna: dna_summary,
+	    for_dna: dna_entity,
 	    version: self.version,
 	    published_at: self.published_at,
 	    last_updated: self.last_updated,
@@ -273,10 +257,7 @@ utils::try_from_element![ DnaChunkEntry ];
 
 impl EntryModel for DnaChunkEntry {
     fn get_type(&self) -> EntityType {
-	EntityType {
-	    name: "dna_chunk",
-	    model: "info",
-	}
+	EntityType::new( "dna_chunk", "info" )
     }
 }
 

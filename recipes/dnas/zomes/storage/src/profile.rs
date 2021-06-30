@@ -105,6 +105,7 @@ fn get_profile_links(maybe_pubkey: Option<AgentPubKey> ) -> ExternResult<(EntryH
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateProfileInput {
+    pub id: Option<EntryHash>,
     pub addr: EntryHash,
     pub properties: ProfileUpdateOptions
 }
@@ -119,8 +120,14 @@ pub struct ProfileUpdateOptions {
 #[hdk_extern]
 fn update_profile(input: UpdateProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
     debug!("Updating Profile: {}", input.addr );
-    let entity = catch!( utils::fetch_entity( &input.addr ) );
-    let current_profile = catch!( ProfileEntry::try_from( &entity.content ) );
+    let id = match input.id {
+	Some(id) => id,
+	None => {
+	    catch!( utils::get_id_for_addr( input.addr.clone() ) )
+	},
+    };
+    let (header, element) = catch!( utils::fetch_entry( input.addr.clone() ) );
+    let current_profile = catch!( ProfileEntry::try_from( &element ) );
 
     let profile = ProfileEntry {
 	name: match input.properties.name {
@@ -141,7 +148,7 @@ fn update_profile(input: UpdateProfileInput) -> ExternResult<EntityResponse<Prof
 	},
     };
 
-    let header_hash = catch!( update_entry(entity.header.clone(), &profile) );
+    let header_hash = catch!( update_entry(header.clone(), &profile) );
     let entry_hash = catch!( hash_entry(&profile) );
 
     debug!("Linking original ({}) to Profile: {}", input.addr, entry_hash );
@@ -151,10 +158,24 @@ fn update_profile(input: UpdateProfileInput) -> ExternResult<EntityResponse<Prof
 	LinkTag::new(utils::TAG_UPDATE)
     ) );
 
+    debug!("Linking Profile ({}) to original: {}", entry_hash, input.addr );
+    catch!( create_link(
+	entry_hash.clone(),
+	input.addr.clone(),
+	LinkTag::new(utils::TAG_ORIGIN)
+    ) );
+
+    let content = profile.to_info();
+
     Ok(EntityResponse::success(
-	entity.new_content( profile.to_info() )
-	    .update_header( header_hash )
-	    .update_address( entry_hash ), ENTITY_MD
+	Entity {
+	    id: id,
+	    header: header_hash,
+	    address: entry_hash,
+	    ctype: content.get_type(),
+	    content: content,
+	},
+	ENTITY_MD
     ))
 }
 

@@ -179,7 +179,7 @@ pub mod tests {
   "kind": "MyError",
   "error": "MyError",
   "message": "BadInput: This is so bad...",
-  "stack": null
+  "stack": []
 }"#));
 	println!("{:?}", error );
     }

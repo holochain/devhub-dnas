@@ -8,6 +8,7 @@ pub use errors::{ UtilsResult, UtilsError };
 
 
 pub const TAG_UPDATE: &'static str = "update";
+pub const TAG_ORIGIN: &'static str = "origin";
 
 
 
@@ -56,12 +57,23 @@ pub fn fetch_entry_latest(addr: EntryHash) -> UtilsResult<(HeaderHash, Element)>
     Ok( (element.header_address().to_owned(), element) )
 }
 
-pub fn fetch_entry(addr: EntryHash) -> UtilsResult<(HeaderHash, Element)> {
-    match get(addr.clone(), GetOptions::latest())
-	.map_err(UtilsError::HDKError)? {
-        Some(element) => Ok((element.header_address().to_owned(), element)),
-        None => Err(UtilsError::EntryNotFoundError(addr.clone())),
+pub fn get_id_for_addr(addr: EntryHash) -> UtilsResult<EntryHash> {
+    let parent_links = get_links(addr.clone(), Some(LinkTag::new(TAG_ORIGIN)))
+	.map_err(UtilsError::HDKError)?.into_inner();
+
+    match parent_links.len() {
+	0 => Ok( addr ),
+	1 => Ok( parent_links.first().unwrap().target.clone() ),
+	_ => Err( UtilsError::MultipleOriginsError(addr) ),
     }
+}
+
+pub fn fetch_entry(addr: EntryHash) -> UtilsResult<(HeaderHash, Element)> {
+    let element = get(addr.clone(), GetOptions::latest())
+	.map_err( UtilsError::HDKError )?
+	.ok_or( UtilsError::EntryNotFoundError(addr.clone()) )?;
+
+    Ok( (element.header_address().to_owned(), element) )
 }
 
 pub fn fetch_entity(id: &EntryHash) -> UtilsResult<Entity<Element>> {
@@ -76,10 +88,7 @@ pub fn fetch_entity(id: &EntryHash) -> UtilsResult<Entity<Element>> {
 	id: id.clone(),
 	header: header_hash,
 	address: address.to_owned(),
-	ctype: EntityType {
-	    name: "element",
-	    model: "entry",
-	},
+	ctype: EntityType::new( "element", "entry" ),
 	content: element,
     })
 }
@@ -93,7 +102,7 @@ macro_rules! try_from_element {
 
 		fn try_from(element: &Element) -> Result<Self, Self::Error> {
 		    let entry = element.entry()
-			.to_app_option::<Self>().map_err( |e| hc_dna_utils::UtilsError::HDKError( hdk::prelude::WasmError::Serialize(e) ) )?
+			.to_app_option::<Self>().map_err( |e| hc_dna_utils::UtilsError::HDKError(e.into()) )?
 			.ok_or( hc_dna_utils::UtilsError::DeserializationError(element.clone()) )?;
 
 		    let entry_hash = hash_entry(&entry)

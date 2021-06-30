@@ -9,6 +9,9 @@ pub enum UtilsError {
     #[error("Entry not found for address: {0:?}")]
     EntryNotFoundError(EntryHash),
 
+    #[error("Found multiple origin links for entry: {0:?}")]
+    MultipleOriginsError(EntryHash),
+
     #[error("Failed to deserialize entry: {0:?}")]
     DeserializationError(Element),
 

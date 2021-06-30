@@ -132,6 +132,7 @@ fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<EntityCollection
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateDnaVersionInput {
+    pub id: Option<EntryHash>,
     pub addr: EntryHash,
     pub properties: DnaVersionUpdateOptions
 }
@@ -146,8 +147,14 @@ pub struct DnaVersionUpdateOptions {
 #[hdk_extern]
 fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<EntityResponse<DnaVersionInfo>> {
     debug!("Updating DNA Version: {}", input.addr );
-    let entity = catch!( utils::fetch_entity( &input.addr ) );
-    let current_version = catch!( DnaVersionEntry::try_from( &entity.content ) );
+    let id = match input.id {
+	Some(id) => id,
+	None => {
+	    catch!( utils::get_id_for_addr( input.addr.clone() ) )
+	},
+    };
+    let (header, element) = catch!( utils::fetch_entry( input.addr.clone() ) );
+    let current_version = catch!( DnaVersionEntry::try_from( &element ) );
 
     let version = DnaVersionEntry {
 	for_dna: current_version.for_dna,
@@ -174,7 +181,7 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<EntityRespon
 	},
     };
 
-    let header_hash = catch!( update_entry(entity.header.clone(), &version) );
+    let header_hash = catch!( update_entry(header.clone(), &version) );
     let entry_hash = catch!( hash_entry(&version) );
 
     debug!("Linking original ({}) to DNA Version: {}", input.addr, entry_hash );
@@ -184,10 +191,23 @@ fn update_dna_version(input: UpdateDnaVersionInput) -> ExternResult<EntityRespon
 	LinkTag::new(utils::TAG_UPDATE)
     ) );
 
+    debug!("Linking DNA Version ({}) to original: {}", entry_hash, input.addr );
+    catch!( create_link(
+	entry_hash.clone(),
+	input.addr.clone(),
+	LinkTag::new(utils::TAG_ORIGIN)
+    ) );
+
+    let content = version.to_info();
+
     Ok(EntityResponse::success(
-	entity.new_content( version.to_info() )
-	    .update_header( header_hash )
-	    .update_address( entry_hash ),
+	Entity {
+	    id: id,
+	    header: header_hash,
+	    address: entry_hash,
+	    ctype: content.get_type(),
+	    content: content,
+	},
 	ENTITY_MD
     ))
 }

@@ -3,13 +3,22 @@ use hdk::prelude::*;
 pub use essence::{ EssencePackage, ErrorEssencePackage, EssenceResponse, ErrorPayload };
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EntityType {
-    pub name: &'static str,
-    pub model: &'static str,
+    pub name: String,
+    pub model: String,
 }
 pub trait EntryModel {
     fn get_type(&self) -> EntityType;
+}
+
+impl EntityType {
+    pub fn new(name: &'static str, model: &'static str) -> Self {
+	EntityType {
+	    name: name.into(),
+	    model: model.into(),
+	}
+    }
 }
 
 
@@ -34,7 +43,7 @@ pub const VALUE_COLLECTION_MD : Option<Metadata> = Some(Metadata {
 
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Entity<T> {
     pub id: EntryHash,
     pub header: HeaderHash,
@@ -138,12 +147,12 @@ pub mod tests {
 	assert_eq!(
 	    serde_json::to_string_pretty( &json!(zome_response(true)) ).unwrap(),
 	    String::from(r#"{
-  "type": "error",
+  "type": "failure",
   "payload": {
     "kind": "AppError",
     "error": "BadInput",
     "message": "This is so bad input: This is so bad...",
-    "stack": null
+    "stack": []
   }
 }"#));
     }
@@ -160,7 +169,7 @@ pub mod tests {
 		id: ehash.clone(),
 		header: hhash,
 		address: ehash,
-		ctype: "entity".into(),
+		ctype: EntityType::new( "boolean", "primitive" ),
 		content: true,
 	    },
 	    Some(Metadata {

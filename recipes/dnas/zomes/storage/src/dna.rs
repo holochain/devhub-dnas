@@ -178,6 +178,7 @@ fn get_deprecated_dnas(input: GetDnasInput) -> ExternResult<EntityCollectionResp
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateDnaInput {
+    pub id: Option<EntryHash>,
     pub addr: EntryHash,
     pub properties: DnaUpdateOptions
 }
@@ -194,8 +195,14 @@ pub struct DnaUpdateOptions {
 #[hdk_extern]
 fn update_dna(input: UpdateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
     debug!("Updating DNA: {}", input.addr );
-    let entity = catch!( utils::fetch_entity( &input.addr ) );
-    let current_dna = catch!( DnaEntry::try_from( &entity.content ) );
+    let id = match input.id {
+	Some(id) => id,
+	None => {
+	    catch!( utils::get_id_for_addr( input.addr.clone() ) )
+	},
+    };
+    let (header, element) = catch!( utils::fetch_entry( input.addr.clone() ) );
+    let current_dna = catch!( DnaEntry::try_from( &element ) );
 
     let dna = DnaEntry {
 	name: input.properties.name
@@ -214,7 +221,7 @@ fn update_dna(input: UpdateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
 	deprecation: current_dna.deprecation,
     };
 
-    let header_hash = catch!( update_entry(entity.header.clone(), &dna) );
+    let header_hash = catch!( update_entry(header, &dna) );
     let entry_hash = catch!( hash_entry(&dna) );
 
     debug!("Linking original ({}) to DNA: {}", input.addr, entry_hash );
@@ -224,10 +231,23 @@ fn update_dna(input: UpdateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
 	LinkTag::new(utils::TAG_UPDATE)
     ) );
 
+    debug!("Linking DNA ({}) to original: {}", entry_hash, input.addr );
+    catch!( create_link(
+	entry_hash.clone(),
+	input.addr.clone(),
+	LinkTag::new(utils::TAG_ORIGIN)
+    ) );
+
+    let content = dna.to_info();
+
     Ok(EntityResponse::success(
-	entity.new_content( dna.to_info() )
-	    .update_header( header_hash )
-	    .update_address( entry_hash ),
+	Entity {
+	    id: id,
+	    header: header_hash,
+	    address: entry_hash,
+	    ctype: content.get_type(),
+	    content: content,
+	},
 	ENTITY_MD
     ))
 }
