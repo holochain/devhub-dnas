@@ -8,6 +8,24 @@ const { Architecture,
 	AgentPubKey }			= EntityArchitectLib;
 
 
+
+//
+// hApps Entity Types
+//
+const Happ				= new EntityType("happ");
+
+Happ.model("info", function ( content ) {
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.designer		= new AgentPubKey( content.designer );
+
+    return content;
+});
+
+
+//
+// DNA Repository Entity Types
+//
 const Profile				= new EntityType("profile");
 
 Profile.model("info");
@@ -65,6 +83,7 @@ DnaChunk.model("info");
 
 
 const Schema				= new Architecture([
+    Happ,
     Profile, Dna, DnaVersion, DnaChunk
 ]);
 

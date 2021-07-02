@@ -2,7 +2,7 @@
 mod errors;
 
 use hdk::prelude::*;
-use devhub_types::{ Entity, EntityType };
+use devhub_types::{ Entity, EntityType, EntryModel };
 
 pub use errors::{ UtilsResult, UtilsError };
 
@@ -92,6 +92,86 @@ pub fn fetch_entity(id: &EntryHash) -> UtilsResult<Entity<Element>> {
 	content: element,
     })
 }
+
+
+pub fn create_entity<T>(input: &T, tag: &str) -> ExternResult<Entity<T>>
+where
+    T: Clone + EntryModel,
+    EntryWithDefId: TryFrom<T, Error = WasmError>,
+{
+    let entry_w_id = EntryWithDefId::try_from( input.to_owned() )?;
+    let entry: &Entry = entry_w_id.as_ref();
+
+    let pubkey = agent_info()?.agent_initial_pubkey;
+    let entry_hash = hash_entry( entry.to_owned() )?;
+
+    let header_hash = create( entry_w_id )?;
+
+    debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entry_hash );
+    create_link(
+	pubkey.into(),
+	entry_hash.clone(),
+	LinkTag::new( tag )
+    )?;
+
+    Ok( Entity {
+	id: entry_hash.clone(),
+	address: entry_hash,
+	header: header_hash,
+	ctype: input.get_type(),
+	content: input.to_owned(),
+    } )
+}
+
+pub fn update_entity<T, F>(id: Option<EntryHash>, addr: EntryHash, callback: F) -> ExternResult<Entity<T>>
+where
+    T: Clone + EntryModel,
+    EntryWithDefId: TryFrom<T, Error = WasmError>,
+    F: FnOnce(Element) -> ExternResult<T>,
+{
+    let id = match id {
+	Some(id) => id,
+	None => {
+	    get_id_for_addr( addr.clone() )
+		.map_err(|e| WasmError::Guest("Nothing here".into()) )?
+	},
+    };
+
+    let (header, element) = fetch_entry( addr.clone() )
+	.map_err(|e| WasmError::Guest("Nothing here".into()) )?;
+
+    let current = callback( element )?;
+
+    let entry_w_id = EntryWithDefId::try_from( current.clone() )?;
+    let entry: &Entry = entry_w_id.as_ref();
+
+    let entry_hash = hash_entry( entry.to_owned() )?;
+    let header_hash = update( header, entry_w_id )?;
+
+    debug!("Linking original ({}) to DNA: {}", addr, entry_hash );
+    create_link(
+	addr.clone(),
+	entry_hash.clone(),
+	LinkTag::new(TAG_UPDATE)
+    )?;
+
+    debug!("Linking DNA ({}) to original: {}", entry_hash, addr );
+    create_link(
+	entry_hash.clone(),
+	addr.clone(),
+	LinkTag::new(TAG_ORIGIN)
+    )?;
+
+    Ok(	Entity {
+	id: id,
+	header: header_hash,
+	address: entry_hash,
+	ctype: current.get_type(),
+	content: current,
+    } )
+}
+
+
 
 #[macro_export]
 macro_rules! try_from_element {

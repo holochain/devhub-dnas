@@ -71,7 +71,7 @@ pub struct DeprecationNotice {
     pub message: String,
 
     // optional
-    pub recommended_alternatives: Option<HeaderHash>,
+    pub recommended_alternatives: Option<Vec<EntryHash>>,
 }
 
 impl DeprecationNotice {

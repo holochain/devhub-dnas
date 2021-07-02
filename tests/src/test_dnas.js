@@ -6,66 +6,19 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 
 const fs				= require('fs');
 const expect				= require('chai').expect;
-const { Orchestrator,
-	Config }			= require('@holochain/tryorama');
-const { Schema }			= require('@holochain/devhub-entities');
 const { HoloHash }			= require('@whi/holo-hash');
-const { Translator }			= require('@whi/essence');
 const json				= require('@whi/json');
 const Identicon				= require('identicon.js');
 
-const { b64 }				= require('./utils.js');
+const { delay, callZome,
+	orchestrator,
+	create_players }		= require('./utils.js');
 
 
 const dna				= path.join(__dirname, "../../bundled/dnas/dnas.dna");
-const storage_zome			= "storage";
-const devhub_bundle			= [ dna ];
+const dna_list				= [ dna ];
+const zome				= "storage";
 
-const conductorConfig			= Config.gen();
-
-const agent_0_happs			= [ devhub_bundle ];
-const agent_1_happs			= [ devhub_bundle ];
-const agent_2_happs			= [ devhub_bundle ];
-
-const delay				= ms => new Promise(f => setTimeout(f,ms));
-const Interpreter			= new Translator(["AppError", "UtilsError", "DNAError", "UserError"], {
-    "rm_stack_lines": 2,
-});
-
-
-const orchestrator			= new Orchestrator({
-    "mode": {
-	executor: { tape: require('tape') },
-	spawning: 'local',
-    },
-});
-
-
-
-async function callZome ( client, fn_name, args ) {
-    log.normal("Calling conductor: %s->%s( %s )", storage_zome, fn_name, Object.keys(args || {}).join(", ") )
-    let response			= await client.call(storage_zome, fn_name, args );
-
-    log.silly("Call Zome FULL Response: %s", json.debug(response, 4, (k,v) => {
-	try {
-	    return (new HoloHash(v)).toString();
-	} catch (err) {
-	    return v;
-	}
-    }) );
-
-    let pack				= Interpreter.parse( response );
-    let payload				= pack.value();
-
-    if ( payload instanceof Error ) {
-	console.error("Throwing error package:", payload );
-	throw payload;
-    }
-
-    let composition			= pack.metadata('composition');
-
-    return Schema.deconstruct( composition, payload );
-}
 
 
 const dna_input				= {
@@ -73,38 +26,31 @@ const dna_input				= {
     "description": "A tool for turn-based games to track the order of player actions",
 };
 
-orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
-    const [a_and_b_conductor]		= await scenario.players([ conductorConfig ]);
-    const [
-	[ alice_devhub_happ ],
-	[ bobby_devhub_happ ],
-	[ carol_devhub_happ ],
-    ]					= await a_and_b_conductor.installAgentsHapps([
-	agent_0_happs,
-	agent_1_happs,
-	agent_2_happs,
-    ]);
+orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
+    const [ alice_happ,
+	    bobby_happ,
+	    carol_happ ]		= await create_players( scenario, dna_list, ["alice", "bobby", "carol"] );
 
-    const alice_devhub			= alice_devhub_happ.cells[0];
-    const bobby_devhub			= bobby_devhub_happ.cells[0];
-    const carol_devhub			= carol_devhub_happ.cells[0];
+    const [ alice_client ]		= alice_happ.cells;
+    const [ bobby_client ]		= bobby_happ.cells;
+    const [ carol_client ]		= carol_happ.cells;
 
 
-    let a_agent_info			= await callZome( alice_devhub, "whoami", null);
+    let a_agent_info			= await alice_client( zome, "whoami", null);
     log.info("Agent info 'alice': %s", json.debug(a_agent_info) );
     log.info("Agent ID 'alice': %s", a_agent_info.agent_initial_pubkey.toString("base64") );
-    let b_agent_info			= await callZome( bobby_devhub, "whoami", null);
-    let c_agent_info			= await callZome( carol_devhub, "whoami", null);
+    let b_agent_info			= await bobby_client( zome, "whoami", null);
+    let c_agent_info			= await carol_client( zome, "whoami", null);
 
     let profile_hash;
     let profile_input			= {
 	"name": "Zed Shaw",
 	"email": "zed.shaw@example.com",
-	"avatar_image": b64( (new Identicon(a_agent_info.agent_initial_pubkey.toString("hex"), 10)).toString() ),
+	"avatar_image": Buffer.from( (new Identicon(a_agent_info.agent_initial_pubkey.toString("hex"), 10)).toString(), "base64"),
     };
 
     {
-	let profile_info		= await callZome( alice_devhub, "create_profile", profile_input );
+	let profile_info		= await alice_client( zome, "create_profile", profile_input );
 	log.normal("Set Developer profile: %s -> %s", String(profile_info.$addr), json.debug(profile_info) );
 
 	expect( profile_info.name	).to.equal( profile_input.name );
@@ -113,12 +59,12 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     }
 
     {
-	let a_profile			= await callZome( alice_devhub, "get_profile", {} );
+	let a_profile			= await alice_client( zome, "get_profile", {} );
 	log.normal("Alice profile: %s", json.debug(a_profile) );
 
 	let failed			= false;
 	try {
-	    let b_profile		= await callZome( bobby_devhub, "get_profile", {} );
+	    let b_profile		= await bobby_client( zome, "get_profile", {} );
 	    log.normal("Bobby profile: %s", json.debug(b_profile) );
 	} catch (err) {
 	    failed			= true;
@@ -129,28 +75,28 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     }
 
     {
-	let header_hash			= await callZome( alice_devhub, "follow_developer", {
+	let header_hash			= await alice_client( zome, "follow_developer", {
 	    "agent": b_agent_info.agent_initial_pubkey,
 	});
-	log.normal("Following link hash: %s", b64(header_hash) );
+	log.normal("Following link hash: %s", String(header_hash) );
 
-	await callZome( alice_devhub, "follow_developer", {
+	await alice_client( zome, "follow_developer", {
 	    "agent": c_agent_info.agent_initial_pubkey,
 	});
 
-	let following			= await callZome( alice_devhub, "get_following", null );
+	let following			= await alice_client( zome, "get_following", null );
 	log.normal("Following developers: %s", json.debug(following) );
 
 	expect( following		).to.have.length( 2 );
 
-	let delete_hash			= await callZome( alice_devhub, "unfollow_developer", {
+	let delete_hash			= await alice_client( zome, "unfollow_developer", {
 	    "agent": c_agent_info.agent_initial_pubkey,
 	});
-	log.normal("Unfollowing link hash: %s", b64(delete_hash) );
+	log.normal("Unfollowing link hash: %s", String(delete_hash) );
 
 	await delay(100);
 
-	let updated_following		= await callZome( alice_devhub, "get_following", null );
+	let updated_following		= await alice_client( zome, "get_following", null );
 	log.normal("Following developers: %s", json.debug(following) );
 
 	expect( updated_following	).to.have.length( 1 );
@@ -161,7 +107,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	    "email": "zed.shaw@example.com",
 	    "website": "zedshaw.example.com",
 	};
-	let profile_info		= await callZome( alice_devhub, "update_profile", {
+	let profile_info		= await alice_client( zome, "update_profile", {
 	    "addr": profile_hash,
 	    "properties": profile_update_input,
 	});
@@ -171,14 +117,14 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	expect( profile_info.email	).to.equal( profile_update_input.email );
     }
 
-    let new_entry			= await callZome( alice_devhub, "create_dna", dna_input );
+    let new_entry			= await alice_client( zome, "create_dna", dna_input );
     let main_dna			= new_entry;
     log.normal("New DNA (metadata): %s -> %s", String(main_dna.$id), json.debug(new_entry) );
 
     let first_header_hash;
     {
 	// Check the created entry
-	let dna_info			= await callZome( alice_devhub, "get_dna", {
+	let dna_info			= await alice_client( zome, "get_dna", {
 	    "addr": main_dna.$id,
 	});
 	log.info("DNA: %s", json.debug(dna_info) );
@@ -199,7 +145,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	let chunk_hashes		= [];
 	let chunk_count			= Math.ceil( dna_bytes.length / chunk_size );
 	for (let i=0; i < chunk_count; i++) {
-	    let chunk			= await callZome( alice_devhub, "create_dna_chunk", {
+	    let chunk			= await alice_client( zome, "create_dna_chunk", {
 		"sequence": {
 		    "position": i+1,
 		    "length": chunk_count,
@@ -212,7 +158,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	}
 	console.log("Final chunks:", chunk_hashes );
 
-	let version			= await callZome( alice_devhub, "create_dna_version", {
+	let version			= await alice_client( zome, "create_dna_version", {
 	    "for_dna": main_dna.$id,
 	    "version": 1,
 	    "file_size": dna_bytes.length,
@@ -229,7 +175,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	let chunk_hashes		= [];
 	let chunk_count			= Math.ceil( bigdna_bytes.length / chunk_size );
 	for (let i=0; i < chunk_count; i++) {
-	    let chunk			= await callZome( alice_devhub, "create_dna_chunk", {
+	    let chunk			= await alice_client( zome, "create_dna_chunk", {
 		"sequence": {
 		    "position": i+1,
 		    "length": chunk_count,
@@ -242,7 +188,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	}
 	console.log("Final chunks:", chunk_hashes );
 
-	let version			= await callZome( alice_devhub, "create_dna_version", {
+	let version			= await alice_client( zome, "create_dna_version", {
 	    "for_dna": main_dna.$id,
 	    "version": 2,
 	    "file_size": dna_bytes.length,
@@ -252,7 +198,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     }
 
     {
-	let dna_versions		= await callZome( alice_devhub, "get_dna_versions", {
+	let dna_versions		= await alice_client( zome, "get_dna_versions", {
 	    "for_dna": main_dna.$id,
 	});
 	log.info("DNA Versions: %s", json.debug(dna_versions) );
@@ -266,7 +212,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     }
 
     {
-	let dnas			= await callZome( alice_devhub, "get_my_dnas", null);
+	let dnas			= await alice_client( zome, "get_my_dnas", null);
 	log.info("My DNAs: %s", json.debug(dnas) );
 
 	log.normal("DNA list (%s):", dnas.length,  );
@@ -276,7 +222,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 
 	expect( dnas			).to.have.length( 1 );
 
-	let b_dnas			= await callZome( alice_devhub, "get_dnas", {
+	let b_dnas			= await alice_client( zome, "get_dnas", {
 	    "agent": b_agent_info.agent_initial_pubkey,
 	});
 	log.normal("Bobby DNAs: %s", json.debug(b_dnas) );
@@ -287,7 +233,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     {
 	// Update DNA
 	const dna_name			= "Game Turns (new)";
-	let dna				= await callZome( alice_devhub, "update_dna", {
+	let dna				= await alice_client( zome, "update_dna", {
 	    "id": main_dna.$id,
 	    "addr": main_dna.$addr,
 	    "properties": {
@@ -297,7 +243,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 	expect( dna.$header		).to.not.deep.equal( first_header_hash );
 	log.normal("Updated DNA (metadata): %s -> %s", String(dna.$addr), json.debug(dna) );
 
-	let dna_info			= await callZome( alice_devhub, "get_dna", {
+	let dna_info			= await alice_client( zome, "get_dna", {
 	    "addr": main_dna.$id,
 	});
 	log.info("DNA post update: %s", json.debug(dna_info) );
@@ -318,13 +264,13 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 		[ "bob@open-games.example", c_agent_info.agent_initial_pubkey ],
             ],
 	};
-	let dna_version			= await callZome( alice_devhub, "update_dna_version", {
+	let dna_version			= await alice_client( zome, "update_dna_version", {
 	    "addr": dna_version_hash,
 	    "properties": properties,
 	});
 	log.normal("Updated DNA Version (metadata): %s -> %s", String(dna_version.$address), json.debug(dna_version) );
 
-	let dna_version_info		= await callZome( alice_devhub, "get_dna_version", {
+	let dna_version_info		= await alice_client( zome, "get_dna_version", {
 	    "addr": dna_version_hash,
 	});
 	log.info("DNA Version post update: %s", json.debug(dna_version_info) );
@@ -334,12 +280,12 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 
     {
 	// Unpublish DNA Version
-	let deleted_dna_version_hash	= await callZome( alice_devhub, "delete_dna_version", {
+	let deleted_dna_version_hash	= await alice_client( zome, "delete_dna_version", {
 	    "addr": dna_version_hash,
 	});
-	log.normal("Deleted DNA Version hash: %s", b64(deleted_dna_version_hash) );
+	log.normal("Deleted DNA Version hash: %s", String(deleted_dna_version_hash) );
 
-	let dna_versions		= await callZome( alice_devhub, "get_dna_versions", {
+	let dna_versions		= await alice_client( zome, "get_dna_versions", {
 	    "for_dna": main_dna.$id,
 	});
 	expect( dna_versions		).to.have.length( 1 );
@@ -348,7 +294,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     {
 	// Deprecate DNA
 	let deprecation_notice		= "No longer maintained";
-	let dna				= await callZome( alice_devhub, "deprecate_dna", {
+	let dna				= await alice_client( zome, "deprecate_dna", {
 	    "addr": main_dna.$id,
 	    "message": deprecation_notice,
 	});
@@ -356,19 +302,19 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
 
 	expect( dna.$header		).to.not.deep.equal( second_header_hash );
 
-	let dna_info			= await callZome( alice_devhub, "get_dna", {
+	let dna_info			= await alice_client( zome, "get_dna", {
 	    "addr": main_dna.$id,
 	});
 	log.info("DNA post deprecation: %s", json.debug(dna_info) );
 	expect( dna_info.deprecation.message	).to.equal( deprecation_notice );
 	expect( dna_info.$header		).to.not.deep.equal( second_header_hash );
 
-	let dnas			= await callZome( alice_devhub, "get_my_dnas", null);
+	let dnas			= await alice_client( zome, "get_my_dnas", null);
 	expect( dnas			).to.have.length( 0 );
     }
 
     {
-	let dnas			= await callZome( alice_devhub, "get_my_deprecated_dnas", null);
+	let dnas			= await alice_client( zome, "get_my_deprecated_dnas", null);
 	log.info("My deprecated DNAs: %s", json.debug(dnas) );
 
 	log.normal("Deprecated DNA list (%s):", dnas.length,  );
@@ -382,7 +328,7 @@ orchestrator.registerScenario('Check uniqueness', async (scenario, _) => {
     {
 	let failed			= false;
 	try {
-	    await callZome( alice_devhub, "get_dna", {
+	    await alice_client( zome, "get_dna", {
 		"addr": dna_version_hash,
 	    });
 	} catch (err) {
