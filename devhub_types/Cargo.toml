@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 essence_payloads = {path = "../essence_payloads"}
+hc_entities = {path = "../hc_entities"}
 hdk = "0.0.100"
 serde = "1.0"
 

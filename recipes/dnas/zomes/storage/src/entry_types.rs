@@ -1,4 +1,4 @@
-use devhub_types::{ EntryModel, EntityType, Entity };
+use hc_entities::{ EntryModel, EntityType, Entity };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
 
@@ -207,7 +207,7 @@ impl DnaVersionEntry {
     pub fn to_info(self) -> DnaVersionInfo {
 	let mut dna_entity : Option<Entity<DnaSummary>> = None;
 
-	if let Some(entity) = utils::fetch_entity( &self.for_dna ).ok() {
+	if let Some(entity) = utils::get_entity( &self.for_dna ).ok() {
 	    if let Some(dna_entry) = DnaEntry::try_from( &entity.content ).ok() {
 		dna_entity = Some( entity.new_content( dna_entry.to_summary() ) );
 	    }

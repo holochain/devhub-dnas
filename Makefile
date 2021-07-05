@@ -77,8 +77,9 @@ test-happs-debug:		tests/node_modules $(HAPPDNA)
 	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_happs.js
 test-crates:
 	cd essence_payloads; cargo test
-	cd devhub_types; cargo test
+	cd hc_entities; cargo test
 	cd dna_utils; cargo test
+	cd devhub_types; cargo test
 
 
 #

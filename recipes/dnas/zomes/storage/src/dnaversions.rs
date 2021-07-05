@@ -1,8 +1,9 @@
-use devhub_types::{ Entity, Collection, EntityResponse, EntityCollectionResponse, EntryModel, DevHubResponse,
+use devhub_types::{ DevHubResponse, EntityResponse, EntityCollectionResponse,
 		    ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD };
-use hdk::prelude::*;
+use hc_entities::{ Entity, Collection, EntryModel };
 use hc_dna_utils as utils;
-use hc_dna_utils::catch;
+use crate::catch;
+use hdk::prelude::*;
 
 use crate::constants::{ TAG_DNAVERSION };
 use crate::entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary };
@@ -72,7 +73,7 @@ pub struct GetDnaVersionInput {
 #[hdk_extern]
 fn get_dna_version(input: GetDnaVersionInput) -> ExternResult<EntityResponse<DnaVersionInfo>> {
     debug!("Get DNA Version: {}", input.addr );
-    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let entity = catch!( utils::get_entity( &input.addr ) );
     let info = catch!( DnaVersionEntry::try_from(&entity.content) ).to_info();
 
     Ok( EntityResponse::success(
@@ -105,7 +106,7 @@ fn get_dna_versions(input: GetDnaVersionsInput) -> ExternResult<EntityCollection
 
     let versions = links.into_iter()
 	.filter_map(|link| {
-	    utils::fetch_entity( &link.target ).ok()
+	    utils::get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<DnaVersionSummary>> = None;

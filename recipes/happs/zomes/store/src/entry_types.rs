@@ -1,4 +1,4 @@
-use devhub_types::{ EntryModel, EntityType, Entity };
+use hc_entities::{ EntryModel, EntityType };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
 
@@ -75,40 +75,27 @@ impl EntryModel for HappInfo {
 }
 
 impl HappEntry {
-    pub fn to_info(self) -> HappInfo {
+    pub fn to_info(&self) -> HappInfo {
 	HappInfo {
-	    name: self.name,
-	    description: self.description,
-	    designer: self.designer,
-	    published_at: self.published_at,
-	    last_updated: self.last_updated,
-	    thumbnail_image: self.thumbnail_image,
-	    deprecation: self.deprecation,
+	    name: self.name.clone(),
+	    description: self.description.clone(),
+	    designer: self.designer.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    thumbnail_image: self.thumbnail_image.clone(),
+	    deprecation: self.deprecation.clone(),
 	}
     }
 
-    pub fn to_summary(self) -> HappSummary {
+    pub fn to_summary(&self) -> HappSummary {
 	HappSummary {
-	    name: self.name,
-	    description: self.description,
-	    designer: self.designer,
-	    published_at: self.published_at,
-	    last_updated: self.last_updated,
-	    thumbnail_image: self.thumbnail_image,
-	    deprecation: self.deprecation.map_or(false, |_| true),
+	    name: self.name.clone(),
+	    description: self.description.clone(),
+	    designer: self.designer.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    thumbnail_image: self.thumbnail_image.clone(),
+	    deprecation: self.deprecation.clone().map_or(false, |_| true),
 	}
     }
-}
-
-
-
-
-#[cfg(test)]
-pub mod tests {
-    use super::*;
-
-    // #[test]
-    // ///
-    // fn dna_to_summary_test() {
-    // }
 }

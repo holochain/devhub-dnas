@@ -1,8 +1,9 @@
-use devhub_types::{ Entity, Collection, EntityResponse, EntityCollectionResponse, EntryModel, DevHubResponse,
+use devhub_types::{ DevHubResponse, EntityResponse, EntityCollectionResponse,
 		    ENTITY_MD, ENTITY_COLLECTION_MD };
-use hdk::prelude::*;
+use hc_entities::{ Entity, Collection, EntryModel };
 use hc_dna_utils as utils;
-use hc_dna_utils::catch;
+use crate::catch;
+use hdk::prelude::*;
 
 use crate::constants::{ TAG_DNA };
 use crate::entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice };
@@ -73,7 +74,7 @@ pub struct GetDnaInput {
 #[hdk_extern]
 fn get_dna(input: GetDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
     debug!("Get DNA: {}", input.addr );
-    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let entity = catch!( utils::get_entity( &input.addr ) );
     let info = catch!( DnaEntry::try_from(&entity.content) ).to_info();
 
     Ok( EntityResponse::success(
@@ -123,7 +124,7 @@ fn get_dnas(input: GetDnasInput) -> ExternResult<EntityCollectionResponse<DnaSum
 
     let dnas = links.into_iter()
 	.filter_map(|link| {
-	    utils::fetch_entity( &link.target ).ok()
+	    utils::get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut answer : Option<Entity<DnaSummary>> = None;
@@ -149,7 +150,7 @@ fn get_deprecated_dnas(input: GetDnasInput) -> ExternResult<EntityCollectionResp
 
     let dnas = links.into_iter()
 	.filter_map(|link| {
-	    utils::fetch_entity( &link.target ).ok()
+	    utils::get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<DnaSummary>> = None;
@@ -264,7 +265,7 @@ pub struct DeprecateDnaInput {
 #[hdk_extern]
 fn deprecate_dna(input: DeprecateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
     debug!("Deprecating DNA: {}", input.addr );
-    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let entity = catch!( utils::get_entity( &input.addr ) );
     let current_dna = catch!( DnaEntry::try_from( &entity.content ) );
 
     let dna = DnaEntry {

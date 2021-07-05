@@ -5,4 +5,5 @@ tests/test.dna
 recipes/*/target
 dna_utils/target
 essence_payloads/target
+hc_entities/target
 devhub_types/target

@@ -44,15 +44,68 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
     let happ				= await alice_client( zome, "create_happ", happ_input );
     log.normal("New hApp: %s -> %s", String(happ.$addr), json.debug(happ) );
 
+    expect( happ.description		).to.equal( happ_input.description );
+
+    let happ_addr			= happ.$addr;
     {
 	let description			= "New description";
 	let update			= await alice_client( zome, "update_happ", {
-	    "addr": happ.$addr,
+	    "addr": happ_addr,
 	    "properties": {
 		description,
 	    },
 	});
 	log.normal("New hApp: %s -> %s", String(update.$addr), json.debug(update) );
+	happ_addr			= update.$addr;
+
+	expect( update.description	).to.equal( description );
+
+	let _happ			= await alice_client( zome, "get_happ", {
+	    "id": happ.$id,
+	});
+	log.normal("Updated hApp: %s -> %s", String(_happ.$addr), json.debug(_happ) );
+
+	expect( _happ.description	).to.equal( description );
+    }
+
+    {
+	let message			= "This hApp is no longer maintained";
+	let update			= await alice_client( zome, "deprecate_happ", {
+	    "addr": happ_addr,
+	    "message": message,
+	});
+	log.normal("New hApp: %s -> %s", String(update.$addr), json.debug(update) );
+	happ_addr			= update.$addr;
+
+	expect( update.deprecation		).to.be.an( "object" );
+	expect( update.deprecation.message	).to.equal( message );
+
+	let _happ			= await alice_client( zome, "get_happ", {
+	    "id": happ.$id,
+	});
+	log.normal("Deprecated hApp: %s -> %s", String(_happ.$addr), json.debug(_happ) );
+
+	expect( _happ.deprecation		).to.be.an( "object" );
+	expect( _happ.deprecation.message	).to.equal( message );
+    }
+
+    {
+	let failed			= false;
+	try {
+	    await alice_client( zome, "get_happ", {
+		"id": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
+	    });
+	} catch (err) {
+	    console.error("Controlled failure:", err.toJSON() );
+
+	    expect( err.kind		).to.equal( "UserError" );
+	    expect( err.name		).to.equal( "EntryNotFoundError" );
+	    expect( err.message		).to.have.string( "Entry not found for address: " );
+
+	    failed			= true;
+	}
+
+	expect( failed			).to.be.true;
     }
 });
 

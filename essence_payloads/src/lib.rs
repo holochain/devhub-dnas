@@ -20,7 +20,10 @@ pub struct ErrorPayload {
     pub stack: Vec<String>,
 }
 
-impl<T: std::error::Error> From<&T> for ErrorPayload {
+impl<T> From<&T> for ErrorPayload
+where
+    T: std::error::Error
+{
     fn from(error: &T) -> Self {
 	let kind = type_of(&error);
 	let name = struct_name(&error);
@@ -70,7 +73,7 @@ impl<P, PM, EM> EssenceResponse<P, PM, EM> {
 	})
     }
 
-    pub fn error(error: ErrorPayload, metadata: Option<EM>) -> Self {
+    pub fn failure(error: ErrorPayload, metadata: Option<EM>) -> Self {
 	EssenceResponse::Failure(EssencePackage {
 	    metadata: metadata,
 	    payload: error,
@@ -144,7 +147,7 @@ pub mod tests {
 	    }
 	}
 
-	let error = MyError { msg: "This is so bad...".into() };
+	let error = MyError { msg: "EntryHash(uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN)".into() };
 	let payload = ErrorPayload::from( &error );
 
 	assert_eq!(
@@ -152,7 +155,7 @@ pub mod tests {
 	    String::from(r#"{
   "kind": "MyError",
   "error": "MyError",
-  "message": "This is so bad...",
+  "message": "EntryHash(uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN)",
   "stack": []
 }"#));
 	println!("{:?}", error );

@@ -1,8 +1,8 @@
-use devhub_types::{ Entity, EntityResponse, EntryModel, DevHubResponse,
-		    ENTITY_MD };
-use hdk::prelude::*;
+use devhub_types::{ DevHubResponse, EntityResponse, ENTITY_MD };
+use hc_entities::{ Entity, EntryModel };
 use hc_dna_utils as utils;
-use hc_dna_utils::catch;
+use crate::catch;
+use hdk::prelude::*;
 
 use crate::entry_types::{ DnaChunkEntry };
 
@@ -31,7 +31,7 @@ pub struct GetDnaChunksInput {
 #[hdk_extern]
 fn get_dna_chunk(input: GetDnaChunksInput) -> ExternResult<EntityResponse<DnaChunkEntry>> {
     debug!("Get DNA Chunk: {}", input.addr );
-    let entity = catch!( utils::fetch_entity( &input.addr ) );
+    let entity = catch!( utils::get_entity( &input.addr ) );
     let info = catch!( DnaChunkEntry::try_from(&entity.content) );
 
     Ok( EntityResponse::success(

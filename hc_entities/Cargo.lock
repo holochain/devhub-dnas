@@ -115,19 +115,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "devhub_types"
-version = "0.1.0"
-dependencies = [
- "essence_payloads",
- "hc_entities",
- "hdk",
- "rand 0.8.4",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
 name = "essence_payloads"
 version = "0.1.0"
 dependencies = [
@@ -186,7 +173,10 @@ version = "0.1.0"
 dependencies = [
  "essence_payloads",
  "hdk",
+ "rand 0.8.4",
  "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

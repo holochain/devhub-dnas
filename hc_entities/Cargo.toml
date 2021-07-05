@@ -1,21 +1,19 @@
 [package]
-name = "store"
+name = "hc_entities"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "store"
+name = "hc_entities"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-devhub_types = {path = "../../../../devhub_types"}
-hc_entities = {path = "../../../../hc_entities"}
-hc_dna_utils = {path = "../../../../dna_utils"}
+essence_payloads = {path = "../essence_payloads"}
 hdk = "0.0.100"
 serde = "1.0"
-serde_derive = "1.0"
-thiserror = "1.0"
 
 [dev-dependencies]
 rand = "0.8.3"
+serde_json = "1.0"
+thiserror = "1.0"

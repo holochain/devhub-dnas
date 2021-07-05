@@ -1,8 +1,9 @@
-use devhub_types::{ Entity, Collection, DevHubResponse, EntityResponse, CollectionResponse, EntryModel,
+use devhub_types::{ DevHubResponse, EntityResponse, CollectionResponse,
 		    ENTITY_MD, VALUE_MD, VALUE_COLLECTION_MD };
-use hdk::prelude::*;
+use hc_entities::{ Entity, Collection, EntryModel };
 use hc_dna_utils as utils;
-use hc_dna_utils::catch;
+use crate::catch;
+use hdk::prelude::*;
 
 use crate::errors::{ AppError };
 use crate::constants::{ TAG_PROFILE, TAG_FOLLOW };
@@ -69,9 +70,9 @@ pub struct GetProfileInput {
 fn get_profile(input: GetProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
     let (_, links) = catch!( get_profile_links( input.agent ) );
 
-    if let Some(link) = catch!( utils::find_latest_link( links ) ) {
+    if let Some(link) = utils::find_latest_link( links ) {
 	debug!("Get Profile: {}", link.target );
-	let entity = catch!( utils::fetch_entity( &link.target ) );
+	let entity = catch!( utils::get_entity( &link.target ) );
 	let info = catch!( ProfileEntry::try_from(&entity.content) ).to_info();
 
 	Ok( EntityResponse::success(
@@ -80,7 +81,7 @@ fn get_profile(input: GetProfileInput) -> ExternResult<EntityResponse<ProfileInf
     }
     else {
 	let error = &AppError::CustomError("Agent Profile has not been created yet");
-	Ok( EntityResponse::error( error.into(), None) )
+	Ok( EntityResponse::failure( error.into(), None) )
     }
 }
 

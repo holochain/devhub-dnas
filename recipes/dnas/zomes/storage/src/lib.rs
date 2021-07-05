@@ -1,4 +1,7 @@
 
+use devhub_types::{ DevHubResponse, VALUE_MD };
+use hdk::prelude::*;
+
 mod profile;
 mod dna;
 mod dnaversions;
@@ -8,9 +11,24 @@ mod errors;
 mod constants;
 mod entry_types;
 
-use hdk::prelude::*;
 use entry_types::{ ProfileEntry, DnaEntry, DnaVersionEntry, DnaChunkEntry };
-use devhub_types::{ DevHubResponse, VALUE_MD };
+
+
+#[macro_export]
+macro_rules! catch { // could change to "trap", "snare", or "capture"
+    ( $r:expr ) => {
+	match $r {
+	    Ok(x) => x,
+	    Err(e) => return Ok(DevHubResponse::failure( (&e).into(), None )),
+	}
+    };
+    ( $r:expr, $e:expr ) => {
+	match $r {
+	    Ok(x) => x,
+	    Err(e) => return Ok(DevHubResponse::failure( (&$e).into(), None )),
+	}
+    };
+}
 
 
 entry_defs![
