@@ -9,7 +9,6 @@ name = "hc_entities"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-essence_payloads = {path = "../essence_payloads"}
 hdk = "0.0.100"
 serde = "1.0"
 

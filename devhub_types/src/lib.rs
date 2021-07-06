@@ -54,7 +54,7 @@ pub mod tests {
 	if fail {
 	    let error = &AppError::BadInput("This is so bad...");
 
-	    DevHubResponse::error( error.into(), None )
+	    DevHubResponse::failure( error.into(), None )
 	}
 	else {
 	    DevHubResponse::success( true, None )

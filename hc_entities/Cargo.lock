@@ -115,14 +115,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "essence_payloads"
-version = "0.1.0"
-dependencies = [
- "hdk",
- "serde",
-]
-
-[[package]]
 name = "fixt"
 version = "0.0.2-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -171,7 +163,6 @@ checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 name = "hc_entities"
 version = "0.1.0"
 dependencies = [
- "essence_payloads",
  "hdk",
  "rand 0.8.4",
  "serde",
