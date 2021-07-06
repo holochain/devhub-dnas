@@ -1,5 +1,9 @@
 bundled/*.happ
 bundled/*/*.dna
-recipes/*/target
 tests/node_modules
 tests/test.dna
+recipes/*/target
+dna_utils/target
+essence_payloads/target
+hc_entities/target
+devhub_types/target

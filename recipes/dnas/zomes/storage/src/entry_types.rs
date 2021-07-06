@@ -1,8 +1,6 @@
-
+use hc_entities::{ EntryModel, EntityType, Entity };
 use hdk::prelude::*;
-
-use crate::utils;
-use crate::errors::{ RuntimeError };
+use hc_dna_utils as utils;
 
 
 //
@@ -15,35 +13,30 @@ pub struct ProfileEntry {
     pub avatar_image: SerializedBytes,
     pub website: String,
 }
+utils::try_from_element![ ProfileEntry ];
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProfileInfo {
-    pub id: EntryHash,
     pub name: String,
     pub email: String,
     pub avatar_image: SerializedBytes,
     pub website: String,
 }
+impl EntryModel for ProfileInfo {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "profile", "info" )
+    }
+}
 
 impl ProfileEntry {
-    pub fn to_info(self, id: EntryHash) -> ProfileInfo {
+    pub fn to_info(self) -> ProfileInfo {
 	ProfileInfo {
-	    id: id,
 	    name: self.name,
 	    email: self.email,
 	    website: self.website,
 	    avatar_image: self.avatar_image,
 	}
-    }
-}
-
-impl TryFrom<Element> for ProfileEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
     }
 }
 
@@ -66,6 +59,7 @@ pub struct DnaEntry {
     pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
+utils::try_from_element![ DnaEntry ];
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DeveloperProfileLocation {
@@ -77,7 +71,7 @@ pub struct DeprecationNotice {
     pub message: String,
 
     // optional
-    pub recommended_alternatives: Option<HeaderHash>,
+    pub recommended_alternatives: Option<Vec<EntryHash>>,
 }
 
 impl DeprecationNotice {
@@ -92,7 +86,6 @@ impl DeprecationNotice {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaSummary {
-    pub id: EntryHash,
     pub name: String,
     pub description: String,
     pub published_at: u64,
@@ -103,11 +96,15 @@ pub struct DnaSummary {
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<bool>,
 }
+impl EntryModel for DnaSummary {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna", "summary" )
+    }
+}
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaInfo {
-    pub id: EntryHash,
     pub name: String,
     pub description: String,
     pub published_at: u64,
@@ -119,11 +116,15 @@ pub struct DnaInfo {
     pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
+impl EntryModel for DnaInfo {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna", "info" )
+    }
+}
 
 impl DnaEntry {
-    pub fn to_info(self, id: EntryHash) -> DnaInfo {
+    pub fn to_info(self) -> DnaInfo {
 	DnaInfo {
-	    id: id,
 	    name: self.name,
 	    description: self.description,
 	    icon: self.icon,
@@ -135,9 +136,8 @@ impl DnaEntry {
 	}
     }
 
-    pub fn to_summary(self, id: EntryHash) -> DnaSummary {
+    pub fn to_summary(self) -> DnaSummary {
 	DnaSummary {
-	    id: id,
 	    name: self.name,
 	    description: self.description,
 	    icon: self.icon,
@@ -151,16 +151,6 @@ impl DnaEntry {
 	}
     }
 }
-
-impl TryFrom<Element> for DnaEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
-    }
-}
-
 
 
 
@@ -179,22 +169,26 @@ pub struct DnaVersionEntry {
     pub changelog: String,
     pub chunk_addresses: Vec<EntryHash>,
 }
+utils::try_from_element![ DnaVersionEntry ];
 
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionSummary {
-    pub id: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
     pub file_size: u64,
 }
+impl EntryModel for DnaVersionSummary {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna_version", "summary" )
+    }
+}
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionInfo {
-    pub id: EntryHash,
-    pub for_dna: Option<DnaSummary>,
+    pub for_dna: Option<Entity<DnaSummary>>,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -203,21 +197,24 @@ pub struct DnaVersionInfo {
     pub changelog: String,
     pub chunk_addresses: Vec<EntryHash>,
 }
+impl EntryModel for DnaVersionInfo {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna_version", "info" )
+    }
+}
 
 impl DnaVersionEntry {
-    pub fn to_info(self, id: EntryHash) -> DnaVersionInfo {
-	let mut dna_summary : Option<DnaSummary> = None;
+    pub fn to_info(self) -> DnaVersionInfo {
+	let mut dna_entity : Option<Entity<DnaSummary>> = None;
 
-	if let Some((_,element)) = utils::fetch_entry_latest( self.for_dna.clone() ).ok() {
-	    dna_summary = match DnaEntry::try_from( element ) {
-		Ok(dna) => Some(dna.to_summary( self.for_dna )),
-		Err(_) => None,
-	    };
+	if let Some(entity) = utils::get_entity( &self.for_dna ).ok() {
+	    if let Some(dna_entry) = DnaEntry::try_from( &entity.content ).ok() {
+		dna_entity = Some( entity.new_content( dna_entry.to_summary() ) );
+	    }
 	};
 
 	DnaVersionInfo {
-	    id: id,
-	    for_dna: dna_summary,
+	    for_dna: dna_entity,
 	    version: self.version,
 	    published_at: self.published_at,
 	    last_updated: self.last_updated,
@@ -228,23 +225,13 @@ impl DnaVersionEntry {
 	}
     }
 
-    pub fn to_summary(self, id: EntryHash) -> DnaVersionSummary {
+    pub fn to_summary(self) -> DnaVersionSummary {
 	DnaVersionSummary {
-	    id: id,
 	    version: self.version,
 	    published_at: self.published_at,
 	    last_updated: self.last_updated,
 	    file_size: self.file_size,
 	}
-    }
-}
-
-impl TryFrom<Element> for DnaVersionEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
     }
 }
 
@@ -255,24 +242,22 @@ impl TryFrom<Element> for DnaVersionEntry {
 //
 // DNA Chunk Entry
 //
-#[hdk_entry(id = "dna_chunk", visibility="public")]
-pub struct DnaChunkEntry {
-    pub sequence: SequencePosition,
-    pub bytes: SerializedBytes,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SequencePosition {
     pub position: u64,
     pub length: u64,
 }
 
-impl TryFrom<Element> for DnaChunkEntry {
-    type Error = WasmError;
-    fn try_from(element: Element) -> Result<Self, Self::Error> {
-	element.entry()
-	    .to_app_option::<Self>()?
-	    .ok_or(WasmError::from(RuntimeError::DeserializationError(element)))
+#[hdk_entry(id = "dna_chunk", visibility="public")]
+pub struct DnaChunkEntry {
+    pub sequence: SequencePosition,
+    pub bytes: SerializedBytes,
+}
+utils::try_from_element![ DnaChunkEntry ];
+
+impl EntryModel for DnaChunkEntry {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna_chunk", "info" )
     }
 }
 
@@ -281,7 +266,7 @@ impl TryFrom<Element> for DnaChunkEntry {
 
 #[hdk_extern]
 fn validate_create_entry_dna(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
-    if let Ok(_dna) = DnaEntry::try_from( validate_data.element ) {
+    if let Ok(_dna) = DnaEntry::try_from( &validate_data.element ) {
 	return Ok(ValidateCallbackResult::Valid);
     }
 
@@ -319,18 +304,16 @@ pub mod tests {
     #[test]
     ///
     fn dna_to_summary_test() {
-	let bytes = rand::thread_rng().gen::<[u8; 32]>();
-	let hash = EntryHash::from_raw_32( bytes.to_vec() );
 	let dna1 = create_dnaentry();
 	let dna2 = create_dnaentry();
 
 	assert_eq!(dna1.name, "Game Turns");
 
-	let dna_info = dna1.to_info( hash.clone() );
+	let dna_info = dna1.to_info();
 
 	assert_eq!(dna_info.name, "Game Turns");
 
-	let dna_summary = dna2.to_summary( hash.clone() );
+	let dna_summary = dna2.to_summary();
 
 	assert_eq!(dna_summary.name, "Game Turns");
     }

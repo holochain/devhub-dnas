@@ -1,0 +1,17 @@
+[package]
+name = "essence_payloads"
+version = "0.1.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "essence"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hdk = "0.0.100"
+serde = "1.0"
+
+[dev-dependencies]
+serde_json = "1.0"
+thiserror = "1.0"

@@ -1,0 +1,132 @@
+use hc_entities::{ Entity, UpdateEntityInput, GetEntityInput };
+use hdk::prelude::*;
+use hc_dna_utils as utils;
+
+use crate::constants::{ TAG_HAPP, AppResult };
+use crate::errors::{ AppError, UserError };
+use crate::entry_types::{ HappEntry, HappInfo, DeprecationNotice };
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct CreateInput {
+    pub name: String,
+    pub description: String,
+
+    // optional
+    pub thumbnail_image: Option<SerializedBytes>,
+    pub published_at: Option<u64>,
+    pub last_updated: Option<u64>,
+}
+
+
+pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
+    debug!("Creating HAPP: {}", input.name );
+    let pubkey = agent_info()?.agent_initial_pubkey;
+    let default_now = utils::now()?;
+
+    // if true {
+    // 	return Err( UserError::DuplicateHappName(input.name).into() );
+    // }
+
+    let happ = HappEntry {
+	name: input.name,
+	description: input.description,
+	designer: pubkey.clone(),
+	published_at: input.published_at
+	    .unwrap_or( default_now ),
+	last_updated: input.last_updated
+	    .unwrap_or( default_now ),
+	thumbnail_image: input.thumbnail_image,
+	deprecation: None,
+    };
+
+    let entity = utils::create_entity( &happ )?
+	.new_content( happ.to_info() );
+
+    debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
+    create_link(
+	pubkey.into(),
+	entity.id.clone(),
+	LinkTag::new( TAG_HAPP )
+    )?;
+
+    Ok( entity )
+}
+
+
+pub fn get_happ(input: GetEntityInput) -> AppResult<Entity<HappInfo>> {
+    debug!("Get hApp: {}", input.id );
+    let entity = utils::get_entity( &input.id )?;
+    let info = HappEntry::try_from( &entity.content )?.to_info();
+
+    Ok(	entity.new_content( info ) )
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct HappUpdateOptions {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub thumbnail_image: Option<SerializedBytes>,
+    pub published_at: Option<u64>,
+    pub last_updated: Option<u64>,
+}
+pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
+
+pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
+    let props = input.properties;
+
+    let entity : Entity<HappEntry> = utils::update_entity(
+	input.id, input.addr,
+	|element| {
+	    let current = HappEntry::try_from( &element )?;
+
+	    Ok(HappEntry {
+		name: props.name
+		    .unwrap_or( current.name ),
+		description: props.description
+		    .unwrap_or( current.description ),
+		designer: current.designer,
+		published_at: props.published_at
+		    .unwrap_or( current.published_at ),
+		last_updated: props.last_updated
+		    .unwrap_or( utils::now()? ),
+		thumbnail_image: props.thumbnail_image
+		    .or( current.thumbnail_image ),
+		deprecation: current.deprecation,
+	    })
+	})?;
+
+    let info = entity.content.to_info();
+
+    Ok( entity.new_content( info ) )
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct HappDeprecateInput {
+    pub id: Option<EntryHash>,
+    pub addr: EntryHash,
+    pub message: String,
+}
+
+pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> {
+    debug!("Deprecating DNA: {}", input.addr );
+    let entity : Entity<HappEntry> = utils::update_entity(
+	input.id.clone(), input.addr.clone(),
+	|element| {
+	    let mut current = HappEntry::try_from( &element )?;
+
+	    current.deprecation = Some(DeprecationNotice {
+		message: input.message,
+		recommended_alternatives: None,
+	    });
+
+	    Ok( current )
+	})?;
+
+    let info = entity.content.to_info();
+
+    Ok( entity.new_content( info ) )
+}

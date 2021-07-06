@@ -1,11 +1,11 @@
 [package]
-name = "storage"
+name = "store"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "storage"
+name = "store"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
