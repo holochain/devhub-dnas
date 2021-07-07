@@ -10,3 +10,7 @@ DNAs for sharing source code and distributing compiled WASM that comprise Holoch
 ## API Reference
 
 See [API.md](API.md)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)

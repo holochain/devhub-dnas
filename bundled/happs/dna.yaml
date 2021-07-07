@@ -1,0 +1,7 @@
+manifest_version: "1"
+name: happs
+uuid: 00000000-0000-0000-0000-000000000000
+properties: ~
+zomes:
+  - name: store
+    bundled: ../../dnas/happs/target/wasm32-unknown-unknown/release/store.wasm
