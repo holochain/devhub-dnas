@@ -1,10 +1,12 @@
+use devhub_types::{
+    constants::{ AppResult },
+    happ_entry_types::{ HappEntry, HappInfo, DeprecationNotice },
+};
 use hc_entities::{ Entity, UpdateEntityInput, GetEntityInput };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
 
-use crate::constants::{ TAG_HAPP, AppResult };
-use crate::errors::{ AppError, UserError };
-use crate::entry_types::{ HappEntry, HappInfo, DeprecationNotice };
+use crate::constants::{ TAG_HAPP };
 
 
 
@@ -75,6 +77,7 @@ pub struct HappUpdateOptions {
 pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
 
 pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
+    debug!("Updating hApp: {}", input.addr );
     let props = input.properties;
 
     let entity : Entity<HappEntry> = utils::update_entity(
@@ -112,7 +115,7 @@ pub struct HappDeprecateInput {
 }
 
 pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> {
-    debug!("Deprecating DNA: {}", input.addr );
+    debug!("Deprecating hApp: {}", input.addr );
     let entity : Entity<HappEntry> = utils::update_entity(
 	input.id.clone(), input.addr.clone(),
 	|element| {

@@ -3,7 +3,7 @@ SHELL		= bash
 
 NAME		= devhub
 
-DNAREPO		= bundled/dnas/dnas.dna
+DNAREPO		= bundled/dnarepo/dnarepo.dna
 DNAREPO_WASM	= target/wasm32-unknown-unknown/release/storage.wasm
 HAPPDNA		= bundled/happs/happs.dna
 HAPPDNA_WASM	= target/wasm32-unknown-unknown/release/store.wasm
@@ -36,7 +36,7 @@ $(DNAREPO):			$(DNAREPO_WASM)
 
 $(DNAREPO_WASM):	Makefile
 	@echo "Building  DNAREPO WASM: $@"; \
-	cd recipes/dnas/; \
+	cd dnas/dnarepo/; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
 	    --package storage
@@ -49,7 +49,7 @@ $(HAPPDNA):			$(HAPPDNA_WASM)
 
 $(HAPPDNA_WASM):	Makefile
 	@echo "Building  HAPPDNA WASM: $@"; \
-	cd recipes/happs/; \
+	cd dnas/happs/; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
 	    --package store
@@ -61,7 +61,7 @@ $(HAPPDNA_WASM):	Makefile
 test-all:			test
 test:				test-unit test-e2e
 test-unit:
-	cd recipes/dnas/; \
+	cd dnas/dnarepo/; \
 	RUST_BACKTRACE=1 cargo test \
 	    -- --nocapture
 unit-%:
@@ -69,9 +69,9 @@ unit-%:
 	    -- --nocapture
 tests/test.dna:
 	cp $(DNAREPO) $@
-test-dnas-debug:		tests/node_modules $(DNAREPO) tests/test.dna
+test-dnarepo-debug:		tests/node_modules $(DNAREPO) tests/test.dna
 	cd tests; \
-	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_dnas.js
+	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_dnarepo.js
 test-happs-debug:		tests/node_modules $(HAPPDNA)
 	cd tests; \
 	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_happs.js

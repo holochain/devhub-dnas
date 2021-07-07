@@ -7,6 +7,7 @@ use hc_dna_utils as utils;
 // Profile Entry
 //
 #[hdk_entry(id = "profile", visibility="public")]
+#[derive(Clone)]
 pub struct ProfileEntry {
     pub name: String,
     pub email: String,
@@ -14,6 +15,12 @@ pub struct ProfileEntry {
     pub website: String,
 }
 utils::try_from_element![ ProfileEntry ];
+
+impl EntryModel for ProfileEntry {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "profile", "entry" )
+    }
+}
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,12 +37,12 @@ impl EntryModel for ProfileInfo {
 }
 
 impl ProfileEntry {
-    pub fn to_info(self) -> ProfileInfo {
+    pub fn to_info(&self) -> ProfileInfo {
 	ProfileInfo {
-	    name: self.name,
-	    email: self.email,
-	    website: self.website,
-	    avatar_image: self.avatar_image,
+	    name: self.name.clone(),
+	    email: self.email.clone(),
+	    website: self.website.clone(),
+	    avatar_image: self.avatar_image.clone(),
 	}
     }
 }
@@ -47,6 +54,7 @@ impl ProfileEntry {
 // DNA Entry
 //
 #[hdk_entry(id = "dna", visibility="public")]
+#[derive(Clone)]
 pub struct DnaEntry {
     pub name: String,
     pub description: String,
@@ -61,12 +69,18 @@ pub struct DnaEntry {
 }
 utils::try_from_element![ DnaEntry ];
 
-#[derive(Debug, Serialize, Deserialize)]
+impl EntryModel for DnaEntry {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna", "entry" )
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeveloperProfileLocation {
     pub pubkey: AgentPubKey,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeprecationNotice {
     pub message: String,
 
@@ -123,31 +137,28 @@ impl EntryModel for DnaInfo {
 }
 
 impl DnaEntry {
-    pub fn to_info(self) -> DnaInfo {
+    pub fn to_info(&self) -> DnaInfo {
 	DnaInfo {
-	    name: self.name,
-	    description: self.description,
-	    icon: self.icon,
-	    published_at: self.published_at,
-	    last_updated: self.last_updated,
-	    developer: self.developer,
-	    collaborators: self.collaborators,
-	    deprecation: self.deprecation,
+	    name: self.name.clone(),
+	    description: self.description.clone(),
+	    icon: self.icon.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    developer: self.developer.clone(),
+	    collaborators: self.collaborators.clone(),
+	    deprecation: self.deprecation.clone(),
 	}
     }
 
-    pub fn to_summary(self) -> DnaSummary {
+    pub fn to_summary(&self) -> DnaSummary {
 	DnaSummary {
-	    name: self.name,
-	    description: self.description,
-	    icon: self.icon,
-	    published_at: self.published_at,
-	    last_updated: self.last_updated,
-	    developer: self.developer.pubkey,
-	    deprecation: match self.deprecation {
-		Some(_) => Some(true),
-		None => None,
-	    },
+	    name: self.name.clone(),
+	    description: self.description.clone(),
+	    icon: self.icon.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    developer: self.developer.pubkey.clone(),
+	    deprecation: self.deprecation.clone().map(|_| true),
 	}
     }
 }
@@ -159,6 +170,7 @@ impl DnaEntry {
 // DNA Version Entry
 //
 #[hdk_entry(id = "dna_version", visibility="public")]
+#[derive(Clone)]
 pub struct DnaVersionEntry {
     pub for_dna: EntryHash,
     pub version: u64,
@@ -170,6 +182,12 @@ pub struct DnaVersionEntry {
     pub chunk_addresses: Vec<EntryHash>,
 }
 utils::try_from_element![ DnaVersionEntry ];
+
+impl EntryModel for DnaVersionEntry {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna_version", "entry" )
+    }
+}
 
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
@@ -204,7 +222,7 @@ impl EntryModel for DnaVersionInfo {
 }
 
 impl DnaVersionEntry {
-    pub fn to_info(self) -> DnaVersionInfo {
+    pub fn to_info(&self) -> DnaVersionInfo {
 	let mut dna_entity : Option<Entity<DnaSummary>> = None;
 
 	if let Some(entity) = utils::get_entity( &self.for_dna ).ok() {
@@ -215,22 +233,22 @@ impl DnaVersionEntry {
 
 	DnaVersionInfo {
 	    for_dna: dna_entity,
-	    version: self.version,
-	    published_at: self.published_at,
-	    last_updated: self.last_updated,
-	    file_size: self.file_size,
-	    contributors: self.contributors,
-	    changelog: self.changelog,
-	    chunk_addresses: self.chunk_addresses,
+	    version: self.version.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    file_size: self.file_size.clone(),
+	    contributors: self.contributors.clone(),
+	    changelog: self.changelog.clone(),
+	    chunk_addresses: self.chunk_addresses.clone(),
 	}
     }
 
-    pub fn to_summary(self) -> DnaVersionSummary {
+    pub fn to_summary(&self) -> DnaVersionSummary {
 	DnaVersionSummary {
-	    version: self.version,
-	    published_at: self.published_at,
-	    last_updated: self.last_updated,
-	    file_size: self.file_size,
+	    version: self.version.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    file_size: self.file_size.clone(),
 	}
     }
 }
@@ -242,13 +260,14 @@ impl DnaVersionEntry {
 //
 // DNA Chunk Entry
 //
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SequencePosition {
     pub position: u64,
     pub length: u64,
 }
 
 #[hdk_entry(id = "dna_chunk", visibility="public")]
+#[derive(Clone)]
 pub struct DnaChunkEntry {
     pub sequence: SequencePosition,
     pub bytes: SerializedBytes,
@@ -281,11 +300,11 @@ pub mod tests {
     use super::*;
     use rand::Rng;
 
-    fn create_dnaentry() -> crate::DnaEntry {
+    fn create_dnaentry() -> DnaEntry {
 	let bytes = rand::thread_rng().gen::<[u8; 32]>();
 	let hash = EntryHash::from_raw_32( bytes.to_vec() );
 
-	crate::DnaEntry {
+	DnaEntry {
 	    name: String::from("Game Turns"),
 	    description: String::from("A tool for turn-based games to track the order of player actions"),
 	    icon: Some(SerializedBytes::try_from(()).unwrap()),

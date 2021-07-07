@@ -1,5 +1,5 @@
 
-use crate::{ Metadata };
+use crate::{ Metadata, errors::ErrorKinds };
 
 pub const ENTITY_MD : Option<Metadata> = Some(Metadata {
     composition: "entity",
@@ -13,3 +13,5 @@ pub const VALUE_MD : Option<Metadata> = Some(Metadata {
 pub const VALUE_COLLECTION_MD : Option<Metadata> = Some(Metadata {
     composition: "value_collection",
 });
+
+pub type AppResult<T> = Result<T, ErrorKinds>;

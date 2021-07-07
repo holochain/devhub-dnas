@@ -18,6 +18,9 @@ pub enum UserError {
 
     #[error("You already created a hApp with the name: {0}")]
     DuplicateHappNameError(String),
+
+    #[error("{0}")]
+    CustomError(&'static str),
 }
 
 

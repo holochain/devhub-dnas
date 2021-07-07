@@ -15,7 +15,7 @@ const { delay, callZome,
 	create_players }		= require('./utils.js');
 
 
-const dna				= path.join(__dirname, "../../bundled/dnas/dnas.dna");
+const dna				= path.join(__dirname, "../../bundled/dnarepo/dnarepo.dna");
 const dna_list				= [ dna ];
 const zome				= "storage";
 
@@ -125,7 +125,7 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
     {
 	// Check the created entry
 	let dna_info			= await alice_client( zome, "get_dna", {
-	    "addr": main_dna.$id,
+	    "id": main_dna.$id,
 	});
 	log.info("DNA: %s", json.debug(dna_info) );
 
@@ -244,7 +244,7 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
 	log.normal("Updated DNA (metadata): %s -> %s", String(dna.$addr), json.debug(dna) );
 
 	let dna_info			= await alice_client( zome, "get_dna", {
-	    "addr": main_dna.$id,
+	    "id": main_dna.$id,
 	});
 	log.info("DNA post update: %s", json.debug(dna_info) );
 
@@ -271,7 +271,7 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
 	log.normal("Updated DNA Version (metadata): %s -> %s", String(dna_version.$address), json.debug(dna_version) );
 
 	let dna_version_info		= await alice_client( zome, "get_dna_version", {
-	    "addr": dna_version_hash,
+	    "id": dna_version_hash,
 	});
 	log.info("DNA Version post update: %s", json.debug(dna_version_info) );
 	expect( dna_version_info.changelog	).to.equal( properties.changelog );
@@ -281,7 +281,7 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
     {
 	// Unpublish DNA Version
 	let deleted_dna_version_hash	= await alice_client( zome, "delete_dna_version", {
-	    "addr": dna_version_hash,
+	    "id": dna_version_hash,
 	});
 	log.normal("Deleted DNA Version hash: %s", String(deleted_dna_version_hash) );
 
@@ -295,7 +295,7 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
 	// Deprecate DNA
 	let deprecation_notice		= "No longer maintained";
 	let dna				= await alice_client( zome, "deprecate_dna", {
-	    "addr": main_dna.$id,
+	    "addr": main_dna.$addr,
 	    "message": deprecation_notice,
 	});
 	log.normal("Deprecated DNA (metadata): %s -> %s", String(dna.$addr), json.debug(dna) );
@@ -303,7 +303,7 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
 	expect( dna.$header		).to.not.deep.equal( second_header_hash );
 
 	let dna_info			= await alice_client( zome, "get_dna", {
-	    "addr": main_dna.$id,
+	    "id": main_dna.$id,
 	});
 	log.info("DNA post deprecation: %s", json.debug(dna_info) );
 	expect( dna_info.deprecation.message	).to.equal( deprecation_notice );
@@ -329,12 +329,12 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
 	let failed			= false;
 	try {
 	    await alice_client( zome, "get_dna", {
-		"addr": dna_version_hash,
+		"id": dna_version_hash,
 	    });
 	} catch (err) {
 	    console.error("Controlled failure:", err.toJSON() );
 
-	    expect( err.kind		).to.equal( "UtilsError" );
+	    expect( err.kind		).to.equal( "UserError" );
 	    expect( err.name		).to.equal( "EntryNotFoundError" );
 	    expect( err.message		).to.have.string( "Entry not found for address: " );
 

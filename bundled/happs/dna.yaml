@@ -4,4 +4,4 @@ uuid: 00000000-0000-0000-0000-000000000000
 properties: ~
 zomes:
   - name: store
-    bundled: ../../recipes/happs/target/wasm32-unknown-unknown/release/store.wasm
+    bundled: ../../dnas/happs/target/wasm32-unknown-unknown/release/store.wasm

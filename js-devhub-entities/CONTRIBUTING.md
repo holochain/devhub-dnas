@@ -4,7 +4,7 @@
 
 ## Overview
 This package is designed specifically for the Holochain DevHub project.  The entity model
-definitions should match the structs defined in this hApp's [DNAs](../recipes/).
+definitions should match the structs defined in this hApp's [DNAs](../dnas/).
 
 See [@whi/entity-architect](https://www.npmjs.com/package/@whi/entity-architect) for more
 information about the Entity architecture.

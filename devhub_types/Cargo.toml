@@ -11,10 +11,11 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 essence_payloads = {path = "../essence_payloads"}
 hc_entities = {path = "../hc_entities"}
+hc_dna_utils = {path = "../dna_utils"}
 hdk = "0.0.100"
 serde = "1.0"
+thiserror = "1.0"
 
 [dev-dependencies]
 rand = "0.8.3"
 serde_json = "1.0"
-thiserror = "1.0"

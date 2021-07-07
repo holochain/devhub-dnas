@@ -119,9 +119,11 @@ name = "devhub_types"
 version = "0.1.0"
 dependencies = [
  "essence_payloads",
+ "hc_dna_utils",
  "hc_entities",
  "hdk",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -190,7 +192,6 @@ dependencies = [
 name = "hc_entities"
 version = "0.1.0"
 dependencies = [
- "essence_payloads",
  "hdk",
  "serde",
 ]
@@ -673,7 +674,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
 
 [[package]]
-name = "store"
+name = "storage"
 version = "0.1.0"
 dependencies = [
  "devhub_types",

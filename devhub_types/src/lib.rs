@@ -1,10 +1,13 @@
-mod constants;
+pub mod constants;
+pub mod errors;
+pub mod dna_entry_types;
+pub mod happ_entry_types;
 
 use hdk::prelude::*;
 use essence::{ EssenceResponse };
 use hc_entities::{ Collection, Entity };
 
-pub use constants::{ ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD, VALUE_COLLECTION_MD };
+use constants::{ ENTITY_MD };
 
 
 #[derive(Debug, Serialize)]
@@ -31,6 +34,31 @@ where
 pub type CollectionResponse<T> = DevHubResponse<Collection<T>>;
 pub type EntityResponse<T> = DevHubResponse<Entity<T>>;
 pub type EntityCollectionResponse<T> = DevHubResponse<Collection<Entity<T>>>;
+
+
+#[macro_export]
+macro_rules! catch { // could change to "trap", "snare", or "capture"
+    ( $r:expr ) => {
+	match $r {
+	    Ok(x) => x,
+	    Err(e) => {
+		let error = match e {
+		    ErrorKinds::AppError(e) => (&e).into(),
+		    ErrorKinds::UserError(e) => (&e).into(),
+		    ErrorKinds::HDKError(e) => (&e).into(),
+		    ErrorKinds::DnaUtilsError(e) => (&e).into(),
+		};
+		return Ok(DevHubResponse::failure( error, None ))
+	    },
+	}
+    };
+    ( $r:expr, $e:expr ) => {
+	match $r {
+	    Ok(x) => x,
+	    Err(e) => return Ok(DevHubResponse::failure( (&$e).into(), None )),
+	}
+    };
+}
 
 
 
