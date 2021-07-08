@@ -1,6 +1,6 @@
 const path				= require('path');
 const log				= require('@whi/stdlog')(path.basename( __filename ), {
-    level: process.env.LOG_LEVEL || 'silly',
+    level: process.env.LOG_LEVEL || 'fatal',
 });
 
 
@@ -32,8 +32,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
     let b_agent_info			= await bobby_client( zome, "whoami", null);
     let c_agent_info			= await carol_client( zome, "whoami", null);
 
-    log.info("Agent info 'alice': %s", json.debug(a_agent_info) );
-    log.info("Agent ID 'alice': %s", a_agent_info.agent_initial_pubkey.toString("base64") );
+    log.info("Agent ID 'alice': %s", String(new HoloHash(a_agent_info.agent_initial_pubkey)) );
 
 
     let happ_input			= {
@@ -42,7 +41,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
     };
 
     let happ				= await alice_client( zome, "create_happ", happ_input );
-    log.normal("New hApp: %s -> %s", String(happ.$addr), json.debug(happ) );
+    log.normal("New hApp: %s -> %s", String(happ.$addr), happ.name );
 
     expect( happ.description		).to.equal( happ_input.description );
 
@@ -55,7 +54,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 		description,
 	    },
 	});
-	log.normal("New hApp: %s -> %s", String(update.$addr), json.debug(update) );
+	log.normal("New hApp: %s -> %s", String(update.$addr), update.name );
 	happ_addr			= update.$addr;
 
 	expect( update.description	).to.equal( description );
@@ -63,7 +62,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 	let _happ			= await alice_client( zome, "get_happ", {
 	    "id": happ.$id,
 	});
-	log.normal("Updated hApp: %s -> %s", String(_happ.$addr), json.debug(_happ) );
+	log.normal("Updated hApp: %s -> %s", String(_happ.$addr), _happ.name );
 
 	expect( _happ.description	).to.equal( description );
     }
@@ -74,7 +73,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 	    "addr": happ_addr,
 	    "message": message,
 	});
-	log.normal("New hApp: %s -> %s", String(update.$addr), json.debug(update) );
+	log.normal("New hApp: %s -> %s", String(update.$addr), update.name );
 	happ_addr			= update.$addr;
 
 	expect( update.deprecation		).to.be.an( "object" );
@@ -83,7 +82,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 	let _happ			= await alice_client( zome, "get_happ", {
 	    "id": happ.$id,
 	});
-	log.normal("Deprecated hApp: %s -> %s", String(_happ.$addr), json.debug(_happ) );
+	log.normal("Deprecated hApp: %s -> %s", String(_happ.$addr), _happ.name );
 
 	expect( _happ.deprecation		).to.be.an( "object" );
 	expect( _happ.deprecation.message	).to.equal( message );
@@ -96,8 +95,6 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 		"id": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
 	    });
 	} catch (err) {
-	    console.error("Controlled failure:", err.toJSON() );
-
 	    expect( err.kind		).to.equal( "UserError" );
 	    expect( err.name		).to.equal( "EntryNotFoundError" );
 	    expect( err.message		).to.have.string( "Entry not found for address: " );

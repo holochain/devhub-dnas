@@ -5,14 +5,14 @@ use serde::*;
 use utils::{ type_of, struct_name };
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EssencePackage<T, M> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<M>,
     pub payload: T,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorPayload {
     pub kind: String,
     pub error: String,
@@ -41,7 +41,7 @@ where
 pub type ErrorEssencePackage<M> = EssencePackage<ErrorPayload, M>;
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 pub enum EssenceResponse<P, PM, EM> {

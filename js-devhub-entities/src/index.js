@@ -82,19 +82,47 @@ const DnaChunk				= new EntityType("dna_chunk");
 DnaChunk.model("info");
 
 
+//
+// Web Asset Entity Types
+//
+const File				= new EntityType("file");
+
+File.model("info", function ( content ) {
+    content.authorr		= new AgentPubKey( content.author );
+    content.published_at	= new Date( content.published_at );
+
+    content.chunk_addresses.forEach( (addr, i) => {
+	content.chunk_addresses[i]	= new EntryHash(addr);
+    });
+
+    return content;
+});
+
+const FileChunk				= new EntityType("file_chunk");
+
+FileChunk.model("info");
+
+
+//
+// Grouping Entity Definitions
+//
 const Schema				= new Architecture([
     Happ,
-    Profile, Dna, DnaVersion, DnaChunk
+    Profile, Dna, DnaVersion, DnaChunk,
+    File, FileChunk,
 ]);
 
 
 module.exports = {
     Schema,
 
+    Happ,
     Profile,
     Dna,
     DnaVersion,
     DnaChunk,
+    File,
+    FileChunk,
 
     "EntityArchitect": EntityArchitectLib,
     "HoloHashes": HoloHashLib,

@@ -7,6 +7,8 @@ DNAREPO		= bundled/dnarepo/dnarepo.dna
 DNAREPO_WASM	= target/wasm32-unknown-unknown/release/storage.wasm
 HAPPDNA		= bundled/happs/happs.dna
 HAPPDNA_WASM	= target/wasm32-unknown-unknown/release/store.wasm
+ASSETSDNA	= bundled/web_assets/files.dna
+ASSETSDNA_WASM	= target/wasm32-unknown-unknown/release/files.wasm
 
 
 #
@@ -34,7 +36,7 @@ $(DNAREPO):			$(DNAREPO_WASM)
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
 
-$(DNAREPO_WASM):	Makefile
+$(DNAREPO_WASM):		Makefile
 	@echo "Building  DNAREPO WASM: $@"; \
 	cd dnas/dnarepo/; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
@@ -47,19 +49,32 @@ $(HAPPDNA):			$(HAPPDNA_WASM)
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
 
-$(HAPPDNA_WASM):	Makefile
+$(HAPPDNA_WASM):		Makefile
 	@echo "Building  HAPPDNA WASM: $@"; \
 	cd dnas/happs/; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
 	    --package store
 
+webassetdna:			$(ASSETSDNA)
+$(ASSETSDNA):			$(ASSETSDNA_WASM)
+	@echo "Packaging ASSETSDNA: $@"
+	@hc dna pack $(dir $@)
+	@ls -l $(dir $@)
+
+$(ASSETSDNA_WASM):		Makefile
+	@echo "Building  ASSETSDNA WASM: $@"; \
+	cd dnas/web_assets/; \
+	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
+	    --release --target wasm32-unknown-unknown \
+	    --package files
+
 
 #
 # Testing
 #
 test-all:			test
-test:				test-unit test-e2e
+test:				test-unit
 test-unit:
 	cd dnas/dnarepo/; \
 	RUST_BACKTRACE=1 cargo test \
@@ -69,12 +84,21 @@ unit-%:
 	    -- --nocapture
 tests/test.dna:
 	cp $(DNAREPO) $@
+tests/test.gz:
+	gzip -kc bundled/dnarepo/dnarepo.dna > $@
+test-dnas:			test-dnarepo-debug test-happs-debug test-webassets-debug
 test-dnarepo-debug:		tests/node_modules $(DNAREPO) tests/test.dna
 	cd tests; \
-	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_dnarepo.js
+	RUST_LOG=[fatal]=fatal TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_dnarepo.js
 test-happs-debug:		tests/node_modules $(HAPPDNA)
 	cd tests; \
-	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=full TRYORAMA_HOLOCHAIN_PATH="holochain" node src/test_happs.js
+	RUST_LOG=[fatal]=fatal TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_happs.js
+test-webassets-debug:		tests/node_modules $(ASSETSDNA) tests/test.gz
+	cd tests; \
+	RUST_LOG=[fatal]=fatal TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_web_assets.js
+test-multi-debug:		tests/node_modules $(HAPPDNA) $(ASSETSDNA) tests/test.gz
+	cd tests; \
+	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=debug LOG_LEVEL=debug node src/test_multiple.js
 test-crates:
 	cd essence_payloads; cargo test
 	cd hc_entities; cargo test

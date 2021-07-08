@@ -1,0 +1,12 @@
+[workspace]
+
+members = [
+  "zomes/files"
+]
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+lto = true
+opt-level = "s"

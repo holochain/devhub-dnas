@@ -3,6 +3,8 @@ use devhub_types::{
     constants::{ VALUE_MD, ENTITY_MD },
     errors::{ ErrorKinds },
     happ_entry_types::{ HappEntry, HappInfo },
+    web_asset_entry_types::{ FileInfo },
+    composition,
     catch,
 };
 use hc_entities::{ GetEntityInput };
@@ -27,7 +29,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 #[hdk_extern]
 fn whoami(_: ()) -> ExternResult<DevHubResponse<AgentInfo>> {
-    Ok( DevHubResponse::success( agent_info()?, VALUE_MD ) )
+    Ok(composition( agent_info()?, VALUE_MD ))
 }
 
 
@@ -35,26 +37,33 @@ fn whoami(_: ()) -> ExternResult<DevHubResponse<AgentInfo>> {
 fn create_happ(input: happ::CreateInput) -> ExternResult<EntityResponse<HappInfo>> {
     let entity = catch!( happ::create_happ( input ) );
 
-    Ok(EntityResponse::success( entity, ENTITY_MD ))
+    Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
 fn get_happ(input: GetEntityInput) -> ExternResult<EntityResponse<HappInfo>> {
     let entity = catch!( happ::get_happ( input ) );
 
-    Ok(EntityResponse::success( entity, ENTITY_MD ))
+    Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
 fn update_happ(input: happ::HappUpdateInput) -> ExternResult<EntityResponse<HappInfo>> {
     let entity = catch!( happ::update_happ( input ) );
 
-    Ok(EntityResponse::success( entity, ENTITY_MD ))
+    Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
 fn deprecate_happ(input: happ::HappDeprecateInput) -> ExternResult<EntityResponse<HappInfo>> {
     let entity = catch!( happ::deprecate_happ( input ) );
 
-    Ok(EntityResponse::success( entity, ENTITY_MD ))
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_ui(input: GetEntityInput) -> ExternResult<EntityResponse<FileInfo>> {
+    let entity = catch!( happ::get_ui( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
 }

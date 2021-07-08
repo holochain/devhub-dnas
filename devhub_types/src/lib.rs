@@ -2,38 +2,31 @@ pub mod constants;
 pub mod errors;
 pub mod dna_entry_types;
 pub mod happ_entry_types;
+pub mod web_asset_entry_types;
 
 use hdk::prelude::*;
 use essence::{ EssenceResponse };
 use hc_entities::{ Collection, Entity };
 
-use constants::{ ENTITY_MD };
 
-
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Metadata {
-    pub composition: &'static str,
+    pub composition: String,
 }
 
 pub type DevHubResponse<T> = EssenceResponse<T, Metadata, ()>;
 
-pub struct Reply<T, E>( DevHubResponse<T>, E )
-where
-    E: std::error::Error;
-
-impl<T, E> Reply<T, E>
-where
-    E: std::error::Error {
-
-    pub fn new(payload: Result<T, E>) -> DevHubResponse<T> {
-	EssenceResponse::new(payload, ENTITY_MD, None )
-    }
+pub fn composition<T>(payload: T, composition: &str) -> DevHubResponse<T> {
+    DevHubResponse::success( payload, Some(Metadata {
+	composition: String::from( composition ),
+    }) )
 }
 
 
 pub type CollectionResponse<T> = DevHubResponse<Collection<T>>;
 pub type EntityResponse<T> = DevHubResponse<Entity<T>>;
 pub type EntityCollectionResponse<T> = DevHubResponse<Collection<Entity<T>>>;
+
 
 
 #[macro_export]

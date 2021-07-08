@@ -1,6 +1,9 @@
 use devhub_types::{
+    DevHubResponse,
     constants::{ AppResult },
+    errors::{ AppError },
     happ_entry_types::{ HappEntry, HappInfo, DeprecationNotice },
+    web_asset_entry_types::{ FileInfo },
 };
 use hc_entities::{ Entity, UpdateEntityInput, GetEntityInput };
 use hdk::prelude::*;
@@ -132,4 +135,36 @@ pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> 
     let info = entity.content.to_info();
 
     Ok( entity.new_content( info ) )
+}
+
+
+pub fn get_ui(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
+    debug!("Get UI from: {}", input.id );
+    let dna_hash : Vec<u8> = vec![
+	132,  45,  36,  28,  99,  63,  35, 190,  23,
+	229, 249,  48, 122,  72,  85,  92, 120, 230,
+	 63,  35, 199, 183,  32,  21,  71, 122,  20,
+	129,  99, 253, 231, 237, 181, 171, 200,  19,
+	147, 180,   9
+    ];
+    let pubkey = agent_info()?.agent_initial_pubkey;
+
+    let result_io = call(
+	Some( CellId::new( HoloHash::from_raw_39_panicky( dna_hash ).into(), pubkey ) ),
+	"files".into(),
+	"get_file".into(),
+	None,
+	input,
+    )?;
+
+    if let ZomeCallResponse::Ok(v) = result_io {
+	let response : DevHubResponse<Entity<FileInfo>> = v.decode()
+	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
+
+	if let DevHubResponse::Success(pack) = response {
+	    return Ok( pack.payload );
+	}
+    };
+
+    Err( AppError::UnexpectedStateError("Failed to call another DNA".into()).into() )
 }
