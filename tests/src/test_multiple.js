@@ -31,9 +31,6 @@ orchestrator.registerScenario('WebAssets::files API', async (scenario, _) => {
     log.warn("happs      DNA hash: %s", String(happ_client.id.dna) );
     log.warn("web_assets DNA hash: %s", String(asset_client.id.dna) );
 
-    // let wait_for			= 1;
-    // log.warn("Waiting for %s seconds so Conductor might be ready...", wait_for );
-    // await delay( wait_for * 1000 );
 
     let a_agent_info			= await asset_client( files, "whoami", null);
     log.info("Agent ID 'alice': %s", String(new HoloHash(a_agent_info.agent_initial_pubkey)) );

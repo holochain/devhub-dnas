@@ -149,7 +149,7 @@ pub fn get_ui(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
     ];
     let pubkey = agent_info()?.agent_initial_pubkey;
 
-    let result_io = call(
+    let zome_call_response = call(
 	Some( CellId::new( HoloHash::from_raw_39_panicky( dna_hash ).into(), pubkey ) ),
 	"files".into(),
 	"get_file".into(),
@@ -157,8 +157,8 @@ pub fn get_ui(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
 	input,
     )?;
 
-    if let ZomeCallResponse::Ok(v) = result_io {
-	let response : DevHubResponse<Entity<FileInfo>> = v.decode()
+    if let ZomeCallResponse::Ok(result_io) = zome_call_response {
+	let response : DevHubResponse<Entity<FileInfo>> = result_io.decode()
 	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
 
 	if let DevHubResponse::Success(pack) = response {
