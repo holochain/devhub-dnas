@@ -115,11 +115,33 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 	expect( _release.description	).to.equal( release_input.description );
     }
 
+    let happ_release_addr;
+    {
+	let description			= "The first release (updated)";
+	let update			= await alice_client( zome, "update_happ_release", {
+	    "addr": release.$addr,
+	    "properties": {
+		description,
+	    },
+	});
+	log.normal("New hApp: %s -> %s", String(update.$addr), update.name );
+	happ_release_addr		= update.$addr;
+
+	expect( update.description	).to.equal( description );
+    }
+
+    {
+	let header			= await alice_client( zome, "delete_happ_release", {
+	    "id": release.$id,
+	});
+	log.normal("Delete hApp: %s", String(header) );
+    }
+
     {
 	let failed			= false;
 	try {
-	    await alice_client( zome, "get_happ", {
-		"id": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
+	    await alice_client( zome, "get_happ_release", {
+		"id": release.$id,
 	    });
 	} catch (err) {
 	    expect( err.kind		).to.equal( "UserError" );

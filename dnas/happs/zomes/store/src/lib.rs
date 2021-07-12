@@ -37,6 +37,7 @@ fn whoami(_: ()) -> ExternResult<DevHubResponse<AgentInfo>> {
 }
 
 
+// hApps
 #[hdk_extern]
 fn create_happ(input: happ::CreateInput) -> ExternResult<EntityResponse<HappInfo>> {
     let entity = catch!( happ::create_happ( input ) );
@@ -65,13 +66,8 @@ fn deprecate_happ(input: happ::HappDeprecateInput) -> ExternResult<EntityRespons
     Ok(composition( entity, ENTITY_MD ))
 }
 
-#[hdk_extern]
-fn get_gui(input: happ::GetGUIInput) -> ExternResult<EntityResponse<FileInfo>> {
-    let entity = catch!( happ::get_gui( input ) );
 
-    Ok(composition( entity, ENTITY_MD ))
-}
-
+// hApp Releases
 #[hdk_extern]
 fn create_happ_release(input: happ_release::CreateInput) -> ExternResult<EntityResponse<HappReleaseInfo>> {
     let entity = catch!( happ_release::create_happ_release( input ) );
@@ -82,6 +78,29 @@ fn create_happ_release(input: happ_release::CreateInput) -> ExternResult<EntityR
 #[hdk_extern]
 fn get_happ_release(input: GetEntityInput) -> ExternResult<EntityResponse<HappReleaseInfo>> {
     let entity = catch!( happ_release::get_happ_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn update_happ_release(input: happ_release::HappReleaseUpdateInput) -> ExternResult<EntityResponse<HappReleaseInfo>> {
+    let entity = catch!( happ_release::update_happ_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn delete_happ_release(input: happ_release::DeleteInput) -> ExternResult<DevHubResponse<HeaderHash>> {
+    let value = catch!( happ_release::delete_happ_release( input ) );
+
+    Ok(composition( value, VALUE_MD ))
+}
+
+
+// Packaging
+#[hdk_extern]
+fn get_gui(input: happ::GetGUIInput) -> ExternResult<EntityResponse<FileInfo>> {
+    let entity = catch!( happ::get_gui( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
