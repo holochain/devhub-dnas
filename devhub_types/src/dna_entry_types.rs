@@ -222,6 +222,27 @@ impl EntryModel for DnaVersionInfo {
 }
 
 impl DnaVersionEntry {
+    pub fn to_package(&self, dna_bytes: Vec<u8>) -> DnaVersionPackage {
+	let mut dna_entity : Option<Entity<DnaSummary>> = None;
+
+	if let Some(entity) = utils::get_entity( &self.for_dna ).ok() {
+	    if let Some(dna_entry) = DnaEntry::try_from( &entity.content ).ok() {
+		dna_entity = Some( entity.new_content( dna_entry.to_summary() ) );
+	    }
+	};
+
+	DnaVersionPackage {
+	    for_dna: dna_entity,
+	    version: self.version.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    file_size: self.file_size.clone(),
+	    contributors: self.contributors.clone(),
+	    changelog: self.changelog.clone(),
+	    bytes: dna_bytes,
+	}
+    }
+
     pub fn to_info(&self) -> DnaVersionInfo {
 	let mut dna_entity : Option<Entity<DnaSummary>> = None;
 
@@ -250,6 +271,24 @@ impl DnaVersionEntry {
 	    last_updated: self.last_updated.clone(),
 	    file_size: self.file_size.clone(),
 	}
+    }
+}
+
+// Full
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DnaVersionPackage {
+    pub for_dna: Option<Entity<DnaSummary>>,
+    pub version: u64,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub file_size: u64,
+    pub contributors: Vec<(String, Option<AgentPubKey>)>,
+    pub changelog: String,
+    pub bytes: Vec<u8>,
+}
+impl EntryModel for DnaVersionPackage {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna_version", "package" )
     }
 }
 

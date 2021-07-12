@@ -14,20 +14,25 @@ const { delay, callZome,
 	create_players }		= require('./utils.js');
 
 
+const dnarepo_dna			= path.join(__dirname, "../../bundled/dnarepo/dnarepo.dna");
 const happs_dna				= path.join(__dirname, "../../bundled/happs/happs.dna");
 const webassets_dna			= path.join(__dirname, "../../bundled/web_assets/web_assets.dna");
 
-const dna_list				= [ happs_dna, webassets_dna ];
+const dna_list				= [ dnarepo_dna, happs_dna, webassets_dna ];
 
+const storage				= "storage";
 const store				= "store";
 const files				= "files";
 
+const chunk_size			= (2**20 /*1 megabyte*/) * 2;
 
 orchestrator.registerScenario('WebAssets::files API', async (scenario, _) => {
     const [ alice ]			= await create_players( scenario, dna_list, ["alice"] );
-    const [ happ_client,
+    const [ dnarepo_client,
+	    happ_client,
 	    asset_client ]		= alice.cells;
 
+    log.warn("dnarepo    DNA hash: %s", String(dnarepo_client.id.dna) );
     log.warn("happs      DNA hash: %s", String(happ_client.id.dna) );
     log.warn("web_assets DNA hash: %s", String(asset_client.id.dna) );
 
@@ -39,7 +44,6 @@ orchestrator.registerScenario('WebAssets::files API', async (scenario, _) => {
     const file_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.gz") );
     log.debug("GZ file bytes (%s): typeof %s", file_bytes.length, typeof file_bytes );
 
-    let chunk_size			= (2**20 /*1 megabyte*/) * 2;
     let gz_file_hash;
     {
 	let chunk_hashes		= [];
@@ -77,6 +81,43 @@ orchestrator.registerScenario('WebAssets::files API', async (scenario, _) => {
     }
 
 
+    const dna_input			= {
+	"name": "Game Turns",
+	"description": "A tool for turn-based games to track the order of player actions",
+    };
+    let dna				= await dnarepo_client( storage, "create_dna", dna_input );
+    log.normal("New DNA (metadata): %s -> %s", String(dna.$id), dna.name );
+
+    const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.dna") );
+    log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
+
+    let chunk_hashes			= [];
+    {
+	let chunk_count			= Math.ceil( dna_bytes.length / chunk_size );
+	for (let i=0; i < chunk_count; i++) {
+	    let chunk			= await dnarepo_client( storage, "create_dna_chunk", {
+		"sequence": {
+		    "position": i+1,
+		    "length": chunk_count,
+		},
+		"bytes": dna_bytes.slice( i*chunk_size, (i+1)*chunk_size ),
+	    });
+	    log.info("Chunk %s/%s hash: %s", i+1, chunk_count, String(chunk.$address) );
+
+	    chunk_hashes.push( chunk.$address );
+	}
+	log.debug("Final chunks:", json.debug(chunk_hashes) );
+    }
+
+    let version			= await dnarepo_client( storage, "create_dna_version", {
+	"for_dna": dna.$id,
+	"version": 1,
+	"file_size": dna_bytes.length,
+	"chunk_addresses": chunk_hashes,
+    });
+    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
+
+
     let happ_input			= {
 	"title": "Chess",
 	"subtitle": "Super fun board game",
@@ -89,9 +130,38 @@ orchestrator.registerScenario('WebAssets::files API', async (scenario, _) => {
 
     let happ				= await happ_client( store, "create_happ", happ_input );
     log.normal("New hApp: %s", String(happ.$addr) );
-    log.debug("hApp: %s", json.debug(happ) );
 
     expect( happ.description		).to.equal( happ_input.description );
+
+
+    const manifest_yaml			= fs.readFileSync( path.resolve(__dirname, "../test_happ.yaml"), "utf8" );
+    let release_input			= {
+	"name": "v0.1.0",
+	"description": "The first release",
+	"for_happ": happ.$id,
+	manifest_yaml,
+	"resources": {
+	    "test_dna": version.$id,
+	},
+    };
+
+    let release				= await happ_client( store, "create_happ_release", release_input );
+    log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
+
+    expect( release.description		).to.equal( release_input.description );
+
+
+    {
+	let happ_package		= await happ_client( store, "get_release_package", {
+	    "id": release.$id,
+	    "dnarepo_dna_hash": dnarepo_client.id.dna,
+	});
+	log.normal("hApp release package bytes: (%s) %s", happ_package.constructor.name, happ_package.length );
+
+	expect( happ_package.length	).to.equal( 899277 );
+
+	fs.writeFileSync( path.resolve(__dirname, "../multitesting.happ"), Buffer.from(happ_package) );
+    }
 });
 
 orchestrator.run();

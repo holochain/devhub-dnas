@@ -94,7 +94,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
     let release_input			= {
 	"name": "v0.1.0",
 	"description": "The first release",
-	"for_happ": happ_addr,
+	"for_happ": happ.$id,
 	manifest_yaml,
 	"resources": {
 	    "test_dna": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),

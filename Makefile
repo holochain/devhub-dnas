@@ -89,16 +89,16 @@ tests/test.gz:
 test-dnas:			test-dnarepo-debug test-happs-debug test-webassets-debug
 test-dnarepo-debug:		tests/node_modules $(DNAREPO) tests/test.dna
 	cd tests; \
-	RUST_LOG=[fatal]=fatal TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_dnarepo.js
+	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_dnarepo.js
 test-happs-debug:		tests/node_modules $(HAPPDNA)
 	cd tests; \
-	RUST_LOG=[fatal]=fatal TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_happs.js
+	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_happs.js
 test-webassets-debug:		tests/node_modules $(ASSETSDNA) tests/test.gz
 	cd tests; \
-	RUST_LOG=[fatal]=fatal TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_web_assets.js
-test-multi-debug:		tests/node_modules $(HAPPDNA) $(ASSETSDNA) tests/test.gz
+	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_web_assets.js
+test-multi-debug:		tests/node_modules $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) tests/test.gz
 	cd tests; \
-	RUST_LOG=[debug]=debug TRYORAMA_LOG_LEVEL=debug LOG_LEVEL=debug node src/test_multiple.js
+	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_multiple.js
 test-crates:
 	cd essence_payloads; cargo test
 	cd hc_entities; cargo test

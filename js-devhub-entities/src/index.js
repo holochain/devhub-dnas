@@ -85,6 +85,21 @@ Dna.model("summary", function ( content ) {
 
 const DnaVersion			= new EntityType("dna_version");
 
+DnaVersion.model("package", function ( content ) {
+    content.for_dna		= Schema.deconstruct( "entity", content.for_dna );
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.bytes		= new Uint8Array(content.bytes);
+
+    content.contributors.forEach( ([email, pubkey], i) => {
+	content.contributors[i]		= {
+	    email,
+	    "agent": pubkey === null ? null : new AgentPubKey(pubkey),
+	};
+    });
+
+    return content;
+});
 DnaVersion.model("info", function ( content ) {
     content.for_dna		= Schema.deconstruct( "entity", content.for_dna );
     content.published_at	= new Date( content.published_at );

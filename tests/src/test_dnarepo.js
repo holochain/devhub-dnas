@@ -278,6 +278,15 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
     }
 
     {
+	let pack			= await alice_client( zome, "get_dna_package", {
+	    "id": dna_version_hash,
+	});
+	log.info("DNA Package bytes: %s", pack.bytes.length );
+
+	expect( pack.bytes.length	).to.equal( dna_bytes.length );
+    }
+
+    {
 	// Unpublish DNA Version
 	let deleted_dna_version_hash	= await alice_client( zome, "delete_dna_version", {
 	    "id": dna_version_hash,
@@ -288,6 +297,21 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
 	    "for_dna": main_dna.$id,
 	});
 	expect( dna_versions		).to.have.length( 1 );
+
+	let failed			= false;
+	try {
+	    await alice_client( zome, "get_dna_version", {
+		"id": dna_version_hash,
+	    });
+	} catch (err) {
+	    expect( err.kind		).to.equal( "UserError" );
+	    expect( err.name		).to.equal( "EntryNotFoundError" );
+	    expect( err.message		).to.have.string( "Entry not found for address: " );
+
+	    failed			= true;
+	}
+
+	expect( failed			).to.be.true;
     }
 
     {
@@ -310,35 +334,6 @@ orchestrator.registerScenario('dnas::storage API', async (scenario, _) => {
 
 	let dnas			= await alice_client( zome, "get_my_dnas", null);
 	expect( dnas			).to.have.length( 0 );
-    }
-
-    {
-	let dnas			= await alice_client( zome, "get_my_deprecated_dnas", null);
-	log.info("My deprecated DNAs: %s", dnas.length );
-
-	log.normal("Deprecated DNA list (%s):", dnas.length,  );
-	dnas.forEach( v => {
-	    log.normal("  - Dna { name: %s, published_at: %s }", v.name, v.published_at );
-	});
-
-	expect( dnas			).to.have.length( 1 );
-    }
-
-    {
-	let failed			= false;
-	try {
-	    await alice_client( zome, "get_dna", {
-		"id": dna_version_hash,
-	    });
-	} catch (err) {
-	    expect( err.kind		).to.equal( "UserError" );
-	    expect( err.name		).to.equal( "EntryNotFoundError" );
-	    expect( err.message		).to.have.string( "Entry not found for address: " );
-
-	    failed			= true;
-	}
-
-	expect( failed			).to.be.true;
     }
 });
 

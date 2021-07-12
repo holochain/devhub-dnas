@@ -4,7 +4,7 @@ use devhub_types::{
     dna_entry_types::{
 	ProfileEntry, ProfileInfo,
 	DnaEntry, DnaInfo, DnaSummary,
-	DnaVersionEntry, DnaVersionInfo, DnaVersionSummary,
+	DnaVersionEntry, DnaVersionInfo, DnaVersionSummary, DnaVersionPackage,
 	DnaChunkEntry,
     },
     composition,
@@ -17,6 +17,7 @@ mod dna;
 mod dnaversions;
 mod dnachunks;
 
+mod packaging;
 mod constants;
 
 
@@ -192,6 +193,15 @@ fn create_dna_chunk(input: DnaChunkEntry) -> ExternResult<EntityResponse<DnaChun
 #[hdk_extern]
 fn get_dna_chunk(input: dnachunks::GetDnaChunksInput) -> ExternResult<EntityResponse<DnaChunkEntry>> {
     let entity = catch!( dnachunks::get_dna_chunk( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+
+// Packaging
+#[hdk_extern]
+fn get_dna_package(input: packaging::GetDnaPackageInput) -> ExternResult<EntityResponse<DnaVersionPackage>> {
+    let entity = catch!( packaging::get_dna_package( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }

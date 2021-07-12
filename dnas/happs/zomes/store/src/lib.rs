@@ -14,6 +14,7 @@ use hdk::prelude::*;
 
 mod happ;
 mod happ_release;
+mod packaging;
 mod constants;
 
 
@@ -99,8 +100,15 @@ fn delete_happ_release(input: happ_release::DeleteInput) -> ExternResult<DevHubR
 
 // Packaging
 #[hdk_extern]
-fn get_gui(input: happ::GetGUIInput) -> ExternResult<EntityResponse<FileInfo>> {
-    let entity = catch!( happ::get_gui( input ) );
+fn get_gui(input: packaging::GetGUIInput) -> ExternResult<EntityResponse<FileInfo>> {
+    let entity = catch!( packaging::get_gui( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_release_package(input: packaging::GetReleasePackageInput) -> ExternResult<DevHubResponse<Vec<u8>>> {
+    let value = catch!( packaging::get_release_package( input ) );
+
+    Ok(composition( value, VALUE_MD ))
 }

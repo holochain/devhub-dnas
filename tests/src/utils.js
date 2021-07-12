@@ -94,10 +94,12 @@ async function create_players ( scenario, happ_dnas, agents ) {
     const agents_happ			= installations.map( happs => happs[0] );
 
     agents_happ.forEach( (happ, i) => {
-	happ.cells.forEach( (cell_client, n) => {
+	// Replace the returned cell order with the order specified by 'happ_dnas'
+	agents_happ[i].cells		= happ_dnas.map( (dna_path, n) => {
+	    let cell_client		= happ.cells.find( cell => cell.cellNick.includes( dna_path ) );
 	    let fn			= callZome.bind(cell_client);
 
-	    happ.cells[n]		= Object.assign( fn, {
+	    return Object.assign( fn, {
 		"cell":		cell_client,
 		"nick":		cell_client.cellNick,
 		"id": {
