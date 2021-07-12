@@ -1,8 +1,10 @@
 use devhub_types::{
     DevHubResponse, EntityResponse,
     constants::{ VALUE_MD, ENTITY_MD },
-    errors::{ ErrorKinds },
-    happ_entry_types::{ HappEntry, HappInfo },
+    happ_entry_types::{
+	HappEntry, HappInfo,
+	HappReleaseEntry, HappReleaseInfo,
+    },
     web_asset_entry_types::{ FileInfo },
     composition,
     catch,
@@ -11,12 +13,14 @@ use hc_entities::{ GetEntityInput };
 use hdk::prelude::*;
 
 mod happ;
+mod happ_release;
 mod constants;
 
 
 
 entry_defs![
-    HappEntry::entry_def()
+    HappEntry::entry_def(),
+    HappReleaseEntry::entry_def()
 ];
 
 
@@ -62,8 +66,22 @@ fn deprecate_happ(input: happ::HappDeprecateInput) -> ExternResult<EntityRespons
 }
 
 #[hdk_extern]
-fn get_ui(input: GetEntityInput) -> ExternResult<EntityResponse<FileInfo>> {
-    let entity = catch!( happ::get_ui( input ) );
+fn get_gui(input: happ::GetGUIInput) -> ExternResult<EntityResponse<FileInfo>> {
+    let entity = catch!( happ::get_gui( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn create_happ_release(input: happ_release::CreateInput) -> ExternResult<EntityResponse<HappReleaseInfo>> {
+    let entity = catch!( happ_release::create_happ_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_happ_release(input: GetEntityInput) -> ExternResult<EntityResponse<HappReleaseInfo>> {
+    let entity = catch!( happ_release::get_happ_release( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }

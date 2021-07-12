@@ -1,10 +1,10 @@
 use devhub_types::{
-    DevHubResponse,
-    constants::{ AppResult },
+    DevHubResponse, AppResult,
     errors::{ AppError },
-    happ_entry_types::{ HappEntry, HappInfo, DeprecationNotice },
+    happ_entry_types::{ HappEntry, HappInfo, DeprecationNotice, HappGUIConfig },
     web_asset_entry_types::{ FileInfo },
 };
+use holo_hash::{ DnaHash };
 use hc_entities::{ Entity, UpdateEntityInput, GetEntityInput };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
@@ -13,29 +13,38 @@ use crate::constants::{ TAG_HAPP };
 
 
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GUIConfigInput {
+    pub asset_group_id: EntryHash,
+    pub uses_web_sdk: bool,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CreateInput {
-    pub name: String,
+    pub title: String,
+    pub subtitle: String,
     pub description: String,
 
     // optional
     pub thumbnail_image: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub gui: Option<GUIConfigInput>,
 }
 
 
 pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
-    debug!("Creating HAPP: {}", input.name );
+    debug!("Creating HAPP: {}", input.title );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = utils::now()?;
 
     // if true {
-    // 	return Err( UserError::DuplicateHappName(input.name).into() );
+    // 	return Err( UserError::DuplicateHappName(input.title).into() );
     // }
 
     let happ = HappEntry {
-	name: input.name,
+	title: input.title,
+	subtitle: input.subtitle,
 	description: input.description,
 	designer: pubkey.clone(),
 	published_at: input.published_at
@@ -44,6 +53,9 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	    .unwrap_or( default_now ),
 	thumbnail_image: input.thumbnail_image,
 	deprecation: None,
+	gui: input.gui.map(|gui| {
+	    HappGUIConfig::new( gui.asset_group_id, gui.uses_web_sdk )
+	}),
     };
 
     let entity = utils::create_entity( &happ )?
@@ -71,11 +83,13 @@ pub fn get_happ(input: GetEntityInput) -> AppResult<Entity<HappInfo>> {
 
 #[derive(Debug, Deserialize)]
 pub struct HappUpdateOptions {
-    pub name: Option<String>,
+    pub title: Option<String>,
+    pub subtitle: Option<String>,
     pub description: Option<String>,
     pub thumbnail_image: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub gui: Option<HappGUIConfig>,
 }
 pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
 
@@ -89,8 +103,10 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 	    let current = HappEntry::try_from( &element )?;
 
 	    Ok(HappEntry {
-		name: props.name
-		    .unwrap_or( current.name ),
+		title: props.title
+		    .unwrap_or( current.title ),
+		subtitle: props.subtitle
+		    .unwrap_or( current.subtitle ),
 		description: props.description
 		    .unwrap_or( current.description ),
 		designer: current.designer,
@@ -101,6 +117,8 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		thumbnail_image: props.thumbnail_image
 		    .or( current.thumbnail_image ),
 		deprecation: current.deprecation,
+		gui: props.gui
+		    .or( current.gui ),
 	    })
 	})?;
 
@@ -137,24 +155,24 @@ pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> 
     Ok( entity.new_content( info ) )
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GetGUIInput {
+    pub id: EntryHash,
+    pub dna_hash: DnaHash,
+}
 
-pub fn get_ui(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
-    debug!("Get UI from: {}", input.id );
-    let dna_hash : Vec<u8> = vec![
-	132,  45,  36,  28,  99,  63,  35, 190,  23,
-	229, 249,  48, 122,  72,  85,  92, 120, 230,
-	 63,  35, 199, 183,  32,  21,  71, 122,  20,
-	129,  99, 253, 231, 237, 181, 171, 200,  19,
-	147, 180,   9
-    ];
+pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
+    debug!("Get GUI from: {}", input.id );
     let pubkey = agent_info()?.agent_initial_pubkey;
 
     let zome_call_response = call(
-	Some( CellId::new( HoloHash::from_raw_39_panicky( dna_hash ).into(), pubkey ) ),
+	Some( CellId::new( input.dna_hash, pubkey ) ),
 	"files".into(),
 	"get_file".into(),
 	None,
-	input,
+	GetEntityInput {
+	    id: input.id,
+	},
     )?;
 
     if let ZomeCallResponse::Ok(result_io) = zome_call_response {

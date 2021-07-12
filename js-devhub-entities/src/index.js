@@ -19,6 +19,40 @@ Happ.model("info", function ( content ) {
     content.last_updated	= new Date( content.last_updated );
     content.designer		= new AgentPubKey( content.designer );
 
+    if ( content.gui ) {
+	content.gui.asset_group_id	= new EntryHash( content.gui.asset_group_id );
+    }
+
+    return content;
+});
+
+Happ.model("summary", function ( content ) {
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.designer		= new AgentPubKey( content.designer );
+
+    return content;
+});
+
+const HappRelease			= new EntityType("happ_release");
+
+HappRelease.model("info", function ( content ) {
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.for_happ		= Schema.deconstruct( "entity", content.for_happ );
+
+    for (let k in content.resources ) {
+	content.resources[k]	= new EntryHash( content.resources[k] );
+    }
+
+    return content;
+});
+
+HappRelease.model("summary", function ( content ) {
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.for_happ		= new EntryHash( content.for_happ );
+
     return content;
 });
 
@@ -88,7 +122,7 @@ DnaChunk.model("info");
 const File				= new EntityType("file");
 
 File.model("info", function ( content ) {
-    content.authorr		= new AgentPubKey( content.author );
+    content.author		= new AgentPubKey( content.author );
     content.published_at	= new Date( content.published_at );
 
     content.chunk_addresses.forEach( (addr, i) => {
@@ -107,7 +141,7 @@ FileChunk.model("info");
 // Grouping Entity Definitions
 //
 const Schema				= new Architecture([
-    Happ,
+    Happ, HappRelease,
     Profile, Dna, DnaVersion, DnaChunk,
     File, FileChunk,
 ]);
@@ -117,6 +151,7 @@ module.exports = {
     Schema,
 
     Happ,
+    HappRelease,
     Profile,
     Dna,
     DnaVersion,

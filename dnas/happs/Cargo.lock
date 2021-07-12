@@ -681,6 +681,7 @@ dependencies = [
  "hc_dna_utils",
  "hc_entities",
  "hdk",
+ "holo_hash",
  "rand 0.8.3",
  "serde",
  "serde_derive",

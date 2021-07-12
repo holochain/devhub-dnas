@@ -1,5 +1,5 @@
 use devhub_types::{
-    constants::{ AppResult },
+    AppResult,
     dna_entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice },
 };
 use hc_entities::{ Entity, Collection, UpdateEntityInput };

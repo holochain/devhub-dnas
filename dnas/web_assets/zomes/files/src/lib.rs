@@ -1,7 +1,6 @@
 use devhub_types::{
     DevHubResponse, EntityResponse,
     constants::{ VALUE_MD, ENTITY_MD },
-    errors::{ ErrorKinds },
     web_asset_entry_types::{ FileEntry, FileInfo, FileChunkEntry },
     composition,
     catch,

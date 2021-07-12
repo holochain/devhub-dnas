@@ -1,5 +1,5 @@
 use devhub_types::{
-    constants::{ AppResult },
+    AppResult,
     errors::{ UserError },
     dna_entry_types::{ ProfileEntry, ProfileInfo },
 };

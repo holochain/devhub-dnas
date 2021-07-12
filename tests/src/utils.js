@@ -14,7 +14,7 @@ const json				= require('@whi/json');
 
 
 const delay				= ms => new Promise(f => setTimeout(f,ms));
-const Interpreter			= new Translator(["AppError", "UtilsError", "DNAError", "UserError"], {
+const Interpreter			= new Translator(["AppError", "UtilsError", "DNAError", "UserError", "WasmError"], {
     "rm_stack_lines": 2,
 });
 

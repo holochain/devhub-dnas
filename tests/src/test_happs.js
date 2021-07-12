@@ -4,6 +4,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 });
 
 
+const fs				= require('fs');
 const expect				= require('chai').expect;
 const { HoloHash }			= require('@whi/holo-hash');
 const json				= require('@whi/json');
@@ -36,12 +37,13 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 
 
     let happ_input			= {
-	"name": "Chess",
+	"title": "Chess",
+	"subtitle": "Super fun board game",
 	"description": "Play chess with friends :)",
     };
 
     let happ				= await alice_client( zome, "create_happ", happ_input );
-    log.normal("New hApp: %s -> %s", String(happ.$addr), happ.name );
+    log.normal("New hApp: %s -> %s", String(happ.$addr), happ.title );
 
     expect( happ.description		).to.equal( happ_input.description );
 
@@ -54,7 +56,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 		description,
 	    },
 	});
-	log.normal("New hApp: %s -> %s", String(update.$addr), update.name );
+	log.normal("New hApp: %s -> %s", String(update.$addr), update.title );
 	happ_addr			= update.$addr;
 
 	expect( update.description	).to.equal( description );
@@ -62,7 +64,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 	let _happ			= await alice_client( zome, "get_happ", {
 	    "id": happ.$id,
 	});
-	log.normal("Updated hApp: %s -> %s", String(_happ.$addr), _happ.name );
+	log.normal("Updated hApp: %s -> %s", String(_happ.$addr), _happ.title );
 
 	expect( _happ.description	).to.equal( description );
     }
@@ -73,7 +75,7 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 	    "addr": happ_addr,
 	    "message": message,
 	});
-	log.normal("New hApp: %s -> %s", String(update.$addr), update.name );
+	log.normal("New hApp: %s -> %s", String(update.$addr), update.title );
 	happ_addr			= update.$addr;
 
 	expect( update.deprecation		).to.be.an( "object" );
@@ -82,10 +84,35 @@ orchestrator.registerScenario('hApps::store API', async (scenario, _) => {
 	let _happ			= await alice_client( zome, "get_happ", {
 	    "id": happ.$id,
 	});
-	log.normal("Deprecated hApp: %s -> %s", String(_happ.$addr), _happ.name );
+	log.normal("Deprecated hApp: %s -> %s", String(_happ.$addr), _happ.title );
 
 	expect( _happ.deprecation		).to.be.an( "object" );
 	expect( _happ.deprecation.message	).to.equal( message );
+    }
+
+    const manifest_yaml			= fs.readFileSync( path.resolve(__dirname, "../test_happ.yaml"), "utf8" );
+    let release_input			= {
+	"name": "v0.1.0",
+	"description": "The first release",
+	"for_happ": happ_addr,
+	manifest_yaml,
+	"resources": {
+	    "test_dna": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
+	},
+    };
+
+    let release				= await alice_client( zome, "create_happ_release", release_input );
+    log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
+
+    expect( release.description		).to.equal( release_input.description );
+
+    {
+	let _release			= await alice_client( zome, "get_happ_release", {
+	    "id": release.$id,
+	});
+	log.normal("Updated release: %s -> %s", String(_release.$addr), _release.name );
+
+	expect( _release.description	).to.equal( release_input.description );
     }
 
     {

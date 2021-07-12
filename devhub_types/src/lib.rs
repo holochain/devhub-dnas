@@ -6,7 +6,11 @@ pub mod web_asset_entry_types;
 
 use hdk::prelude::*;
 use essence::{ EssenceResponse };
+use errors::{ ErrorKinds };
 use hc_entities::{ Collection, Entity };
+
+
+pub type AppResult<T> = Result<T, ErrorKinds>;
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,19 +40,19 @@ macro_rules! catch { // could change to "trap", "snare", or "capture"
 	    Ok(x) => x,
 	    Err(e) => {
 		let error = match e {
-		    ErrorKinds::AppError(e) => (&e).into(),
-		    ErrorKinds::UserError(e) => (&e).into(),
-		    ErrorKinds::HDKError(e) => (&e).into(),
-		    ErrorKinds::DnaUtilsError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::AppError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::UserError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::HDKError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::DnaUtilsError(e) => (&e).into(),
 		};
-		return Ok(DevHubResponse::failure( error, None ))
+		return Ok(devhub_types::DevHubResponse::failure( error, None ))
 	    },
 	}
     };
     ( $r:expr, $e:expr ) => {
 	match $r {
 	    Ok(x) => x,
-	    Err(e) => return Ok(DevHubResponse::failure( (&$e).into(), None )),
+	    Err(e) => return Ok(devhub_types::DevHubResponse::failure( (&$e).into(), None )),
 	}
     };
 }

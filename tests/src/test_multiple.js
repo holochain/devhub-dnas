@@ -67,13 +67,31 @@ orchestrator.registerScenario('WebAssets::files API', async (scenario, _) => {
     }
 
     {
-	let ui				= await happ_client( store, "get_ui", {
+	let gui				= await happ_client( store, "get_gui", {
+	    "dna_hash": asset_client.id.dna,
 	    "id": gz_file_hash,
 	});
-	log.normal("Updated hApp UI: %s", ui.file_size );
+	log.normal("Updated hApp UI: %s", gui.file_size );
 
-	expect( ui.file_size		).to.equal( 802067 );
+	expect( gui.file_size		).to.equal( 802067 );
     }
+
+
+    let happ_input			= {
+	"title": "Chess",
+	"subtitle": "Super fun board game",
+	"description": "Play chess with friends :)",
+	"gui": {
+	    "asset_group_id": gz_file_hash,
+	    "uses_web_sdk": false,
+	}
+    };
+
+    let happ				= await happ_client( store, "create_happ", happ_input );
+    log.normal("New hApp: %s", String(happ.$addr) );
+    log.debug("hApp: %s", json.debug(happ) );
+
+    expect( happ.description		).to.equal( happ_input.description );
 });
 
 orchestrator.run();

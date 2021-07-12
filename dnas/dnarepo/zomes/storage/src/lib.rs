@@ -1,7 +1,6 @@
 use devhub_types::{
     DevHubResponse, EntityResponse, CollectionResponse, EntityCollectionResponse,
     constants::{ ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD, VALUE_COLLECTION_MD },
-    errors::{ ErrorKinds },
     dna_entry_types::{
 	ProfileEntry, ProfileInfo,
 	DnaEntry, DnaInfo, DnaSummary,

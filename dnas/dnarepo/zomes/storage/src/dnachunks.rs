@@ -1,5 +1,5 @@
 use devhub_types::{
-    constants::{ AppResult },
+    AppResult,
     dna_entry_types::{ DnaChunkEntry },
 };
 use hc_entities::{ Entity };
