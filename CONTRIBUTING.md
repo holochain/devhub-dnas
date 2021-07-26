@@ -1,4 +1,13 @@
 
+## Overview
+
+### (high-level) Entity Relationship Diagram
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1bS9_PpZiwE5pA8mFTlRGvOYaWFwgzHPD&sz=w1000)
+
+### Entity Relationship Pattern
+
+#### Chained Updates (permalink / state-based CRDT)
+![](https://drive.google.com/a/webheroes.ca/thumbnail?sz=w1000&id=1oJTioA_IlGrcZI4tn-AyM0orMCt5kP6r)
 
 ## Building DNAs
 

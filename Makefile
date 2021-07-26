@@ -86,19 +86,29 @@ tests/test.dna:
 	cp $(DNAREPO) $@
 tests/test.gz:
 	gzip -kc bundled/dnarepo/dnarepo.dna > $@
-test-dnas:			test-dnarepo-debug test-happs-debug test-webassets-debug
-test-dnarepo-debug:		tests/node_modules $(DNAREPO) tests/test.dna
-	cd tests; \
-	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_dnarepo.js
-test-happs-debug:		tests/node_modules $(HAPPDNA)
-	cd tests; \
-	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_happs.js
-test-webassets-debug:		tests/node_modules $(ASSETSDNA) tests/test.gz
-	cd tests; \
-	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_web_assets.js
-test-multi-debug:		tests/node_modules $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) tests/test.gz
-	cd tests; \
-	TRYORAMA_LOG_LEVEL=error LOG_LEVEL=debug node src/test_multiple.js
+test-dnas:			test-dnarepo		test-happs		test-webassets
+test-dnas-debug:		test-dnarepo-debug	test-happs-debug	test-webassets-debug
+
+test-dnarepo:
+	cd tests; RUST_LOG=none npx mocha integration/test_dnarepo.js
+test-dnarepo-debug:
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_dnarepo.js
+
+test-happs:
+	cd tests; RUST_LOG=none npx mocha integration/test_happs.js
+test-happs-debug:
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_happs.js
+
+test-webassets:
+	cd tests; RUST_LOG=none npx mocha integration/test_webassets.js
+test-webassets-debug:
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_webassets.js
+
+test-multi:
+	cd tests; RUST_LOG=none npx mocha integration/test_multiple.js
+test-multi-debug:
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_multiple.js
+
 test-crates:
 	cd essence_payloads; cargo test
 	cd hc_entities; cargo test

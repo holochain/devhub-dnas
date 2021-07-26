@@ -1,4 +1,6 @@
 
+const { AppWebsocket }			= require('@holochain/conductor-api');
+const { Translator }			= require('@whi/essence');
 const HoloHashLib			= require('@whi/holo-hash');
 const EntityArchitectLib		= require('@whi/entity-architect');
 
@@ -6,6 +8,13 @@ const { Architecture,
 	EntityType,
 	EntryHash,
 	AgentPubKey }			= EntityArchitectLib;
+
+
+let debug				= false;
+function log ( msg, ...args ) {
+    let datetime			= (new Date()).toISOString();
+    console.log(`${datetime} [ src/index. ]  INFO: ${msg}`, ...args );
+}
 
 
 
@@ -162,7 +171,76 @@ const Schema				= new Architecture([
 ]);
 
 
+const Interpreter			= new Translator(["AppError", "UtilsError", "DNAError", "UserError", "WasmError"], {
+    "rm_stack_lines": 2,
+});
+
+class Client {
+    constructor ( port, dna_hash, agent_pubkey ) {
+	this.port			= port;
+	this.dna_hash			= dna_hash;
+	this.agent_pubkey		= agent_pubkey;
+	this.cell_id			= [ this.dna_hash, this.agent_pubkey ];
+    }
+
+    async connect () {
+	this._client			= await AppWebsocket.connect( "ws://localhost:" + this.port );
+    }
+
+    async destroy () {
+	this._client.socket.terminate();
+    }
+
+    async call ( zome_name, fn_name, args = null ) {
+	debug && log("Calling conductor: %s->%s({ %s })", zome_name, fn_name, Object.keys(args || {}).join(", ") );
+
+	let response;
+	try {
+	    response			= await this._client.callZome({
+		"cell_id":	this.cell_id,
+		"zome_name":	zome_name,
+		"fn_name":	fn_name,
+		"payload":	args,
+		"provenance":	this.agent_pubkey, // AgentPubKey
+	    });
+	} catch ( err ) {
+	    debug && log("Conductor returned error: %s", err );
+	    if ( err instanceof Error )
+		console.error( err );
+	    throw err;
+	}
+
+	let pack;
+	try {
+	    pack			= Interpreter.parse( response );
+	} catch ( err ) {
+	    debug && log("Failed to interpret Essence package: %s", String(err) );
+	    console.error( err.stack );
+	    throw err;
+	}
+
+	let payload			= pack.value();
+
+	if ( payload instanceof Error ) {
+	    debug && log("Throwing error package: %s::%s( %s )", payload.kind, payload.name, payload.message );
+	    throw payload;
+	}
+
+	let composition			= pack.metadata('composition');
+
+	try {
+	    return Schema.deconstruct( composition, payload );
+	} catch ( err ) {
+	    debug && log("Failed to deconstruct payload: %s", String(err) );
+	    console.error( err.stack );
+	    throw err;
+	}
+    };
+}
+
+
 module.exports = {
+    Client,
     Schema,
 
     Happ,
@@ -176,4 +254,8 @@ module.exports = {
 
     "EntityArchitect": EntityArchitectLib,
     "HoloHashes": HoloHashLib,
+
+    logging () {
+	debug				= true;
+    },
 };

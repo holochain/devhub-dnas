@@ -1,7 +1,7 @@
 const webpack			= require('webpack');
 
 module.exports = {
-    target: 'node',
+    target: 'web',
     mode: 'production', // production | development
     entry: [ './src/index.js' ],
     output: {

@@ -17,6 +17,7 @@ npm i @holochain/devhub-entities
 
 ## Basic usage
 
+### Schema
 ```javascript
 const { Schema } = require('@holochain/devhub-entities');
 
@@ -36,6 +37,20 @@ Schema.deconstruct( "entity", {
     "content": dna_info
 });
 // Entity { ...dna_info }
+```
+
+### Client
+This client will automatically parse Essence packages and deconstruct Entity payloads using
+`Schema`.
+
+```javascript
+const { Client } = require('@holochain/devhub-entities');
+
+const client = new Client( app_port, cell.dna.hash, cell.agent );
+
+await client.connect();
+
+let data = client.call( zome, fn_name, args );
 ```
 
 ### Contributing
