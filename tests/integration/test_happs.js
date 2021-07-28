@@ -43,6 +43,13 @@ function basic_tests () {
 
 	expect( happ.description	).to.equal( happ_input.description );
 
+	{
+	    let happs			= await alice.call( zome, "get_my_happs" );
+	    log.normal("My hApps: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
+	}
+
 	let happ_addr			= happ.$addr;
 	{
 	    let description		= "New description";
@@ -109,6 +116,16 @@ function basic_tests () {
 	    log.normal("Updated release: %s -> %s", String(_release.$addr), _release.name );
 
 	    expect( _release.description	).to.equal( release_input.description );
+	}
+
+	{
+	    let releases		= await alice.call( zome, "get_happ_releases", {
+		"for_happ": happ.$id,
+	    });
+	    log.normal("hApp Releases %s -> %s", releases.length, String(releases.$base) );
+
+	    expect( happ.$id		).to.deep.equal( releases.$base );
+	    expect( releases		).to.have.length( 1 );
 	}
 
 	let happ_release_addr;

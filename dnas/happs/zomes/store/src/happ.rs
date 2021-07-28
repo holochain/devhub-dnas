@@ -1,8 +1,11 @@
 use devhub_types::{
     AppResult,
-    happ_entry_types::{ HappEntry, HappInfo, DeprecationNotice, HappGUIConfig },
+    happ_entry_types::{
+	HappEntry, HappInfo, HappSummary,
+	DeprecationNotice, HappGUIConfig,
+    },
 };
-use hc_entities::{ Entity, UpdateEntityInput, GetEntityInput };
+use hc_entities::{ Entity, Collection, UpdateEntityInput, GetEntityInput };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
 
@@ -150,4 +153,60 @@ pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> 
     let info = entity.content.to_info();
 
     Ok( entity.new_content( info ) )
+}
+
+
+pub fn get_happ_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash, Vec<Link>)> {
+    let base : EntryHash = match maybe_pubkey {
+	None => agent_info()?.agent_initial_pubkey,
+	Some(agent) => agent,
+    }.into();
+
+    debug!("Getting hApp links for Agent entry: {}", base );
+    let all_links: Vec<Link> = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_HAPP))
+    )?.into();
+
+    Ok( (base, all_links) )
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GetHappsInput {
+    pub agent: Option<AgentPubKey>,
+}
+
+pub fn get_happs(input: GetHappsInput) -> AppResult<Collection<Entity<HappSummary>>> {
+    let (base, links) = get_happ_links( input.agent.clone() )?;
+
+    let happs = links.into_iter()
+	.filter_map(|link| {
+	    utils::get_entity( &link.target ).ok()
+	})
+	.filter_map(|entity| {
+	    let mut maybe_entity : Option<Entity<HappSummary>> = None;
+
+	    if let Some(happ) = HappEntry::try_from( &entity.content ).ok() {
+		if happ.deprecation.is_none() {
+		    let summary = happ.to_summary();
+		    let entity = entity.new_content( summary );
+
+		    maybe_entity.replace( entity );
+		}
+	    }
+
+	    maybe_entity
+	})
+	.collect();
+
+    Ok(Collection {
+	base,
+	items: happs
+    })
+}
+
+pub fn get_my_happs() -> AppResult<Collection<Entity<HappSummary>>> {
+    get_happs(GetHappsInput {
+	agent: None,
+    })
 }

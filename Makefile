@@ -89,24 +89,24 @@ tests/test.gz:
 test-dnas:			test-dnarepo		test-happs		test-webassets
 test-dnas-debug:		test-dnarepo-debug	test-happs-debug	test-webassets-debug
 
-test-dnarepo:
+test-dnarepo:			dnarepo
 	cd tests; RUST_LOG=none npx mocha integration/test_dnarepo.js
-test-dnarepo-debug:
+test-dnarepo-debug:		dnarepo
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_dnarepo.js
 
-test-happs:
+test-happs:			happdna
 	cd tests; RUST_LOG=none npx mocha integration/test_happs.js
-test-happs-debug:
+test-happs-debug:		happdna
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_happs.js
 
-test-webassets:
+test-webassets:			webassetdna
 	cd tests; RUST_LOG=none npx mocha integration/test_webassets.js
-test-webassets-debug:
+test-webassets-debug:		webassetdna
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_webassets.js
 
-test-multi:
+test-multi:			dnarepo happdna webassetdna
 	cd tests; RUST_LOG=none npx mocha integration/test_multiple.js
-test-multi-debug:
+test-multi-debug:		dnarepo happdna webassetdna
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_multiple.js
 
 test-crates:

@@ -1,9 +1,9 @@
 use devhub_types::{
-    DevHubResponse, EntityResponse,
-    constants::{ VALUE_MD, ENTITY_MD },
+    DevHubResponse, EntityResponse, EntityCollectionResponse,
+    constants::{ VALUE_MD, ENTITY_MD, ENTITY_COLLECTION_MD },
     happ_entry_types::{
-	HappEntry, HappInfo,
-	HappReleaseEntry, HappReleaseInfo,
+	HappEntry, HappInfo, HappSummary,
+	HappReleaseEntry, HappReleaseInfo, HappReleaseSummary,
     },
     web_asset_entry_types::{ FileInfo },
     composition,
@@ -67,6 +67,20 @@ fn deprecate_happ(input: happ::HappDeprecateInput) -> ExternResult<EntityRespons
     Ok(composition( entity, ENTITY_MD ))
 }
 
+#[hdk_extern]
+fn get_happs(input: happ::GetHappsInput) -> ExternResult<EntityCollectionResponse<HappSummary>> {
+    let collection = catch!( happ::get_happs( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_my_happs(_:()) -> ExternResult<EntityCollectionResponse<HappSummary>> {
+    let collection = catch!( happ::get_my_happs() );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
 
 // hApp Releases
 #[hdk_extern]
@@ -95,6 +109,13 @@ fn delete_happ_release(input: happ_release::DeleteInput) -> ExternResult<DevHubR
     let value = catch!( happ_release::delete_happ_release( input ) );
 
     Ok(composition( value, VALUE_MD ))
+}
+
+#[hdk_extern]
+fn get_happ_releases(input: happ_release::GetHappReleasesInput) -> ExternResult<EntityCollectionResponse<HappReleaseSummary>> {
+    let collection = catch!( happ_release::get_happ_releases( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
 

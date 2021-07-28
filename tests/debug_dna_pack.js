@@ -14,6 +14,7 @@ function print( msg, ...args ) {
 	throw new TypeError(`First argument must be a path to the DNA file; not 'undefined'`);
 
     let dna_pack			= fs.readFileSync( dna_file );
+    print("Opened file with %s bytes", dna_pack.length );
     let msgpack_bytes			= await ungzip( dna_pack );
     let bundle				= msgpack.decode( msgpack_bytes );
 

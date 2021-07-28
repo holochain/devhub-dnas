@@ -117,15 +117,19 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 	    return Err( AppError::UnexpectedStateError("Failed to call another DNA".into()).into() );
 	}
     }
+    debug!("Finished collecting DNAs for package with {} resources: {:?}", package.resources.len(), package.resources.clone().into_iter().map( |(k,v)| (k, v.len()) ).collect::<Vec<(String, usize)>>() );
 
     let packed_bytes = rmp_serde::to_vec_named( &package )
 	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to msgpack bundle: {:?}", e )) )?;
+    debug!("Message packed bytes: {}", packed_bytes.len() );
 
     let mut enc = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
     enc.write_all( &packed_bytes )
 	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to gzip package: {:?}", e )) )?;
+
     let gzipped_package = enc.finish()
 	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to finish gzip encoding: {:?}", e )) )?;
+    debug!("Gzipped package bytes: {}", gzipped_package.len() );
 
     Ok( gzipped_package )
 }

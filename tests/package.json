@@ -19,5 +19,7 @@
     "node-gzip": "^1.1.2",
     "why-is-node-running": "^2.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@msgpack/msgpack": "^2.7.0"
+  }
 }

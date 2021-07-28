@@ -1,9 +1,11 @@
 use std::collections::BTreeMap;
 use devhub_types::{
     AppResult,
-    happ_entry_types::{ HappReleaseEntry, HappReleaseInfo },
+    happ_entry_types::{
+	HappReleaseEntry, HappReleaseInfo, HappReleaseSummary
+    },
 };
-use hc_entities::{ Entity, GetEntityInput, UpdateEntityInput };
+use hc_entities::{ Entity, Collection, GetEntityInput, UpdateEntityInput };
 use hdk::prelude::*;
 use hc_dna_utils as utils;
 
@@ -119,4 +121,48 @@ pub fn delete_happ_release(input: DeleteInput) -> AppResult<HeaderHash> {
     debug!("Deleted hApp release create {} via header ({})", header, delete_header );
 
     Ok( header )
+}
+
+
+pub fn get_release_links(happ_id: EntryHash) -> AppResult<Vec<Link>> {
+    debug!("Getting release links for HAPP: {}", happ_id );
+    let all_links: Vec<Link> = get_links(
+        happ_id,
+	Some(LinkTag::new( TAG_HAPP_RELEASE ))
+    )?.into();
+
+    Ok( all_links )
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct GetHappReleasesInput {
+    pub for_happ: EntryHash,
+}
+
+pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Collection<Entity<HappReleaseSummary>>> {
+    let links = get_release_links( input.for_happ.clone() )?;
+
+    let releases = links.into_iter()
+	.filter_map(|link| {
+	    utils::get_entity( &link.target ).ok()
+	})
+	.filter_map(|entity| {
+	    let mut maybe_entity : Option<Entity<HappReleaseSummary>> = None;
+
+	    if let Some(release) = HappReleaseEntry::try_from( &entity.content ).ok() {
+		let summary = release.to_summary();
+		let entity = entity.new_content( summary );
+
+		maybe_entity.replace( entity );
+	    }
+
+	    maybe_entity
+	})
+	.collect();
+
+    Ok(Collection {
+	base: input.for_happ,
+	items: releases,
+    })
 }
