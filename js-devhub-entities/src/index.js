@@ -175,12 +175,18 @@ const Interpreter			= new Translator(["AppError", "UtilsError", "DNAError", "Use
     "rm_stack_lines": 2,
 });
 
+const CLIENT_DEFAULT_OPTIONS		= {
+    "parse_essence": true,
+    "parse_entities": true,
+};
+
 class Client {
-    constructor ( port, dna_hash, agent_pubkey ) {
+    constructor ( port, dna_hash, agent_pubkey, options = {} ) {
 	this.port			= port;
 	this.dna_hash			= dna_hash;
 	this.agent_pubkey		= agent_pubkey;
 	this.cell_id			= [ this.dna_hash, this.agent_pubkey ];
+	this.options			= Object.assign( {}, CLIENT_DEFAULT_OPTIONS, options );
     }
 
     async connect () {
@@ -188,11 +194,23 @@ class Client {
     }
 
     async destroy () {
-	this._client.socket.terminate();
+	this._client.client.socket.terminate();
     }
 
     async call ( zome_name, fn_name, args = null ) {
-	debug && log("Calling conductor: %s->%s({ %s })", zome_name, fn_name, Object.keys(args || {}).join(", ") );
+	let args_debug;
+
+	if ( debug ) {
+	    if ( args === null )
+		args_debug		= " null ";
+	    else if ( args === undefined )
+		args_debug		= ` ${typeof args} `;
+	    else if ( args.constructor.name === "Object" )
+		args_debug		= `{ ${Object.keys(args || {}).join(", ")} }`;
+	    else
+		args_debug		= ` ${args.constructor.name} `;
+	}
+	debug && log("Calling conductor: %s->%s(%s)", zome_name, fn_name, args_debug );
 
 	let response;
 	try {
@@ -203,12 +221,17 @@ class Client {
 		"payload":	args,
 		"provenance":	this.agent_pubkey, // AgentPubKey
 	    });
+	    debug && log("Received response for: %s->%s(%s)", zome_name, fn_name, args_debug );
+	    debug && log("Full response:", response );
 	} catch ( err ) {
 	    debug && log("Conductor returned error: %s", err );
 	    if ( err instanceof Error )
 		console.error( err );
 	    throw err;
 	}
+
+	if ( this.options.parse_essence === false )
+	    return response;
 
 	let pack;
 	try {
@@ -225,6 +248,9 @@ class Client {
 	    debug && log("Throwing error package: %s::%s( %s )", payload.kind, payload.name, payload.message );
 	    throw payload;
 	}
+
+	if ( this.options.parse_entities === false )
+	    return payload;
 
 	let composition			= pack.metadata('composition');
 

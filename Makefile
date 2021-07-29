@@ -109,11 +109,25 @@ test-multi:			dnarepo happdna webassetdna
 test-multi-debug:		dnarepo happdna webassetdna
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_multiple.js
 
+test-zome-mere-memory:		test_dna_mere_memory
+	cd tests; RUST_LOG=none npx mocha integration/test_zome_mere_memory.js
+test-zome-mere-memory-debug:	test_dna_mere_memory
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_zome_mere_memory.js
+
 test-crates:
 	cd essence_payloads; cargo test
 	cd hc_entities; cargo test
 	cd dna_utils; cargo test
 	cd devhub_types; cargo test
+test_dna_mere_memory:		tests/dnas/memory/memory.dna
+tests/dnas/memory/memory.dna:	zomes/mere_memory/target/wasm32-unknown-unknown/debug/mere_memory.wasm
+	@echo "Packaging test DNA for 'mere_memory' zome: $@"
+	@hc dna pack $(dir $@)
+	@ls -l $(dir $@)
+zomes/mere_memory/target/wasm32-unknown-unknown/debug/mere_memory.wasm:	Makefile zomes/mere_memory/src/*.rs
+	@echo "Building 'mere_memory' zome: $@"; \
+	cd zomes/mere_memory/; \
+	RUST_BACKTRACE=1 cargo build --target wasm32-unknown-unknown
 
 
 #

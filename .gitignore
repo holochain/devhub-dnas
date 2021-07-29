@@ -2,8 +2,10 @@ bundled/*.happ
 bundled/*/*.dna
 tests/node_modules
 tests/test.dna
+tests/dnas/*/*.dna
 tests/test.gz
 dnas/*/target
+zomes/*/target
 dna_utils/target
 essence_payloads/target
 hc_entities/target

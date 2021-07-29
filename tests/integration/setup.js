@@ -15,7 +15,10 @@ function exit_cleanup () {
 process.once("exit", exit_cleanup );
 
 
-async function backdrop ( holochain, dnas, actors ) {
+async function backdrop ( holochain, dnas, actors, client_options ) {
+    log.normal("Setting up backdrop with %s DNAs and %s Agents", Object.keys(dnas).length, actors.length );
+
+    log.debug("Adding stdout/stderr line event logging hooks");
     holochain.on("lair:stdout", (line, parts) => {
 	log.debug( "\x1b[39;1m     Lair STDOUT:\x1b[22;37m %s", line );
     });
@@ -32,19 +35,22 @@ async function backdrop ( holochain, dnas, actors ) {
 	log.debug( "\x1b[31;1mConductor STDERR:\x1b[22m %s", line );
     });
 
+    log.debug("Waiting for holochain to start...");
     await holochain.start();
 
     const app_id			= "test";
     const app_port			= 44910;
     const clients			= {};
 
+    log.debug("Waiting for DNAs and actors to be set up...");
     const agents			= await holochain.backdrop( app_id, app_port, dnas, actors );
 
+    log.debug("Creating clients actors: %s", actors.join(", ") );
     await Promise.all( Object.entries( agents ).map( async ([ actor, happ ]) => {
 	clients[actor]		= happ.agent;
 
 	await Promise.all( Object.entries( happ.cells ).map( async ([ nick, cell ]) => {
-	    const client		= new Client( app_port, cell.dna.hash, cell.agent );
+	    const client		= new Client( app_port, cell.dna.hash, cell.agent, client_options );
 	    await client.connect();
 
 	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, nick, String(cell.dna.hash), String(happ.agent) );

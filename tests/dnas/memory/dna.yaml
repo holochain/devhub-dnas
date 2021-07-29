@@ -1,0 +1,7 @@
+manifest_version: "1"
+name: memory
+uuid: 00000000-0000-0000-0000-000000000000
+properties: ~
+zomes:
+  - name: mere_memory
+    bundled: ../../../zomes/mere_memory/target/wasm32-unknown-unknown/debug/mere_memory.wasm
