@@ -116,7 +116,6 @@ DnaVersion.model("info", function ( content ) {
     content.for_dna		= Schema.deconstruct( "entity", content.for_dna );
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
-    content.mere_memory_addr	= new EntryHash(content.mere_memory_addr);
 
     content.contributors.forEach( ([email, pubkey], i) => {
 	content.contributors[i]		= {
@@ -167,6 +166,7 @@ ZomeVersion.model("info", function ( content ) {
 ZomeVersion.model("summary", function ( content ) {
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
+    content.mere_memory_addr	= new EntryHash(content.mere_memory_addr);
 
     return content;
 });
@@ -260,6 +260,12 @@ class Client {
 	    debug && log("Conductor returned error: %s", err );
 	    if ( err instanceof Error )
 		console.error( err );
+
+	    if ( err.type === "error" ) { // Holochain error
+		if ( err.data.data.length > 2000 )
+		    err.data.data	=  err.data.data.slice(0,1999) + "\u2026";
+	    }
+
 	    throw err;
 	}
 

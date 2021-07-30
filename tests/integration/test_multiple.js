@@ -28,6 +28,7 @@ let clients;
 
 
 function basic_tests () {
+    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
 
     it("should get whoami info", async function () {
 	const asset_client		= clients.alice.webassets;
@@ -84,6 +85,22 @@ function basic_tests () {
 	}
 
 
+	let zome_input			= {
+	    "name": "File Storage",
+	    "description": "A generic API for fs-like data management",
+	};
+	let zome_1			= await dnarepo_client.call( storage, "create_zome", zome_input );
+	log.normal("New ZOME (metadata): %s -> %s", String(zome_1.$id), zome_1.name );
+
+	log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
+	let zome_version_1		= await dnarepo_client.call( storage, "create_zome_version", {
+	    "for_zome": zome_1.$id,
+	    "version": 1,
+	    "zome_bytes": zome_bytes,
+	});
+	log.normal("New ZOME version: %s -> %s", String(zome_version_1.$address), zome_version_1.version );
+
+
 	const dna_input			= {
 	    "name": "Game Turns",
 	    "description": "A tool for turn-based games to track the order of player actions",
@@ -97,8 +114,12 @@ function basic_tests () {
 	let version			= await dnarepo_client.call( storage, "create_dna_version", {
 	    "for_dna": dna.$id,
 	    "version": 1,
-	    "file_size": dna_bytes.length,
-	    "dna_bytes": dna_bytes,
+	    "zomes": [{
+		"name": "mere_memory",
+		"zome": zome_version_1.for_zome.$id,
+		"version": zome_version_1.$id,
+		"resource": zome_version_1.mere_memory_addr,
+	    }],
 	});
 	log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 
@@ -143,7 +164,7 @@ function basic_tests () {
 	    });
 	    log.normal("hApp release package bytes: (%s) %s", happ_package.constructor.name, happ_package.length );
 
-	    expect( happ_package.length	).to.equal( 899277 );
+	    expect( happ_package.constructor.name	).to.equal("Array");
 
 	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.happ"), Buffer.from(happ_package) );
 	}

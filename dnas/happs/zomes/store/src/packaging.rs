@@ -1,10 +1,12 @@
 use std::collections::BTreeMap;
-use std::io::Write;
+
 use devhub_types::{
     DevHubResponse, AppResult,
     errors::{ AppError },
     dnarepo_entry_types::{ DnaVersionPackage },
     web_asset_entry_types::{ FileInfo },
+    call_local_dna_zome,
+    encode_bundle,
 };
 use holo_hash::{ DnaHash };
 use hc_entities::{ Entity, GetEntityInput };
@@ -45,16 +47,86 @@ pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
 }
 
 
+// {
+//     "manifest": {
+//         "manifest_version": "1",
+//         "name": "devhub",
+//         "description": "Holochain App Store",
+//         "slots": [
+//             {
+//                 "id": "file_storage",
+//                 "provisioning": {
+//                     "strategy": "create",
+//                     "deferred": false
+//                 },
+//                 "dna": {
+//                     "bundled": "file_storage/file_storage.dna",
+//                     "properties": {
+//                         "foo": 1111
+//                     },
+//                     "uuid": null,
+//                     "version": null,
+//                     "clone_limit": 10
+//                 }
+//             }
+//         ]
+//     },
+//     "resources": {
+//         "file_storage/file_storage.dna": <Buffer ... 779361 more bytes>
+//     }
+// }
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BundleSlotDnaProvisioning {
+    pub strategy: String,
+    pub deferred: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BundleSlotDnaInfo {
+    #[serde(alias = "path", alias = "url")]
+    pub bundled: String,
+    #[serde(default)]
+    pub clone_limit: u32,
+
+    // Optional fields
+    pub uid: Option<String>,
+    pub version: Option<String>,
+    pub properties: Option<serde_yaml::Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BundleSlotInfo {
+    pub id: String,
+    pub dna: BundleSlotDnaInfo,
+
+    // Optional fields
+    pub provisioning: Option<BundleSlotDnaProvisioning>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Manifest {
+    pub manifest_version: String,
+    pub slots: Vec<BundleSlotInfo>,
+
+    // Optional fields
+    pub name: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Bundle {
+    pub manifest: Manifest,
+    pub resources: BTreeMap<String, Vec<u8>>,
+}
+
+
+
 #[derive(Debug, Deserialize)]
 pub struct GetReleasePackageInput {
     pub id: EntryHash,
     pub dnarepo_dna_hash: DnaHash,
-}
-
-#[derive(Debug, Serialize)]
-pub struct Bundle {
-    pub manifest: serde_yaml::Value,
-    pub resources: BTreeMap<String, Vec<u8>>,
 }
 
 pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> {
@@ -73,63 +145,26 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 	resources: BTreeMap::new(),
     };
 
+    for slot in package.manifest.slots.iter_mut() {
+	slot.dna.bundled = format!("./{}.dna", slot.id );
+    }
+
     debug!("Fetching DNA package for {} resources", entity.content.resources.len() );
     for (slot_id, version_entry_hash) in entity.content.resources.iter() {
 	debug!("Fetching DNA package: {}", version_entry_hash );
-	let zome_call_response = call(
-	    Some( cell_id.clone() ),
-	    "storage".into(),
-	    "get_dna_package".into(),
-	    None,
-	    GetEntityInput {
-		id: version_entry_hash.to_owned(),
-	    },
-	)?;
 
-	if let ZomeCallResponse::Ok(result_io) = zome_call_response {
-	    let response : DevHubResponse<Entity<DnaVersionPackage>> = result_io.decode()
-		.map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
+	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( &cell_id, "storage", "get_dna_package", GetEntityInput {
+	    id: version_entry_hash.to_owned(),
+	})?;
 
-	    if let DevHubResponse::Success(pack) = response {
-		let slot = package.manifest.get("slots")
-		    .ok_or( AppError::UnexpectedStateError("Manifest is missing 'slots' field".into()) )?
-		    .as_sequence().unwrap().into_iter()
-		    .find( |slot| {
-			debug!("Slot ID: {:?}", slot.get("id") );
-			match slot.get("id") {
-			    Some(id) => {
-				debug!("Compare slot ID to DNA id: {:?} == {:?}", slot_id, id );
-				id.as_str().unwrap() == slot_id
-			    },
-			    None => false,
-			}
-		    })
-		    .ok_or( AppError::UnexpectedStateError(format!("Missing slot for resource {}", slot_id )) )?;
-		let key = slot["dna"]["path"].as_str()
-		    .ok_or( AppError::UnexpectedStateError(format!("DNA path is not a string: {:?}", slot["dna"]["path"] )) )?;
+	let path = format!("./{}.dna", slot_id );
 
-		debug!("Parsed Manifest YAML: {:?}", package.manifest );
-		debug!("Adding resource pack '{}' with {} bytes", key, pack.payload.content.bytes.len() );
-		package.resources.insert( key.to_string(), pack.payload.content.bytes );
-	    }
-	}
-	else {
-	    return Err( AppError::UnexpectedStateError("Failed to call another DNA".into()).into() );
-	}
+	debug!("Adding resource pack '{}' with {} bytes", path, version_entity.content.bytes.len() );
+	package.resources.insert( path, version_entity.content.bytes );
     }
     debug!("Finished collecting DNAs for package with {} resources: {:?}", package.resources.len(), package.resources.clone().into_iter().map( |(k,v)| (k, v.len()) ).collect::<Vec<(String, usize)>>() );
 
-    let packed_bytes = rmp_serde::to_vec_named( &package )
-	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to msgpack bundle: {:?}", e )) )?;
-    debug!("Message packed bytes: {}", packed_bytes.len() );
+    let happ_pack_bytes = encode_bundle( package )?;
 
-    let mut enc = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
-    enc.write_all( &packed_bytes )
-	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to gzip package: {:?}", e )) )?;
-
-    let gzipped_package = enc.finish()
-	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to finish gzip encoding: {:?}", e )) )?;
-    debug!("Gzipped package bytes: {}", gzipped_package.len() );
-
-    Ok( gzipped_package )
+    Ok( happ_pack_bytes )
 }

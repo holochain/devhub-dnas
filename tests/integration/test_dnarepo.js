@@ -24,9 +24,14 @@ const storage				= "storage";
 const mm_zome				= "mere_memory";
 
 let clients;
+let zome_version_1;
+let zome_version_2;
 let dna_version_hash;
 
 function basic_tests () {
+    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
+    const bigzome_bytes			= Buffer.concat( Array(5).fill(zome_bytes) );
+
     it("should get whoami info", async function () {
 	let whoami			= await clients.alice.dnarepo.call("storage", "whoami");
 
@@ -117,7 +122,6 @@ function basic_tests () {
 	    "description": "A generic API for fs-like data management",
 	};
 
-	let zome_version_hash;
 	let new_entry			= await alice.call( storage, "create_zome", zome_input );
 	let main_zome			= new_entry;
 	log.normal("New ZOME (metadata): %s -> %s", String(main_zome.$id), new_entry.name );
@@ -136,10 +140,8 @@ function basic_tests () {
 	    first_header_hash		= zome_info.$header;
 	}
 
-	const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
-	log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
-
 	{
+	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	    let version			= await alice.call( storage, "create_zome_version", {
 		"for_zome": main_zome.$id,
 		"version": 1,
@@ -147,7 +149,19 @@ function basic_tests () {
 	    });
 	    log.normal("New ZOME version: %s -> %s", String(version.$address), version.version );
 
-	    zome_version_hash		= version.$id;
+	    zome_version_1		= version;
+	}
+
+	{
+	    log.debug("Big ZOME file bytes (%s): typeof %s", bigzome_bytes.length, typeof bigzome_bytes );
+	    let version			= await alice.call( storage, "create_zome_version", {
+		"for_zome": main_zome.$id,
+		"version": 2,
+		"zome_bytes": bigzome_bytes,
+	    });
+	    log.normal("New ZOME version: %s -> %s", String(version.$address), version.version );
+
+	    zome_version_2		= version;
 	}
 
 	{
@@ -161,7 +175,7 @@ function basic_tests () {
 		log.normal("  - ZomeVersion { version: %s, published_at: %s }", v.version, v.published_at );
 	    });
 
-	    expect( zome_versions	).to.have.length( 1 );
+	    expect( zome_versions	).to.have.length( 2 );
 	}
 
 	{
@@ -213,13 +227,13 @@ function basic_tests () {
 		"changelog": "# Changelog\nFeatures\n...",
 	    };
 	    let zome_version		= await alice.call( storage, "update_zome_version", {
-		"addr": zome_version_hash,
+		"addr": zome_version_1.$id,
 		"properties": properties,
 	    });
 	    log.normal("Updated ZOME Version (metadata): %s -> %s", String(zome_version.$address), zome_version.version );
 
 	    let zome_version_info	= await alice.call( storage, "get_zome_version", {
-		"id": zome_version_hash,
+		"id": zome_version_1.$id,
 	    });
 	    log.info("ZOME Version post update: %s", zome_version_info.version );
 	    expect( zome_version_info.changelog		).to.equal( properties.changelog );
@@ -228,14 +242,14 @@ function basic_tests () {
 	{
 	    // Unpublish ZOME Version
 	    let deleted_zome_version_hash	= await alice.call( storage, "delete_zome_version", {
-		"id": zome_version_hash,
+		"id": zome_version_1.$id,
 	    });
 	    log.normal("Deleted ZOME Version hash: %s", String(new HoloHash(deleted_zome_version_hash)) );
 
 	    let zome_versions		= await alice.call( storage, "get_zome_versions", {
 		"for_zome": main_zome.$id,
 	    });
-	    expect( zome_versions	).to.have.length( 0 );
+	    expect( zome_versions	).to.have.length( 1 );
 	}
 
 	{
@@ -291,35 +305,32 @@ function basic_tests () {
 	    first_header_hash		= dna_info.$header;
 	}
 
-	const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.dna") );
-	log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
-
 	{
 	    let version			= await alice.call( storage, "create_dna_version", {
 		"for_dna": main_dna.$id,
 		"version": 1,
-		"file_size": dna_bytes.length,
-		"dna_bytes": dna_bytes,
+		"zomes": [{
+		    "name": "mere_memory",
+		    "zome": zome_version_1.for_zome.$id,
+		    "version": zome_version_1.$id,
+		    "resource": zome_version_1.mere_memory_addr,
+		}],
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 
 	    dna_version_hash		= version.$id;
 	}
 
-	const bigdna_bytes		= Buffer.concat( Array(5).fill(dna_bytes) );
-	log.debug("Big DNA file bytes (%s): typeof %s", bigdna_bytes.length, typeof bigdna_bytes );
-
 	{
-	    let addr			= new HoloHash( await alice.call( mm_zome, "save_bytes", bigdna_bytes, {
-		"parse_entities": false,
-	    }) );
-	    log.normal("New memory address: %s", String(addr) );
-
 	    let version			= await alice.call( storage, "create_dna_version", {
 		"for_dna": main_dna.$id,
 		"version": 2,
-		"file_size": bigdna_bytes.length,
-		"mere_memory_addr": addr,
+		"zomes": [{
+		    "name": "mere_memory",
+		    "zome": zome_version_2.for_zome.$id,
+		    "version": zome_version_2.$id,
+		    "resource": zome_version_2.mere_memory_addr,
+		}],
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 	}
@@ -411,7 +422,7 @@ function basic_tests () {
 	    });
 	    log.info("DNA Package bytes: %s", pack.bytes.length );
 
-	    expect( pack.bytes.length	).to.equal( dna_bytes.length );
+	    expect( pack.bytes.constructor.name		).to.equal("Uint8Array");
 	}
 
 	{
@@ -490,14 +501,14 @@ function errors_tests () {
 	}
     });
 
-    it("should fail to create DNA version because missing DNA package info", async function () {
+    it("should fail to create ZOME version because missing ZOME package info", async function () {
 	const alice			= clients.alice.dnarepo;
 
 	{
 	    let failed			= false;
 	    try {
-		await alice.call( storage, "create_dna_version", {
-		    "for_dna": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
+		await alice.call( storage, "create_zome_version", {
+		    "for_zome": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
 		    "version": 1,
 		    "file_size": 0,
 		});

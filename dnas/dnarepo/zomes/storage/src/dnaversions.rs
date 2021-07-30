@@ -1,8 +1,6 @@
 use devhub_types::{
     AppResult,
-    errors::{ UserError },
-    dnarepo_entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary },
-    call_local_zome,
+    dnarepo_entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary, ZomeReference },
 };
 
 use hc_entities::{ Entity, Collection, UpdateEntityInput };
@@ -17,7 +15,7 @@ use crate::constants::{ TAG_DNAVERSION };
 pub struct DnaVersionInput {
     pub for_dna: EntryHash,
     pub version: u64,
-    pub file_size: u64,
+    pub zomes: Vec<ZomeReference>,
 
     // optional
     pub mere_memory_addr: Option<EntryHash>,
@@ -35,16 +33,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
 	version: input.version,
-	file_size: input.file_size,
-	mere_memory_addr: match input.mere_memory_addr {
-	    Some(addr) => addr,
-	    None => {
-		let bytes = input.dna_bytes
-		    .ok_or( UserError::CustomError("You must supply an address or bytes for the DNA package") )?;
-
-		call_local_zome("mere_memory", "save_bytes", bytes )?
-	    },
-	},
+	zomes: input.zomes,
 	changelog: input.changelog
 	    .unwrap_or( String::from("") ),
 	contributors: input.contributors
@@ -158,8 +147,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
 		    .unwrap_or( utils::now()? ),
-		file_size: current.file_size,
-		mere_memory_addr: current.mere_memory_addr,
+		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
 		contributors: props.contributors

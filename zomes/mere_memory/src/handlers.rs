@@ -13,11 +13,13 @@ fn now() -> AppResult<u64> {
 }
 
 
+const BLOCK_SIZE : usize = 4_194_304; // 4MB
+
 pub fn remember_bytes(bytes: &Vec<u8>) -> AppResult<EntryHash> {
     debug!("Creating entries for remembering ({} bytes)", bytes.len() );
 
     let memory_size = bytes.len();
-    let chunks = bytes.chunks( usize::pow(2, 20) );
+    let chunks = bytes.chunks( BLOCK_SIZE );
     let block_count = chunks.len();
 
     let mut blocks : Vec<EntryHash> = vec![];

@@ -4,6 +4,8 @@ pub mod dnarepo_entry_types;
 pub mod happ_entry_types;
 pub mod web_asset_entry_types;
 
+use std::io::Write;
+
 use hdk::prelude::*;
 use essence::{ EssenceResponse };
 use errors::{ ErrorKinds, AppError };
@@ -61,7 +63,8 @@ macro_rules! catch { // could change to "trap", "snare", or "capture"
 pub fn call_local_zome<'a, T, A>(zome: &str, func: &str, input: A) -> AppResult<T>
 where
     T: serde::de::DeserializeOwned + std::fmt::Debug,
-    A: serde::Serialize + std::fmt::Debug {
+    A: serde::Serialize + std::fmt::Debug
+{
     let zome_call_response = call(
 	None,
 	zome.into(),
@@ -84,6 +87,52 @@ where
     }
 }
 
+pub fn call_local_dna_zome<'a, T, A>(cell_id: &CellId, zome: &str, func: &str, input: A) -> AppResult<T>
+where
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+    A: serde::Serialize + std::fmt::Debug
+{
+    let zome_call_response = call(
+	Some( cell_id.to_owned() ),
+	zome.into(),
+	func.into(),
+	None,
+	input,
+    )?;
+
+    if let ZomeCallResponse::Ok(result_io) = zome_call_response {
+	let response : DevHubResponse<T> = result_io.decode()
+	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
+
+	if let DevHubResponse::Success(pack) = response {
+	    return Ok( pack.payload );
+	} else {
+	    return Err( AppError::UnexpectedStateError("Essence package is not success".into()).into() );
+	}
+    } else {
+	return Err( AppError::UnexpectedStateError("Zome call response is not Ok".into()).into() );
+    }
+}
+
+
+pub fn encode_bundle<T>(bundle: T) -> AppResult<Vec<u8>>
+where
+    T: serde::Serialize
+{
+    let packed_bytes = rmp_serde::to_vec_named( &bundle )
+	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to msgpack bundle: {:?}", e )) )?;
+    debug!("Message packed bytes: {}", packed_bytes.len() );
+
+    let mut enc = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+    enc.write_all( &packed_bytes )
+	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to gzip package: {:?}", e )) )?;
+
+    let gzipped_package = enc.finish()
+	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to finish gzip encoding: {:?}", e )) )?;
+    debug!("Gzipped package bytes: {}", gzipped_package.len() );
+
+    Ok( gzipped_package )
+}
 
 
 

@@ -77,7 +77,6 @@ impl ProfileEntry {
 
 
 
-
 //
 // DNA Entry
 //
@@ -171,10 +170,17 @@ impl DnaEntry {
 
 
 
-
 //
 // DNA Version Entry
 //
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ZomeReference {
+    pub name: String,
+    pub zome : EntryHash, // Zome ID
+    pub version : EntryHash, // Version ID
+    pub resource : EntryHash, // Mere Memory address for a short-circuit download
+}
+
 #[hdk_entry(id = "dna_version", visibility="public")]
 #[derive(Clone)]
 pub struct DnaVersionEntry {
@@ -182,10 +188,9 @@ pub struct DnaVersionEntry {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub file_size: u64,
     pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
-    pub mere_memory_addr: EntryHash,
+    pub zomes: Vec<ZomeReference>,
 }
 utils::try_from_element![ DnaVersionEntry ];
 
@@ -201,7 +206,7 @@ pub struct DnaVersionSummary {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub file_size: u64,
+    pub zomes: Vec<EntryHash>,
 }
 impl EntryModel for DnaVersionSummary {
     fn get_type(&self) -> EntityType {
@@ -216,10 +221,9 @@ pub struct DnaVersionInfo {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub file_size: u64,
     pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
-    pub mere_memory_addr: EntryHash,
+    pub zomes: Vec<ZomeReference>,
 }
 impl EntryModel for DnaVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -234,7 +238,6 @@ pub struct DnaVersionPackage {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub file_size: u64,
     pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
     pub bytes: Vec<u8>,
@@ -260,7 +263,6 @@ impl DnaVersionEntry {
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
-	    file_size: self.file_size.clone(),
 	    contributors: self.contributors.clone(),
 	    changelog: self.changelog.clone(),
 	    bytes: dna_bytes,
@@ -281,10 +283,9 @@ impl DnaVersionEntry {
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
-	    file_size: self.file_size.clone(),
 	    contributors: self.contributors.clone(),
 	    changelog: self.changelog.clone(),
-	    mere_memory_addr: self.mere_memory_addr.clone(),
+	    zomes: self.zomes.clone(),
 	}
     }
 
@@ -293,11 +294,12 @@ impl DnaVersionEntry {
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
-	    file_size: self.file_size.clone(),
+	    zomes: self.zomes.clone().into_iter()
+		.map( |zome_ref| zome_ref.resource )
+		.collect(),
 	}
     }
 }
-
 
 
 
@@ -386,7 +388,6 @@ impl ZomeEntry {
 
 
 
-
 //
 // Zome Version Entry
 //
@@ -414,6 +415,7 @@ pub struct ZomeVersionSummary {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
+    pub mere_memory_addr: EntryHash,
 }
 impl EntryModel for ZomeVersionSummary {
     fn get_type(&self) -> EntityType {
@@ -462,6 +464,7 @@ impl ZomeVersionEntry {
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
+	    mere_memory_addr: self.mere_memory_addr.clone(),
 	}
     }
 }

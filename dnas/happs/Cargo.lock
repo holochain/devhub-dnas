@@ -134,9 +134,11 @@ name = "devhub_types"
 version = "0.1.0"
 dependencies = [
  "essence_payloads",
+ "flate2",
  "hc_dna_utils",
  "hc_entities",
  "hdk",
+ "rmp-serde",
  "serde",
  "thiserror",
 ]
@@ -739,13 +741,11 @@ name = "store"
 version = "0.1.0"
 dependencies = [
  "devhub_types",
- "flate2",
  "hc_dna_utils",
  "hc_entities",
  "hdk",
  "holo_hash",
  "rand 0.8.3",
- "rmp-serde",
  "serde",
  "serde_derive",
  "serde_yaml",
