@@ -1,6 +1,8 @@
 use devhub_types::{
     AppResult,
-    dna_entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary },
+    errors::{ UserError },
+    dnarepo_entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary },
+    call_local_zome,
 };
 
 use hc_entities::{ Entity, Collection, UpdateEntityInput };
@@ -10,14 +12,16 @@ use hdk::prelude::*;
 use crate::constants::{ TAG_DNAVERSION };
 
 
+
 #[derive(Debug, Deserialize)]
 pub struct DnaVersionInput {
     pub for_dna: EntryHash,
     pub version: u64,
     pub file_size: u64,
-    pub chunk_addresses: Vec<EntryHash>,
 
     // optional
+    pub mere_memory_addr: Option<EntryHash>,
+    pub dna_bytes: Option<SerializedBytes>,
     pub changelog: Option<String>,
     pub contributors: Option<Vec<(String, Option<AgentPubKey>)>>,
     pub published_at: Option<u64>,
@@ -32,7 +36,15 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	for_dna: input.for_dna.clone(),
 	version: input.version,
 	file_size: input.file_size,
-	chunk_addresses: input.chunk_addresses,
+	mere_memory_addr: match input.mere_memory_addr {
+	    Some(addr) => addr,
+	    None => {
+		let bytes = input.dna_bytes
+		    .ok_or( UserError::CustomError("You must supply an address or bytes for the DNA package") )?;
+
+		call_local_zome("mere_memory", "save_bytes", bytes )?
+	    },
+	},
 	changelog: input.changelog
 	    .unwrap_or( String::from("") ),
 	contributors: input.contributors
@@ -147,7 +159,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		last_updated: props.last_updated
 		    .unwrap_or( utils::now()? ),
 		file_size: current.file_size,
-		chunk_addresses: current.chunk_addresses,
+		mere_memory_addr: current.mere_memory_addr,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
 		contributors: props.contributors

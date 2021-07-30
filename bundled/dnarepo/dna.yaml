@@ -5,3 +5,5 @@ properties: ~
 zomes:
   - name: storage
     bundled: ../../dnas/dnarepo/target/wasm32-unknown-unknown/release/storage.wasm
+  - name: mere_memory
+    bundled: ../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm

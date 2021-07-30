@@ -3,13 +3,15 @@ SHELL		= bash
 
 NAME		= devhub
 
-DNAREPO		= bundled/dnarepo/dnarepo.dna
-DNAREPO_WASM	= target/wasm32-unknown-unknown/release/storage.wasm
-HAPPDNA		= bundled/happs/happs.dna
-HAPPDNA_WASM	= target/wasm32-unknown-unknown/release/store.wasm
-ASSETSDNA	= bundled/web_assets/files.dna
-ASSETSDNA_WASM	= target/wasm32-unknown-unknown/release/files.wasm
+DNAREPO			= bundled/dnarepo/dnarepo.dna
+DNAREPO_WASM		= target/wasm32-unknown-unknown/release/storage.wasm
+HAPPDNA			= bundled/happs/happs.dna
+HAPPDNA_WASM		= target/wasm32-unknown-unknown/release/store.wasm
+ASSETSDNA		= bundled/web_assets/files.dna
+ASSETSDNA_WASM		= target/wasm32-unknown-unknown/release/files.wasm
 
+MERE_MEMORY_BASE	= zomes/mere_memory
+MERE_MEMORY_WASM	= $(MERE_MEMORY_BASE)/target/wasm32-unknown-unknown/release/mere_memory.wasm
 
 #
 # Project
@@ -31,7 +33,7 @@ rebuild:			clean build
 build:				dnarepo happdna
 
 dnarepo:			$(DNAREPO)
-$(DNAREPO):			$(DNAREPO_WASM)
+$(DNAREPO):			$(DNAREPO_WASM) $(MERE_MEMORY_WASM)
 	@echo "Packaging DNAREPO: $@"
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
@@ -73,6 +75,8 @@ $(ASSETSDNA_WASM):		Makefile
 #
 # Testing
 #
+TEST_DNA_MERE_MEMORY	= tests/dnas/memory/memory.dna
+
 test-all:			test
 test:				test-unit
 test-unit:
@@ -86,6 +90,8 @@ tests/test.dna:
 	cp $(DNAREPO) $@
 tests/test.gz:
 	gzip -kc bundled/dnarepo/dnarepo.dna > $@
+
+# DNAs
 test-dnas:			test-dnarepo		test-happs		test-webassets
 test-dnas-debug:		test-dnarepo-debug	test-happs-debug	test-webassets-debug
 
@@ -109,6 +115,7 @@ test-multi:			dnarepo happdna webassetdna
 test-multi-debug:		dnarepo happdna webassetdna
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_multiple.js
 
+# Zomes
 test-zome-mere-memory:		test_dna_mere_memory
 	cd tests; RUST_LOG=none npx mocha integration/test_zome_mere_memory.js
 test-zome-mere-memory-debug:	test_dna_mere_memory
@@ -119,15 +126,15 @@ test-crates:
 	cd hc_entities; cargo test
 	cd dna_utils; cargo test
 	cd devhub_types; cargo test
-test_dna_mere_memory:		tests/dnas/memory/memory.dna
-tests/dnas/memory/memory.dna:	zomes/mere_memory/target/wasm32-unknown-unknown/debug/mere_memory.wasm
+test_dna_mere_memory:		$(TEST_DNA_MERE_MEMORY)
+$(TEST_DNA_MERE_MEMORY):	$(MERE_MEMORY_WASM)
 	@echo "Packaging test DNA for 'mere_memory' zome: $@"
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
-zomes/mere_memory/target/wasm32-unknown-unknown/debug/mere_memory.wasm:	Makefile zomes/mere_memory/src/*.rs
-	@echo "Building 'mere_memory' zome: $@"; \
-	cd zomes/mere_memory/; \
-	RUST_BACKTRACE=1 cargo build --target wasm32-unknown-unknown
+$(MERE_MEMORY_WASM):		Makefile $(MERE_MEMORY_BASE)/src/*.rs $(MERE_MEMORY_BASE)/Cargo.toml
+	@echo "Building zome: $@"; \
+	cd $(MERE_MEMORY_BASE); RUST_BACKTRACE=1 cargo build \
+		--release --target wasm32-unknown-unknown
 
 
 #

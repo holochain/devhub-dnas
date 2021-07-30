@@ -1,11 +1,12 @@
 use devhub_types::{
     DevHubResponse, EntityResponse, CollectionResponse, EntityCollectionResponse,
     constants::{ ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD, VALUE_COLLECTION_MD },
-    dna_entry_types::{
+    dnarepo_entry_types::{
 	ProfileEntry, ProfileInfo,
 	DnaEntry, DnaInfo, DnaSummary,
 	DnaVersionEntry, DnaVersionInfo, DnaVersionSummary, DnaVersionPackage,
-	DnaChunkEntry,
+	ZomeEntry, ZomeInfo, ZomeSummary,
+	ZomeVersionEntry, ZomeVersionInfo, ZomeVersionSummary,
     },
     composition,
     catch,
@@ -15,7 +16,8 @@ use hdk::prelude::*;
 mod profile;
 mod dna;
 mod dnaversions;
-mod dnachunks;
+mod zome;
+mod zomeversion;
 
 mod packaging;
 mod constants;
@@ -26,7 +28,8 @@ entry_defs![
     ProfileEntry::entry_def(),
     DnaEntry::entry_def(),
     DnaVersionEntry::entry_def(),
-    DnaChunkEntry::entry_def()
+    ZomeEntry::entry_def(),
+    ZomeVersionEntry::entry_def()
 ];
 
 
@@ -182,26 +185,105 @@ fn delete_dna_version(input: dnaversions::DeleteDnaVersionInput) -> ExternResult
 }
 
 
-// DNA Chunk zome functions
-#[hdk_extern]
-fn create_dna_chunk(input: DnaChunkEntry) -> ExternResult<EntityResponse<DnaChunkEntry>> {
-    let entity = catch!( dnachunks::create_dna_chunk( input ) );
-
-    Ok(composition( entity, ENTITY_MD ))
-}
-
-#[hdk_extern]
-fn get_dna_chunk(input: dnachunks::GetDnaChunksInput) -> ExternResult<EntityResponse<DnaChunkEntry>> {
-    let entity = catch!( dnachunks::get_dna_chunk( input ) );
-
-    Ok(composition( entity, ENTITY_MD ))
-}
-
-
 // Packaging
 #[hdk_extern]
 fn get_dna_package(input: packaging::GetDnaPackageInput) -> ExternResult<EntityResponse<DnaVersionPackage>> {
     let entity = catch!( packaging::get_dna_package( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
+}
+
+
+// ZOME Version zome functions
+#[hdk_extern]
+fn create_zome(input: zome::ZomeInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+    let entity = catch!( zome::create_zome( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_zome(input: zome::GetZomeInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+    let entity = catch!( zome::get_zome( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_zomes(input: zome::GetZomesInput) -> ExternResult<EntityCollectionResponse<ZomeSummary>> {
+    let collection = catch!( zome::get_zomes( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_deprecated_zomes(input: zome::GetZomesInput) -> ExternResult<EntityCollectionResponse<ZomeSummary>> {
+    let collection = catch!( zome::get_deprecated_zomes( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_my_zomes(_:()) -> ExternResult<EntityCollectionResponse<ZomeSummary>> {
+    let collection = catch!( zome::get_my_zomes() );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_my_deprecated_zomes(_:()) -> ExternResult<EntityCollectionResponse<ZomeSummary>> {
+    let collection = catch!( zome::get_my_deprecated_zomes() );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn update_zome(input: zome::ZomeUpdateInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+    let entity = catch!( zome::update_zome( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn deprecate_zome(input: zome::DeprecateZomeInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+    let entity = catch!( zome::deprecate_zome( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+
+// ZOME Version zome functions
+#[hdk_extern]
+fn create_zome_version(input: zomeversion::ZomeVersionInput) -> ExternResult<EntityResponse<ZomeVersionInfo>> {
+    let entity = catch!( zomeversion::create_zome_version( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_zome_version(input: zomeversion::GetZomeVersionInput) -> ExternResult<EntityResponse<ZomeVersionInfo>> {
+    let entity = catch!( zomeversion::get_zome_version( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_zome_versions(input: zomeversion::GetZomeVersionsInput) -> ExternResult<EntityCollectionResponse<ZomeVersionSummary>> {
+    let collection = catch!( zomeversion::get_zome_versions( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn update_zome_version(input: zomeversion::ZomeVersionUpdateInput) -> ExternResult<EntityResponse<ZomeVersionInfo>> {
+    let entity = catch!( zomeversion::update_zome_version( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn delete_zome_version(input: zomeversion::DeleteZomeVersionInput) -> ExternResult<DevHubResponse<HeaderHash>> {
+    let value = catch!( zomeversion::delete_zome_version( input ) );
+
+    Ok(composition( value, VALUE_MD ))
 }

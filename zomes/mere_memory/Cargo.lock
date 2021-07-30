@@ -169,6 +169,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
 
 [[package]]
+name = "hc_zome_mere_memory"
+version = "0.1.0"
+dependencies = [
+ "essence_payloads",
+ "hdk",
+ "rand 0.8.4",
+ "serde",
+ "serde_derive",
+ "thiserror",
+]
+
+[[package]]
 name = "hdk"
 version = "0.0.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -348,18 +360,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f099785f7595cc4b4553a174ce30dd7589ef93391ff414dbb67f62392b9e0ce1"
 dependencies = [
  "regex-automata",
-]
-
-[[package]]
-name = "mere_memory"
-version = "0.1.0"
-dependencies = [
- "essence_payloads",
- "hdk",
- "rand 0.8.4",
- "serde",
- "serde_derive",
- "thiserror",
 ]
 
 [[package]]

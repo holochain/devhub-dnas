@@ -1,6 +1,7 @@
 use devhub_types::{
     AppResult,
-    dna_entry_types::{ DnaVersionEntry, DnaVersionPackage, DnaChunkEntry },
+    dnarepo_entry_types::{ DnaVersionEntry, DnaVersionPackage },
+    call_local_zome,
 };
 
 use hc_entities::{ Entity };
@@ -19,20 +20,9 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     let entity = utils::get_entity( &input.id )?;
     let entry = DnaVersionEntry::try_from( &entity.content )?;
 
-    let dna_bytes : Vec<u8> = entry.chunk_addresses.clone().into_iter()
-	.enumerate()
-	.filter_map(|(i, entry_hash)| {
-	    debug!("Fetching chunk #{}: {}", i, entry_hash );
-	    utils::fetch_entry( entry_hash ).ok()
-	})
-	.filter_map(|(_, element)| {
-	    DnaChunkEntry::try_from( &element ).ok()
-	})
-	.map( |chunk_entry| chunk_entry.bytes.bytes().to_owned() )
-	.flatten()
-	.collect();
+    let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", entry.mere_memory_addr.clone() )?;
 
-    let package = entry.to_package( dna_bytes );
+    let package = entry.to_package( bytes );
 
     Ok( entity.new_content( package ) )
 }

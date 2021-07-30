@@ -71,7 +71,7 @@ describe("Web Assets", () => {
     const holochain			= new Holochain();
 
     before(async function () {
-	this.timeout( 5_000 );
+	this.timeout( 30_000 );
 
 	clients				= await backdrop( holochain, {
 	    "webassets": WEBASSETS_PATH,

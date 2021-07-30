@@ -1,55 +1,51 @@
 use devhub_types::{
     AppResult,
-    dnarepo_entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice },
+    dnarepo_entry_types::{ ZomeEntry, ZomeInfo, ZomeSummary, DeveloperProfileLocation, DeprecationNotice },
 };
 use hc_entities::{ Entity, Collection, UpdateEntityInput };
 use hc_dna_utils as utils;
 use hdk::prelude::*;
 
-use crate::constants::{ TAG_DNA };
+use crate::constants::{ TAG_ZOME };
 
 
 
 #[derive(Debug, Deserialize)]
-pub struct DnaInput {
+pub struct ZomeInput {
     pub name: String,
     pub description: String,
 
     // optional
-    pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
 }
 
-pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
-    debug!("Creating DNA: {}", input.name );
+pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
+    debug!("Creating ZOME: {}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = utils::now()?;
 
-    let dna = DnaEntry {
+    let zome = ZomeEntry {
 	name: input.name,
 	description: input.description,
-	icon: input.icon,
 	published_at: input.published_at
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
-	collaborators: input.collaborators,
 	developer: DeveloperProfileLocation {
 	    pubkey: pubkey.clone(),
 	},
 	deprecation: None,
     };
 
-    let entity = utils::create_entity( &dna )?
-	.new_content( dna.to_info() );
+    let entity = utils::create_entity( &zome )?
+	.new_content( zome.to_info() );
 
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
     create_link(
 	pubkey.into(),
 	entity.id.clone(),
-	LinkTag::new( TAG_DNA )
+	LinkTag::new( TAG_ZOME )
     )?;
 
     Ok( entity )
@@ -59,53 +55,53 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
 
 
 #[derive(Debug, Deserialize)]
-pub struct GetDnaInput {
+pub struct GetZomeInput {
     pub id: EntryHash,
 }
 
-pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaInfo>> {
-    debug!("Get DNA: {}", input.id );
+pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeInfo>> {
+    debug!("Get ZOME: {}", input.id );
     let entity = utils::get_entity( &input.id )?;
-    let info = DnaEntry::try_from( &entity.content )?.to_info();
+    let info = ZomeEntry::try_from( &entity.content )?.to_info();
 
     Ok( entity.new_content( info ) )
 }
 
 
 
-pub fn get_dna_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash, Vec<Link>)> {
+pub fn get_zome_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash, Vec<Link>)> {
     let base : EntryHash = match maybe_pubkey {
 	None => agent_info()?.agent_initial_pubkey,
 	Some(agent) => agent,
     }.into();
 
-    debug!("Getting DNA links for Agent entry: {}", base );
+    debug!("Getting ZOME links for Agent entry: {}", base );
     let all_links: Vec<Link> = get_links(
         base.clone(),
-	Some(LinkTag::new(TAG_DNA))
+	Some(LinkTag::new(TAG_ZOME))
     )?.into();
 
     Ok( (base, all_links) )
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GetDnasInput {
+pub struct GetZomesInput {
     pub agent: Option<AgentPubKey>,
 }
 
-pub fn get_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<DnaSummary>>> {
-    let (base, links) = get_dna_links( input.agent.clone() )?;
+pub fn get_zomes(input: GetZomesInput) -> AppResult<Collection<Entity<ZomeSummary>>> {
+    let (base, links) = get_zome_links( input.agent.clone() )?;
 
-    let dnas = links.into_iter()
+    let zomes = links.into_iter()
 	.filter_map(|link| {
 	    utils::get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<DnaSummary>> = None;
+	    let mut maybe_entity : Option<Entity<ZomeSummary>> = None;
 
-	    if let Some(dna) = DnaEntry::try_from( &entity.content ).ok() {
-		if dna.deprecation.is_none() {
-		    let summary = dna.to_summary();
+	    if let Some(zome) = ZomeEntry::try_from( &entity.content ).ok() {
+		if zome.deprecation.is_none() {
+		    let summary = zome.to_summary();
 		    let entity = entity.new_content( summary );
 
 		    maybe_entity.replace( entity );
@@ -118,23 +114,23 @@ pub fn get_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<DnaSummary>>
 
     Ok(Collection {
 	base,
-	items: dnas
+	items: zomes
     })
 }
 
-pub fn get_deprecated_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<DnaSummary>>> {
-    let (base, links) = get_dna_links( input.agent.clone() )?;
+pub fn get_deprecated_zomes(input: GetZomesInput) -> AppResult<Collection<Entity<ZomeSummary>>> {
+    let (base, links) = get_zome_links( input.agent.clone() )?;
 
-    let dnas = links.into_iter()
+    let zomes = links.into_iter()
 	.filter_map(|link| {
 	    utils::get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<DnaSummary>> = None;
+	    let mut maybe_entity : Option<Entity<ZomeSummary>> = None;
 
-	    if let Some(dna) = DnaEntry::try_from(&entity.content).ok() {
-		if dna.deprecation.is_some() {
-		    let summary = dna.to_summary();
+	    if let Some(zome) = ZomeEntry::try_from(&entity.content).ok() {
+		if zome.deprecation.is_some() {
+		    let summary = zome.to_summary();
 		    let entity = entity.new_content( summary );
 
 		    maybe_entity.replace( entity );
@@ -147,18 +143,18 @@ pub fn get_deprecated_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<D
 
     Ok(Collection {
 	base,
-	items: dnas
+	items: zomes
     })
 }
 
-pub fn get_my_dnas() -> AppResult<Collection<Entity<DnaSummary>>> {
-    get_dnas(GetDnasInput {
+pub fn get_my_zomes() -> AppResult<Collection<Entity<ZomeSummary>>> {
+    get_zomes(GetZomesInput {
 	agent: None,
     })
 }
 
-pub fn get_my_deprecated_dnas() -> AppResult<Collection<Entity<DnaSummary>>> {
-    get_deprecated_dnas(GetDnasInput {
+pub fn get_my_deprecated_zomes() -> AppResult<Collection<Entity<ZomeSummary>>> {
+    get_deprecated_zomes(GetZomesInput {
 	agent: None,
     })
 }
@@ -167,38 +163,32 @@ pub fn get_my_deprecated_dnas() -> AppResult<Collection<Entity<DnaSummary>>> {
 
 
 #[derive(Debug, Deserialize)]
-pub struct DnaUpdateOptions {
+pub struct ZomeUpdateOptions {
     pub name: Option<String>,
     pub description: Option<String>,
-    pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
 }
-pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
+pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 
-pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
-    debug!("Updating DNA: {}", input.addr );
+pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
+    debug!("Updating ZOME: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<DnaEntry> = utils::update_entity(
+    let entity : Entity<ZomeEntry> = utils::update_entity(
 	input.id, input.addr,
 	|element| {
-	    let current = DnaEntry::try_from( &element )?;
+	    let current = ZomeEntry::try_from( &element )?;
 
-	    Ok(DnaEntry {
+	    Ok(ZomeEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
 		description: props.description
 		    .unwrap_or( current.description ),
-		icon: props.icon
-		    .or( current.icon ),
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
 		    .unwrap_or( utils::now()? ),
-		collaborators: props.collaborators
-		    .or( current.collaborators ),
 		developer: current.developer,
 		deprecation: current.deprecation,
 	    })
@@ -213,25 +203,23 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 
 
 #[derive(Debug, Deserialize)]
-pub struct DeprecateDnaInput {
+pub struct DeprecateZomeInput {
     pub addr: EntryHash,
     pub message: String,
 }
 
-pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
-    debug!("Deprecating DNA: {}", input.addr );
-    let entity : Entity<DnaEntry> = utils::update_entity(
+pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> {
+    debug!("Deprecating ZOME: {}", input.addr );
+    let entity : Entity<ZomeEntry> = utils::update_entity(
 	None, input.addr.clone(),
 	|element| {
-	    let current = DnaEntry::try_from( &element )?;
+	    let current = ZomeEntry::try_from( &element )?;
 
-	    Ok(DnaEntry {
+	    Ok(ZomeEntry {
 		name: current.name,
 		description: current.description,
-		icon: current.icon,
 		published_at: current.published_at,
 		last_updated: current.last_updated,
-		collaborators: None,
 		developer: current.developer,
 		deprecation: Some(DeprecationNotice::new( input.message )),
 	    })

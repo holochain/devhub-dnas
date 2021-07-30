@@ -1,12 +1,12 @@
 pub mod constants;
 pub mod errors;
-pub mod dna_entry_types;
+pub mod dnarepo_entry_types;
 pub mod happ_entry_types;
 pub mod web_asset_entry_types;
 
 use hdk::prelude::*;
 use essence::{ EssenceResponse };
-use errors::{ ErrorKinds };
+use errors::{ ErrorKinds, AppError };
 use hc_entities::{ Collection, Entity };
 
 
@@ -55,6 +55,33 @@ macro_rules! catch { // could change to "trap", "snare", or "capture"
 	    Err(e) => return Ok(devhub_types::DevHubResponse::failure( (&$e).into(), None )),
 	}
     };
+}
+
+
+pub fn call_local_zome<'a, T, A>(zome: &str, func: &str, input: A) -> AppResult<T>
+where
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+    A: serde::Serialize + std::fmt::Debug {
+    let zome_call_response = call(
+	None,
+	zome.into(),
+	func.into(),
+	None,
+	input,
+    )?;
+
+    if let ZomeCallResponse::Ok(result_io) = zome_call_response {
+	let response : DevHubResponse<T> = result_io.decode()
+	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
+
+	if let DevHubResponse::Success(pack) = response {
+	    return Ok( pack.payload );
+	} else {
+	    return Err( AppError::UnexpectedStateError("Essence package is not success".into()).into() );
+	}
+    } else {
+	return Err( AppError::UnexpectedStateError("Zome call response is not Ok".into()).into() );
+    }
 }
 
 

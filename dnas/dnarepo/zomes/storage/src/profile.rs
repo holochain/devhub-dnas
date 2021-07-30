@@ -1,7 +1,7 @@
 use devhub_types::{
     AppResult,
     errors::{ UserError },
-    dna_entry_types::{ ProfileEntry, ProfileInfo },
+    dnarepo_entry_types::{ ProfileEntry, ProfileInfo },
 };
 use hc_entities::{ Entity, Collection };
 use hc_dna_utils as utils;

@@ -93,7 +93,7 @@ describe("Zome: Mere Memory", () => {
     const holochain			= new Holochain();
 
     before(async function () {
-	this.timeout( 10_000 );
+	this.timeout( 30_000 );
 
 	clients				= await backdrop( holochain, {
 	    "memory": MEMORY_PATH,

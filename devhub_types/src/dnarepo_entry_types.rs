@@ -3,6 +3,34 @@ use hdk::prelude::*;
 use hc_dna_utils as utils;
 
 
+
+//
+// General-use Structs
+//
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DeveloperProfileLocation {
+    pub pubkey: AgentPubKey,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DeprecationNotice {
+    pub message: String,
+
+    // optional
+    pub recommended_alternatives: Option<Vec<EntryHash>>,
+}
+
+impl DeprecationNotice {
+    pub fn new(message: String) -> Self {
+	Self {
+	    message: message,
+	    recommended_alternatives: None,
+	}
+    }
+}
+
+
+
 //
 // Profile Entry
 //
@@ -72,28 +100,6 @@ utils::try_from_element![ DnaEntry ];
 impl EntryModel for DnaEntry {
     fn get_type(&self) -> EntityType {
 	EntityType::new( "dna", "entry" )
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DeveloperProfileLocation {
-    pub pubkey: AgentPubKey,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DeprecationNotice {
-    pub message: String,
-
-    // optional
-    pub recommended_alternatives: Option<Vec<EntryHash>>,
-}
-
-impl DeprecationNotice {
-    pub fn new(message: String) -> Self {
-	Self {
-	    message: message,
-	    recommended_alternatives: None,
-	}
     }
 }
 
@@ -179,7 +185,7 @@ pub struct DnaVersionEntry {
     pub file_size: u64,
     pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
-    pub chunk_addresses: Vec<EntryHash>,
+    pub mere_memory_addr: EntryHash,
 }
 utils::try_from_element![ DnaVersionEntry ];
 
@@ -213,11 +219,29 @@ pub struct DnaVersionInfo {
     pub file_size: u64,
     pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
-    pub chunk_addresses: Vec<EntryHash>,
+    pub mere_memory_addr: EntryHash,
 }
 impl EntryModel for DnaVersionInfo {
     fn get_type(&self) -> EntityType {
 	EntityType::new( "dna_version", "info" )
+    }
+}
+
+// Package
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DnaVersionPackage {
+    pub for_dna: Option<Entity<DnaSummary>>,
+    pub version: u64,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub file_size: u64,
+    pub contributors: Vec<(String, Option<AgentPubKey>)>,
+    pub changelog: String,
+    pub bytes: Vec<u8>,
+}
+impl EntryModel for DnaVersionPackage {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "dna_version", "package" )
     }
 }
 
@@ -260,7 +284,7 @@ impl DnaVersionEntry {
 	    file_size: self.file_size.clone(),
 	    contributors: self.contributors.clone(),
 	    changelog: self.changelog.clone(),
-	    chunk_addresses: self.chunk_addresses.clone(),
+	    mere_memory_addr: self.mere_memory_addr.clone(),
 	}
     }
 
@@ -274,50 +298,175 @@ impl DnaVersionEntry {
     }
 }
 
+
+
+
+//
+// ZOME Entry
+//
+#[hdk_entry(id = "zome", visibility="public")]
+#[derive(Clone)]
+pub struct ZomeEntry {
+    pub name: String,
+    pub description: String,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub developer: DeveloperProfileLocation,
+
+    // optional
+    pub deprecation: Option<DeprecationNotice>,
+}
+utils::try_from_element![ ZomeEntry ];
+
+impl EntryModel for ZomeEntry {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "zome", "entry" )
+    }
+}
+
+// Summary
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ZomeSummary {
+    pub name: String,
+    pub description: String,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub developer: AgentPubKey,
+
+    // optional
+    pub deprecation: Option<bool>,
+}
+impl EntryModel for ZomeSummary {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "zome", "summary" )
+    }
+}
+
 // Full
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DnaVersionPackage {
-    pub for_dna: Option<Entity<DnaSummary>>,
+pub struct ZomeInfo {
+    pub name: String,
+    pub description: String,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub developer: DeveloperProfileLocation,
+
+    // optional
+    pub deprecation: Option<DeprecationNotice>,
+}
+impl EntryModel for ZomeInfo {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "zome", "info" )
+    }
+}
+
+impl ZomeEntry {
+    pub fn to_info(&self) -> ZomeInfo {
+	ZomeInfo {
+	    name: self.name.clone(),
+	    description: self.description.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    developer: self.developer.clone(),
+	    deprecation: self.deprecation.clone(),
+	}
+    }
+
+    pub fn to_summary(&self) -> ZomeSummary {
+	ZomeSummary {
+	    name: self.name.clone(),
+	    description: self.description.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    developer: self.developer.pubkey.clone(),
+	    deprecation: self.deprecation.clone().map(|_| true),
+	}
+    }
+}
+
+
+
+
+//
+// Zome Version Entry
+//
+#[hdk_entry(id = "zome_version", visibility="public")]
+#[derive(Clone)]
+pub struct ZomeVersionEntry {
+    pub for_zome: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub file_size: u64,
-    pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
-    pub bytes: Vec<u8>,
+    pub mere_memory_addr: EntryHash,
 }
-impl EntryModel for DnaVersionPackage {
+utils::try_from_element![ ZomeVersionEntry ];
+
+impl EntryModel for ZomeVersionEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "package" )
+	EntityType::new( "zome_version", "entry" )
+    }
+}
+
+// Summary
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ZomeVersionSummary {
+    pub version: u64,
+    pub published_at: u64,
+    pub last_updated: u64,
+}
+impl EntryModel for ZomeVersionSummary {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "zome_version", "summary" )
+    }
+}
+
+// Full
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ZomeVersionInfo {
+    pub for_zome: Option<Entity<ZomeSummary>>,
+    pub version: u64,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub changelog: String,
+    pub mere_memory_addr: EntryHash,
+}
+impl EntryModel for ZomeVersionInfo {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "zome_version", "info" )
+    }
+}
+
+impl ZomeVersionEntry {
+    pub fn to_info(&self) -> ZomeVersionInfo {
+	let mut zome_entity : Option<Entity<ZomeSummary>> = None;
+
+	if let Some(entity) = utils::get_entity( &self.for_zome ).ok() {
+	    if let Some(zome_entry) = ZomeEntry::try_from( &entity.content ).ok() {
+		zome_entity = Some( entity.new_content( zome_entry.to_summary() ) );
+	    }
+	};
+
+	ZomeVersionInfo {
+	    for_zome: zome_entity,
+	    version: self.version.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	    changelog: self.changelog.clone(),
+	    mere_memory_addr: self.mere_memory_addr.clone(),
+	}
+    }
+
+    pub fn to_summary(&self) -> ZomeVersionSummary {
+	ZomeVersionSummary {
+	    version: self.version.clone(),
+	    published_at: self.published_at.clone(),
+	    last_updated: self.last_updated.clone(),
+	}
     }
 }
 
 
-
-
-
-//
-// DNA Chunk Entry
-//
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SequencePosition {
-    pub position: u64,
-    pub length: u64,
-}
-
-#[hdk_entry(id = "dna_chunk", visibility="public")]
-#[derive(Clone)]
-pub struct DnaChunkEntry {
-    pub sequence: SequencePosition,
-    pub bytes: SerializedBytes,
-}
-utils::try_from_element![ DnaChunkEntry ];
-
-impl EntryModel for DnaChunkEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_chunk", "info" )
-    }
-}
 
 
 

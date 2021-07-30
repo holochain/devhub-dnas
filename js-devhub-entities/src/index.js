@@ -69,11 +69,14 @@ HappRelease.model("summary", function ( content ) {
 //
 // DNA Repository Entity Types
 //
+
+// Profiles
 const Profile				= new EntityType("profile");
 
 Profile.model("info");
 
 
+// DNAs
 const Dna				= new EntityType("dna");
 
 Dna.model("info", function ( content ) {
@@ -113,16 +116,13 @@ DnaVersion.model("info", function ( content ) {
     content.for_dna		= Schema.deconstruct( "entity", content.for_dna );
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
+    content.mere_memory_addr	= new EntryHash(content.mere_memory_addr);
 
     content.contributors.forEach( ([email, pubkey], i) => {
 	content.contributors[i]		= {
 	    email,
 	    "agent": pubkey === null ? null : new AgentPubKey(pubkey),
 	};
-    });
-
-    content.chunk_addresses.forEach( (addr, i) => {
-	content.chunk_addresses[i]	= new EntryHash(addr);
     });
 
     return content;
@@ -135,9 +135,41 @@ DnaVersion.model("summary", function ( content ) {
 });
 
 
-const DnaChunk				= new EntityType("dna_chunk");
+// Zomes
+const Zome				= new EntityType("zome");
 
-DnaChunk.model("info");
+Zome.model("info", function ( content ) {
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.developer.pubkey	= new AgentPubKey( content.developer.pubkey );
+
+    return content;
+});
+Zome.model("summary", function ( content ) {
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.developer		= new AgentPubKey( content.developer );
+
+    return content;
+});
+
+
+const ZomeVersion			= new EntityType("zome_version");
+
+ZomeVersion.model("info", function ( content ) {
+    content.for_zome		= Schema.deconstruct( "entity", content.for_zome );
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+    content.mere_memory_addr	= new EntryHash(content.mere_memory_addr);
+
+    return content;
+});
+ZomeVersion.model("summary", function ( content ) {
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
+
+    return content;
+});
 
 
 //
@@ -149,9 +181,7 @@ File.model("info", function ( content ) {
     content.author		= new AgentPubKey( content.author );
     content.published_at	= new Date( content.published_at );
 
-    content.chunk_addresses.forEach( (addr, i) => {
-	content.chunk_addresses[i]	= new EntryHash(addr);
-    });
+    content.mere_memory_addr	= new EntryHash(content.mere_memory_addr);
 
     return content;
 });
@@ -166,7 +196,7 @@ FileChunk.model("info");
 //
 const Schema				= new Architecture([
     Happ, HappRelease,
-    Profile, Dna, DnaVersion, DnaChunk,
+    Profile, Dna, DnaVersion, Zome, ZomeVersion,
     File, FileChunk,
 ]);
 
@@ -197,8 +227,9 @@ class Client {
 	this._client.client.socket.terminate();
     }
 
-    async call ( zome_name, fn_name, args = null ) {
+    async call ( zome_name, fn_name, args = null, opts_override = {} ) {
 	let args_debug;
+	const opts			= Object.assign( {}, this.options, opts_override );
 
 	if ( debug ) {
 	    if ( args === null )
@@ -230,7 +261,7 @@ class Client {
 	    throw err;
 	}
 
-	if ( this.options.parse_essence === false )
+	if ( opts.parse_essence === false )
 	    return response;
 
 	let pack;
@@ -249,7 +280,7 @@ class Client {
 	    throw payload;
 	}
 
-	if ( this.options.parse_entities === false )
+	if ( opts.parse_entities === false )
 	    return payload;
 
 	let composition			= pack.metadata('composition');
@@ -274,7 +305,8 @@ module.exports = {
     Profile,
     Dna,
     DnaVersion,
-    DnaChunk,
+    Zome,
+    ZomeVersion,
     File,
     FileChunk,
 

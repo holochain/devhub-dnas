@@ -3,7 +3,7 @@ use std::io::Write;
 use devhub_types::{
     DevHubResponse, AppResult,
     errors::{ AppError },
-    dna_entry_types::{ DnaVersionPackage },
+    dnarepo_entry_types::{ DnaVersionPackage },
     web_asset_entry_types::{ FileInfo },
 };
 use holo_hash::{ DnaHash };
