@@ -181,7 +181,9 @@ File.model("info", function ( content ) {
     content.author		= new AgentPubKey( content.author );
     content.published_at	= new Date( content.published_at );
 
-    content.mere_memory_addr	= new EntryHash(content.mere_memory_addr);
+    content.chunk_addresses.forEach( (addr, i) => {
+	content.chunk_addresses[i]	= new EntryHash(addr);
+    });
 
     return content;
 });

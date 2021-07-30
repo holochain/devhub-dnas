@@ -94,29 +94,11 @@ function basic_tests () {
 	const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.dna") );
 	log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
 
-	let chunk_hashes		= [];
-	{
-	    let chunk_count		= Math.ceil( dna_bytes.length / chunk_size );
-	    for (let i=0; i < chunk_count; i++) {
-		let chunk		= await dnarepo_client.call( storage, "create_dna_chunk", {
-		    "sequence": {
-			"position": i+1,
-			"length": chunk_count,
-		    },
-		    "bytes": dna_bytes.slice( i*chunk_size, (i+1)*chunk_size ),
-		});
-		log.info("Chunk %s/%s hash: %s", i+1, chunk_count, String(chunk.$address) );
-
-		chunk_hashes.push( chunk.$address );
-	    }
-	    log.debug("Final chunks:", json.debug(chunk_hashes) );
-	}
-
 	let version			= await dnarepo_client.call( storage, "create_dna_version", {
 	    "for_dna": dna.$id,
 	    "version": 1,
 	    "file_size": dna_bytes.length,
-	    "chunk_addresses": chunk_hashes,
+	    "dna_bytes": dna_bytes,
 	});
 	log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 

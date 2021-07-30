@@ -77,7 +77,8 @@ $(ASSETSDNA_WASM):		Makefile
 #
 TEST_DNA_MERE_MEMORY	= tests/dnas/memory/memory.dna
 
-test-all:			test
+test-all:			test-crates test-zomes test-dnas test-multi
+test-all-debug:			test-crates test-zomes-debug test-dnas-debug test-multi-debug
 test:				test-unit
 test-unit:
 	cd dnas/dnarepo/; \
@@ -116,6 +117,8 @@ test-multi-debug:		dnarepo happdna webassetdna
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_multiple.js
 
 # Zomes
+test-zomes:			test-zome-mere-memory
+test-zomes-debug:		test-zome-mere-memory-debug
 test-zome-mere-memory:		test_dna_mere_memory
 	cd tests; RUST_LOG=none npx mocha integration/test_zome_mere_memory.js
 test-zome-mere-memory-debug:	test_dna_mere_memory
