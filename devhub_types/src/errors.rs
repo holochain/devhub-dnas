@@ -1,4 +1,5 @@
 use hc_dna_utils::UtilsError;
+use essence::EssenceError;
 use hdk::prelude::*;
 use thiserror::Error;
 
@@ -8,6 +9,15 @@ use thiserror::Error;
 pub enum AppError {
     #[error("Unexpected state: {0}")]
     UnexpectedStateError(String),
+
+    #[error("Agent '{3}' does not have the capability to call {0}::{1}->{2}( [args] )")]
+    UnauthorizedError(CellId, ZomeName, FunctionName, AgentPubKey),
+
+    #[error("{0}")]
+    NetworkError(String),
+
+    #[error("{0}")]
+    DeserializeError(String),
 }
 
 
@@ -37,6 +47,9 @@ pub enum ErrorKinds {
     DnaUtilsError(UtilsError),
 
     #[error(transparent)]
+    FailureResponseError(EssenceError),
+
+    #[error(transparent)]
     HDKError(WasmError), // catch all for unhandled errors
 }
 
@@ -60,6 +73,12 @@ impl From<UtilsError> for ErrorKinds  {
 	else {
             ErrorKinds::DnaUtilsError(error)
 	}
+    }
+}
+
+impl From<EssenceError> for ErrorKinds  {
+    fn from(error: EssenceError) -> Self {
+        ErrorKinds::FailureResponseError(error)
     }
 }
 

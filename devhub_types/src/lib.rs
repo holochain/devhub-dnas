@@ -46,6 +46,7 @@ macro_rules! catch { // could change to "trap", "snare", or "capture"
 		    devhub_types::errors::ErrorKinds::UserError(e) => (&e).into(),
 		    devhub_types::errors::ErrorKinds::HDKError(e) => (&e).into(),
 		    devhub_types::errors::ErrorKinds::DnaUtilsError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::FailureResponseError(e) => (&e).into(),
 		};
 		return Ok(devhub_types::DevHubResponse::failure( error, None ))
 	    },
@@ -60,12 +61,34 @@ macro_rules! catch { // could change to "trap", "snare", or "capture"
 }
 
 
-pub fn call_local_zome<'a, T, A>(zome: &str, func: &str, input: A) -> AppResult<T>
+fn zome_call_response_as_result(response: ZomeCallResponse) -> AppResult<zome_io::ExternIO> {
+    Ok( match response {
+	ZomeCallResponse::Ok(bytes)
+	    => Ok(bytes),
+	ZomeCallResponse::Unauthorized(cell_id, zome, func, agent)
+	    => Err(AppError::UnauthorizedError( cell_id, zome, func, agent )),
+	ZomeCallResponse::NetworkError(message)
+	    => Err(AppError::NetworkError(message)),
+    }? )
+}
+
+fn interpret_zome_response<T>(response: ZomeCallResponse) -> AppResult<T>
+where
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+{
+    let result_io = zome_call_response_as_result( response )?;
+    let essence : DevHubResponse<T> = result_io.decode()
+	.map_err( |e| AppError::DeserializeError(format!("Could not decode Essence response ({} bytes): {}", result_io.as_bytes().len(), e )) )?;
+
+    Ok( essence.as_result()? )
+}
+
+pub fn call_local_zome<T, A>(zome: &str, func: &str, input: A) -> AppResult<T>
 where
     T: serde::de::DeserializeOwned + std::fmt::Debug,
     A: serde::Serialize + std::fmt::Debug
 {
-    let zome_call_response = call(
+    let response = call(
 	None,
 	zome.into(),
 	func.into(),
@@ -73,26 +96,15 @@ where
 	input,
     )?;
 
-    if let ZomeCallResponse::Ok(result_io) = zome_call_response {
-	let response : DevHubResponse<T> = result_io.decode()
-	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
-
-	if let DevHubResponse::Success(pack) = response {
-	    return Ok( pack.payload );
-	} else {
-	    return Err( AppError::UnexpectedStateError("Essence package is not success".into()).into() );
-	}
-    } else {
-	return Err( AppError::UnexpectedStateError("Zome call response is not Ok".into()).into() );
-    }
+    Ok( interpret_zome_response( response )? )
 }
 
-pub fn call_local_dna_zome<'a, T, A>(cell_id: &CellId, zome: &str, func: &str, input: A) -> AppResult<T>
+pub fn call_local_dna_zome<T, A>(cell_id: &CellId, zome: &str, func: &str, input: A) -> AppResult<T>
 where
     T: serde::de::DeserializeOwned + std::fmt::Debug,
-    A: serde::Serialize + std::fmt::Debug
+    A: serde::Serialize + std::fmt::Debug,
 {
-    let zome_call_response = call(
+    let response = call(
 	Some( cell_id.to_owned() ),
 	zome.into(),
 	func.into(),
@@ -100,18 +112,7 @@ where
 	input,
     )?;
 
-    if let ZomeCallResponse::Ok(result_io) = zome_call_response {
-	let response : DevHubResponse<T> = result_io.decode()
-	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
-
-	if let DevHubResponse::Success(pack) = response {
-	    return Ok( pack.payload );
-	} else {
-	    return Err( AppError::UnexpectedStateError("Essence package is not success".into()).into() );
-	}
-    } else {
-	return Err( AppError::UnexpectedStateError("Zome call response is not Ok".into()).into() );
-    }
+    Ok( interpret_zome_response( response )? )
 }
 
 

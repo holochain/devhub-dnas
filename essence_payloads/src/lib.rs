@@ -1,4 +1,5 @@
 mod utils;
+use thiserror::Error;
 
 use serde::*;
 
@@ -37,6 +38,12 @@ where
     }
 }
 
+
+#[derive(Debug, Error)]
+pub enum EssenceError {
+    #[error("[{0}::{1}( {2} )]")]
+    ErrorPayload(String, String, String),
+}
 
 pub type ErrorEssencePackage<M> = EssencePackage<ErrorPayload, M>;
 
@@ -78,6 +85,13 @@ impl<P, PM, EM> EssenceResponse<P, PM, EM> {
 	    metadata: metadata,
 	    payload: error,
 	})
+    }
+
+    pub fn as_result(self) -> Result<P, EssenceError> {
+	match self {
+	    EssenceResponse::Success(pack) => Ok(pack.payload),
+	    EssenceResponse::Failure(pack) => Err(EssenceError::ErrorPayload(pack.payload.kind.clone(), pack.payload.error.clone(), pack.payload.message.clone())),
+	}
     }
 }
 
