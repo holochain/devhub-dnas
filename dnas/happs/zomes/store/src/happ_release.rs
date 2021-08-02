@@ -1,8 +1,8 @@
-use std::collections::BTreeMap;
 use devhub_types::{
     AppResult,
     happ_entry_types::{
-	HappReleaseEntry, HappReleaseInfo, HappReleaseSummary
+	HappReleaseEntry, HappReleaseInfo, HappReleaseSummary,
+	HappManifest, DnaReference,
     },
 };
 use hc_entities::{ Entity, Collection, GetEntityInput, UpdateEntityInput };
@@ -18,8 +18,8 @@ pub struct CreateInput {
     pub name: String,
     pub description: String,
     pub for_happ: EntryHash,
-    pub manifest_yaml: String,
-    pub resources: BTreeMap<String, EntryHash>,
+    pub manifest: HappManifest,
+    pub dnas: Vec<DnaReference>,
 
     // optional
     pub published_at: Option<u64>,
@@ -38,8 +38,8 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
-	manifest_yaml: input.manifest_yaml,
-	resources: input.resources,
+	manifest: input.manifest,
+	dnas: input.dnas,
     };
 
     let entity = utils::create_entity( &happ_release )?
@@ -71,8 +71,8 @@ pub struct HappReleaseUpdateOptions {
     pub description: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub manifest_yaml: Option<String>,
-    pub resources: Option<BTreeMap<String, EntryHash>>,
+    pub manifest: Option<HappManifest>,
+    pub dnas: Option<Vec<DnaReference>>,
 }
 pub type HappReleaseUpdateInput = UpdateEntityInput<HappReleaseUpdateOptions>;
 
@@ -95,10 +95,10 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
 		    .unwrap_or( utils::now()? ),
-		manifest_yaml: props.manifest_yaml
-		    .unwrap_or( current.manifest_yaml ),
-		resources: props.resources
-		    .unwrap_or( current.resources ),
+		manifest: props.manifest
+		    .unwrap_or( current.manifest ),
+		dnas: props.dnas
+		    .unwrap_or( current.dnas ),
 	    })
 	})?;
 

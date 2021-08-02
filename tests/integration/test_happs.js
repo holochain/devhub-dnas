@@ -98,10 +98,25 @@ function basic_tests () {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
-	    manifest_yaml,
-	    "resources": {
-		"test_dna": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
+	    "manifest": {
+		"manifest_version": "1",
+		"slots": [
+		    {
+			"id": "test_dna",
+			"dna": {
+			    "path": "./this/does/not/matter.dna",
+			},
+			"clone_limit": 0,
+		    },
+		],
 	    },
+	    "dnas": [
+		{
+		    "name": "test_dna",
+		    "dna": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
+		    "version": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
+		}
+	    ],
 	};
 
 	let release			= await alice.call( zome, "create_happ_release", release_input );

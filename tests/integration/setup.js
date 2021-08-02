@@ -47,7 +47,7 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
 
     log.debug("Creating clients actors: %s", actors.join(", ") );
     await Promise.all( Object.entries( agents ).map( async ([ actor, happ ]) => {
-	clients[actor]		= happ.agent;
+	clients[actor]			= happ.agent;
 
 	await Promise.all( Object.entries( happ.cells ).map( async ([ nick, cell ]) => {
 	    const client		= new Client( app_port, cell.dna.hash, cell.agent, client_options );

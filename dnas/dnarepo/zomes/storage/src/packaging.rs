@@ -79,18 +79,18 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     let mut manifest_zomes : Vec<BundleZomeInfo> = vec![];
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
 
-    for zome in entry.zomes.iter() {
-	let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", zome.resource.clone() )?;
-	let path = format!("./{}.wasm", zome.name );
+    for zome_ref in entry.zomes.iter() {
+	let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", zome_ref.resource.clone() )?;
+	let path = format!("./{}.wasm", zome_ref.name );
 
 	manifest_zomes.push( BundleZomeInfo {
-	    name: zome.name.clone(),
+	    name: zome_ref.name.clone(),
 	    bundle: path,
 	    hash: None,
 	});
 
 	resources.insert(
-	    format!("./{}.wasm", zome.name ),
+	    format!("./{}.wasm", zome_ref.name ),
 	    bytes
 	);
     }

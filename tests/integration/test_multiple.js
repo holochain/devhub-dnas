@@ -9,6 +9,7 @@ const expect				= require('chai').expect;
 const { HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
+const YAML				= require('yaml');
 
 const { backdrop }			= require('./setup.js');
 const delay				= (n) => new Promise(f => setTimeout(f, n));
@@ -145,10 +146,25 @@ function basic_tests () {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
-	    manifest_yaml,
-	    "resources": {
-		"test_dna": version.$id,
+	    "manifest": {
+		"manifest_version": "1",
+		"slots": [
+		    {
+			"id": "test_dna",
+			"dna": {
+			    "path": "./this/does/not/matter.dna",
+			},
+			"clone_limit": 0,
+		    },
+		],
 	    },
+	    "dnas": [
+		{
+		    "name": "test_dna",
+		    "dna": dna.$id,
+		    "version": version.$id,
+		}
+	    ],
 	};
 
 	let release			= await happ_client.call( store, "create_happ_release", release_input );

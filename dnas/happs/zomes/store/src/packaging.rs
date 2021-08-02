@@ -4,6 +4,7 @@ use devhub_types::{
     DevHubResponse, AppResult,
     errors::{ AppError },
     dnarepo_entry_types::{ DnaVersionPackage },
+    happ_entry_types::{ HappManifest },
     web_asset_entry_types::{ FileInfo },
     call_local_dna_zome,
     encode_bundle,
@@ -78,46 +79,8 @@ pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BundleSlotDnaProvisioning {
-    pub strategy: String,
-    pub deferred: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BundleSlotDnaInfo {
-    #[serde(alias = "path", alias = "url")]
-    pub bundled: String,
-    #[serde(default)]
-    pub clone_limit: u32,
-
-    // Optional fields
-    pub uid: Option<String>,
-    pub version: Option<String>,
-    pub properties: Option<serde_yaml::Value>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BundleSlotInfo {
-    pub id: String,
-    pub dna: BundleSlotDnaInfo,
-
-    // Optional fields
-    pub provisioning: Option<BundleSlotDnaProvisioning>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Manifest {
-    pub manifest_version: String,
-    pub slots: Vec<BundleSlotInfo>,
-
-    // Optional fields
-    pub name: Option<String>,
-    pub description: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Bundle {
-    pub manifest: Manifest,
+    pub manifest: HappManifest,
     pub resources: BTreeMap<String, Vec<u8>>,
 }
 
@@ -138,31 +101,32 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 	id: input.id,
     })?;
 
-    debug!("Manifest YAML: {}", entity.content.manifest_yaml );
+    let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
+
+    debug!("Fetching DNA package for {} resources", entity.content.dnas.len() );
+    for dna_ref in entity.content.dnas.iter() {
+	debug!("Fetching DNA package: {}", dna_ref.version );
+
+	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( &cell_id, "storage", "get_dna_package", GetEntityInput {
+	    id: dna_ref.version.to_owned(),
+	})?;
+
+	let path = format!("./{}.dna", dna_ref.name );
+
+	debug!("Adding resource pack '{}' with {} bytes", path, version_entity.content.bytes.len() );
+	resources.insert( path, version_entity.content.bytes );
+    }
+    debug!("Finished collecting DNAs for package with {} resources: {:?}", resources.len(), resources.clone().into_iter().map( |(k,v)| (k, v.len()) ).collect::<Vec<(String, usize)>>() );
+
+    debug!("Manifest: {:?}", entity.content.manifest );
     let mut package = Bundle {
-	manifest: serde_yaml::from_str( &entity.content.manifest_yaml )
-	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to parse YAML: {:?}", e )) )?,
-	resources: BTreeMap::new(),
+	manifest: entity.content.manifest,
+	resources: resources,
     };
 
     for slot in package.manifest.slots.iter_mut() {
 	slot.dna.bundled = format!("./{}.dna", slot.id );
     }
-
-    debug!("Fetching DNA package for {} resources", entity.content.resources.len() );
-    for (slot_id, version_entry_hash) in entity.content.resources.iter() {
-	debug!("Fetching DNA package: {}", version_entry_hash );
-
-	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( &cell_id, "storage", "get_dna_package", GetEntityInput {
-	    id: version_entry_hash.to_owned(),
-	})?;
-
-	let path = format!("./{}.dna", slot_id );
-
-	debug!("Adding resource pack '{}' with {} bytes", path, version_entity.content.bytes.len() );
-	package.resources.insert( path, version_entity.content.bytes );
-    }
-    debug!("Finished collecting DNAs for package with {} resources: {:?}", package.resources.len(), package.resources.clone().into_iter().map( |(k,v)| (k, v.len()) ).collect::<Vec<(String, usize)>>() );
 
     let happ_pack_bytes = encode_bundle( package )?;
 

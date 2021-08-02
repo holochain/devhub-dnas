@@ -140,6 +140,7 @@ dependencies = [
  "hdk",
  "rmp-serde",
  "serde",
+ "serde_yaml",
  "thiserror",
 ]
 
@@ -748,7 +749,6 @@ dependencies = [
  "rand 0.8.3",
  "serde",
  "serde_derive",
- "serde_yaml",
  "thiserror",
 ]
 

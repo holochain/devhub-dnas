@@ -16,7 +16,6 @@ hdk = "0.0.100"
 holo_hash = "0.0.2-alpha.1"
 serde = "1.0"
 serde_derive = "1.0"
-serde_yaml = "0.8.17"
 thiserror = "1.0"
 
 [dev-dependencies]
