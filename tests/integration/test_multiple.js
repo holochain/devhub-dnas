@@ -21,7 +21,7 @@ const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets/web_asse
 
 const storage				= "dna_library";
 const store				= "happ_library";
-const files				= "files";
+const files				= "web_assets";
 
 const chunk_size			= (2**20 /*1 megabyte*/) * 2;
 

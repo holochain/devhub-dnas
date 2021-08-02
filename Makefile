@@ -5,11 +5,11 @@ NAME		= devhub
 
 DNAREPO			= bundled/dnarepo/dnarepo.dna
 HAPPDNA			= bundled/happs/happs.dna
+ASSETSDNA		= bundled/web_assets/web_assets.dna
 
 DNA_LIBRARY_WASM	= target/wasm32-unknown-unknown/release/dna_library.wasm
 HAPP_LIBRARY_WASM	= target/wasm32-unknown-unknown/release/happ_library.wasm
-ASSETSDNA		= bundled/web_assets/files.dna
-ASSETSDNA_WASM		= target/wasm32-unknown-unknown/release/files.wasm
+WEB_ASSETS_WASM		= target/wasm32-unknown-unknown/release/web_assets.wasm
 
 MERE_MEMORY_BASE	= zomes/mere_memory
 MERE_MEMORY_WASM	= $(MERE_MEMORY_BASE)/target/wasm32-unknown-unknown/release/mere_memory.wasm
@@ -60,17 +60,17 @@ $(HAPP_LIBRARY_WASM):		Makefile zomes/happ_library/src/*.rs zomes/happ_library/C
 	    --package happ_library
 
 webassetdna:			$(ASSETSDNA)
-$(ASSETSDNA):			$(ASSETSDNA_WASM)
+$(ASSETSDNA):			$(WEB_ASSETS_WASM)
 	@echo "Packaging ASSETSDNA: $@"
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
 
-$(ASSETSDNA_WASM):		Makefile
-	@echo "Building  ASSETSDNA WASM: $@"; \
-	cd dnas/web_assets/; \
+$(WEB_ASSETS_WASM):		Makefile zomes/web_assets/src/*.rs zomes/web_assets/Cargo.toml
+	@echo "Building  'web_assets' WASM: $@"; \
+	cd zomes/web_assets/; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
-	    --package files
+	    --package web_assets
 
 
 #

@@ -27,7 +27,7 @@ pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
 
     let zome_call_response = call(
 	Some( CellId::new( input.dna_hash, pubkey ) ),
-	"files".into(),
+	"web_assets".into(),
 	"get_file".into(),
 	None,
 	GetEntityInput {

@@ -159,20 +159,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "files"
-version = "0.1.0"
-dependencies = [
- "devhub_types",
- "hc_dna_utils",
- "hc_entities",
- "hdk",
- "rand 0.8.3",
- "serde",
- "serde_derive",
- "thiserror",
-]
-
-[[package]]
 name = "fixt"
 version = "0.0.2-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -924,6 +910,20 @@ name = "wasi"
 version = "0.10.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
+
+[[package]]
+name = "web_assets"
+version = "0.1.0"
+dependencies = [
+ "devhub_types",
+ "hc_dna_utils",
+ "hc_entities",
+ "hdk",
+ "rand 0.8.3",
+ "serde",
+ "serde_derive",
+ "thiserror",
+]
 
 [[package]]
 name = "winapi"
