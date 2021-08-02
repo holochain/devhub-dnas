@@ -1,17 +1,17 @@
 [package]
-name = "store"
+name = "happ_library"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "store"
+name = "happ_library"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-devhub_types = {path = "../../../../devhub_types"}
-hc_entities = {path = "../../../../hc_entities"}
-hc_dna_utils = {path = "../../../../dna_utils"}
+devhub_types = {path = "../../devhub_types"}
+hc_entities = {path = "../../hc_entities"}
+hc_dna_utils = {path = "../../dna_utils"}
 hdk = "0.0.100"
 holo_hash = "0.0.2-alpha.1"
 serde = "1.0"

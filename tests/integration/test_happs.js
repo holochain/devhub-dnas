@@ -14,7 +14,7 @@ const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs/happs.dna");
-const zome				= "store";
+const zome				= "happ_library";
 
 
 function basic_tests () {

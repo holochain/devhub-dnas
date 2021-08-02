@@ -20,7 +20,7 @@ const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs/happs.dna");
 const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets/web_assets.dna");
 
 const storage				= "dna_library";
-const store				= "store";
+const store				= "happ_library";
 const files				= "files";
 
 const chunk_size			= (2**20 /*1 megabyte*/) * 2;

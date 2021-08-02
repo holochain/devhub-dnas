@@ -143,7 +143,7 @@ let dna = client.call("viewer", "happ", "get_dna_package", {
 Get hApp (metadata)
 
 ```javascript
-let happ = client.call("happs", "store", "get_app", {
+let happ = client.call("happs", "happ_library", "get_app", {
     "addr": <Buffer 84 21 24 ...>,
 });
 ```
@@ -153,7 +153,7 @@ let happ = client.call("happs", "store", "get_app", {
 Get latest manifest
 
 ```javascript
-let manifest = client.call("happs", "store", "get_manifest", {
+let manifest = client.call("happs", "happ_library", "get_manifest", {
     "addr": <Buffer 84 21 24 ...>,
 });
 ```
@@ -163,7 +163,7 @@ let manifest = client.call("happs", "store", "get_manifest", {
 Get my hApps
 
 ```javascript
-let happs = client.call("happs", "store", "get_my_apps", null);
+let happs = client.call("happs", "happ_library", "get_my_apps", null);
 ```
 
 
@@ -171,7 +171,7 @@ let happs = client.call("happs", "store", "get_my_apps", null);
 Get hApp versions for hApp
 
 ```javascript
-let manifests = client.call("happs", "store", "get_manifests", {
+let manifests = client.call("happs", "happ_library", "get_manifests", {
     "for_happ": <Buffer 84 21 24 ...>,
 });
 ```
@@ -181,7 +181,7 @@ let manifests = client.call("happs", "store", "get_manifests", {
 Create hApp
 
 ```javascript
-let [happ_hash, happ] = client.call("happs", "store", "create_app", {
+let [happ_hash, happ] = client.call("happs", "happ_library", "create_app", {
     "title": "Spider Solitaire",
     "subtitle": "The popular classic card game",
     "description": "Play the #1 classic Spider Solitaire for Free! ...",
@@ -199,7 +199,7 @@ let [happ_hash, happ] = client.call("happs", "store", "create_app", {
 Update hApp
 
 ```javascript
-let [updated_happ_hash, happ] = client.call("happs", "store", "update_app", {
+let [updated_happ_hash, happ] = client.call("happs", "happ_library", "update_app", {
     "addr": happ_hash,
     "properties": {
         "subtitle": "The popular classic card game",
@@ -213,7 +213,7 @@ let [updated_happ_hash, happ] = client.call("happs", "store", "update_app", {
 Delete hApp
 
 ```javascript
-let delete_happ_hash = client.call("happs", "store", "delete_app", {
+let delete_happ_hash = client.call("happs", "happ_library", "delete_app", {
     "addr": happ_hash,
 });
 ```
@@ -223,7 +223,7 @@ let delete_happ_hash = client.call("happs", "store", "delete_app", {
 Create hApp version
 
 ```javascript
-let [manifest_hash, manifest] = client.call("happs", "store", "create_manifest", {
+let [manifest_hash, manifest] = client.call("happs", "happ_library", "create_manifest", {
     "for_happ": happ_hash,
     "name": "Beta 1.0",
     "description": "First beta release",
@@ -245,7 +245,7 @@ let [manifest_hash, manifest] = client.call("happs", "store", "create_manifest",
 Update hApp version
 
 ```javascript
-let [updated_manifest_hash, manifest] = client.call("happs", "store", "update_manifest", {
+let [updated_manifest_hash, manifest] = client.call("happs", "happ_library", "update_manifest", {
     "addr": manifest_hash,
     "properties": {
         "cells": [{
@@ -265,7 +265,7 @@ let [updated_manifest_hash, manifest] = client.call("happs", "store", "update_ma
 Delete hApp version
 
 ```javascript
-let delete_manifest_hash = client.call("happs", "store", "delete_manifest", {
+let delete_manifest_hash = client.call("happs", "happ_library", "delete_manifest", {
     "addr": manifest_hash,
 });
 ```
