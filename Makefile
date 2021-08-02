@@ -4,7 +4,7 @@ SHELL		= bash
 NAME		= devhub
 
 DNAREPO			= bundled/dnarepo/dnarepo.dna
-DNAREPO_WASM		= target/wasm32-unknown-unknown/release/storage.wasm
+DNA_LIBRARY_WASM	= target/wasm32-unknown-unknown/release/dna_library.wasm
 HAPPDNA			= bundled/happs/happs.dna
 HAPPDNA_WASM		= target/wasm32-unknown-unknown/release/store.wasm
 ASSETSDNA		= bundled/web_assets/files.dna
@@ -33,17 +33,17 @@ rebuild:			clean build
 build:				dnarepo happdna
 
 dnarepo:			$(DNAREPO)
-$(DNAREPO):			$(DNAREPO_WASM) $(MERE_MEMORY_WASM)
+$(DNAREPO):			$(DNA_LIBRARY_WASM) $(MERE_MEMORY_WASM)
 	@echo "Packaging DNAREPO: $@"
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
 
-$(DNAREPO_WASM):		Makefile
-	@echo "Building  DNAREPO WASM: $@"; \
-	cd dnas/dnarepo/; \
+$(DNA_LIBRARY_WASM):		Makefile
+	@echo "Building  'dna_library' WASM: $@"; \
+	cd zomes/dna_library/; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
-	    --package storage
+	    --package dna_library
 
 happdna:			$(HAPPDNA)
 $(HAPPDNA):			$(HAPPDNA_WASM)
@@ -51,7 +51,7 @@ $(HAPPDNA):			$(HAPPDNA_WASM)
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
 
-$(HAPPDNA_WASM):		Makefile
+$(HAPPDNA_WASM):		Makefile dnas/happs/zomes/store/src/*.rs dnas/happs/zomes/store/Cargo.toml
 	@echo "Building  HAPPDNA WASM: $@"; \
 	cd dnas/happs/; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
@@ -81,7 +81,7 @@ test-all:			test-crates test-zomes test-dnas test-multi
 test-all-debug:			test-crates test-zomes-debug test-dnas-debug test-multi-debug
 test:				test-unit
 test-unit:
-	cd dnas/dnarepo/; \
+	cd zomes/dna_library/; \
 	RUST_BACKTRACE=1 cargo test \
 	    -- --nocapture
 unit-%:

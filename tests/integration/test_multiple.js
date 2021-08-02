@@ -19,7 +19,7 @@ const DNAREPO_PATH			= path.join(__dirname, "../../bundled/dnarepo/dnarepo.dna")
 const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs/happs.dna");
 const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets/web_assets.dna");
 
-const storage				= "storage";
+const storage				= "dna_library";
 const store				= "store";
 const files				= "files";
 

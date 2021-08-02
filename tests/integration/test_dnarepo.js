@@ -20,7 +20,7 @@ const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo/dnarepo.dna" );
-const storage				= "storage";
+const storage				= "dna_library";
 const mm_zome				= "mere_memory";
 
 let clients;
@@ -33,7 +33,7 @@ function basic_tests () {
     const bigzome_bytes			= Buffer.concat( Array(5).fill(zome_bytes) );
 
     it("should get whoami info", async function () {
-	let whoami			= await clients.alice.dnarepo.call("storage", "whoami");
+	let whoami			= await clients.alice.dnarepo.call( storage, "whoami" );
 
 	log.normal("Alice whoami: %s", whoami );
     });

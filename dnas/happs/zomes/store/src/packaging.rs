@@ -107,7 +107,7 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
     for dna_ref in entity.content.dnas.iter() {
 	debug!("Fetching DNA package: {}", dna_ref.version );
 
-	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( &cell_id, "storage", "get_dna_package", GetEntityInput {
+	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( &cell_id, "dna_library", "get_dna_package", GetEntityInput {
 	    id: dna_ref.version.to_owned(),
 	})?;
 

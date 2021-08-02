@@ -298,7 +298,7 @@ let apps = client.call("happs_index", "search", "keywords", {
 Get DNA package
 
 ```javascript
-let dna = client.call("dnarepo", "storage", "get_package", {
+let dna = client.call("dnarepo", "dna_library", "get_package", {
     "addr": <Buffer 84 21 24 ...>,
 });
 ```
@@ -308,7 +308,7 @@ let dna = client.call("dnarepo", "storage", "get_package", {
 Get a DNA (metadata)
 
 ```javascript
-let dna = client.call("dnarepo", "storage", "get_dna", {
+let dna = client.call("dnarepo", "dna_library", "get_dna", {
     "addr": dna_hash,
 });
 ```
@@ -318,7 +318,7 @@ let dna = client.call("dnarepo", "storage", "get_dna", {
 Get my DNA's (metadata)
 
 ```javascript
-let dnas = client.call("dnarepo", "storage", "get_my_dnas", null );
+let dnas = client.call("dnarepo", "dna_library", "get_my_dnas", null );
 ```
 
 
@@ -326,7 +326,7 @@ let dnas = client.call("dnarepo", "storage", "get_my_dnas", null );
 Get DNA versions for DNA (metadata)
 
 ```javascript
-let dna_versions = client.call("dnarepo", "storage", "get_dna_versions", {
+let dna_versions = client.call("dnarepo", "dna_library", "get_dna_versions", {
     "for_dna": <Buffer 84 21 24 ...>,
 });
 ```
@@ -336,7 +336,7 @@ let dna_versions = client.call("dnarepo", "storage", "get_dna_versions", {
 Create DNA (metadata)
 
 ```javascript
-let [dna_hash, dna_info] = client.call("dnarepo", "storage", "create_dna", {
+let [dna_hash, dna_info] = client.call("dnarepo", "dna_library", "create_dna", {
     "name": "Game Turns",
     "description": "A tool for turn-based games to track the order of player actions",
 });
@@ -347,7 +347,7 @@ let [dna_hash, dna_info] = client.call("dnarepo", "storage", "create_dna", {
 Update DNA (metadata)
 
 ```javascript
-let [updated_dna_hash, dna_info] = client.call("dnarepo", "storage", "update_dna", {
+let [updated_dna_hash, dna_info] = client.call("dnarepo", "dna_library", "update_dna", {
     "addr": dna_hash,
     "properties": {
         "developer": {
@@ -363,7 +363,7 @@ let [updated_dna_hash, dna_info] = client.call("dnarepo", "storage", "update_dna
 Deprecate DNA (metadata)
 
 ```javascript
-let [deprecated_dna_hash, dna_info] = client.call("dnarepo", "storage", "deprecate_dna", {
+let [deprecated_dna_hash, dna_info] = client.call("dnarepo", "dna_library", "deprecate_dna", {
     "addr": dna_hash,
     "properties": {
         "deprecation": {
@@ -378,7 +378,7 @@ let [deprecated_dna_hash, dna_info] = client.call("dnarepo", "storage", "depreca
 Create DNA version
 
 ```javascript
-let [dna_version_hash, dna_info] = client.call("dnarepo", "storage", "create_dna_version", {
+let [dna_version_hash, dna_info] = client.call("dnarepo", "dna_library", "create_dna_version", {
     "for_dna": dna_hash,
     "version": 1,
     "published_at": 1618855430,
@@ -397,7 +397,7 @@ let [dna_version_hash, dna_info] = client.call("dnarepo", "storage", "create_dna
 Update DNA version
 
 ```javascript
-let [updated_dna_version_hash, dna_info] = client.call("dnarepo", "storage", "create_dna_version", {
+let [updated_dna_version_hash, dna_info] = client.call("dnarepo", "dna_library", "create_dna_version", {
     "addr": dna_version_hash,
     "properties": {
         "changelog": "# Changelog\nFeatures\n...",
@@ -415,7 +415,7 @@ let [updated_dna_version_hash, dna_info] = client.call("dnarepo", "storage", "cr
 Delete DNA version
 
 ```javascript
-let delete_dna_version_hash = client.call("dnarepo", "storage", "delete_dna_version", {
+let delete_dna_version_hash = client.call("dnarepo", "dna_library", "delete_dna_version", {
     "addr": dna_version_hash,
 });
 ```
@@ -425,7 +425,7 @@ let delete_dna_version_hash = client.call("dnarepo", "storage", "delete_dna_vers
 Create DNA version
 
 ```javascript
-let dna_chunk1_hash = client.call("dnarepo", "storage", "create_dna_chunk", {
+let dna_chunk1_hash = client.call("dnarepo", "dna_library", "create_dna_chunk", {
     "sequence": {
         "position": 1,
         "length": 73,

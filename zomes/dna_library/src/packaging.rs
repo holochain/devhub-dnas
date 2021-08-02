@@ -20,9 +20,9 @@ use hdk::prelude::*;
 //         "properties": null,
 //         "zomes": [
 //             {
-//                 "name": "storage",
+//                 "name": "dna_library",
 //                 "hash": null,
-//                 "bundled": "../../zomes/dnarepo/target/wasm32-unknown-unknown/release/storage.wasm"
+//                 "bundled": "../../zomes/dnarepo/target/wasm32-unknown-unknown/release/dna_library.wasm"
 //             },
 //             {
 //                 "name": "mere_memory",
@@ -32,7 +32,7 @@ use hdk::prelude::*;
 //         ]
 //     },
 //     "resources": {
-//         "../../zomes/dnarepo/target/wasm32-unknown-unknown/release/storage.wasm": <Buffer ... 3490626 more bytes>,
+//         "../../zomes/dnarepo/target/wasm32-unknown-unknown/release/dna_library.wasm": <Buffer ... 3490626 more bytes>,
 //         "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm": <Buffer ... 2726804 more bytes>
 //     }
 // }
