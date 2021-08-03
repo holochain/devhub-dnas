@@ -3,6 +3,10 @@ name = "hc_zome_mere_memory"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas/"
+description = "A Holochain Zome for storing large or small byte values"
+readme = "README.md"
 
 [lib]
 name = "mere_memory"

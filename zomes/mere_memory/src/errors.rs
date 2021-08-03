@@ -1,3 +1,5 @@
+#![macro_use]
+
 use hdk::prelude::*;
 use thiserror::Error;
 
@@ -24,7 +26,6 @@ impl From<WasmError> for ErrorKinds  {
 }
 
 
-#[macro_export]
 macro_rules! catch {
     ( $r:expr ) => {
 	match $r {

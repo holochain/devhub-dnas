@@ -1,3 +1,41 @@
+//! # How to use `mere_memory` in your DNA
+//!
+//! ## Build the WASM
+//! Clone the Github repo [holochain/devhub-dnas](https://github.com/holochain/devhub-dnas) and run
+//!
+//! ```shell
+//! nix-shell
+//! [nix-shell:devhub-dnas$] make zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
+//! ```
+//!
+//!
+//! ## Include `mere_memory` WASM
+//! Add the WASM for this zome to your DNA manifest (example)
+//!
+//! ```yaml
+//! manifest_version: "1"
+//! ...
+//! zomes:
+//!   - name: mere_memory
+//!     bundled: path/to/mere_memory.wasm
+//!   ...other zomes
+//! ```
+//!
+//!
+//! ## Add calls to your other zomes
+//! Then, from your other zomes, you can call zome functions in 'mere_memory' (example)
+//!
+//! ```rust
+//! let bytes : Vec<u8> = vec![188, 100, 88, 152, ..., 212, 211, 212, 13];
+//! let response = call(
+//!     None,
+//!     "mere_memory".into(),
+//!     "save_bytes".into(),
+//!     None,
+//!     bytes,
+//! )?;
+//! ```
+
 use essence::{ EssenceResponse };
 use hdk::prelude::*;
 
@@ -7,10 +45,16 @@ mod handlers;
 
 pub use entry_types::{ MemoryEntry, MemoryBlockEntry, SequencePosition };
 
-
+/// Essence response definition
+///
+/// Types for each of the 3 parts (payload, payload metadata, error metadata)
+///
+/// 1. Generic <T>
+/// 2. None
+/// 3. None
 pub type Response<T> = EssenceResponse<T, (), ()>;
 
-pub fn success<T>(payload: T) -> Response<T> {
+fn success<T>(payload: T) -> Response<T> {
     Response::success( payload, None )
 }
 
