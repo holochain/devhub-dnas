@@ -12,7 +12,7 @@ HAPP_LIBRARY_WASM	= target/wasm32-unknown-unknown/release/happ_library.wasm
 WEB_ASSETS_WASM		= target/wasm32-unknown-unknown/release/web_assets.wasm
 
 MERE_MEMORY_BASE	= zomes/mere_memory
-MERE_MEMORY_WASM	= $(MERE_MEMORY_BASE)/target/wasm32-unknown-unknown/release/mere_memory.wasm
+MERE_MEMORY_WASM	= zomes/target/wasm32-unknown-unknown/release/mere_memory.wasm
 
 #
 # Project
@@ -41,7 +41,7 @@ $(DNAREPO):			$(DNA_LIBRARY_WASM) $(MERE_MEMORY_WASM)
 
 $(DNA_LIBRARY_WASM):		Makefile zomes/dna_library/src/*.rs zomes/dna_library/Cargo.toml
 	@echo "Building  'dna_library' WASM: $@"; \
-	cd zomes/dna_library/; \
+	cd zomes; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
 	    --package dna_library
@@ -54,7 +54,7 @@ $(HAPPDNA):			$(HAPP_LIBRARY_WASM)
 
 $(HAPP_LIBRARY_WASM):		Makefile zomes/happ_library/src/*.rs zomes/happ_library/Cargo.toml
 	@echo "Building  'happ_library' WASM: $@"; \
-	cd zomes/happ_library/; \
+	cd zomes; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
 	    --package happ_library
@@ -67,7 +67,7 @@ $(ASSETSDNA):			$(WEB_ASSETS_WASM)
 
 $(WEB_ASSETS_WASM):		Makefile zomes/web_assets/src/*.rs zomes/web_assets/Cargo.toml
 	@echo "Building  'web_assets' WASM: $@"; \
-	cd zomes/web_assets/; \
+	cd zomes; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
 	    --release --target wasm32-unknown-unknown \
 	    --package web_assets
@@ -137,8 +137,16 @@ $(TEST_DNA_MERE_MEMORY):	$(MERE_MEMORY_WASM)
 	@ls -l $(dir $@)
 $(MERE_MEMORY_WASM):		Makefile $(MERE_MEMORY_BASE)/src/*.rs $(MERE_MEMORY_BASE)/Cargo.toml
 	@echo "Building zome: $@"; \
-	cd $(MERE_MEMORY_BASE); RUST_BACKTRACE=1 cargo build \
+	cd zomes; RUST_BACKTRACE=1 cargo build --package hc_zome_mere_memory \
 		--release --target wasm32-unknown-unknown
+
+
+#
+# Testing
+#
+build-docs:			build-mere-memory-docs
+build-mere-memory-docs:
+	cd zomes; cargo doc -p hc_zome_mere_memory
 
 
 #

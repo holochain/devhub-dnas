@@ -3,14 +3,17 @@ name = "essence_payloads"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas/"
+description = "Rust implementations for the Essence Payloads protocol"
+readme = "README.md"
 
 [lib]
 name = "essence"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hdk = "0.0.100"
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
 
 [dev-dependencies]

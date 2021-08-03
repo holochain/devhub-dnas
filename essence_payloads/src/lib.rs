@@ -1,11 +1,27 @@
+//! # Basic Usage
+//!
+//! ## Defining your Essence package
+//! Essence packages have 3 options for structure variations
+//!
+//! 1. Payload struct
+//! 2. Payload metadata struct
+//! 3. Error metadata struct
+//!
+//! Example using a generic payload struct with no metadata structs
+//! ```
+//! use essence::{ EssenceResponse };
+//! pub type MyResponse<T> = EssenceResponse<T, (), ()>;
+//! ```
+
 mod utils;
 use thiserror::Error;
 
-use serde::*;
+use serde::{Serialize, Deserialize};
 
 use utils::{ type_of, struct_name };
 
 
+/// The standard shell of all Essence packages
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EssencePackage<T, M> {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -13,6 +29,7 @@ pub struct EssencePackage<T, M> {
     pub payload: T,
 }
 
+/// The payload definition of Essence failure responses
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorPayload {
     pub kind: String,
@@ -39,21 +56,24 @@ where
 }
 
 
+/// The possible errors that could be raised by this crate
 #[derive(Debug, Error)]
 pub enum EssenceError {
     #[error("[{0}::{1}( {2} )]")]
     ErrorPayload(String, String, String),
 }
 
-pub type ErrorEssencePackage<M> = EssencePackage<ErrorPayload, M>;
+/// This defines the struct of an Essence Error package
+pub type EssenceErrorPackage<M> = EssencePackage<ErrorPayload, M>;
 
 
+/// Defines the 2 possible package types (success or failure)
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 pub enum EssenceResponse<P, PM, EM> {
     Success(EssencePackage<P, PM>),
-    Failure(ErrorEssencePackage<EM>),
+    Failure(EssenceErrorPackage<EM>),
 }
 
 
@@ -139,8 +159,8 @@ pub mod tests {
 	assert_eq!(
 	    serde_json::to_string_pretty( &json!(payload) ).unwrap(),
 	    String::from(r#"{
-  "kind": "AppError",
   "error": "BadInput",
+  "kind": "AppError",
   "message": "This is so bad input: This is so bad...",
   "stack": []
 }"#));
@@ -167,8 +187,8 @@ pub mod tests {
 	assert_eq!(
 	    serde_json::to_string_pretty( &json!(payload) ).unwrap(),
 	    String::from(r#"{
-  "kind": "MyError",
   "error": "MyError",
+  "kind": "MyError",
   "message": "EntryHash(uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN)",
   "stack": []
 }"#));
@@ -193,8 +213,8 @@ pub mod tests {
 	assert_eq!(
 	    serde_json::to_string_pretty( &json!(payload) ).unwrap(),
 	    String::from(r#"{
-  "kind": "MyError",
   "error": "MyError",
+  "kind": "MyError",
   "message": "BadInput: This is so bad...",
   "stack": []
 }"#));

@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "mere_memory",
+  "dna_library",
+  "happ_library",
+  "web_assets",
+]

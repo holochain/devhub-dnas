@@ -29,7 +29,7 @@ let clients;
 
 
 function basic_tests () {
-    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
+    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
 
     it("should get whoami info", async function () {
 	const asset_client		= clients.alice.webassets;

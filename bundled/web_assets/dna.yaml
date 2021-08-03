@@ -4,4 +4,4 @@ uuid: 00000000-0000-0000-0000-000000000000
 properties: ~
 zomes:
   - name: web_assets
-    bundled: ../../zomes/web_assets/target/wasm32-unknown-unknown/release/web_assets.wasm
+    bundled: ../../zomes/target/wasm32-unknown-unknown/release/web_assets.wasm

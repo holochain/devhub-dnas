@@ -29,7 +29,7 @@ let zome_version_2;
 let dna_version_hash;
 
 function basic_tests () {
-    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
+    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
     const bigzome_bytes			= Buffer.concat( Array(5).fill(zome_bytes) );
 
     it("should get whoami info", async function () {
