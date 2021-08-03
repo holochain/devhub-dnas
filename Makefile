@@ -72,6 +72,14 @@ $(WEB_ASSETS_WASM):		Makefile zomes/web_assets/src/*.rs zomes/web_assets/Cargo.t
 	    --release --target wasm32-unknown-unknown \
 	    --package web_assets
 
+mere-memory-zome:		$(MERE_MEMORY_WASM)
+	cd zomes; cargo publish --dry-run --manifest-path mere_memory/Cargo.toml
+$(MERE_MEMORY_WASM):		Makefile $(MERE_MEMORY_BASE)/src/*.rs $(MERE_MEMORY_BASE)/Cargo.toml
+	@echo "Building zome: $@"; \
+	cd zomes; RUST_BACKTRACE=1 cargo build --package hc_zome_mere_memory \
+		--release --target wasm32-unknown-unknown
+
+
 
 #
 # Testing
@@ -135,14 +143,10 @@ $(TEST_DNA_MERE_MEMORY):	$(MERE_MEMORY_WASM)
 	@echo "Packaging test DNA for 'mere_memory' zome: $@"
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)
-$(MERE_MEMORY_WASM):		Makefile $(MERE_MEMORY_BASE)/src/*.rs $(MERE_MEMORY_BASE)/Cargo.toml
-	@echo "Building zome: $@"; \
-	cd zomes; RUST_BACKTRACE=1 cargo build --package hc_zome_mere_memory \
-		--release --target wasm32-unknown-unknown
 
 
 #
-# Testing
+# Documentation
 #
 build-docs:			build-mere-memory-docs
 build-mere-memory-docs:

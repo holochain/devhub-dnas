@@ -13,7 +13,7 @@ name = "mere_memory"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-essence_payloads = {path = "../../essence_payloads"}
+essence_payloads = "0.1.0"
 hdk = "0.0.100"
 serde = "1.0"
 serde_derive = "1.0"

@@ -134,7 +134,7 @@ dependencies = [
 name = "devhub_types"
 version = "0.1.0"
 dependencies = [
- "essence_payloads",
+ "essence_payloads 0.1.0",
  "flate2",
  "hc_dna_utils",
  "hc_entities",
@@ -169,6 +169,16 @@ checksum = "56899898ce76aaf4a0f24d914c97ea6ed976d42fec6ad33fcbb0a1103e07b2b0"
 [[package]]
 name = "essence_payloads"
 version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "essence_payloads"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5862712b20f8ee17bd1bc63a1bbef34a031c593b43d6bfdd7bdcb5c1f9b2e0a"
 dependencies = [
  "serde",
  "thiserror",
@@ -267,7 +277,7 @@ dependencies = [
 name = "hc_zome_mere_memory"
 version = "0.1.0"
 dependencies = [
- "essence_payloads",
+ "essence_payloads 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hdk",
  "rand 0.8.4",
  "serde",
