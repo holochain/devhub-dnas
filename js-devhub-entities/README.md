@@ -46,11 +46,11 @@ This client will automatically parse Essence packages and deconstruct Entity pay
 ```javascript
 const { Client } = require('@holochain/devhub-entities');
 
-const client = new Client( app_port, cell.dna.hash, cell.agent );
+const client = new Client( cell_agent, {
+    [dna_nickname]: dna_hash,
+}, app_port );
 
-await client.connect();
-
-let data = client.call( zome, fn_name, args );
+let response = client.call( dna_nickname, zome_name, fn_name, args );
 ```
 
 ### Contributing

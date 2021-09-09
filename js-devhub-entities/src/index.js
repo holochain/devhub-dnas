@@ -1,7 +1,8 @@
 
-const { AppWebsocket }			= require('@holochain/conductor-api');
+const { AgentClient,
+	HoloHashTypes,
+	...HolochainClient }		= require('@whi/holochain-client');
 const { Translator }			= require('@whi/essence');
-const HoloHashLib			= require('@whi/holo-hash');
 const EntityArchitectLib		= require('@whi/entity-architect');
 
 const { Architecture,
@@ -208,30 +209,31 @@ const Interpreter			= new Translator(["AppError", "UtilsError", "DNAError", "Use
 });
 
 const CLIENT_DEFAULT_OPTIONS		= {
+    "timeout": 5_000,
     "parse_essence": true,
     "parse_entities": true,
+    "simulate_latency": false,
 };
 
 class Client {
-    constructor ( port, dna_hash, agent_pubkey, options = {} ) {
-	this.port			= port;
-	this.dna_hash			= dna_hash;
+    constructor ( agent_pubkey, dnas, address, options = {} ) {
 	this.agent_pubkey		= agent_pubkey;
+	this.dnas			= dnas;
 	this.cell_id			= [ this.dna_hash, this.agent_pubkey ];
 	this.options			= Object.assign( {}, CLIENT_DEFAULT_OPTIONS, options );
-    }
-
-    async connect () {
-	this._client			= await AppWebsocket.connect( "ws://localhost:" + this.port );
+	this._client			= new AgentClient( this.agent_pubkey, this.dnas, address );
     }
 
     async destroy () {
-	this._client.client.socket.terminate();
+	this._client.close();
     }
 
-    async call ( zome_name, fn_name, args = null, opts_override = {} ) {
+    async call ( dna_nickname, zome_name, fn_name, args = null, opts_override = {} ) {
 	let args_debug;
 	const opts			= Object.assign( {}, this.options, opts_override );
+
+	if ( opts.simulate_latency )
+	    await new Promise( f => setTimeout(f, (Math.random() * 1_000) + 500) ); // range 500ms to 1500ms
 
 	if ( debug ) {
 	    if ( args === null )
@@ -247,13 +249,9 @@ class Client {
 
 	let response;
 	try {
-	    response			= await this._client.callZome({
-		"cell_id":	this.cell_id,
-		"zome_name":	zome_name,
-		"fn_name":	fn_name,
-		"payload":	args,
-		"provenance":	this.agent_pubkey, // AgentPubKey
-	    });
+	    response			= await this._client.call(
+		dna_nickname, zome_name, fn_name, args, opts.timeout
+	    );
 	    debug && log("Received response for: %s->%s(%s)", zome_name, fn_name, args_debug );
 	    debug && log("Full response:", response );
 	} catch ( err ) {
@@ -293,6 +291,9 @@ class Client {
 
 	let composition			= pack.metadata('composition');
 
+	if ( composition === undefined )
+	    return payload;
+
 	try {
 	    return Schema.deconstruct( composition, payload );
 	} catch ( err ) {
@@ -319,7 +320,9 @@ module.exports = {
     FileChunk,
 
     "EntityArchitect": EntityArchitectLib,
-    "HoloHashes": HoloHashLib,
+    "HoloHashes": HoloHashTypes,
+
+    HolochainClient,
 
     logging () {
 	debug				= true;
