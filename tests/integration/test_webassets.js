@@ -20,7 +20,7 @@ const zome				= "web_assets";
 
 function basic_tests () {
     it("should get whoami info", async function () {
-	let whoami			= await clients.alice.webassets.call( zome, "whoami" );
+	let whoami			= await clients.alice.call( "webassets", zome, "whoami" );
 
 	log.info("Agent ID 'alice': %s", String(new HoloHash(whoami.agent_initial_pubkey)) );
     });
@@ -28,7 +28,7 @@ function basic_tests () {
     it("should manage files", async function () {
 	this.timeout( 10_000 );
 
-	const alice			= clients.alice.webassets;
+	const alice			= clients.alice;
 
 
 	const file_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.gz") );
@@ -40,7 +40,7 @@ function basic_tests () {
 	    let chunk_hashes		= [];
 	    let chunk_count		= Math.ceil( file_bytes.length / chunk_size );
 	    for (let i=0; i < chunk_count; i++) {
-		let chunk		= await alice.call( zome, "create_file_chunk", {
+		let chunk		= await alice.call( "webassets", zome, "create_file_chunk", {
 		    "sequence": {
 			"position": i+1,
 			"length": chunk_count,
@@ -53,7 +53,7 @@ function basic_tests () {
 	    }
 	    log.debug("Final chunks:", json.debug(chunk_hashes) );
 
-	    let version			= await alice.call( zome, "create_file", {
+	    let version			= await alice.call( "webassets", zome, "create_file", {
 		"file_size": file_bytes.length,
 		"chunk_addresses": chunk_hashes,
 	    });

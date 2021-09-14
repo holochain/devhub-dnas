@@ -22,7 +22,7 @@ function basic_tests () {
     it("should create a memory manually", async function () {
 	this.timeout( 10_000 );
 
-	const alice			= clients.alice.memory;
+	const alice			= clients.alice;
 
 
 	const memory_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.gz") );
@@ -33,7 +33,7 @@ function basic_tests () {
 	    let block_hashes		= [];
 	    let block_count		= Math.ceil( memory_bytes.length / block_size );
 	    for (let i=0; i < block_count; i++) {
-		let addr		= new HoloHash( await alice.call( zome, "create_memory_block", {
+		let addr		= new HoloHash( await alice.call( "memory", zome, "create_memory_block", {
 		    "sequence": {
 			"position": i+1,
 			"length": block_count,
@@ -46,7 +46,7 @@ function basic_tests () {
 	    }
 	    log.debug("Final blocks:", json.debug(block_hashes) );
 
-	    let addr			= new HoloHash( await alice.call( zome, "create_memory", {
+	    let addr			= new HoloHash( await alice.call( "memory", zome, "create_memory", {
 		"memory_size": memory_bytes.length,
 		"block_addresses": block_hashes,
 	    }) );
@@ -58,13 +58,13 @@ function basic_tests () {
     it("should create a memory using 'save_bytes'", async function () {
 	this.timeout( 10_000 );
 
-	const alice			= clients.alice.memory;
+	const alice			= clients.alice;
 
 
 	const memory_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.gz") );
 	log.debug("GZ memory bytes (%s): typeof %s", memory_bytes.length, typeof memory_bytes );
 
-	let addr			= new HoloHash( await alice.call( zome, "save_bytes", memory_bytes ) );
+	let addr			= new HoloHash( await alice.call( "memory", zome, "save_bytes", memory_bytes ) );
 	log.normal("New GZ address: %s", String(addr) );
 
 	memory_addr			= addr;
@@ -73,10 +73,10 @@ function basic_tests () {
     it("should get a memory using 'retrieve_bytes'", async function () {
 	this.timeout( 10_000 );
 
-	const alice			= clients.alice.memory;
+	const alice			= clients.alice;
 
 	const memory_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.gz") );
-	let memory			= Buffer.from( await alice.call( zome, "retrieve_bytes", memory_addr ) );
+	let memory			= Buffer.from( await alice.call( "memory", zome, "retrieve_bytes", memory_addr ) );
 
 	expect( memory			).to.have.length( memory_bytes.length );
 

@@ -3,6 +3,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
     level: process.env.LOG_LEVEL || 'fatal',
 });
 
+global.WebSocket			= require('ws');
 const { Client, logging }		= require('@holochain/devhub-entities');
 
 if ( process.env.LOG_LEVEL )
@@ -47,17 +48,16 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
 
     log.debug("Creating clients actors: %s", actors.join(", ") );
     await Promise.all( Object.entries( agents ).map( async ([ actor, happ ]) => {
-	clients[actor]			= happ.agent;
-
+	const dna_map			= {};
 	await Promise.all( Object.entries( happ.cells ).map( async ([ nick, cell ]) => {
-	    const client		= new Client( app_port, cell.dna.hash, cell.agent, client_options );
-	    await client.connect();
-
+	    dna_map[nick]		= cell.dna.hash;
 	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, nick, String(cell.dna.hash), String(happ.agent) );
-	    clients[actor][nick]	= client;
-
-	    all_clients.push( client );
 	}) );
+
+	const client			= new Client( happ.agent, dna_map, app_port );
+	clients[actor]			= client
+
+	all_clients.push( client );
     }) );
     log.info("Finished backdrop setup: %s", Object.keys(clients) );
 

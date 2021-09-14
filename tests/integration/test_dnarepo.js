@@ -33,7 +33,7 @@ function basic_tests () {
     const bigzome_bytes			= Buffer.concat( Array(5).fill(zome_bytes) );
 
     it("should get whoami info", async function () {
-	let whoami			= await clients.alice.dnarepo.call( storage, "whoami" );
+	let whoami			= await clients.alice.call( "dnarepo", storage, "whoami" );
 
 	log.normal("Alice whoami: %s", whoami );
     });
@@ -41,19 +41,18 @@ function basic_tests () {
     it("should manage developer profile", async function () {
 	this.timeout( 10_000 );
 
-	const alice			= clients.alice.dnarepo;
-	const bobby			= clients.bobby.dnarepo;
-	const carol			= clients.carol.dnarepo;
+	const alice			= clients.alice;
+	const bobby			= clients.bobby;
 
 	let profile_hash;
 	let profile_input		= {
 	    "name": "Zed Shaw",
 	    "email": "zed.shaw@example.com",
-	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( clients.alice ).toString("hex"), 10)).toString(), "base64"),
+	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( clients.alice.agent_pubkey ).toString("hex"), 10)).toString(), "base64"),
 	};
 
 	{
-	    let profile_info		= await alice.call( storage, "create_profile", profile_input );
+	    let profile_info		= await alice.call( "dnarepo", storage, "create_profile", profile_input );
 	    log.normal("Set Developer profile: %s -> %s", String(profile_info.$addr), profile_info.name );
 
 	    expect( profile_info.name	).to.equal( profile_input.name );
@@ -62,33 +61,33 @@ function basic_tests () {
 	}
 
 	{
-	    let a_profile		= await alice.call( storage, "get_profile", {} );
+	    let a_profile		= await alice.call( "dnarepo", storage, "get_profile", {} );
 	    log.normal("Alice profile: %s", a_profile.name );
 	}
 
 	{
-	    let header_hash		= await alice.call( storage, "follow_developer", {
-		"agent": clients.bobby,
+	    let header_hash		= await alice.call( "dnarepo", storage, "follow_developer", {
+		"agent": clients.bobby.agent_pubkey,
 	    });
 	    log.normal("Following link hash: %s", String(new HoloHash(header_hash)) );
 
-	    await alice.call( storage, "follow_developer", {
-		"agent": clients.carol,
+	    await alice.call( "dnarepo", storage, "follow_developer", {
+		"agent": clients.carol.agent_pubkey,
 	    });
 
-	    let following		= await alice.call( storage, "get_following", null );
+	    let following		= await alice.call( "dnarepo", storage, "get_following", null );
 	    log.normal("Following %s developers", following.length );
 
 	    expect( following		).to.have.length( 2 );
 
-	    let delete_hash		= await alice.call( storage, "unfollow_developer", {
-		"agent": clients.carol,
+	    let delete_hash		= await alice.call( "dnarepo", storage, "unfollow_developer", {
+		"agent": clients.carol.agent_pubkey,
 	    });
 	    log.normal("Unfollowing link hash: %s", String(new HoloHash(delete_hash)) );
 
 	    await delay(200);
 
-	    let updated_following	= await alice.call( storage, "get_following", null );
+	    let updated_following	= await alice.call( "dnarepo", storage, "get_following", null );
 	    log.normal("Following %s developers", following.length );
 
 	    expect( updated_following	).to.have.length( 1 );
@@ -99,7 +98,7 @@ function basic_tests () {
 		"email": "zed.shaw@example.com",
 		"website": "zedshaw.example.com",
 	    };
-	    let profile_info		= await alice.call( storage, "update_profile", {
+	    let profile_info		= await alice.call( "dnarepo", storage, "update_profile", {
 		"addr": profile_hash,
 		"properties": profile_update_input,
 	    });
@@ -113,23 +112,22 @@ function basic_tests () {
     it("should CRUD Zome and ZomeVersion", async function () {
 	this.timeout( 30_000 );
 
-	const alice			= clients.alice.dnarepo;
-	const bobby			= clients.bobby.dnarepo;
-	const carol			= clients.carol.dnarepo;
+	const alice			= clients.alice;
+	const bobby			= clients.bobby;
 
 	let zome_input			= {
 	    "name": "File Storage",
 	    "description": "A generic API for fs-like data management",
 	};
 
-	let new_entry			= await alice.call( storage, "create_zome", zome_input );
+	let new_entry			= await alice.call( "dnarepo", storage, "create_zome", zome_input );
 	let main_zome			= new_entry;
 	log.normal("New ZOME (metadata): %s -> %s", String(main_zome.$id), new_entry.name );
 
 	let first_header_hash;
 	{
 	    // Check the created entry
-	    let zome_info		= await alice.call( storage, "get_zome", {
+	    let zome_info		= await alice.call( "dnarepo", storage, "get_zome", {
 		"id": main_zome.$id,
 	    });
 	    log.info("ZOME: %s", zome_info.name );
@@ -142,7 +140,7 @@ function basic_tests () {
 
 	{
 	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
-	    let version			= await alice.call( storage, "create_zome_version", {
+	    let version			= await alice.call( "dnarepo", storage, "create_zome_version", {
 		"for_zome": main_zome.$id,
 		"version": 1,
 		"zome_bytes": zome_bytes,
@@ -154,7 +152,7 @@ function basic_tests () {
 
 	{
 	    log.debug("Big ZOME file bytes (%s): typeof %s", bigzome_bytes.length, typeof bigzome_bytes );
-	    let version			= await alice.call( storage, "create_zome_version", {
+	    let version			= await alice.call( "dnarepo", storage, "create_zome_version", {
 		"for_zome": main_zome.$id,
 		"version": 2,
 		"zome_bytes": bigzome_bytes,
@@ -165,7 +163,7 @@ function basic_tests () {
 	}
 
 	{
-	    let zome_versions		= await alice.call( storage, "get_zome_versions", {
+	    let zome_versions		= await alice.call( "dnarepo", storage, "get_zome_versions", {
 		"for_zome": main_zome.$id,
 	    });
 	    log.info("ZOME Versions: %s", zome_versions.version );
@@ -179,7 +177,7 @@ function basic_tests () {
 	}
 
 	{
-	    let zomes			= await alice.call( storage, "get_my_zomes", null);
+	    let zomes			= await alice.call( "dnarepo", storage, "get_my_zomes", null);
 	    log.info("My ZOMEs: %s", zomes.length );
 
 	    log.normal("ZOME list (%s):", zomes.length,  );
@@ -189,8 +187,8 @@ function basic_tests () {
 
 	    expect( zomes		).to.have.length( 1 );
 
-	    let b_zomes			= await alice.call( storage, "get_zomes", {
-		"agent": clients.bobby,
+	    let b_zomes			= await alice.call( "dnarepo", storage, "get_zomes", {
+		"agent": clients.bobby.agent_pubkey,
 	    });
 	    log.normal("Bobby ZOMEs: %s", b_zomes.length );
 	    expect( b_zomes		).to.have.length( 0 );
@@ -200,7 +198,7 @@ function basic_tests () {
 	{
 	    // Update ZOME
 	    const zome_name		= "Game Turns (new)";
-	    let zome			= await alice.call( storage, "update_zome", {
+	    let zome			= await alice.call( "dnarepo", storage, "update_zome", {
 		"id": main_zome.$id,
 		"addr": main_zome.$addr,
 		"properties": {
@@ -210,7 +208,7 @@ function basic_tests () {
 	    expect( zome.$header		).to.not.deep.equal( first_header_hash );
 	    log.normal("Updated ZOME (metadata): %s -> %s", String(zome.$addr), zome.name );
 
-	    let zome_info		= await alice.call( storage, "get_zome", {
+	    let zome_info		= await alice.call( "dnarepo", storage, "get_zome", {
 		"id": main_zome.$id,
 	    });
 	    log.info("ZOME post update: %s", zome_info.name );
@@ -226,13 +224,13 @@ function basic_tests () {
 	    const properties		= {
 		"changelog": "# Changelog\nFeatures\n...",
 	    };
-	    let zome_version		= await alice.call( storage, "update_zome_version", {
+	    let zome_version		= await alice.call( "dnarepo", storage, "update_zome_version", {
 		"addr": zome_version_1.$id,
 		"properties": properties,
 	    });
 	    log.normal("Updated ZOME Version (metadata): %s -> %s", String(zome_version.$address), zome_version.version );
 
-	    let zome_version_info	= await alice.call( storage, "get_zome_version", {
+	    let zome_version_info	= await alice.call( "dnarepo", storage, "get_zome_version", {
 		"id": zome_version_1.$id,
 	    });
 	    log.info("ZOME Version post update: %s", zome_version_info.version );
@@ -241,12 +239,12 @@ function basic_tests () {
 
 	{
 	    // Unpublish ZOME Version
-	    let deleted_zome_version_hash	= await alice.call( storage, "delete_zome_version", {
+	    let deleted_zome_version_hash	= await alice.call( "dnarepo", storage, "delete_zome_version", {
 		"id": zome_version_1.$id,
 	    });
 	    log.normal("Deleted ZOME Version hash: %s", String(new HoloHash(deleted_zome_version_hash)) );
 
-	    let zome_versions		= await alice.call( storage, "get_zome_versions", {
+	    let zome_versions		= await alice.call( "dnarepo", storage, "get_zome_versions", {
 		"for_zome": main_zome.$id,
 	    });
 	    expect( zome_versions	).to.have.length( 1 );
@@ -255,7 +253,7 @@ function basic_tests () {
 	{
 	    // Deprecate ZOME
 	    let deprecation_notice	= "No longer maintained";
-	    let zome			= await alice.call( storage, "deprecate_zome", {
+	    let zome			= await alice.call( "dnarepo", storage, "deprecate_zome", {
 		"addr": main_zome.$addr,
 		"message": deprecation_notice,
 	    });
@@ -263,14 +261,14 @@ function basic_tests () {
 
 	    expect( zome.$header		).to.not.deep.equal( second_header_hash );
 
-	    let zome_info		= await alice.call( storage, "get_zome", {
+	    let zome_info		= await alice.call( "dnarepo", storage, "get_zome", {
 		"id": main_zome.$id,
 	    });
 	    log.info("ZOME post deprecation: %s", zome_info.name );
 	    expect( zome_info.deprecation.message	).to.equal( deprecation_notice );
 	    expect( zome_info.$header			).to.not.deep.equal( second_header_hash );
 
-	    let zomes			= await alice.call( storage, "get_my_zomes", null);
+	    let zomes			= await alice.call( "dnarepo", storage, "get_my_zomes", null);
 	    expect( zomes		).to.have.length( 0 );
 	}
     });
@@ -278,23 +276,22 @@ function basic_tests () {
     it("should CRUD Dna and DnaVersion", async function () {
 	this.timeout( 30_000 );
 
-	const alice			= clients.alice.dnarepo;
-	const bobby			= clients.bobby.dnarepo;
-	const carol			= clients.carol.dnarepo;
+	const alice			= clients.alice;
+	const bobby			= clients.bobby;
 
 	let dna_input			= {
 	    "name": "Game Turns",
 	    "description": "A tool for turn-based games to track the order of player actions",
 	};
 
-	let new_entry			= await alice.call( storage, "create_dna", dna_input );
+	let new_entry			= await alice.call( "dnarepo", storage, "create_dna", dna_input );
 	let main_dna			= new_entry;
 	log.normal("New DNA (metadata): %s -> %s", String(main_dna.$id), new_entry.name );
 
 	let first_header_hash;
 	{
 	    // Check the created entry
-	    let dna_info		= await alice.call( storage, "get_dna", {
+	    let dna_info		= await alice.call( "dnarepo", storage, "get_dna", {
 		"id": main_dna.$id,
 	    });
 	    log.info("DNA: %s", dna_info.name );
@@ -306,7 +303,7 @@ function basic_tests () {
 	}
 
 	{
-	    let version			= await alice.call( storage, "create_dna_version", {
+	    let version			= await alice.call( "dnarepo", storage, "create_dna_version", {
 		"for_dna": main_dna.$id,
 		"version": 1,
 		"zomes": [{
@@ -322,7 +319,7 @@ function basic_tests () {
 	}
 
 	{
-	    let version			= await alice.call( storage, "create_dna_version", {
+	    let version			= await alice.call( "dnarepo", storage, "create_dna_version", {
 		"for_dna": main_dna.$id,
 		"version": 2,
 		"zomes": [{
@@ -336,7 +333,7 @@ function basic_tests () {
 	}
 
 	{
-	    let dna_versions		= await alice.call( storage, "get_dna_versions", {
+	    let dna_versions		= await alice.call( "dnarepo", storage, "get_dna_versions", {
 		"for_dna": main_dna.$id,
 	    });
 	    log.info("DNA Versions: %s", dna_versions.version );
@@ -350,7 +347,7 @@ function basic_tests () {
 	}
 
 	{
-	    let dnas			= await alice.call( storage, "get_my_dnas", null);
+	    let dnas			= await alice.call( "dnarepo", storage, "get_my_dnas", null);
 	    log.info("My DNAs: %s", dnas.length );
 
 	    log.normal("DNA list (%s):", dnas.length,  );
@@ -360,8 +357,8 @@ function basic_tests () {
 
 	    expect( dnas		).to.have.length( 1 );
 
-	    let b_dnas			= await alice.call( storage, "get_dnas", {
-		"agent": clients.bobby,
+	    let b_dnas			= await alice.call( "dnarepo", storage, "get_dnas", {
+		"agent": clients.bobby.agent_pubkey,
 	    });
 	    log.normal("Bobby DNAs: %s", b_dnas.length );
 	    expect( b_dnas		).to.have.length( 0 );
@@ -371,7 +368,7 @@ function basic_tests () {
 	{
 	    // Update DNA
 	    const dna_name		= "Game Turns (new)";
-	    let dna			= await alice.call( storage, "update_dna", {
+	    let dna			= await alice.call( "dnarepo", storage, "update_dna", {
 		"id": main_dna.$id,
 		"addr": main_dna.$addr,
 		"properties": {
@@ -381,7 +378,7 @@ function basic_tests () {
 	    expect( dna.$header		).to.not.deep.equal( first_header_hash );
 	    log.normal("Updated DNA (metadata): %s -> %s", String(dna.$addr), dna.name );
 
-	    let dna_info		= await alice.call( storage, "get_dna", {
+	    let dna_info		= await alice.call( "dnarepo", storage, "get_dna", {
 		"id": main_dna.$id,
 	    });
 	    log.info("DNA post update: %s", dna_info.name );
@@ -398,17 +395,17 @@ function basic_tests () {
 		"changelog": "# Changelog\nFeatures\n...",
 		"contributors": [
 		    [ "kevin@open-games.example", null ],
-		    [ "stuart@open-games.example", clients.bobby ],
-		    [ "bob@open-games.example", clients.carol ],
+		    [ "stuart@open-games.example", clients.bobby.agent_pubkey ],
+		    [ "bob@open-games.example", clients.carol.agent_pubkey ],
 		],
 	    };
-	    let dna_version		= await alice.call( storage, "update_dna_version", {
+	    let dna_version		= await alice.call( "dnarepo", storage, "update_dna_version", {
 		"addr": dna_version_hash,
 		"properties": properties,
 	    });
 	    log.normal("Updated DNA Version (metadata): %s -> %s", String(dna_version.$address), dna_version.version );
 
-	    let dna_version_info	= await alice.call( storage, "get_dna_version", {
+	    let dna_version_info	= await alice.call( "dnarepo", storage, "get_dna_version", {
 		"id": dna_version_hash,
 	    });
 	    log.info("DNA Version post update: %s", dna_version_info.version );
@@ -417,7 +414,7 @@ function basic_tests () {
 	}
 
 	{
-	    let pack			= await alice.call( storage, "get_dna_package", {
+	    let pack			= await alice.call( "dnarepo", storage, "get_dna_package", {
 		"id": dna_version_hash,
 	    });
 	    log.info("DNA Package bytes: %s", pack.bytes.length );
@@ -427,12 +424,12 @@ function basic_tests () {
 
 	{
 	    // Unpublish DNA Version
-	    let deleted_dna_version_hash	= await alice.call( storage, "delete_dna_version", {
+	    let deleted_dna_version_hash	= await alice.call( "dnarepo", storage, "delete_dna_version", {
 		"id": dna_version_hash,
 	    });
 	    log.normal("Deleted DNA Version hash: %s", String(new HoloHash(deleted_dna_version_hash)) );
 
-	    let dna_versions		= await alice.call( storage, "get_dna_versions", {
+	    let dna_versions		= await alice.call( "dnarepo", storage, "get_dna_versions", {
 		"for_dna": main_dna.$id,
 	    });
 	    expect( dna_versions	).to.have.length( 1 );
@@ -441,7 +438,7 @@ function basic_tests () {
 	{
 	    // Deprecate DNA
 	    let deprecation_notice	= "No longer maintained";
-	    let dna			= await alice.call( storage, "deprecate_dna", {
+	    let dna			= await alice.call( "dnarepo", storage, "deprecate_dna", {
 		"addr": main_dna.$addr,
 		"message": deprecation_notice,
 	    });
@@ -449,14 +446,14 @@ function basic_tests () {
 
 	    expect( dna.$header		).to.not.deep.equal( second_header_hash );
 
-	    let dna_info		= await alice.call( storage, "get_dna", {
+	    let dna_info		= await alice.call( "dnarepo", storage, "get_dna", {
 		"id": main_dna.$id,
 	    });
 	    log.info("DNA post deprecation: %s", dna_info.name );
 	    expect( dna_info.deprecation.message	).to.equal( deprecation_notice );
 	    expect( dna_info.$header			).to.not.deep.equal( second_header_hash );
 
-	    let dnas			= await alice.call( storage, "get_my_dnas", null);
+	    let dnas			= await alice.call( "dnarepo", storage, "get_my_dnas", null);
 	    expect( dnas		).to.have.length( 0 );
 	}
     });
@@ -464,12 +461,12 @@ function basic_tests () {
 
 function errors_tests () {
     it("should fail to get profile because it is not made yet", async function () {
-	const bobby			= clients.bobby.dnarepo;
+	const bobby			= clients.bobby;
 
 	{
 	    let failed			= false;
 	    try {
-		let b_profile		= await bobby.call( storage, "get_profile", {} );
+		let b_profile		= await bobby.call( "dnarepo", storage, "get_profile", {} );
 		log.normal("Bobby profile: %s", b_profile.name );
 	    } catch (err) {
 		failed			= true;
@@ -481,12 +478,12 @@ function errors_tests () {
     });
 
     it("should fail to get deleted DNA version", async function () {
-	const alice			= clients.alice.dnarepo;
+	const alice			= clients.alice;
 
 	{
 	    let failed			= false;
 	    try {
-		await alice.call( storage, "get_dna_version", {
+		await alice.call( "dnarepo", storage, "get_dna_version", {
 		    "id": dna_version_hash,
 		});
 	    } catch (err) {
@@ -502,12 +499,12 @@ function errors_tests () {
     });
 
     it("should fail to create ZOME version because missing ZOME package info", async function () {
-	const alice			= clients.alice.dnarepo;
+	const alice			= clients.alice;
 
 	{
 	    let failed			= false;
 	    try {
-		await alice.call( storage, "create_zome_version", {
+		await alice.call( "dnarepo", storage, "create_zome_version", {
 		    "for_zome": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
 		    "version": 1,
 		    "file_size": 0,

@@ -19,7 +19,7 @@ const zome				= "happ_library";
 
 function basic_tests () {
     it("should get whoami info", async function () {
-	let whoami			= await clients.alice.happs.call( zome, "whoami" );
+	let whoami			= await clients.alice.call( "happs", zome, "whoami" );
 
 	log.info("Agent ID 'alice': %s", String(new HoloHash(whoami.agent_initial_pubkey)) );
     });
@@ -27,10 +27,7 @@ function basic_tests () {
     it("should manage happ configurations", async function () {
 	this.timeout( 10_000 );
 
-	const alice			= clients.alice.happs;
-	const bobby			= clients.bobby.happs;
-	const carol			= clients.carol.happs;
-
+	const alice			= clients.alice;
 
 	let happ_input			= {
 	    "title": "Chess",
@@ -38,13 +35,13 @@ function basic_tests () {
 	    "description": "Play chess with friends :)",
 	};
 
-	let happ			= await alice.call( zome, "create_happ", happ_input );
+	let happ			= await alice.call( "happs", zome, "create_happ", happ_input );
 	log.normal("New hApp: %s -> %s", String(happ.$addr), happ.title );
 
 	expect( happ.description	).to.equal( happ_input.description );
 
 	{
-	    let happs			= await alice.call( zome, "get_my_happs" );
+	    let happs			= await alice.call( "happs", zome, "get_my_happs" );
 	    log.normal("My hApps: %s -> %s", happs.length, String(happs.$base) );
 
 	    expect( happs		).to.have.length( 1 );
@@ -53,7 +50,7 @@ function basic_tests () {
 	let happ_addr			= happ.$addr;
 	{
 	    let description		= "New description";
-	    let update			= await alice.call( zome, "update_happ", {
+	    let update			= await alice.call( "happs", zome, "update_happ", {
 		"addr": happ_addr,
 		"properties": {
 		    description,
@@ -64,7 +61,7 @@ function basic_tests () {
 
 	    expect( update.description	).to.equal( description );
 
-	    let _happ			= await alice.call( zome, "get_happ", {
+	    let _happ			= await alice.call( "happs", zome, "get_happ", {
 		"id": happ.$id,
 	    });
 	    log.normal("Updated hApp: %s -> %s", String(_happ.$addr), _happ.title );
@@ -74,7 +71,7 @@ function basic_tests () {
 
 	{
 	    let message			= "This hApp is no longer maintained";
-	    let update			= await alice.call( zome, "deprecate_happ", {
+	    let update			= await alice.call( "happs", zome, "deprecate_happ", {
 		"addr": happ_addr,
 		"message": message,
 	    });
@@ -84,7 +81,7 @@ function basic_tests () {
 	    expect( update.deprecation		).to.be.an( "object" );
 	    expect( update.deprecation.message	).to.equal( message );
 
-	    let _happ			= await alice.call( zome, "get_happ", {
+	    let _happ			= await alice.call( "happs", zome, "get_happ", {
 		"id": happ.$id,
 	    });
 	    log.normal("Deprecated hApp: %s -> %s", String(_happ.$addr), _happ.title );
@@ -119,13 +116,13 @@ function basic_tests () {
 	    ],
 	};
 
-	let release			= await alice.call( zome, "create_happ_release", release_input );
+	let release			= await alice.call( "happs", zome, "create_happ_release", release_input );
 	log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
 
 	expect( release.description	).to.equal( release_input.description );
 
 	{
-	    let _release		= await alice.call( zome, "get_happ_release", {
+	    let _release		= await alice.call( "happs", zome, "get_happ_release", {
 		"id": release.$id,
 	    });
 	    log.normal("Updated release: %s -> %s", String(_release.$addr), _release.name );
@@ -134,7 +131,7 @@ function basic_tests () {
 	}
 
 	{
-	    let releases		= await alice.call( zome, "get_happ_releases", {
+	    let releases		= await alice.call( "happs", zome, "get_happ_releases", {
 		"for_happ": happ.$id,
 	    });
 	    log.normal("hApp Releases %s -> %s", releases.length, String(releases.$base) );
@@ -146,7 +143,7 @@ function basic_tests () {
 	let happ_release_addr;
 	{
 	    let description		= "The first release (updated)";
-	    let update			= await alice.call( zome, "update_happ_release", {
+	    let update			= await alice.call( "happs", zome, "update_happ_release", {
 		"addr": release.$addr,
 		"properties": {
 		    description,
@@ -159,7 +156,7 @@ function basic_tests () {
 	}
 
 	{
-	    let header			= await alice.call( zome, "delete_happ_release", {
+	    let header			= await alice.call( "happs", zome, "delete_happ_release", {
 		"id": release.$id,
 	    });
 	    log.normal("Delete hApp: %s", header );
@@ -168,7 +165,7 @@ function basic_tests () {
 	{
 	    let failed			= false;
 	    try {
-		await alice.call( zome, "get_happ_release", {
+		await alice.call( "happs", zome, "get_happ_release", {
 		    "id": release.$id,
 		});
 	    } catch (err) {
@@ -198,8 +195,6 @@ describe("hApps", () => {
 	    "happs": HAPPS_PATH,
 	}, [
 	    "alice",
-	    "bobby",
-	    "carol",
 	]);
     });
 
