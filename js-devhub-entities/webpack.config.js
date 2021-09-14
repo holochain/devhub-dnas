@@ -1,12 +1,17 @@
 const webpack			= require('webpack');
+const TerserPlugin		= require('terser-webpack-plugin');
 
 module.exports = {
-    target: 'node',
-    mode: 'production', // production | development
-    entry: [ './src/index.js' ],
+    target: "web",
+    // mode: "development",
+    mode: "production",
+    entry: [ "./src/index.js" ],
+    resolve: {
+	mainFields: ["main"],
+    },
     output: {
-	filename: 'devhub-entities.bundled.js',
-	globalObject: 'this',
+	filename: "devhub-entities.bundled.js",
+	globalObject: "this",
 	library: {
 	    "name": "DevHubEntities",
 	    "type": "umd",
@@ -15,5 +20,14 @@ module.exports = {
     stats: {
 	colors: true
     },
-    devtool: 'source-map',
+    devtool: "source-map",
+    optimization: {
+	minimizer: [
+	    new TerserPlugin({
+		terserOptions: {
+		    keep_classnames: true,
+		},
+	    }),
+	],
+    },
 };

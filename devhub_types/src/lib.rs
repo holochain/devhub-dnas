@@ -1,39 +1,38 @@
 pub mod constants;
 pub mod errors;
-pub mod dna_entry_types;
+pub mod dnarepo_entry_types;
 pub mod happ_entry_types;
+pub mod web_asset_entry_types;
+
+use std::io::Write;
 
 use hdk::prelude::*;
 use essence::{ EssenceResponse };
+use errors::{ ErrorKinds, AppError };
 use hc_entities::{ Collection, Entity };
 
-use constants::{ ENTITY_MD };
+
+pub type AppResult<T> = Result<T, ErrorKinds>;
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Metadata {
-    pub composition: &'static str,
+    pub composition: String,
 }
 
 pub type DevHubResponse<T> = EssenceResponse<T, Metadata, ()>;
 
-pub struct Reply<T, E>( DevHubResponse<T>, E )
-where
-    E: std::error::Error;
-
-impl<T, E> Reply<T, E>
-where
-    E: std::error::Error {
-
-    pub fn new(payload: Result<T, E>) -> DevHubResponse<T> {
-	EssenceResponse::new(payload, ENTITY_MD, None )
-    }
+pub fn composition<T>(payload: T, composition: &str) -> DevHubResponse<T> {
+    DevHubResponse::success( payload, Some(Metadata {
+	composition: String::from( composition ),
+    }) )
 }
 
 
 pub type CollectionResponse<T> = DevHubResponse<Collection<T>>;
 pub type EntityResponse<T> = DevHubResponse<Entity<T>>;
 pub type EntityCollectionResponse<T> = DevHubResponse<Collection<Entity<T>>>;
+
 
 
 #[macro_export]
@@ -43,23 +42,98 @@ macro_rules! catch { // could change to "trap", "snare", or "capture"
 	    Ok(x) => x,
 	    Err(e) => {
 		let error = match e {
-		    ErrorKinds::AppError(e) => (&e).into(),
-		    ErrorKinds::UserError(e) => (&e).into(),
-		    ErrorKinds::HDKError(e) => (&e).into(),
-		    ErrorKinds::DnaUtilsError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::AppError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::UserError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::HDKError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::DnaUtilsError(e) => (&e).into(),
+		    devhub_types::errors::ErrorKinds::FailureResponseError(e) => (&e).into(),
 		};
-		return Ok(DevHubResponse::failure( error, None ))
+		return Ok(devhub_types::DevHubResponse::failure( error, None ))
 	    },
 	}
     };
     ( $r:expr, $e:expr ) => {
 	match $r {
 	    Ok(x) => x,
-	    Err(e) => return Ok(DevHubResponse::failure( (&$e).into(), None )),
+	    Err(e) => return Ok(devhub_types::DevHubResponse::failure( (&$e).into(), None )),
 	}
     };
 }
 
+
+fn zome_call_response_as_result(response: ZomeCallResponse) -> AppResult<zome_io::ExternIO> {
+    Ok( match response {
+	ZomeCallResponse::Ok(bytes)
+	    => Ok(bytes),
+	ZomeCallResponse::Unauthorized(cell_id, zome, func, agent)
+	    => Err(AppError::UnauthorizedError( cell_id, zome, func, agent )),
+	ZomeCallResponse::NetworkError(message)
+	    => Err(AppError::NetworkError(message)),
+    }? )
+}
+
+fn interpret_zome_response<T>(response: ZomeCallResponse) -> AppResult<T>
+where
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+{
+    let result_io = zome_call_response_as_result( response )?;
+    let essence : DevHubResponse<T> = result_io.decode()
+	.map_err( |e| AppError::DeserializeError(format!("Could not decode Essence response ({} bytes): {}", result_io.as_bytes().len(), e )) )?;
+
+    Ok( essence.as_result()? )
+}
+
+pub fn call_local_zome<T, A>(zome: &str, func: &str, input: A) -> AppResult<T>
+where
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+    A: serde::Serialize + std::fmt::Debug
+{
+    let response = call(
+	None,
+	zome.into(),
+	func.into(),
+	None,
+	input,
+    )?;
+
+    Ok( interpret_zome_response( response )? )
+}
+
+pub fn call_local_dna_zome<T, A>(cell_id: &CellId, zome: &str, func: &str, input: A) -> AppResult<T>
+where
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+    A: serde::Serialize + std::fmt::Debug,
+{
+    let response = call(
+	Some( cell_id.to_owned() ),
+	zome.into(),
+	func.into(),
+	None,
+	input,
+    )?;
+
+    Ok( interpret_zome_response( response )? )
+}
+
+
+pub fn encode_bundle<T>(bundle: T) -> AppResult<Vec<u8>>
+where
+    T: serde::Serialize
+{
+    let packed_bytes = rmp_serde::to_vec_named( &bundle )
+	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to msgpack bundle: {:?}", e )) )?;
+    debug!("Message packed bytes: {}", packed_bytes.len() );
+
+    let mut enc = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+    enc.write_all( &packed_bytes )
+	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to gzip package: {:?}", e )) )?;
+
+    let gzipped_package = enc.finish()
+	.map_err( |e| AppError::UnexpectedStateError(format!("Failed to finish gzip encoding: {:?}", e )) )?;
+    debug!("Gzipped package bytes: {}", gzipped_package.len() );
+
+    Ok( gzipped_package )
+}
 
 
 

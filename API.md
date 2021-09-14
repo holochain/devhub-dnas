@@ -133,13 +133,17 @@ let dna = client.call("viewer", "happ", "get_dna_package", {
 
 ## `happs` DNA Zome Functions
 
+#### Entity Relationship Diagram
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1amiyBBUt2JAPz1PhknOv3wFg6v-tKx5I&sz=w1000)
+
+
 ### `store` Zome
 
 #### `get_app( { addr: EntryHash } ) -> AppInfo`
 Get hApp (metadata)
 
 ```javascript
-let happ = client.call("happs", "store", "get_app", {
+let happ = client.call("happs", "happ_library", "get_app", {
     "addr": <Buffer 84 21 24 ...>,
 });
 ```
@@ -149,7 +153,7 @@ let happ = client.call("happs", "store", "get_app", {
 Get latest manifest
 
 ```javascript
-let manifest = client.call("happs", "store", "get_manifest", {
+let manifest = client.call("happs", "happ_library", "get_manifest", {
     "addr": <Buffer 84 21 24 ...>,
 });
 ```
@@ -159,7 +163,7 @@ let manifest = client.call("happs", "store", "get_manifest", {
 Get my hApps
 
 ```javascript
-let happs = client.call("happs", "store", "get_my_apps", null);
+let happs = client.call("happs", "happ_library", "get_my_apps", null);
 ```
 
 
@@ -167,7 +171,7 @@ let happs = client.call("happs", "store", "get_my_apps", null);
 Get hApp versions for hApp
 
 ```javascript
-let manifests = client.call("happs", "store", "get_manifests", {
+let manifests = client.call("happs", "happ_library", "get_manifests", {
     "for_happ": <Buffer 84 21 24 ...>,
 });
 ```
@@ -177,7 +181,7 @@ let manifests = client.call("happs", "store", "get_manifests", {
 Create hApp
 
 ```javascript
-let [happ_hash, happ] = client.call("happs", "store", "create_app", {
+let [happ_hash, happ] = client.call("happs", "happ_library", "create_app", {
     "title": "Spider Solitaire",
     "subtitle": "The popular classic card game",
     "description": "Play the #1 classic Spider Solitaire for Free! ...",
@@ -195,7 +199,7 @@ let [happ_hash, happ] = client.call("happs", "store", "create_app", {
 Update hApp
 
 ```javascript
-let [updated_happ_hash, happ] = client.call("happs", "store", "update_app", {
+let [updated_happ_hash, happ] = client.call("happs", "happ_library", "update_app", {
     "addr": happ_hash,
     "properties": {
         "subtitle": "The popular classic card game",
@@ -209,7 +213,7 @@ let [updated_happ_hash, happ] = client.call("happs", "store", "update_app", {
 Delete hApp
 
 ```javascript
-let delete_happ_hash = client.call("happs", "store", "delete_app", {
+let delete_happ_hash = client.call("happs", "happ_library", "delete_app", {
     "addr": happ_hash,
 });
 ```
@@ -219,7 +223,7 @@ let delete_happ_hash = client.call("happs", "store", "delete_app", {
 Create hApp version
 
 ```javascript
-let [manifest_hash, manifest] = client.call("happs", "store", "create_manifest", {
+let [manifest_hash, manifest] = client.call("happs", "happ_library", "create_manifest", {
     "for_happ": happ_hash,
     "name": "Beta 1.0",
     "description": "First beta release",
@@ -241,7 +245,7 @@ let [manifest_hash, manifest] = client.call("happs", "store", "create_manifest",
 Update hApp version
 
 ```javascript
-let [updated_manifest_hash, manifest] = client.call("happs", "store", "update_manifest", {
+let [updated_manifest_hash, manifest] = client.call("happs", "happ_library", "update_manifest", {
     "addr": manifest_hash,
     "properties": {
         "cells": [{
@@ -261,7 +265,7 @@ let [updated_manifest_hash, manifest] = client.call("happs", "store", "update_ma
 Delete hApp version
 
 ```javascript
-let delete_manifest_hash = client.call("happs", "store", "delete_manifest", {
+let delete_manifest_hash = client.call("happs", "happ_library", "delete_manifest", {
     "addr": manifest_hash,
 });
 ```
@@ -283,7 +287,10 @@ let apps = client.call("happs_index", "search", "keywords", {
 
 
 
-## `dnas` DNA Zome Functions
+## `dnarepo` DNA Zome Functions
+
+#### Entity Relationship Diagram
+![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1VjYZPu0A4-yjhH53Fefr1FEWNdQdgCJ4&sz=w1000)
 
 ### `storage` Zome
 
@@ -291,7 +298,7 @@ let apps = client.call("happs_index", "search", "keywords", {
 Get DNA package
 
 ```javascript
-let dna = client.call("dnas", "storage", "get_package", {
+let dna = client.call("dnarepo", "dna_library", "get_package", {
     "addr": <Buffer 84 21 24 ...>,
 });
 ```
@@ -301,7 +308,7 @@ let dna = client.call("dnas", "storage", "get_package", {
 Get a DNA (metadata)
 
 ```javascript
-let dna = client.call("dnas", "storage", "get_dna", {
+let dna = client.call("dnarepo", "dna_library", "get_dna", {
     "addr": dna_hash,
 });
 ```
@@ -311,7 +318,7 @@ let dna = client.call("dnas", "storage", "get_dna", {
 Get my DNA's (metadata)
 
 ```javascript
-let dnas = client.call("dnas", "storage", "get_my_dnas", null );
+let dnas = client.call("dnarepo", "dna_library", "get_my_dnas", null );
 ```
 
 
@@ -319,7 +326,7 @@ let dnas = client.call("dnas", "storage", "get_my_dnas", null );
 Get DNA versions for DNA (metadata)
 
 ```javascript
-let dna_versions = client.call("dnas", "storage", "get_dna_versions", {
+let dna_versions = client.call("dnarepo", "dna_library", "get_dna_versions", {
     "for_dna": <Buffer 84 21 24 ...>,
 });
 ```
@@ -329,7 +336,7 @@ let dna_versions = client.call("dnas", "storage", "get_dna_versions", {
 Create DNA (metadata)
 
 ```javascript
-let [dna_hash, dna_info] = client.call("dnas", "storage", "create_dna", {
+let [dna_hash, dna_info] = client.call("dnarepo", "dna_library", "create_dna", {
     "name": "Game Turns",
     "description": "A tool for turn-based games to track the order of player actions",
 });
@@ -340,7 +347,7 @@ let [dna_hash, dna_info] = client.call("dnas", "storage", "create_dna", {
 Update DNA (metadata)
 
 ```javascript
-let [updated_dna_hash, dna_info] = client.call("dnas", "storage", "update_dna", {
+let [updated_dna_hash, dna_info] = client.call("dnarepo", "dna_library", "update_dna", {
     "addr": dna_hash,
     "properties": {
         "developer": {
@@ -356,7 +363,7 @@ let [updated_dna_hash, dna_info] = client.call("dnas", "storage", "update_dna", 
 Deprecate DNA (metadata)
 
 ```javascript
-let [deprecated_dna_hash, dna_info] = client.call("dnas", "storage", "deprecate_dna", {
+let [deprecated_dna_hash, dna_info] = client.call("dnarepo", "dna_library", "deprecate_dna", {
     "addr": dna_hash,
     "properties": {
         "deprecation": {
@@ -371,7 +378,7 @@ let [deprecated_dna_hash, dna_info] = client.call("dnas", "storage", "deprecate_
 Create DNA version
 
 ```javascript
-let [dna_version_hash, dna_info] = client.call("dnas", "storage", "create_dna_version", {
+let [dna_version_hash, dna_info] = client.call("dnarepo", "dna_library", "create_dna_version", {
     "for_dna": dna_hash,
     "version": 1,
     "published_at": 1618855430,
@@ -390,7 +397,7 @@ let [dna_version_hash, dna_info] = client.call("dnas", "storage", "create_dna_ve
 Update DNA version
 
 ```javascript
-let [updated_dna_version_hash, dna_info] = client.call("dnas", "storage", "create_dna_version", {
+let [updated_dna_version_hash, dna_info] = client.call("dnarepo", "dna_library", "create_dna_version", {
     "addr": dna_version_hash,
     "properties": {
         "changelog": "# Changelog\nFeatures\n...",
@@ -408,7 +415,7 @@ let [updated_dna_version_hash, dna_info] = client.call("dnas", "storage", "creat
 Delete DNA version
 
 ```javascript
-let delete_dna_version_hash = client.call("dnas", "storage", "delete_dna_version", {
+let delete_dna_version_hash = client.call("dnarepo", "dna_library", "delete_dna_version", {
     "addr": dna_version_hash,
 });
 ```
@@ -418,7 +425,7 @@ let delete_dna_version_hash = client.call("dnas", "storage", "delete_dna_version
 Create DNA version
 
 ```javascript
-let dna_chunk1_hash = client.call("dnas", "storage", "create_dna_chunk", {
+let dna_chunk1_hash = client.call("dnarepo", "dna_library", "create_dna_chunk", {
     "sequence": {
         "position": 1,
         "length": 73,
@@ -544,7 +551,7 @@ hApps
 - Manifest summary
 - Manifest info
 
-DNAs
+DNArepo
 - DNA summary
 - DNA info
 - DNA version summary

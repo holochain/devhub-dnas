@@ -10,10 +10,13 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 essence_payloads = {path = "../essence_payloads"}
+flate2 = "1.0"
 hc_entities = {path = "../hc_entities"}
 hc_dna_utils = {path = "../dna_utils"}
 hdk = "0.0.100"
+rmp-serde = "0.15.5"
 serde = "1.0"
+serde_yaml = "0.8.17"
 thiserror = "1.0"
 
 [dev-dependencies]

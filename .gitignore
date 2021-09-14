@@ -2,8 +2,12 @@ bundled/*.happ
 bundled/*/*.dna
 tests/node_modules
 tests/test.dna
-dnas/*/target
+tests/dnas/*/*.dna
+tests/test.gz
+zomes/target
 dna_utils/target
 essence_payloads/target
 hc_entities/target
 devhub_types/target
+tests/multitesting.happ
+DevHub.happ
