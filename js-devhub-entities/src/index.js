@@ -219,7 +219,6 @@ class Client {
     constructor ( agent_pubkey, dnas, address, options = {} ) {
 	this.agent_pubkey		= agent_pubkey;
 	this.dnas			= dnas;
-	this.cell_id			= [ this.dna_hash, this.agent_pubkey ];
 	this.options			= Object.assign( {}, CLIENT_DEFAULT_OPTIONS, options );
 	this._client			= new AgentClient( this.agent_pubkey, this.dnas, address );
     }
@@ -245,7 +244,7 @@ class Client {
 	    else
 		args_debug		= ` ${args.constructor.name} `;
 	}
-	debug && log("Calling conductor: %s->%s(%s)", zome_name, fn_name, args_debug );
+	debug && log("Calling conductor: %s::%s->%s(%s)", dna_nickname, zome_name, fn_name, args_debug );
 
 	let response;
 	try {
