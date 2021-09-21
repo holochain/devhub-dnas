@@ -9,7 +9,7 @@ name = "hc_entities"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hdk = "0.0.100"
+hdk = "0.0.106"
 serde = "1.0"
 
 [dev-dependencies]

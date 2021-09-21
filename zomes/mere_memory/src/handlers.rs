@@ -8,7 +8,7 @@ pub type AppResult<T> = Result<T, ErrorKinds>;
 
 fn now() -> AppResult<u64> {
     sys_time()
-	.map( |t| t.as_millis() as u64 )
+	.map( |t| (t.as_micros() / 1000) as u64 )
 	.map_err(ErrorKinds::HDKError)
 }
 

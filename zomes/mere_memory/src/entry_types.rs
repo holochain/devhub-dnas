@@ -1,31 +1,4 @@
 use hdk::prelude::*;
-use crate::errors::{ ErrorKinds };
-
-macro_rules! try_from_element {
-    ( $( $struct:ident ),* ) => {
-	$(
-	    impl TryFrom<&Element> for $struct {
-		type Error = ErrorKinds;
-
-		fn try_from(element: &Element) -> Result<Self, Self::Error> {
-		    let entry = element.entry()
-			.to_app_option::<Self>().map_err( |e| ErrorKinds::HDKError(e.into()) )?
-			.ok_or( ErrorKinds::DeserializationError(element.clone()) )?;
-
-		    let entry_hash = hash_entry(&entry)
-			.map_err(ErrorKinds::HDKError)?;
-		    let expected_hash = element.header().entry_hash().unwrap().clone();
-
-		    if entry_hash == expected_hash {
-			Ok( entry )
-		    } else {
-			Err( ErrorKinds::DeserializationWrongEntryTypeError(entry_hash, expected_hash) )
-		    }
-		}
-	    }
-	)*
-    };
-}
 
 //
 // Memory Entry
@@ -51,7 +24,6 @@ pub struct MemoryEntry {
     pub memory_size: u64,
     pub block_addresses: Vec<EntryHash>,
 }
-try_from_element![ MemoryEntry ];
 
 
 //
@@ -79,4 +51,3 @@ pub struct MemoryBlockEntry {
     pub sequence: SequencePosition,
     pub bytes: SerializedBytes,
 }
-try_from_element![ MemoryBlockEntry ];

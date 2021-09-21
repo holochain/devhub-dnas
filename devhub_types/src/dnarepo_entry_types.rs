@@ -42,7 +42,6 @@ pub struct ProfileEntry {
     pub avatar_image: SerializedBytes,
     pub website: String,
 }
-utils::try_from_element![ ProfileEntry ];
 
 impl EntryModel for ProfileEntry {
     fn get_type(&self) -> EntityType {
@@ -94,7 +93,6 @@ pub struct DnaEntry {
     pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
-utils::try_from_element![ DnaEntry ];
 
 impl EntryModel for DnaEntry {
     fn get_type(&self) -> EntityType {
@@ -192,7 +190,6 @@ pub struct DnaVersionEntry {
     pub changelog: String,
     pub zomes: Vec<ZomeReference>,
 }
-utils::try_from_element![ DnaVersionEntry ];
 
 impl EntryModel for DnaVersionEntry {
     fn get_type(&self) -> EntityType {
@@ -318,7 +315,6 @@ pub struct ZomeEntry {
     // optional
     pub deprecation: Option<DeprecationNotice>,
 }
-utils::try_from_element![ ZomeEntry ];
 
 impl EntryModel for ZomeEntry {
     fn get_type(&self) -> EntityType {
@@ -401,7 +397,6 @@ pub struct ZomeVersionEntry {
     pub changelog: String,
     pub mere_memory_addr: EntryHash,
 }
-utils::try_from_element![ ZomeVersionEntry ];
 
 impl EntryModel for ZomeVersionEntry {
     fn get_type(&self) -> EntityType {

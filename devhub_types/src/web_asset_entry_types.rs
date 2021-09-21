@@ -1,6 +1,5 @@
 use hc_entities::{ EntryModel, EntityType };
 use hdk::prelude::*;
-use hc_dna_utils as utils;
 
 
 //
@@ -17,7 +16,6 @@ pub struct FileEntry {
     // optional
     pub name: Option<String>,
 }
-utils::try_from_element![ FileEntry ];
 
 impl EntryModel for FileEntry {
     fn get_type(&self) -> EntityType {
@@ -95,7 +93,6 @@ pub struct FileChunkEntry {
     pub sequence: SequencePosition,
     pub bytes: SerializedBytes,
 }
-utils::try_from_element![ FileChunkEntry ];
 
 impl EntryModel for FileChunkEntry {
     fn get_type(&self) -> EntityType {

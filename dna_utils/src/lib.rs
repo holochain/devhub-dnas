@@ -13,7 +13,7 @@ pub const TAG_ORIGIN: &'static str = "origin";
 
 pub fn now() -> UtilsResult<u64> {
     sys_time()
-	.map( |t| t.as_millis() as u64 )
+	.map( |t| (t.as_micros() / 1000) as u64 )
 	.map_err(UtilsError::HDKError)
 }
 
@@ -99,16 +99,16 @@ pub fn get_entity(id: &EntryHash) -> UtilsResult<Entity<Element>> {
 pub fn create_entity<T>(input: &T) -> UtilsResult<Entity<T>>
 where
     T: Clone + EntryModel,
-    EntryWithDefId: TryFrom<T, Error = WasmError>,
+    CreateInput: TryFrom<T, Error = WasmError>,
+    Entry: TryFrom<T, Error = WasmError>,
 {
-    let entry_w_id = EntryWithDefId::try_from( input.to_owned() )
-	.map_err(UtilsError::HDKError)?;
-    let entry: &Entry = entry_w_id.as_ref();
-
-    let entry_hash = hash_entry( entry.to_owned() )
+    let create_input = CreateInput::try_from( input.to_owned() )
 	.map_err(UtilsError::HDKError)?;
 
-    let header_hash = create( entry_w_id )
+    let entry_hash = hash_entry( input.to_owned() )
+	.map_err(UtilsError::HDKError)?;
+
+    let header_hash = create( create_input )
 	.map_err(UtilsError::HDKError)?;
 
     Ok( Entity {
@@ -123,7 +123,8 @@ where
 pub fn update_entity<T, F>(id: Option<EntryHash>, addr: EntryHash, callback: F) -> UtilsResult<Entity<T>>
 where
     T: Clone + EntryModel,
-    EntryWithDefId: TryFrom<T, Error = WasmError>,
+    CreateInput: TryFrom<T, Error = WasmError>,
+    Entry: TryFrom<T, Error = WasmError>,
     F: FnOnce(Element) -> UtilsResult<T>,
 {
     let id = match id {
@@ -137,13 +138,13 @@ where
 
     let updated_entry = callback( element )?;
 
-    let entry_w_id = EntryWithDefId::try_from( updated_entry.clone() )
+    let create_input = CreateInput::try_from( updated_entry.clone() )
 	.map_err(UtilsError::HDKError)?;
-    let entry: &Entry = entry_w_id.as_ref();
 
-    let entry_hash = hash_entry( entry.to_owned() )
+    let entry_hash = hash_entry( updated_entry.to_owned() )
 	.map_err(UtilsError::HDKError)?;
-    let header_hash = update( header, entry_w_id )
+
+    let header_hash = update( header, create_input )
 	.map_err(UtilsError::HDKError)?;
 
     debug!("Linking original ({}) to DNA: {}", id, entry_hash );

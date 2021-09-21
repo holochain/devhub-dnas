@@ -11,12 +11,6 @@ pub enum ErrorKinds {
 
     #[error(transparent)]
     HDKError(WasmError),
-
-    #[error("Failed to deserialize entry: {0:?}")]
-    DeserializationError(Element),
-
-    #[error("Deserialized entry did not match entry hash: {0:?}")]
-    DeserializationWrongEntryTypeError(EntryHash, EntryHash),
 }
 
 impl From<WasmError> for ErrorKinds  {
