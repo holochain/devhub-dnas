@@ -1,3 +1,5 @@
+const { Logger }			= require('@whi/weblogger');
+const log				= new Logger("devhub-entities");
 
 const { AgentClient,
 	HoloHashTypes,
@@ -9,14 +11,6 @@ const { Architecture,
 	EntityType,
 	EntryHash,
 	AgentPubKey }			= EntityArchitectLib;
-
-
-let debug				= false;
-function log ( msg, ...args ) {
-    let datetime			= (new Date()).toISOString();
-    console.log(`${datetime} [ src/index. ]  INFO: ${msg}`, ...args );
-}
-
 
 
 //
@@ -234,7 +228,7 @@ class Client {
 	if ( opts.simulate_latency )
 	    await new Promise( f => setTimeout(f, (Math.random() * 1_000) + 500) ); // range 500ms to 1500ms
 
-	if ( debug ) {
+	if ( log.level.normal ) {
 	    if ( args === null )
 		args_debug		= " null ";
 	    else if ( args === undefined )
@@ -244,17 +238,17 @@ class Client {
 	    else
 		args_debug		= ` ${args.constructor.name} `;
 	}
-	debug && log("Calling conductor: %s::%s->%s(%s)", dna_nickname, zome_name, fn_name, args_debug );
+	log.normal("Calling conductor: %s::%s->%s(%s)", dna_nickname, zome_name, fn_name, args_debug );
 
 	let response;
 	try {
 	    response			= await this._client.call(
 		dna_nickname, zome_name, fn_name, args, opts.timeout
 	    );
-	    debug && log("Received response for: %s->%s(%s)", zome_name, fn_name, args_debug );
-	    debug && log("Full response:", response );
+	    log.info("Received response for: %s->%s(%s)", zome_name, fn_name, args_debug );
+	    log.trace("Full response:", response );
 	} catch ( err ) {
-	    debug && log("Conductor returned error: %s", err );
+	    log.debug("Conductor returned error: %s", err );
 	    if ( err instanceof Error )
 		console.error( err );
 
@@ -273,7 +267,7 @@ class Client {
 	try {
 	    pack			= Interpreter.parse( response );
 	} catch ( err ) {
-	    debug && log("Failed to interpret Essence package: %s", String(err) );
+	    log.error("Failed to interpret Essence package: %s", String(err) );
 	    console.error( err.stack );
 	    throw err;
 	}
@@ -281,7 +275,7 @@ class Client {
 	let payload			= pack.value();
 
 	if ( payload instanceof Error ) {
-	    debug && log("Throwing error package: %s::%s( %s )", payload.kind, payload.name, payload.message );
+	    log.error("Throwing error package: %s::%s( %s )", payload.kind, payload.name, payload.message );
 	    throw payload;
 	}
 
@@ -296,7 +290,7 @@ class Client {
 	try {
 	    return Schema.deconstruct( composition, payload );
 	} catch ( err ) {
-	    debug && log("Failed to deconstruct payload: %s", String(err) );
+	    log.error("Failed to deconstruct payload: %s", String(err) );
 	    console.error( err.stack );
 	    throw err;
 	}
@@ -323,7 +317,7 @@ module.exports = {
 
     HolochainClient,
 
-    logging () {
-	debug				= true;
+    logging ( level = 6 ) {
+	log.setLevel( level );
     },
 };
