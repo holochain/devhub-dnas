@@ -17,6 +17,9 @@ pub enum AppError {
     NetworkError(String),
 
     #[error("{0}")]
+    CountersigningSessionError(String),
+
+    #[error("{0}")]
     DeserializeError(String),
 }
 

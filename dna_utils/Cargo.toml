@@ -10,5 +10,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_entities = {path = "../hc_entities"}
-hdk = "0.0.100"
+hdk = "0.0.106"
 thiserror = "1.0"

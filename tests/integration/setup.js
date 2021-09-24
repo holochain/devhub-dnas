@@ -33,6 +33,9 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
     });
 
     holochain.on("conductor:stderr", (line, parts) => {
+	if ( line.includes("func_translator") )
+	    return;
+
 	log.debug( "\x1b[31;1mConductor STDERR:\x1b[22m %s", line );
     });
 
@@ -54,7 +57,7 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
 	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, nick, String(cell.dna.hash), String(happ.agent) );
 	}) );
 
-	const client			= new Client( happ.agent, dna_map, app_port );
+	const client			= new Client( happ.agent, dna_map, app_port, client_options );
 	clients[actor]			= client
 
 	all_clients.push( client );

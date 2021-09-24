@@ -25,9 +25,9 @@ impl From<UtilsError> for WasmError  {
     }
 }
 
-impl Into<UtilsError> for WasmError  {
-    fn into(self) -> UtilsError {
-        UtilsError::HDKError(self)
+impl From<WasmError> for UtilsError  {
+    fn from(error: WasmError) -> Self {
+        UtilsError::HDKError(error)
     }
 }
 

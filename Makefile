@@ -79,8 +79,10 @@ mere-memory-zome:		$(MERE_MEMORY_WASM)
 	cd zomes; cargo publish --dry-run --manifest-path mere_memory/Cargo.toml
 $(MERE_MEMORY_WASM):		Makefile $(MERE_MEMORY_BASE)/src/*.rs $(MERE_MEMORY_BASE)/Cargo.toml
 	@echo "Building zome: $@"; \
-	cd zomes; RUST_BACKTRACE=1 cargo build --package hc_zome_mere_memory \
-		--release --target wasm32-unknown-unknown
+	cd zomes; \
+	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
+	    --release --target wasm32-unknown-unknown \
+	    --package hc_zome_mere_memory
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
 
 DevHub.happ:		bundled/*/*.dna
@@ -146,7 +148,7 @@ test-crates:
 	cd dna_utils; cargo test
 	cd devhub_types; cargo test
 test_dna_mere_memory:		$(TEST_DNA_MERE_MEMORY)
-$(TEST_DNA_MERE_MEMORY):	$(MERE_MEMORY_WASM)
+$(TEST_DNA_MERE_MEMORY):	$(MERE_MEMORY_WASM) tests/dnas/memory/dna.yaml
 	@echo "Packaging test DNA for 'mere_memory' zome: $@"
 	@hc dna pack $(dir $@)
 	@ls -l $(dir $@)

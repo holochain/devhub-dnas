@@ -9,7 +9,6 @@ use devhub_types::{
     call_local_dna_zome,
     encode_bundle,
 };
-use holo_hash::{ DnaHash };
 use hc_entities::{ Entity, GetEntityInput };
 use hdk::prelude::*;
 
@@ -18,7 +17,7 @@ use hdk::prelude::*;
 #[derive(Debug, Deserialize)]
 pub struct GetGUIInput {
     pub id: EntryHash,
-    pub dna_hash: DnaHash,
+    pub dna_hash: holo_hash::DnaHash,
 }
 
 pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
@@ -89,7 +88,7 @@ pub struct Bundle {
 #[derive(Debug, Deserialize)]
 pub struct GetReleasePackageInput {
     pub id: EntryHash,
-    pub dnarepo_dna_hash: DnaHash,
+    pub dnarepo_dna_hash: holo_hash::DnaHash,
 }
 
 pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> {

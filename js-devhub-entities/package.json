@@ -1,6 +1,6 @@
 {
   "name": "@holochain/devhub-entities",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A Holochain client for deconstructing DevHub entity payloads",
   "main": "src/index.js",
   "browser": "dist/devhub-entities.bundled.js",
@@ -23,7 +23,7 @@
   "dependencies": {
     "@whi/entity-architect": "^0.1.2",
     "@whi/essence": "^0.1.1",
-    "@whi/holochain-client": "^0.1.0"
+    "@whi/holochain-client": "^0.6.0"
   },
   "devDependencies": {
     "@whi/stdlog": "^0.3.4",

@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 devhub_types = {path = "../../devhub_types"}
 hc_entities = {path = "../../hc_entities"}
 hc_dna_utils = {path = "../../dna_utils"}
-hdk = "0.0.100"
+hdk = "0.0.106"
 serde = "1.0"
 serde_derive = "1.0"
 thiserror = "1.0"

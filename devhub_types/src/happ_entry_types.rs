@@ -54,7 +54,6 @@ pub struct HappEntry {
     pub deprecation: Option<DeprecationNotice>,
     pub gui: Option<HappGUIConfig>,
 }
-utils::try_from_element![ HappEntry ];
 
 impl EntryModel for HappEntry {
     fn get_type(&self) -> EntityType {
@@ -216,7 +215,6 @@ pub struct HappReleaseEntry {
     pub manifest: HappManifest,
     pub dnas: Vec<DnaReference>,
 }
-utils::try_from_element![ HappReleaseEntry ];
 
 impl EntryModel for HappReleaseEntry {
     fn get_type(&self) -> EntityType {

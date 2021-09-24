@@ -69,6 +69,8 @@ fn zome_call_response_as_result(response: ZomeCallResponse) -> AppResult<zome_io
 	    => Err(AppError::UnauthorizedError( cell_id, zome, func, agent )),
 	ZomeCallResponse::NetworkError(message)
 	    => Err(AppError::NetworkError(message)),
+	ZomeCallResponse::CountersigningSession(message)
+	    => Err(AppError::CountersigningSessionError(message)),
     }? )
 }
 
