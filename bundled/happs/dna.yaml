@@ -4,4 +4,4 @@ uuid: 00000000-0000-0000-0000-000000000000
 properties: ~
 zomes:
   - name: happ_library
-    bundled: ../../zomes/target/wasm32-unknown-unknown/release/happ_library.wasm
+    bundled: ../../zomes/happ_library.wasm

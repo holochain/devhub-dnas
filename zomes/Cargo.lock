@@ -67,10 +67,9 @@ dependencies = [
 name = "devhub_types"
 version = "0.1.0"
 dependencies = [
- "essence_payloads 0.1.0",
+ "essence_payloads",
  "flate2",
- "hc_dna_utils",
- "hc_entities",
+ "hc_crud_ceps",
  "hdk",
  "rmp-serde",
  "serde",
@@ -83,12 +82,10 @@ name = "dna_library"
 version = "0.1.0"
 dependencies = [
  "devhub_types",
- "hc_dna_utils",
- "hc_entities",
+ "hc_crud_ceps",
  "hdk",
  "rand",
  "serde",
- "serde_derive",
  "serde_yaml",
  "thiserror",
 ]
@@ -98,14 +95,6 @@ name = "dtoa"
 version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56899898ce76aaf4a0f24d914c97ea6ed976d42fec6ad33fcbb0a1103e07b2b0"
-
-[[package]]
-name = "essence_payloads"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "essence_payloads"
@@ -145,12 +134,10 @@ name = "happ_library"
 version = "0.1.0"
 dependencies = [
  "devhub_types",
- "hc_dna_utils",
- "hc_entities",
+ "hc_crud_ceps",
  "hdk",
  "rand",
  "serde",
- "serde_derive",
  "thiserror",
 ]
 
@@ -161,31 +148,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
 
 [[package]]
-name = "hc_dna_utils"
+name = "hc_crud_ceps"
 version = "0.1.0"
-dependencies = [
- "hc_entities",
- "hdk",
- "thiserror",
-]
-
-[[package]]
-name = "hc_entities"
-version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee5e8544352522c74641c55716c5686fc8f687d58629d7048167fb6b0cc24455"
 dependencies = [
  "hdk",
  "serde",
-]
-
-[[package]]
-name = "hc_zome_mere_memory"
-version = "0.1.0"
-dependencies = [
- "essence_payloads 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "hdk",
- "rand",
- "serde",
- "serde_derive",
  "thiserror",
 ]
 
@@ -810,12 +779,10 @@ name = "web_assets"
 version = "0.1.0"
 dependencies = [
  "devhub_types",
- "hc_dna_utils",
- "hc_entities",
+ "hc_crud_ceps",
  "hdk",
  "rand",
  "serde",
- "serde_derive",
  "thiserror",
 ]
 

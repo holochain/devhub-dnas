@@ -7,7 +7,7 @@ global.WebSocket			= require('ws');
 const { Client, logging }		= require('@holochain/devhub-entities');
 
 if ( process.env.LOG_LEVEL )
-    logging();
+    logging( process.env.LOG_LEVEL.replace("silly", "trace") );
 
 const all_clients			= [];
 function exit_cleanup () {

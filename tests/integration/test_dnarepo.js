@@ -19,17 +19,18 @@ const why				= require('why-is-node-running');
 const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
-const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo/dnarepo.dna" );
+const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo.dna" );
 const storage				= "dna_library";
 const mm_zome				= "mere_memory";
 
 let clients;
 let zome_version_1;
 let zome_version_2;
+let dna_addr;
 let dna_version_hash;
 
 function basic_tests () {
-    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/target/wasm32-unknown-unknown/release/mere_memory.wasm") );
+    const zome_bytes			= fs.readFileSync( path.resolve(__dirname, "../../zomes/mere_memory.wasm") );
     const bigzome_bytes			= Buffer.concat( Array(3).fill(zome_bytes) );
 
     it("should get whoami info", async function () {
@@ -286,6 +287,7 @@ function basic_tests () {
 
 	let new_entry			= await alice.call( "dnarepo", storage, "create_dna", dna_input );
 	let main_dna			= new_entry;
+	dna_addr			= main_dna.$addr;
 	log.normal("New DNA (metadata): %s -> %s", String(main_dna.$id), new_entry.name );
 
 	let first_header_hash;
@@ -519,6 +521,26 @@ function errors_tests () {
 
 	    expect( failed		).to.be.true;
 	}
+    });
+
+    it("should fail to update DNA because the address is a different entry type", async function () {
+	let failed			= false;
+	try {
+	    let dna			= await clients.alice.call( "dnarepo", storage, "update_dna_version", {
+		"addr": dna_addr,
+		"properties": {
+		    "name": "Bla bla",
+		}
+	    });
+	} catch (err) {
+	    expect( err.kind		).to.equal( "UtilsError" );
+	    expect( err.name		).to.equal( "DeserializationError" );
+	    expect( err.message		).to.have.string( 'App("dna_version")' );
+
+	    failed			= true;
+	}
+
+	expect( failed			).to.be.true;
     });
 }
 

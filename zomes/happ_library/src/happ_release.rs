@@ -5,9 +5,11 @@ use devhub_types::{
 	HappManifest, DnaReference,
     },
 };
-use hc_entities::{ Entity, Collection, GetEntityInput, UpdateEntityInput };
+use hc_crud::{
+    now, create_entity, get_entity, update_entity, fetch_entry,
+    Entity, Collection, UpdateEntityInput, GetEntityInput,
+};
 use hdk::prelude::*;
-use hc_dna_utils as utils;
 
 use crate::constants::{ TAG_HAPP_RELEASE };
 
@@ -28,7 +30,7 @@ pub struct CreateInput {
 
 pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseInfo>> {
     debug!("Creating HAPPRELEASE: {}", input.name );
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     let happ_release = HappReleaseEntry {
 	name: input.name,
@@ -42,7 +44,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	dnas: input.dnas,
     };
 
-    let entity = utils::create_entity( &happ_release )?
+    let entity = create_entity( &happ_release )?
 	.new_content( happ_release.to_info() );
 
     debug!("Linking happ ({}) to ENTRY: {}", input.for_happ, entity.id );
@@ -58,7 +60,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 
 pub fn get_happ_release(input: GetEntityInput) -> AppResult<Entity<HappReleaseInfo>> {
     debug!("Get happ_release: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
+    let entity = get_entity( &input.id )?;
     let info = HappReleaseEntry::try_from( &entity.content )?.to_info();
 
     Ok(	entity.new_content( info ) )
@@ -80,7 +82,7 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
     debug!("Updating hApp: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<HappReleaseEntry> = utils::update_entity(
+    let entity : Entity<HappReleaseEntry> = update_entity(
 	input.id, input.addr,
 	|element| {
 	    let current = HappReleaseEntry::try_from( &element )?;
@@ -94,7 +96,7 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
-		    .unwrap_or( utils::now()? ),
+		    .unwrap_or( now()? ),
 		manifest: props.manifest
 		    .unwrap_or( current.manifest ),
 		dnas: props.dnas
@@ -115,7 +117,7 @@ pub struct DeleteInput {
 
 pub fn delete_happ_release(input: DeleteInput) -> AppResult<HeaderHash> {
     debug!("Delete HAPPRELEASE Version: {}", input.id );
-    let (header, _) = utils::fetch_entry( input.id.clone() )?;
+    let (header, _) = fetch_entry( input.id.clone() )?;
 
     let delete_header = delete_entry( header.clone() )?;
     debug!("Deleted hApp release create {} via header ({})", header, delete_header );
@@ -145,7 +147,7 @@ pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Collection<En
 
     let releases = links.into_iter()
 	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
+	    get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<HappReleaseSummary>> = None;

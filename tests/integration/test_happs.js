@@ -13,7 +13,7 @@ const json				= require('@whi/json');
 const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
-const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs/happs.dna");
+const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs.dna");
 const zome				= "happ_library";
 
 

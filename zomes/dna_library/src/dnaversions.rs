@@ -2,9 +2,10 @@ use devhub_types::{
     AppResult,
     dnarepo_entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary, ZomeReference },
 };
-
-use hc_entities::{ Entity, Collection, UpdateEntityInput };
-use hc_dna_utils as utils;
+use hc_crud::{
+    now, create_entity, get_entity, update_entity, fetch_entry,
+    Entity, Collection, UpdateEntityInput
+};
 use hdk::prelude::*;
 
 use crate::constants::{ TAG_DNAVERSION };
@@ -28,7 +29,7 @@ pub struct DnaVersionInput {
 
 pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
     debug!("Creating DNA version ({}) for DNA: {}", input.version, input.for_dna );
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
@@ -44,7 +45,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	    .unwrap_or( default_now ),
     };
 
-    let entity = utils::create_entity( &version )?
+    let entity = create_entity( &version )?
 	.new_content( version.to_info() );
 
     debug!("Linking DNA ({}) to ENTRY: {}", input.for_dna, entity.id );
@@ -67,7 +68,7 @@ pub struct GetDnaVersionInput {
 
 pub fn get_dna_version(input: GetDnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
     debug!("Get DNA Version: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
+    let entity = get_entity( &input.id )?;
     let info = DnaVersionEntry::try_from( &entity.content )?.to_info();
 
     Ok(	entity.new_content( info ) )
@@ -97,7 +98,7 @@ pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Collection<Enti
 
     let versions = links.into_iter()
 	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
+	    get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<DnaVersionSummary>> = None;
@@ -135,7 +136,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
     debug!("Updating DNA Version: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<DnaVersionEntry> = utils::update_entity(
+    let entity : Entity<DnaVersionEntry> = update_entity(
 	input.id, input.addr,
 	|element| {
 	    let current = DnaVersionEntry::try_from( &element )?;
@@ -146,7 +147,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
-		    .unwrap_or( utils::now()? ),
+		    .unwrap_or( now()? ),
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
@@ -170,7 +171,7 @@ pub struct DeleteDnaVersionInput {
 
 pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<HeaderHash> {
     debug!("Delete DNA Version: {}", input.id );
-    let (header, _) = utils::fetch_entry( input.id.clone() )?;
+    let (header, _) = fetch_entry( input.id.clone() )?;
 
     let delete_header = delete_entry( header.clone() )?;
     debug!("Deleted DNA Version create {} via header ({})", header, delete_header );

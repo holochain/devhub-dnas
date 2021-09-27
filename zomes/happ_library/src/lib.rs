@@ -9,7 +9,9 @@ use devhub_types::{
     composition,
     catch,
 };
-use hc_entities::{ GetEntityInput };
+use hc_crud::{
+    GetEntityInput,
+};
 use hdk::prelude::*;
 
 mod happ;

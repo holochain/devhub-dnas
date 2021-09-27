@@ -5,9 +5,11 @@ use devhub_types::{
 	DeprecationNotice, HappGUIConfig,
     },
 };
-use hc_entities::{ Entity, Collection, UpdateEntityInput, GetEntityInput };
+use hc_crud::{
+    now, create_entity, get_entity, update_entity,
+    Entity, Collection, UpdateEntityInput, GetEntityInput,
+};
 use hdk::prelude::*;
-use hc_dna_utils as utils;
 
 use crate::constants::{ TAG_HAPP };
 
@@ -36,7 +38,7 @@ pub struct CreateInput {
 pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Creating HAPP: {}", input.title );
     let pubkey = agent_info()?.agent_initial_pubkey;
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     // if true {
     // 	return Err( UserError::DuplicateHappName(input.title).into() );
@@ -58,7 +60,7 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	}),
     };
 
-    let entity = utils::create_entity( &happ )?
+    let entity = create_entity( &happ )?
 	.new_content( happ.to_info() );
 
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
@@ -74,7 +76,7 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 
 pub fn get_happ(input: GetEntityInput) -> AppResult<Entity<HappInfo>> {
     debug!("Get hApp: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
+    let entity = get_entity( &input.id )?;
     let info = HappEntry::try_from( &entity.content )?.to_info();
 
     Ok(	entity.new_content( info ) )
@@ -97,7 +99,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Updating hApp: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<HappEntry> = utils::update_entity(
+    let entity : Entity<HappEntry> = update_entity(
 	input.id, input.addr,
 	|element| {
 	    let current = HappEntry::try_from( &element )?;
@@ -113,7 +115,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
-		    .unwrap_or( utils::now()? ),
+		    .unwrap_or( now()? ),
 		thumbnail_image: props.thumbnail_image
 		    .or( current.thumbnail_image ),
 		deprecation: current.deprecation,
@@ -137,7 +139,7 @@ pub struct HappDeprecateInput {
 
 pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Deprecating hApp: {}", input.addr );
-    let entity : Entity<HappEntry> = utils::update_entity(
+    let entity : Entity<HappEntry> = update_entity(
 	input.id.clone(), input.addr.clone(),
 	|element| {
 	    let mut current = HappEntry::try_from( &element )?;
@@ -181,7 +183,7 @@ pub fn get_happs(input: GetHappsInput) -> AppResult<Collection<Entity<HappSummar
 
     let happs = links.into_iter()
 	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
+	    get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<HappSummary>> = None;

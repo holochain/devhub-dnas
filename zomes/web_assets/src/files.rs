@@ -2,9 +2,11 @@ use devhub_types::{
     AppResult,
     web_asset_entry_types::{ FileEntry, FileInfo, FileChunkEntry },
 };
-use hc_entities::{ Entity, GetEntityInput };
+use hc_crud::{
+    now, create_entity, get_entity,
+    Entity, GetEntityInput,
+};
 use hdk::prelude::*;
-use hc_dna_utils as utils;
 
 use crate::constants::{ TAG_FILE };
 
@@ -24,7 +26,7 @@ pub struct CreateInput {
 pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
     debug!("Creating FILE ({}): {:?}", input.file_size, input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     let file = FileEntry {
 	author: pubkey.clone(),
@@ -35,7 +37,7 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
 	name: input.name,
     };
 
-    let entity = utils::create_entity( &file )?
+    let entity = create_entity( &file )?
 	.new_content( file.to_info() );
 
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
@@ -51,7 +53,7 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
 
 pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
     debug!("Get file: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
+    let entity = get_entity( &input.id )?;
     let info = FileEntry::try_from( &entity.content )?.to_info();
 
     Ok(	entity.new_content( info ) )
@@ -62,7 +64,7 @@ pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
 
 pub fn create_file_chunk(chunk: FileChunkEntry) -> AppResult<Entity<FileChunkEntry>> {
     debug!("Creating FILE chunk ({}/{}): {}", chunk.sequence.position, chunk.sequence.length, chunk.bytes.bytes().len() );
-    let entity = utils::create_entity( &chunk )?;
+    let entity = create_entity( &chunk )?;
 
     Ok( entity )
 }
@@ -74,7 +76,7 @@ pub struct GetFileChunkInput {
 
 pub fn get_file_chunk(input: GetFileChunkInput) -> AppResult<Entity<FileChunkEntry>> {
     debug!("Get FILE Chunk: {}", input.addr );
-    let entity = utils::get_entity( &input.addr )?;
+    let entity = get_entity( &input.addr )?;
     let info = FileChunkEntry::try_from( &entity.content )?;
 
     Ok( entity.new_content( info ) )

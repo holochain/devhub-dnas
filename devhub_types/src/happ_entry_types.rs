@@ -1,6 +1,8 @@
-use hc_entities::{ EntryModel, EntityType, Entity };
+use hc_crud::{
+    get_entity,
+    EntryModel, EntityType, Entity
+};
 use hdk::prelude::*;
-use hc_dna_utils as utils;
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -258,7 +260,7 @@ impl HappReleaseEntry {
     pub fn to_info(&self) -> HappReleaseInfo {
 	let mut happ_entity : Option<Entity<HappSummary>> = None;
 
-	if let Some(entity) = utils::get_entity( &self.for_happ ).ok() {
+	if let Some(entity) = get_entity( &self.for_happ ).ok() {
 	    if let Some(happ_entry) = HappEntry::try_from( &entity.content ).ok() {
 		happ_entity = Some( entity.new_content( happ_entry.to_summary() ) );
 	    }

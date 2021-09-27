@@ -2,8 +2,10 @@ use devhub_types::{
     AppResult,
     dnarepo_entry_types::{ ZomeEntry, ZomeInfo, ZomeSummary, DeveloperProfileLocation, DeprecationNotice },
 };
-use hc_entities::{ Entity, Collection, UpdateEntityInput };
-use hc_dna_utils as utils;
+use hc_crud::{
+    now, create_entity, get_entity, update_entity,
+    Entity, Collection, UpdateEntityInput
+};
 use hdk::prelude::*;
 
 use crate::constants::{ TAG_ZOME };
@@ -23,7 +25,7 @@ pub struct ZomeInput {
 pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Creating ZOME: {}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     let zome = ZomeEntry {
 	name: input.name,
@@ -38,7 +40,7 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
 	deprecation: None,
     };
 
-    let entity = utils::create_entity( &zome )?
+    let entity = create_entity( &zome )?
 	.new_content( zome.to_info() );
 
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
@@ -61,7 +63,7 @@ pub struct GetZomeInput {
 
 pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Get ZOME: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
+    let entity = get_entity( &input.id )?;
     let info = ZomeEntry::try_from( &entity.content )?.to_info();
 
     Ok( entity.new_content( info ) )
@@ -94,7 +96,7 @@ pub fn get_zomes(input: GetZomesInput) -> AppResult<Collection<Entity<ZomeSummar
 
     let zomes = links.into_iter()
 	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
+	    get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<ZomeSummary>> = None;
@@ -123,7 +125,7 @@ pub fn get_deprecated_zomes(input: GetZomesInput) -> AppResult<Collection<Entity
 
     let zomes = links.into_iter()
 	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
+	    get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<ZomeSummary>> = None;
@@ -175,7 +177,7 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Updating ZOME: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<ZomeEntry> = utils::update_entity(
+    let entity : Entity<ZomeEntry> = update_entity(
 	input.id, input.addr,
 	|element| {
 	    let current = ZomeEntry::try_from( &element )?;
@@ -188,7 +190,7 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
-		    .unwrap_or( utils::now()? ),
+		    .unwrap_or( now()? ),
 		developer: current.developer,
 		deprecation: current.deprecation,
 	    })
@@ -210,7 +212,7 @@ pub struct DeprecateZomeInput {
 
 pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Deprecating ZOME: {}", input.addr );
-    let entity : Entity<ZomeEntry> = utils::update_entity(
+    let entity : Entity<ZomeEntry> = update_entity(
 	None, input.addr.clone(),
 	|element| {
 	    let current = ZomeEntry::try_from( &element )?;

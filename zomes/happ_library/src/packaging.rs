@@ -9,7 +9,9 @@ use devhub_types::{
     call_local_dna_zome,
     encode_bundle,
 };
-use hc_entities::{ Entity, GetEntityInput };
+use hc_crud::{
+    Entity, GetEntityInput,
+};
 use hdk::prelude::*;
 
 

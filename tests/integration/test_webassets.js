@@ -14,7 +14,7 @@ const { backdrop }			= require('./setup.js');
 
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
-const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets/web_assets.dna");
+const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets.dna");
 const zome				= "web_assets";
 
 

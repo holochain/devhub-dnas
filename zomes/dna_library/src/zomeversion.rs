@@ -4,9 +4,10 @@ use devhub_types::{
     dnarepo_entry_types::{ ZomeVersionEntry, ZomeVersionInfo, ZomeVersionSummary },
     call_local_zome,
 };
-
-use hc_entities::{ Entity, Collection, UpdateEntityInput };
-use hc_dna_utils as utils;
+use hc_crud::{
+    now, create_entity, get_entity, update_entity, fetch_entry,
+    Entity, Collection, UpdateEntityInput
+};
 use hdk::prelude::*;
 
 use crate::constants::{ TAG_ZOMEVERSION };
@@ -28,7 +29,7 @@ pub struct ZomeVersionInput {
 
 pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVersionInfo>> {
     debug!("Creating ZOME version ({}) for ZOME: {}", input.version, input.for_zome );
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     let version = ZomeVersionEntry {
 	for_zome: input.for_zome.clone(),
@@ -50,7 +51,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 	    .unwrap_or( default_now ),
     };
 
-    let entity = utils::create_entity( &version )?
+    let entity = create_entity( &version )?
 	.new_content( version.to_info() );
 
     debug!("Linking ZOME ({}) to ENTRY: {}", input.for_zome, entity.id );
@@ -73,7 +74,7 @@ pub struct GetZomeVersionInput {
 
 pub fn get_zome_version(input: GetZomeVersionInput) -> AppResult<Entity<ZomeVersionInfo>> {
     debug!("Get ZOME Version: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
+    let entity = get_entity( &input.id )?;
     let info = ZomeVersionEntry::try_from( &entity.content )?.to_info();
 
     Ok(	entity.new_content( info ) )
@@ -103,7 +104,7 @@ pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Collection<En
 
     let versions = links.into_iter()
 	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
+	    get_entity( &link.target ).ok()
 	})
 	.filter_map(|entity| {
 	    let mut maybe_entity : Option<Entity<ZomeVersionSummary>> = None;
@@ -140,7 +141,7 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
     debug!("Updating ZOME Version: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<ZomeVersionEntry> = utils::update_entity(
+    let entity : Entity<ZomeVersionEntry> = update_entity(
 	input.id, input.addr,
 	|element| {
 	    let current = ZomeVersionEntry::try_from( &element )?;
@@ -151,7 +152,7 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
-		    .unwrap_or( utils::now()? ),
+		    .unwrap_or( now()? ),
 		mere_memory_addr: current.mere_memory_addr,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
@@ -173,7 +174,7 @@ pub struct DeleteZomeVersionInput {
 
 pub fn delete_zome_version(input: DeleteZomeVersionInput) -> AppResult<HeaderHash> {
     debug!("Delete ZOME Version: {}", input.id );
-    let (header, _) = utils::fetch_entry( input.id.clone() )?;
+    let (header, _) = fetch_entry( input.id.clone() )?;
 
     let delete_header = delete_entry( header.clone() )?;
     debug!("Deleted ZOME Version create {} via header ({})", header, delete_header );

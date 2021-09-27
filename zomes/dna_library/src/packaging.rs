@@ -6,9 +6,10 @@ use devhub_types::{
     call_local_zome,
     encode_bundle,
 };
-
-use hc_entities::{ Entity };
-use hc_dna_utils as utils;
+use hc_crud::{
+    get_entity,
+    Entity,
+};
 use hdk::prelude::*;
 
 
@@ -27,13 +28,13 @@ use hdk::prelude::*;
 //             {
 //                 "name": "mere_memory",
 //                 "hash": null,
-//                 "bundled": "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm"
+//                 "bundled": "../../zomes/mere_memory.wasm"
 //             }
 //         ]
 //     },
 //     "resources": {
 //         "../../zomes/dnarepo/target/wasm32-unknown-unknown/release/dna_library.wasm": <Buffer ... 3490626 more bytes>,
-//         "../../zomes/mere_memory/target/wasm32-unknown-unknown/release/mere_memory.wasm": <Buffer ... 2726804 more bytes>
+//         "../../zomes/mere_memory.wasm": <Buffer ... 2726804 more bytes>
 //     }
 // }
 
@@ -73,7 +74,7 @@ pub struct GetDnaPackageInput {
 
 pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersionPackage>> {
     debug!("Get DNA Version: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
+    let entity = get_entity( &input.id )?;
     let entry = DnaVersionEntry::try_from( &entity.content )?;
 
     let mut manifest_zomes : Vec<BundleZomeInfo> = vec![];

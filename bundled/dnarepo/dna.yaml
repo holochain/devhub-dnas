@@ -4,6 +4,6 @@ uuid: 00000000-0000-0000-0000-000000000000
 properties: ~
 zomes:
   - name: dna_library
-    bundled: ../../zomes/target/wasm32-unknown-unknown/release/dna_library.wasm
+    bundled: ../../zomes/dna_library.wasm
   - name: mere_memory
-    bundled: ../../zomes/target/wasm32-unknown-unknown/release/mere_memory.wasm
+    bundled: ../../zomes/mere_memory.wasm

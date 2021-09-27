@@ -1,4 +1,4 @@
-use hc_dna_utils::UtilsError;
+use hc_crud::UtilsError;
 use essence::EssenceError;
 use hdk::prelude::*;
 use thiserror::Error;
