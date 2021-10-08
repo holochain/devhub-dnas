@@ -1,10 +1,10 @@
 use devhub_types::{
-    AppResult,
+    AppResult, UpdateEntityInput,
     dnarepo_entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice },
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
-    Entity, Collection, UpdateEntityInput
+    Entity, Collection,
 };
 use hdk::prelude::*;
 
@@ -45,14 +45,11 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
     };
 
     let entity = create_entity( &dna )?
-	.new_content( dna.to_info() );
+	.change_model( |dna| dna.to_info() );
+    let base = crate::root_path_hash( None )?;
 
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
-    create_link(
-	pubkey.into(),
-	entity.id.clone(),
-	LinkTag::new( TAG_DNA )
-    )?;
+    entity.link_from( &base, TAG_DNA.into() )?;
 
     Ok( entity )
 }
@@ -67,19 +64,15 @@ pub struct GetDnaInput {
 
 pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Get DNA: {}", input.id );
-    let entity = get_entity( &input.id )?;
-    let info = DnaEntry::try_from( &entity.content )?.to_info();
+    let entity = get_entity::<DnaEntry>( &input.id )?;
 
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |dna| dna.to_info() ) )
 }
 
 
 
-pub fn get_dna_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash, Vec<Link>)> {
-    let base : EntryHash = match maybe_pubkey {
-	None => agent_info()?.agent_initial_pubkey,
-	Some(agent) => agent,
-    }.into();
+pub fn get_dna_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<DnaSummary>>> {
+    let base = crate::root_path_hash( maybe_pubkey )?;
 
     debug!("Getting DNA links for Agent entry: {}", base );
     let all_links: Vec<Link> = get_links(
@@ -87,7 +80,19 @@ pub fn get_dna_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash,
 	Some(LinkTag::new(TAG_DNA))
     )?.into();
 
-    Ok( (base, all_links) )
+    let dnas = all_links.into_iter()
+	.filter_map(|link| {
+	    get_entity::<DnaEntry>( &link.target ).ok()
+	})
+	.map( |entity| {
+	    entity.change_model( |dna| dna.to_summary() )
+	})
+	.collect();
+
+    Ok(Collection {
+	base,
+	items: dnas,
+    })
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,59 +101,31 @@ pub struct GetDnasInput {
 }
 
 pub fn get_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<DnaSummary>>> {
-    let (base, links) = get_dna_links( input.agent.clone() )?;
+    let dna_collection = get_dna_collection( input.agent.clone() )?;
 
-    let dnas = links.into_iter()
-	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
-	})
-	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<DnaSummary>> = None;
-
-	    if let Some(dna) = DnaEntry::try_from( &entity.content ).ok() {
-		if dna.deprecation.is_none() {
-		    let summary = dna.to_summary();
-		    let entity = entity.new_content( summary );
-
-		    maybe_entity.replace( entity );
-		}
-	    }
-
-	    maybe_entity
+    let dnas = dna_collection.items.into_iter()
+	.filter(|entity| {
+	    entity.content.deprecation.is_none()
 	})
 	.collect();
 
     Ok(Collection {
-	base,
-	items: dnas
+	base: dna_collection.base,
+	items: dnas,
     })
 }
 
 pub fn get_deprecated_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<DnaSummary>>> {
-    let (base, links) = get_dna_links( input.agent.clone() )?;
+    let dna_collection = get_dna_collection( input.agent.clone() )?;
 
-    let dnas = links.into_iter()
-	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
-	})
-	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<DnaSummary>> = None;
-
-	    if let Some(dna) = DnaEntry::try_from(&entity.content).ok() {
-		if dna.deprecation.is_some() {
-		    let summary = dna.to_summary();
-		    let entity = entity.new_content( summary );
-
-		    maybe_entity.replace( entity );
-		}
-	    }
-
-	    maybe_entity
+    let dnas = dna_collection.items.into_iter()
+	.filter(|entity| {
+	    entity.content.deprecation.is_some()
 	})
 	.collect();
 
     Ok(Collection {
-	base,
+	base: dna_collection.base,
 	items: dnas
     })
 }
@@ -184,10 +161,8 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
     let props = input.properties;
 
     let entity : Entity<DnaEntry> = update_entity(
-	input.id, input.addr,
-	|element| {
-	    let current = DnaEntry::try_from( &element )?;
-
+	&input.addr,
+	|current : DnaEntry, _| {
 	    Ok(DnaEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -206,9 +181,7 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 	    })
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |dna| dna.to_info() ) )
 }
 
 
@@ -223,10 +196,8 @@ pub struct DeprecateDnaInput {
 pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Deprecating DNA: {}", input.addr );
     let entity : Entity<DnaEntry> = update_entity(
-	None, input.addr.clone(),
-	|element| {
-	    let current = DnaEntry::try_from( &element )?;
-
+	&input.addr,
+	|current : DnaEntry, _| {
 	    Ok(DnaEntry {
 		name: current.name,
 		description: current.description,
@@ -235,11 +206,9 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 		last_updated: current.last_updated,
 		collaborators: None,
 		developer: current.developer,
-		deprecation: Some(DeprecationNotice::new( input.message )),
+		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
 	    })
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |dna| dna.to_info() ) )
 }

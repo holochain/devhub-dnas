@@ -14,6 +14,17 @@ use hc_crud::{ Collection, Entity };
 
 pub type AppResult<T> = Result<T, ErrorKinds>;
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetEntityInput {
+    pub id: EntryHash,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateEntityInput<T> {
+    pub id: Option<EntryHash>,
+    pub addr: EntryHash,
+    pub properties: T,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Metadata {

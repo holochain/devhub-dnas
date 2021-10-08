@@ -260,10 +260,10 @@ impl HappReleaseEntry {
     pub fn to_info(&self) -> HappReleaseInfo {
 	let mut happ_entity : Option<Entity<HappSummary>> = None;
 
-	if let Some(entity) = get_entity( &self.for_happ ).ok() {
-	    if let Some(happ_entry) = HappEntry::try_from( &entity.content ).ok() {
-		happ_entity = Some( entity.new_content( happ_entry.to_summary() ) );
-	    }
+	if let Some(entity) = get_entity::<HappEntry>( &self.for_happ ).ok() {
+	    happ_entity = Some( entity.change_model(
+		|happ| happ.to_summary()
+	    ));
 	};
 
 	HappReleaseInfo {

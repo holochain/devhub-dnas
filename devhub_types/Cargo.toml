@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 essence_payloads = "0.1"
 flate2 = "1"
-hc_crud_ceps = "0.1"
+hc_crud_ceps = "0.3.1"
 hdk = "0.0.106"
 rmp-serde = "0.15.5"
 serde = "1"

@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
-hc_crud_ceps = "0.1"
+hc_crud_ceps = "0.3.1"
 hdk = "0.0.106"
 serde = "1"
 thiserror = "1"

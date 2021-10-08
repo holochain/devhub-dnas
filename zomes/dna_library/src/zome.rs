@@ -1,10 +1,10 @@
 use devhub_types::{
-    AppResult,
+    AppResult, UpdateEntityInput,
     dnarepo_entry_types::{ ZomeEntry, ZomeInfo, ZomeSummary, DeveloperProfileLocation, DeprecationNotice },
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
-    Entity, Collection, UpdateEntityInput
+    Entity, Collection,
 };
 use hdk::prelude::*;
 
@@ -41,14 +41,11 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     };
 
     let entity = create_entity( &zome )?
-	.new_content( zome.to_info() );
+	.change_model( |zome| zome.to_info() );
+    let base = crate::root_path_hash( None )?;
 
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
-    create_link(
-	pubkey.into(),
-	entity.id.clone(),
-	LinkTag::new( TAG_ZOME )
-    )?;
+    entity.link_from( &base, TAG_ZOME.into() )?;
 
     Ok( entity )
 }
@@ -63,27 +60,33 @@ pub struct GetZomeInput {
 
 pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Get ZOME: {}", input.id );
-    let entity = get_entity( &input.id )?;
-    let info = ZomeEntry::try_from( &entity.content )?.to_info();
+    let entity = get_entity::<ZomeEntry>( &input.id )?;
 
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |zome| zome.to_info() ) )
 }
 
-
-
-pub fn get_zome_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash, Vec<Link>)> {
-    let base : EntryHash = match maybe_pubkey {
-	None => agent_info()?.agent_initial_pubkey,
-	Some(agent) => agent,
-    }.into();
+pub fn get_zome_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<ZomeSummary>>> {
+    let base = crate::root_path_hash( maybe_pubkey )?;
 
     debug!("Getting ZOME links for Agent entry: {}", base );
-    let all_links: Vec<Link> = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_ZOME))
+    let links: Vec<Link> = get_links(
+        base.to_owned(),
+	Some( LinkTag::new( TAG_ZOME ) )
     )?.into();
 
-    Ok( (base, all_links) )
+    let zomes = links.into_iter()
+	.filter_map(|link| {
+	    get_entity::<ZomeEntry>( &link.target ).ok()
+	})
+	.map( |entity| {
+	    entity.change_model( |zome| zome.to_summary() )
+	})
+	.collect();
+
+    Ok(Collection {
+	base,
+	items: zomes,
+    })
 }
 
 #[derive(Debug, Deserialize)]
@@ -92,59 +95,31 @@ pub struct GetZomesInput {
 }
 
 pub fn get_zomes(input: GetZomesInput) -> AppResult<Collection<Entity<ZomeSummary>>> {
-    let (base, links) = get_zome_links( input.agent.clone() )?;
+    let zome_collection = get_zome_collection( input.agent.clone() )?;
 
-    let zomes = links.into_iter()
-	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
-	})
-	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<ZomeSummary>> = None;
-
-	    if let Some(zome) = ZomeEntry::try_from( &entity.content ).ok() {
-		if zome.deprecation.is_none() {
-		    let summary = zome.to_summary();
-		    let entity = entity.new_content( summary );
-
-		    maybe_entity.replace( entity );
-		}
-	    }
-
-	    maybe_entity
+    let zomes = zome_collection.items.into_iter()
+	.filter( |entity| {
+	    entity.content.deprecation.is_none()
 	})
 	.collect();
 
     Ok(Collection {
-	base,
-	items: zomes
+	base: zome_collection.base,
+	items: zomes,
     })
 }
 
 pub fn get_deprecated_zomes(input: GetZomesInput) -> AppResult<Collection<Entity<ZomeSummary>>> {
-    let (base, links) = get_zome_links( input.agent.clone() )?;
+    let zome_collection = get_zome_collection( input.agent.clone() )?;
 
-    let zomes = links.into_iter()
-	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
-	})
-	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<ZomeSummary>> = None;
-
-	    if let Some(zome) = ZomeEntry::try_from(&entity.content).ok() {
-		if zome.deprecation.is_some() {
-		    let summary = zome.to_summary();
-		    let entity = entity.new_content( summary );
-
-		    maybe_entity.replace( entity );
-		}
-	    }
-
-	    maybe_entity
+    let zomes = zome_collection.items.into_iter()
+	.filter( |entity| {
+	    entity.content.deprecation.is_some()
 	})
 	.collect();
 
     Ok(Collection {
-	base,
+	base: zome_collection.base,
 	items: zomes
     })
 }
@@ -177,11 +152,9 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Updating ZOME: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<ZomeEntry> = update_entity(
-	input.id, input.addr,
-	|element| {
-	    let current = ZomeEntry::try_from( &element )?;
-
+    let entity = update_entity(
+	&input.addr,
+	|current : ZomeEntry, _| {
 	    Ok(ZomeEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -196,9 +169,7 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 	    })
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |zome| zome.to_info() ) )
 }
 
 
@@ -213,21 +184,17 @@ pub struct DeprecateZomeInput {
 pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Deprecating ZOME: {}", input.addr );
     let entity : Entity<ZomeEntry> = update_entity(
-	None, input.addr.clone(),
-	|element| {
-	    let current = ZomeEntry::try_from( &element )?;
-
+	&input.addr,
+	|current : ZomeEntry, _| {
 	    Ok(ZomeEntry {
 		name: current.name,
 		description: current.description,
 		published_at: current.published_at,
 		last_updated: current.last_updated,
 		developer: current.developer,
-		deprecation: Some(DeprecationNotice::new( input.message )),
+		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
 	    })
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |zome| zome.to_info() ) )
 }

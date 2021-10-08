@@ -25,8 +25,6 @@ pub struct ProfileInput {
 
 pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
     debug!("Creating Profile: {}", input.name );
-    let pubkey = agent_info()?.agent_initial_pubkey;
-
     let profile = ProfileEntry {
 	name: input.name,
 	email: match input.email {
@@ -41,14 +39,13 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
     };
 
     let entity = create_entity( &profile )?
-	.new_content( profile.to_info() );
+	.change_model( |profile| profile.to_info() );
 
-    debug!("Linking pubkey ({}) to Profile: {}", pubkey, entity.id );
-    create_link(
-	pubkey.into(),
-	entity.id.clone(),
-	LinkTag::new( TAG_PROFILE )
-    )?;
+    let root_path = crate::root_path( None )?;
+    let base = root_path.hash()?;
+
+    debug!("Linking agent root path ({}) to Profile: {}", base, entity.id );
+    entity.link_from( &base, TAG_PROFILE.into() )?;
 
     Ok( entity )
 }
@@ -56,10 +53,8 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
 
 
 pub fn get_profile_links(maybe_pubkey: Option<AgentPubKey> ) -> ExternResult<Vec<Link>> {
-    let base : EntryHash = match maybe_pubkey {
-	None => agent_info()?.agent_initial_pubkey,
-	Some(agent) => agent,
-    }.into();
+    let root_path = crate::root_path( maybe_pubkey )?;
+    let base = root_path.hash()?;
 
     debug!("Getting Profile links for Agent: {}", base );
     let all_links: Vec<Link> = get_links(
@@ -82,10 +77,9 @@ pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileInfo>> {
 	.ok_or( UserError::CustomError("Agent Profile has not been created yet") )?;
 
     debug!("Get Profile: {}", link.target );
-    let entity = get_entity( &link.target )?;
-    let info = ProfileEntry::try_from( &entity.content )?.to_info();
+    let entity = get_entity::<ProfileEntry>( &link.target )?;
 
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |profile| profile.to_info() ) )
 }
 
 
@@ -109,10 +103,8 @@ pub fn update_profile(input: UpdateProfileInput) -> AppResult<Entity<ProfileInfo
     let props = input.properties;
 
     let entity : Entity<ProfileEntry> = update_entity(
-	input.id, input.addr,
-	|element| {
-	    let current = ProfileEntry::try_from( &element )?;
-
+	&input.addr,
+	|current : ProfileEntry, _| {
 	    Ok(ProfileEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -125,9 +117,7 @@ pub fn update_profile(input: UpdateProfileInput) -> AppResult<Entity<ProfileInfo
 	    })
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |profile| profile.to_info() ) )
 }
 
 
@@ -141,12 +131,14 @@ pub struct FollowInput {
 }
 
 pub fn follow_developer(input: FollowInput) -> AppResult<HeaderHash> {
-    let pubkey = agent_info()?.agent_initial_pubkey;
-    debug!("Creating follow link from this agent ({}) to agent: {}", pubkey, input.agent );
+    let my_agent = crate::root_path( None )?.hash()?;
+    let other_agent = crate::root_path( Some(input.agent) )?.hash()?;
+
+    debug!("Creating follow link from this agent ({}) to agent: {}", my_agent, other_agent );
 
     let header_hash = create_link(
-	pubkey.into(),
-	input.agent.clone().into(),
+	my_agent,
+	other_agent,
 	LinkTag::new( TAG_FOLLOW )
     )?;
 
@@ -161,10 +153,11 @@ pub struct UnfollowInput {
 
 pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>> {
     let links = get_following()?.items;
+    let other_agent = crate::root_path( Some(input.agent.to_owned()) )?.hash()?;
 
     let maybe_link = links
 	.into_iter()
-	.find(|link| link.target == EntryHash::from(input.agent.clone()));
+	.find(|link| link.target == other_agent );
     let mut maybe_header : Option<HeaderHash> = None;
 
     if let Some(link) = maybe_link {
@@ -180,16 +173,16 @@ pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>>
 
 
 pub fn get_following() -> AppResult<Collection<Link>> {
-    let base : EntryHash = agent_info()?.agent_initial_pubkey.into();
+    let my_agent = crate::root_path( None )?.hash()?;
 
-    debug!("Getting Profile links for Agent: {}", base );
+    debug!("Getting Profile links for Agent: {}", my_agent );
     let all_links: Vec<Link> = get_links(
-        base.clone(),
+        my_agent.to_owned(),
 	Some(LinkTag::new(TAG_FOLLOW))
     )?.into();
 
     Ok(Collection {
-	base: base,
+	base: my_agent,
 	items: all_links
     })
 }

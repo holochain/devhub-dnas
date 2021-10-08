@@ -74,8 +74,8 @@ pub struct GetDnaPackageInput {
 
 pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersionPackage>> {
     debug!("Get DNA Version: {}", input.id );
-    let entity = get_entity( &input.id )?;
-    let entry = DnaVersionEntry::try_from( &entity.content )?;
+    let entity = get_entity::<DnaVersionEntry>( &input.id )?;
+    let entry = &entity.content;
 
     let mut manifest_zomes : Vec<BundleZomeInfo> = vec![];
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
@@ -108,7 +108,6 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     };
 
     let dna_pack_bytes = encode_bundle( bundle )?;
-    let package = entry.to_package( dna_pack_bytes );
 
-    Ok( entity.new_content( package ) )
+    Ok( entity.change_model( |package| package.to_package( dna_pack_bytes ) ) )
 }

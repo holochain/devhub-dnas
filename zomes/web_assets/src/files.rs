@@ -1,10 +1,10 @@
 use devhub_types::{
-    AppResult,
+    AppResult, GetEntityInput,
     web_asset_entry_types::{ FileEntry, FileInfo, FileChunkEntry },
 };
 use hc_crud::{
     now, create_entity, get_entity,
-    Entity, GetEntityInput,
+    Entity,
 };
 use hdk::prelude::*;
 
@@ -38,14 +38,11 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
     };
 
     let entity = create_entity( &file )?
-	.new_content( file.to_info() );
+	.change_model( |file| file.to_info() );
+    let base = crate::root_path_hash( None )?;
 
-    debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
-    create_link(
-	pubkey.into(),
-	entity.id.clone(),
-	LinkTag::new( TAG_FILE )
-    )?;
+    debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
+    entity.link_from( &base, TAG_FILE.into() )?;
 
     Ok( entity )
 }
@@ -53,10 +50,9 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
 
 pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
     debug!("Get file: {}", input.id );
-    let entity = get_entity( &input.id )?;
-    let info = FileEntry::try_from( &entity.content )?.to_info();
+    let entity = get_entity::<FileEntry>( &input.id )?;
 
-    Ok(	entity.new_content( info ) )
+    Ok(	entity.change_model( |file| file.to_info() ) )
 }
 
 
@@ -76,8 +72,5 @@ pub struct GetFileChunkInput {
 
 pub fn get_file_chunk(input: GetFileChunkInput) -> AppResult<Entity<FileChunkEntry>> {
     debug!("Get FILE Chunk: {}", input.addr );
-    let entity = get_entity( &input.addr )?;
-    let info = FileChunkEntry::try_from( &entity.content )?;
-
-    Ok( entity.new_content( info ) )
+    Ok( get_entity::<FileChunkEntry>( &input.addr )? )
 }

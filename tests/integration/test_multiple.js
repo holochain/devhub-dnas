@@ -19,10 +19,6 @@ const DNAREPO_PATH			= path.join(__dirname, "../../bundled/dnarepo.dna");
 const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs.dna");
 const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets.dna");
 
-const storage				= "dna_library";
-const store				= "happ_library";
-const files				= "web_assets";
-
 const chunk_size			= (2**20 /*1 megabyte*/) * 2;
 
 let clients;
@@ -34,7 +30,7 @@ function basic_tests () {
     it("should get whoami info", async function () {
 	const alice			= clients.alice;
 
-	let a_agent_info		= await alice.call( "webassets", files, "whoami", null);
+	let a_agent_info		= await alice.call( "webassets", "web_assets", "whoami", null);
 	log.info("Agent ID 'alice': %s", String(new HoloHash(a_agent_info.agent_initial_pubkey)) );
     });
 
@@ -52,7 +48,7 @@ function basic_tests () {
 	    let chunk_hashes		= [];
 	    let chunk_count		= Math.ceil( file_bytes.length / chunk_size );
 	    for (let i=0; i < chunk_count; i++) {
-		let chunk		= await alice.call( "webassets", files, "create_file_chunk", {
+		let chunk		= await alice.call( "webassets", "web_assets", "create_file_chunk", {
 		    "sequence": {
 			"position": i+1,
 			"length": chunk_count,
@@ -65,7 +61,7 @@ function basic_tests () {
 	    }
 	    log.debug("Final chunks:", json.debug(chunk_hashes) );
 
-	    let file			= await alice.call( "webassets", files, "create_file", {
+	    let file			= await alice.call( "webassets", "web_assets", "create_file", {
 		"file_size": file_bytes.length,
 		"chunk_addresses": chunk_hashes,
 	    });
@@ -74,7 +70,7 @@ function basic_tests () {
 	}
 
 	{
-	    let gui			= await alice.call( "happs", store, "get_gui", {
+	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
 		"dna_hash": alice.dnas.webassets,
 		"id": gz_file_hash,
 	    });
@@ -89,11 +85,11 @@ function basic_tests () {
 	    "name": "File Storage",
 	    "description": "A generic API for fs-like data management",
 	};
-	let zome_1			= await alice.call( "dnarepo", storage, "create_zome", zome_input );
+	let zome_1			= await alice.call( "dnarepo", "dna_library", "create_zome", zome_input );
 	log.normal("New ZOME (metadata): %s -> %s", String(zome_1.$id), zome_1.name );
 
 	log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
-	let zome_version_1		= await alice.call( "dnarepo", storage, "create_zome_version", {
+	let zome_version_1		= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 	    "for_zome": zome_1.$id,
 	    "version": 1,
 	    "zome_bytes": zome_bytes,
@@ -105,13 +101,13 @@ function basic_tests () {
 	    "name": "Game Turns",
 	    "description": "A tool for turn-based games to track the order of player actions",
 	};
-	let dna				= await alice.call( "dnarepo", storage, "create_dna", dna_input );
+	let dna				= await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
 	log.normal("New DNA (metadata): %s -> %s", String(dna.$id), dna.name );
 
 	const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.dna") );
 	log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
 
-	let version			= await alice.call( "dnarepo", storage, "create_dna_version", {
+	let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 	    "for_dna": dna.$id,
 	    "version": 1,
 	    "zomes": [{
@@ -134,7 +130,7 @@ function basic_tests () {
 	    }
 	};
 
-	let happ			= await alice.call( "happs", store, "create_happ", happ_input );
+	let happ			= await alice.call( "happs", "happ_library", "create_happ", happ_input );
 	log.normal("New hApp: %s", String(happ.$addr) );
 
 	expect( happ.description	).to.equal( happ_input.description );
@@ -166,14 +162,14 @@ function basic_tests () {
 	    ],
 	};
 
-	let release			= await alice.call( "happs", store, "create_happ_release", release_input );
+	let release			= await alice.call( "happs", "happ_library", "create_happ_release", release_input );
 	log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
 
 	expect( release.description	).to.equal( release_input.description );
 
 
 	{
-	    let happ_package		= await alice.call( "happs", store, "get_release_package", {
+	    let happ_package		= await alice.call( "happs", "happ_library", "get_release_package", {
 		"id": release.$id,
 		"dnarepo_dna_hash": alice.dnas.dnarepo,
 	    });
@@ -204,6 +200,20 @@ describe("All DNAs", () => {
 	}, [
 	    "alice",
 	]);
+
+	// Must call whoami on each cell to ensure that init has finished.
+	{
+	    let whoami			= await clients.alice.call( "dnarepo", "dna_library", "whoami" );
+	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
+	}
+	{
+	    let whoami			= await clients.alice.call( "happs", "happ_library", "whoami" );
+	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
+	}
+	{
+	    let whoami			= await clients.alice.call( "webassets", "web_assets", "whoami" );
+	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
+	}
     });
 
     describe("Basic", basic_tests.bind( this, holochain ) );
