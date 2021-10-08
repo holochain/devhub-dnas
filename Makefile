@@ -71,12 +71,14 @@ devhub_types:			devhub_types/src/*.rs
 #
 # Testing
 #
-test-all:			test-crates test-zomes test-dnas test-multi
-test-all-debug:			test-crates test-zomes-debug test-dnas-debug test-multi-debug
+test-all:			test test-dnas
+test-all-debug:			test test-dnas-debug
 
-test:				test-unit-dna_library test-unit-happ_library test-unit-web_assets
+test:				test-unit test-unit-dna_library test-unit-happ_library test-unit-web_assets
 test-unit:
 	cd devhub_types;	RUST_BACKTRACE=1 cargo test
+test-unit-%:
+	cd zomes;		RUST_BACKTRACE=1 cargo test $* -- --nocapture
 
 tests/test.dna:
 	cp $(DNAREPO) $@

@@ -275,9 +275,9 @@ checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 
 [[package]]
 name = "hc_crud_ceps"
-version = "0.2.1"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9479b50c2449eeb4c393b3e9efa69f9aca920e74bae374f04e2bd29eeac54179"
+checksum = "602c6200308149f7d9e4759e2baac604932d1d9e6e86d3aa5763a53a4d6aa8f6"
 dependencies = [
  "hdk",
  "holo_hash",
