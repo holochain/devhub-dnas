@@ -61,9 +61,7 @@ zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile zomes/%/src/*.rs zo
 $(MERE_MEMORY_WASM):		../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
 	cp $< $@
 
-crates:				essence_payloads devhub_types
-essence_payloads:		essence_payloads/src/*.rs
-	cd $@; cargo build && touch $@
+crates:				devhub_types
 devhub_types:			devhub_types/src/*.rs
 	cd $@; cargo build && touch $@
 
