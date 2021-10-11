@@ -1,13 +1,15 @@
 use devhub_types::{
-    AppResult,
+    AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
 	HappEntry, HappInfo, HappSummary,
 	DeprecationNotice, HappGUIConfig,
     },
 };
-use hc_entities::{ Entity, Collection, UpdateEntityInput, GetEntityInput };
+use hc_crud::{
+    now, create_entity, get_entity, update_entity,
+    Entity, Collection,
+};
 use hdk::prelude::*;
-use hc_dna_utils as utils;
 
 use crate::constants::{ TAG_HAPP };
 
@@ -36,7 +38,7 @@ pub struct CreateInput {
 pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Creating HAPP: {}", input.title );
     let pubkey = agent_info()?.agent_initial_pubkey;
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     // if true {
     // 	return Err( UserError::DuplicateHappName(input.title).into() );
@@ -58,15 +60,12 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	}),
     };
 
-    let entity = utils::create_entity( &happ )?
-	.new_content( happ.to_info() );
+    let entity = create_entity( &happ )?
+	.change_model( |happ| happ.to_info() );
+    let base = crate::root_path_hash( None )?;
 
-    debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
-    create_link(
-	pubkey.into(),
-	entity.id.clone(),
-	LinkTag::new( TAG_HAPP )
-    )?;
+    debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
+    entity.link_from( &base, TAG_HAPP.into() )?;
 
     Ok( entity )
 }
@@ -74,10 +73,9 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 
 pub fn get_happ(input: GetEntityInput) -> AppResult<Entity<HappInfo>> {
     debug!("Get hApp: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
-    let info = HappEntry::try_from( &entity.content )?.to_info();
+    let entity = get_entity::<HappEntry>( &input.id )?;
 
-    Ok(	entity.new_content( info ) )
+    Ok(	entity.change_model( |happ| happ.to_info() ) )
 }
 
 
@@ -97,11 +95,9 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Updating hApp: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<HappEntry> = utils::update_entity(
-	input.id, input.addr,
-	|element| {
-	    let current = HappEntry::try_from( &element )?;
-
+    let entity = update_entity(
+	&input.addr,
+	|current : HappEntry, _| {
 	    Ok(HappEntry {
 		title: props.title
 		    .unwrap_or( current.title ),
@@ -113,7 +109,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
-		    .unwrap_or( utils::now()? ),
+		    .unwrap_or( now()? ),
 		thumbnail_image: props.thumbnail_image
 		    .or( current.thumbnail_image ),
 		deprecation: current.deprecation,
@@ -122,9 +118,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 	    })
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |happ| happ.to_info() ) )
 }
 
 
@@ -137,30 +131,23 @@ pub struct HappDeprecateInput {
 
 pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Deprecating hApp: {}", input.addr );
-    let entity : Entity<HappEntry> = utils::update_entity(
-	input.id.clone(), input.addr.clone(),
-	|element| {
-	    let mut current = HappEntry::try_from( &element )?;
-
+    let entity = update_entity(
+	&input.addr,
+	|mut current : HappEntry, _| {
 	    current.deprecation = Some(DeprecationNotice {
-		message: input.message,
+		message: input.message.to_owned(),
 		recommended_alternatives: None,
 	    });
 
 	    Ok( current )
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |happ| happ.to_info() ) )
 }
 
 
-pub fn get_happ_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash, Vec<Link>)> {
-    let base : EntryHash = match maybe_pubkey {
-	None => agent_info()?.agent_initial_pubkey,
-	Some(agent) => agent,
-    }.into();
+pub fn get_happ_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<HappSummary>>> {
+    let base = crate::root_path_hash( maybe_pubkey )?;
 
     debug!("Getting hApp links for Agent entry: {}", base );
     let all_links: Vec<Link> = get_links(
@@ -168,7 +155,19 @@ pub fn get_happ_links(maybe_pubkey: Option<AgentPubKey>) -> AppResult<(EntryHash
 	Some(LinkTag::new(TAG_HAPP))
     )?.into();
 
-    Ok( (base, all_links) )
+    let happs = all_links.into_iter()
+	.filter_map(|link| {
+	    get_entity::<HappEntry>( &link.target ).ok()
+	})
+	.map( |entity| {
+	    entity.change_model( |happ| happ.to_summary() )
+	})
+	.collect();
+
+    Ok(Collection {
+	base,
+	items: happs,
+    })
 }
 
 #[derive(Debug, Deserialize)]
@@ -177,31 +176,17 @@ pub struct GetHappsInput {
 }
 
 pub fn get_happs(input: GetHappsInput) -> AppResult<Collection<Entity<HappSummary>>> {
-    let (base, links) = get_happ_links( input.agent.clone() )?;
+    let happ_collection = get_happ_collection( input.agent.clone() )?;
 
-    let happs = links.into_iter()
-	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
-	})
-	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<HappSummary>> = None;
-
-	    if let Some(happ) = HappEntry::try_from( &entity.content ).ok() {
-		if happ.deprecation.is_none() {
-		    let summary = happ.to_summary();
-		    let entity = entity.new_content( summary );
-
-		    maybe_entity.replace( entity );
-		}
-	    }
-
-	    maybe_entity
+    let happs = happ_collection.items.into_iter()
+	.filter(|entity| {
+	    !entity.content.deprecation
 	})
 	.collect();
 
     Ok(Collection {
-	base,
-	items: happs
+	base: happ_collection.base,
+	items: happs,
     })
 }
 

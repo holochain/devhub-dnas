@@ -14,13 +14,12 @@ const { backdrop }			= require('./setup.js');
 
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
-const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets/web_assets.dna");
-const zome				= "web_assets";
+const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets.dna");
 
 
 function basic_tests () {
     it("should get whoami info", async function () {
-	let whoami			= await clients.alice.call( "webassets", zome, "whoami" );
+	let whoami			= await clients.alice.call( "webassets", "web_assets", "whoami" );
 
 	log.info("Agent ID 'alice': %s", String(new HoloHash(whoami.agent_initial_pubkey)) );
     });
@@ -40,7 +39,7 @@ function basic_tests () {
 	    let chunk_hashes		= [];
 	    let chunk_count		= Math.ceil( file_bytes.length / chunk_size );
 	    for (let i=0; i < chunk_count; i++) {
-		let chunk		= await alice.call( "webassets", zome, "create_file_chunk", {
+		let chunk		= await alice.call( "webassets", "web_assets", "create_file_chunk", {
 		    "sequence": {
 			"position": i+1,
 			"length": chunk_count,
@@ -53,7 +52,7 @@ function basic_tests () {
 	    }
 	    log.debug("Final chunks:", json.debug(chunk_hashes) );
 
-	    let version			= await alice.call( "webassets", zome, "create_file", {
+	    let version			= await alice.call( "webassets", "web_assets", "create_file", {
 		"file_size": file_bytes.length,
 		"chunk_addresses": chunk_hashes,
 	    });
@@ -78,6 +77,12 @@ describe("Web Assets", () => {
 	}, [
 	    "alice",
 	]);
+
+	// Must call whoami on each cell to ensure that init has finished.
+	{
+	    let whoami			= await clients.alice.call( "webassets", "web_assets", "whoami" );
+	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
+	}
     });
 
     describe("Basic", basic_tests.bind( this, holochain ) );

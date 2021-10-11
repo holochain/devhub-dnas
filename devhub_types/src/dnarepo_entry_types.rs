@@ -1,6 +1,8 @@
-use hc_entities::{ EntryModel, EntityType, Entity };
+use hc_crud::{
+    get_entity,
+    EntryModel, EntityType, Entity
+};
 use hdk::prelude::*;
-use hc_dna_utils as utils;
 
 
 
@@ -249,10 +251,10 @@ impl DnaVersionEntry {
     pub fn to_package(&self, dna_bytes: Vec<u8>) -> DnaVersionPackage {
 	let mut dna_entity : Option<Entity<DnaSummary>> = None;
 
-	if let Some(entity) = utils::get_entity( &self.for_dna ).ok() {
-	    if let Some(dna_entry) = DnaEntry::try_from( &entity.content ).ok() {
-		dna_entity = Some( entity.new_content( dna_entry.to_summary() ) );
-	    }
+	if let Some(entity) = get_entity::<DnaEntry>( &self.for_dna ).ok() {
+	    dna_entity = Some( entity.change_model(
+		|version| version.to_summary()
+	    ));
 	};
 
 	DnaVersionPackage {
@@ -269,10 +271,10 @@ impl DnaVersionEntry {
     pub fn to_info(&self) -> DnaVersionInfo {
 	let mut dna_entity : Option<Entity<DnaSummary>> = None;
 
-	if let Some(entity) = utils::get_entity( &self.for_dna ).ok() {
-	    if let Some(dna_entry) = DnaEntry::try_from( &entity.content ).ok() {
-		dna_entity = Some( entity.new_content( dna_entry.to_summary() ) );
-	    }
+	if let Some(entity) = get_entity::<DnaEntry>( &self.for_dna ).ok() {
+	    dna_entity = Some( entity.change_model(
+		|version| version.to_summary()
+	    ));
 	};
 
 	DnaVersionInfo {
@@ -438,10 +440,10 @@ impl ZomeVersionEntry {
     pub fn to_info(&self) -> ZomeVersionInfo {
 	let mut zome_entity : Option<Entity<ZomeSummary>> = None;
 
-	if let Some(entity) = utils::get_entity( &self.for_zome ).ok() {
-	    if let Some(zome_entry) = ZomeEntry::try_from( &entity.content ).ok() {
-		zome_entity = Some( entity.new_content( zome_entry.to_summary() ) );
-	    }
+	if let Some(entity) = get_entity::<ZomeEntry>( &self.for_zome ).ok() {
+	    zome_entity = Some( entity.change_model(
+		|version| version.to_summary()
+	    ));
 	};
 
 	ZomeVersionInfo {

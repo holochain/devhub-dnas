@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use devhub_types::{
-    DevHubResponse, AppResult,
+    DevHubResponse, AppResult, GetEntityInput,
     errors::{ AppError },
     dnarepo_entry_types::{ DnaVersionPackage },
     happ_entry_types::{ HappManifest },
@@ -9,7 +9,9 @@ use devhub_types::{
     call_local_dna_zome,
     encode_bundle,
 };
-use hc_entities::{ Entity, GetEntityInput };
+use hc_crud::{
+    Entity,
+};
 use hdk::prelude::*;
 
 

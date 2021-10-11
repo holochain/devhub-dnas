@@ -1,10 +1,14 @@
 use devhub_types::{
-    AppResult,
-    dnarepo_entry_types::{ DnaVersionEntry, DnaVersionInfo, DnaVersionSummary, ZomeReference },
+    AppResult, UpdateEntityInput,
+    dnarepo_entry_types::{
+	DnaEntry,
+	DnaVersionEntry, DnaVersionInfo, DnaVersionSummary, ZomeReference,
+    },
 };
-
-use hc_entities::{ Entity, Collection, UpdateEntityInput };
-use hc_dna_utils as utils;
+use hc_crud::{
+    now, create_entity, get_entity, update_entity, delete_entity, get_entities,
+    Entity, Collection,
+};
 use hdk::prelude::*;
 
 use crate::constants::{ TAG_DNAVERSION };
@@ -28,7 +32,7 @@ pub struct DnaVersionInput {
 
 pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
     debug!("Creating DNA version ({}) for DNA: {}", input.version, input.for_dna );
-    let default_now = utils::now()?;
+    let default_now = now()?;
 
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
@@ -44,15 +48,11 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	    .unwrap_or( default_now ),
     };
 
-    let entity = utils::create_entity( &version )?
-	.new_content( version.to_info() );
+    let entity = create_entity( &version )?
+	.change_model( |version| version.to_info() );
 
     debug!("Linking DNA ({}) to ENTRY: {}", input.for_dna, entity.id );
-    create_link(
-	input.for_dna,
-	entity.id.clone(),
-	LinkTag::new( TAG_DNAVERSION )
-    )?;
+    entity.link_from( &input.for_dna, TAG_DNAVERSION.into() )?;
 
     Ok( entity )
 }
@@ -67,24 +67,12 @@ pub struct GetDnaVersionInput {
 
 pub fn get_dna_version(input: GetDnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
     debug!("Get DNA Version: {}", input.id );
-    let entity = utils::get_entity( &input.id )?;
-    let info = DnaVersionEntry::try_from( &entity.content )?.to_info();
+    let entity = get_entity::<DnaVersionEntry>( &input.id )?;
 
-    Ok(	entity.new_content( info ) )
+    Ok(	entity.change_model( |version| version.to_info() ) )
 }
 
 
-
-
-pub fn get_version_links(dna_id: EntryHash) -> AppResult<Vec<Link>> {
-    debug!("Getting version links for DNA: {}", dna_id );
-    let all_links: Vec<Link> = get_links(
-        dna_id,
-	Some(LinkTag::new( TAG_DNAVERSION ))
-    )?.into();
-
-    Ok( all_links )
-}
 
 
 #[derive(Debug, Deserialize)]
@@ -93,28 +81,16 @@ pub struct GetDnaVersionsInput {
 }
 
 pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Collection<Entity<DnaVersionSummary>>> {
-    let links = get_version_links( input.for_dna.clone() )?;
+    let collection = get_entities::<DnaEntry, DnaVersionEntry>( &input.for_dna, TAG_DNAVERSION.into() )?;
 
-    let versions = links.into_iter()
-	.filter_map(|link| {
-	    utils::get_entity( &link.target ).ok()
-	})
-	.filter_map(|entity| {
-	    let mut maybe_entity : Option<Entity<DnaVersionSummary>> = None;
-
-	    if let Some(version) = DnaVersionEntry::try_from( &entity.content ).ok() {
-		let summary = version.to_summary();
-		let entity = entity.new_content( summary );
-
-		maybe_entity.replace( entity );
-	    }
-
-	    maybe_entity
+    let versions = collection.items.into_iter()
+	.map(|entity| {
+	    entity.change_model( |version| version.to_summary() )
 	})
 	.collect();
 
     Ok(Collection {
-	base: input.for_dna,
+	base: collection.base,
 	items: versions,
     })
 }
@@ -135,18 +111,16 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
     debug!("Updating DNA Version: {}", input.addr );
     let props = input.properties;
 
-    let entity : Entity<DnaVersionEntry> = utils::update_entity(
-	input.id, input.addr,
-	|element| {
-	    let current = DnaVersionEntry::try_from( &element )?;
-
+    let entity = update_entity(
+	&input.addr,
+	|current : DnaVersionEntry, _| {
 	    Ok(DnaVersionEntry {
 		for_dna: current.for_dna,
 		version: current.version,
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
-		    .unwrap_or( utils::now()? ),
+		    .unwrap_or( now()? ),
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
@@ -155,9 +129,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 	    })
 	})?;
 
-    let info = entity.content.to_info();
-
-    Ok( entity.new_content( info ) )
+    Ok( entity.change_model( |version| version.to_info() ) )
 }
 
 
@@ -170,10 +142,8 @@ pub struct DeleteDnaVersionInput {
 
 pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<HeaderHash> {
     debug!("Delete DNA Version: {}", input.id );
-    let (header, _) = utils::fetch_entry( input.id.clone() )?;
+    let delete_header = delete_entity::<DnaVersionEntry>( &input.id )?;
+    debug!("Deleted DNA Version via header ({})", delete_header );
 
-    let delete_header = delete_entry( header.clone() )?;
-    debug!("Deleted DNA Version create {} via header ({})", header, delete_header );
-
-    Ok( header )
+    Ok( delete_header )
 }

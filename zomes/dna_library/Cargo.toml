@@ -10,13 +10,11 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
-hc_entities = {path = "../../hc_entities"}
-hc_dna_utils = {path = "../../dna_utils"}
-hdk = "0.0.106"
-serde = "1.0"
-serde_derive = "1.0"
+hc_crud_ceps = "0.6.0"
+hdk = "0.0.109"
+serde = "1"
 serde_yaml = "0.8.17"
-thiserror = "1.0"
+thiserror = "1"
 
 [dev-dependencies]
 rand = "0.8.3"

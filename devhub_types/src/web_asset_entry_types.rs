@@ -1,4 +1,6 @@
-use hc_entities::{ EntryModel, EntityType };
+use hc_crud::{
+    EntryModel, EntityType
+};
 use hdk::prelude::*;
 
 

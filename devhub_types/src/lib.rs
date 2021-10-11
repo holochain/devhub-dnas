@@ -9,11 +9,22 @@ use std::io::Write;
 use hdk::prelude::*;
 use essence::{ EssenceResponse };
 use errors::{ ErrorKinds, AppError };
-use hc_entities::{ Collection, Entity };
+use hc_crud::{ Collection, Entity };
 
 
 pub type AppResult<T> = Result<T, ErrorKinds>;
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetEntityInput {
+    pub id: EntryHash,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateEntityInput<T> {
+    pub id: Option<EntryHash>,
+    pub addr: EntryHash,
+    pub properties: T,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Metadata {
@@ -146,7 +157,7 @@ pub mod tests {
     use rand::Rng;
     use serde_json::json;
     use thiserror::Error;
-    use hc_entities::{ EntityType };
+    use hc_crud::{ EntityType };
 
     #[derive(Debug, Error)]
     enum AppError<'a> {
@@ -192,8 +203,8 @@ pub mod tests {
     ///
     fn success_entity_test() {
 	let bytes = rand::thread_rng().gen::<[u8; 32]>();
-	let ehash = EntryHash::from_raw_32( bytes.to_vec() );
-	let hhash = HeaderHash::from_raw_32( bytes.to_vec() );
+	let ehash = crate::holo_hash::EntryHash::from_raw_32( bytes.to_vec() );
+	let hhash = crate::holo_hash::HeaderHash::from_raw_32( bytes.to_vec() );
 
 	let _ : DevHubResponse<Entity<_>> = DevHubResponse::success(
 	    Entity {
