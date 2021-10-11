@@ -1,7 +1,7 @@
 let
-  holonixPath = builtins.fetchTarball {
-    url = "https://github.com/holochain/holonix/archive/6ae8ffb8e5c1a1faa4f4e1af8a9f7139b2ce0f3c.tar.gz";
-    sha256 = "0ksvy2m7gpxf5r7l1rznvjwajypk7iii3h5d8nx762kah55nyliq";
+  holonixPath = builtins.fetchTarball { # Oct 6, 2021
+    url = "https://github.com/holochain/holonix/archive/48a75e79b1713334ab0086767a214e5b1619d38d.tar.gz";
+    sha256 = "0r8ph5l00g70lr7lfcipnsv5vcagq5b51in232gdbglw9ngk8048";
   };
   holonix = import (holonixPath) {
     include = {
@@ -11,14 +11,14 @@ let
     };
 
     holochainVersionId = "custom";
-    holochainVersion = { # v0.0.106
-      rev = "b11908875a9f6a09e8939fbf6f45ff658e3d10a6"; # Sep 16, 2021
-      sha256 = "074jdpr0dmzp2wl7flal1rdcnhd86bbf9g8dmzq4wl616v3ibqzs";
-      cargoSha256 = "0k1bbh7cklnhzkj06icbi7wamq6hl6q77d51k43qil3mrvddb7j0";
+    holochainVersion = { # v0.0.109 (not official tag)
+      rev = "e5a480ce735beaa8ae7434abdb1b6dc03d487ffa"; # Oct 7, 2021
+      sha256 = "12xg1qmxxcp252z9dsk3hf2c3zl3m74891iiwg6ks08pql39cjsb";
+      cargoSha256 = "08a72d7nqpakml657z9vla739cbg8y046av4pwisdgj1ykyzyi60";
 
       lairKeystoreHashes = { # v0.0.4
-        sha256 = "0khg5w5fgdp1sg22vqyzsb2ri7znbxiwl7vr2zx6bwn744wy2cyv";
-        cargoSha256 = "1lm8vrxh7fw7gcir9lq85frfd0rdcca9p7883nikjfbn21ac4sn4";
+        sha256 = "12n1h94b1r410lbdg4waj5jsx3rafscnw5qnhz3ky98lkdc1mnl3";
+        cargoSha256 = "0axr1b2hc0hhik0vrs6sm412cfndk358grfnax9wv4vdpm8bq33m";
       };
 
       bins = {
