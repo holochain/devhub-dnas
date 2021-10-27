@@ -69,8 +69,6 @@ pub struct HappReleaseUpdateOptions {
     pub description: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub manifest: Option<HappManifest>,
-    pub dnas: Option<Vec<DnaReference>>,
 }
 pub type HappReleaseUpdateInput = UpdateEntityInput<HappReleaseUpdateOptions>;
 
@@ -91,10 +89,8 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
-		manifest: props.manifest
-		    .unwrap_or( current.manifest ),
-		dnas: props.dnas
-		    .unwrap_or( current.dnas ),
+		manifest: current.manifest,
+		dnas: current.dnas,
 	    })
 	})?;
 

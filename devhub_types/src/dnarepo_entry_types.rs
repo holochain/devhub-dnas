@@ -92,7 +92,6 @@ pub struct DnaEntry {
 
     // optional
     pub icon: Option<SerializedBytes>,
-    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
 
@@ -110,10 +109,10 @@ pub struct DnaSummary {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: AgentPubKey,
+    pub deprecation: bool,
 
     // optional
     pub icon: Option<SerializedBytes>,
-    pub deprecation: Option<bool>,
 }
 impl EntryModel for DnaSummary {
     fn get_type(&self) -> EntityType {
@@ -132,7 +131,6 @@ pub struct DnaInfo {
 
     // optional
     pub icon: Option<SerializedBytes>,
-    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
     pub deprecation: Option<DeprecationNotice>,
 }
 impl EntryModel for DnaInfo {
@@ -150,7 +148,6 @@ impl DnaEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.clone(),
-	    collaborators: self.collaborators.clone(),
 	    deprecation: self.deprecation.clone(),
 	}
     }
@@ -163,7 +160,7 @@ impl DnaEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.pubkey.clone(),
-	    deprecation: self.deprecation.clone().map(|_| true),
+	    deprecation: self.deprecation.clone().map_or(false, |_| true),
 	}
     }
 }
@@ -188,7 +185,6 @@ pub struct DnaVersionEntry {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
     pub zomes: Vec<ZomeReference>,
 }
@@ -220,7 +216,6 @@ pub struct DnaVersionInfo {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
     pub zomes: Vec<ZomeReference>,
 }
@@ -237,7 +232,6 @@ pub struct DnaVersionPackage {
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
-    pub contributors: Vec<(String, Option<AgentPubKey>)>,
     pub changelog: String,
     pub bytes: Vec<u8>,
 }
@@ -262,7 +256,6 @@ impl DnaVersionEntry {
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
-	    contributors: self.contributors.clone(),
 	    changelog: self.changelog.clone(),
 	    bytes: dna_bytes,
 	}
@@ -282,7 +275,6 @@ impl DnaVersionEntry {
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
-	    contributors: self.contributors.clone(),
 	    changelog: self.changelog.clone(),
 	    zomes: self.zomes.clone(),
 	}
@@ -332,9 +324,7 @@ pub struct ZomeSummary {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: AgentPubKey,
-
-    // optional
-    pub deprecation: Option<bool>,
+    pub deprecation: bool,
 }
 impl EntryModel for ZomeSummary {
     fn get_type(&self) -> EntityType {
@@ -379,7 +369,7 @@ impl ZomeEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.pubkey.clone(),
-	    deprecation: self.deprecation.clone().map(|_| true),
+	    deprecation: self.deprecation.clone().map_or(false, |_| true),
 	}
     }
 }
@@ -500,7 +490,6 @@ pub mod tests {
 	    last_updated: 1618855430,
 
 	    // optional
-	    collaborators: None,
 	    developer: DeveloperProfileLocation {
 		pubkey: hash.into(),
 	    },

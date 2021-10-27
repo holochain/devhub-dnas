@@ -16,7 +16,6 @@ pub struct DeprecationNotice {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HoloGUIConfig {
     pub uses_web_sdk: bool,
-    pub approved: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -31,7 +30,6 @@ impl HappGUIConfig {
 	    asset_group_id: asset_group_id,
 	    holo_hosting_settings: HoloGUIConfig {
 		uses_web_sdk: uses_web_sdk,
-		approved: false,
 	    }
 	}
     }
@@ -72,10 +70,10 @@ pub struct HappSummary {
     pub designer: AgentPubKey,
     pub published_at: u64,
     pub last_updated: u64,
+    pub deprecation: bool,
 
     // optional
     pub thumbnail_image: Option<SerializedBytes>,
-    pub deprecation: bool,
 }
 impl EntryModel for HappSummary {
     fn get_type(&self) -> EntityType {

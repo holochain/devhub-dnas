@@ -87,7 +87,6 @@ pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileInfo>> {
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateProfileInput {
-    pub id: Option<EntryHash>,
     pub addr: EntryHash,
     pub properties: ProfileUpdateOptions
 }

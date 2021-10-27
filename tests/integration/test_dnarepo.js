@@ -389,11 +389,6 @@ function basic_tests () {
 	    // Update DNA Version
 	    const properties		= {
 		"changelog": "# Changelog\nFeatures\n...",
-		"contributors": [
-		    [ "kevin@open-games.example", null ],
-		    [ "stuart@open-games.example", clients.bobby.agent_pubkey ],
-		    [ "bob@open-games.example", clients.carol.agent_pubkey ],
-		],
 	    };
 	    let dna_version		= await alice.call( "dnarepo", "dna_library", "update_dna_version", {
 		"addr": dna_version_hash,
@@ -406,7 +401,6 @@ function basic_tests () {
 	    });
 	    log.info("DNA Version post update: %s", dna_version_info.version );
 	    expect( dna_version_info.changelog		).to.equal( properties.changelog );
-	    expect( dna_version_info.contributors	).to.have.length( 3 );
 	}
 
 	{

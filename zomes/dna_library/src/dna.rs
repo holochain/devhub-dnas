@@ -21,7 +21,6 @@ pub struct DnaInput {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
 }
 
 pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
@@ -37,7 +36,6 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
-	collaborators: input.collaborators,
 	developer: DeveloperProfileLocation {
 	    pubkey: pubkey.clone(),
 	},
@@ -105,7 +103,7 @@ pub fn get_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<DnaSummary>>
 
     let dnas = dna_collection.items.into_iter()
 	.filter(|entity| {
-	    entity.content.deprecation.is_none()
+	    !entity.content.deprecation
 	})
 	.collect();
 
@@ -120,7 +118,7 @@ pub fn get_deprecated_dnas(input: GetDnasInput) -> AppResult<Collection<Entity<D
 
     let dnas = dna_collection.items.into_iter()
 	.filter(|entity| {
-	    entity.content.deprecation.is_some()
+	    entity.content.deprecation
 	})
 	.collect();
 
@@ -152,7 +150,6 @@ pub struct DnaUpdateOptions {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub collaborators: Option<Vec<(AgentPubKey, String)>>,
 }
 pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 
@@ -174,8 +171,6 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
-		collaborators: props.collaborators
-		    .or( current.collaborators ),
 		developer: current.developer,
 		deprecation: current.deprecation,
 	    })
@@ -204,7 +199,6 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 		icon: current.icon,
 		published_at: current.published_at,
 		last_updated: current.last_updated,
-		collaborators: None,
 		developer: current.developer,
 		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
 	    })

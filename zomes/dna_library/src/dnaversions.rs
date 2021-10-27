@@ -22,10 +22,7 @@ pub struct DnaVersionInput {
     pub zomes: Vec<ZomeReference>,
 
     // optional
-    pub mere_memory_addr: Option<EntryHash>,
-    pub dna_bytes: Option<SerializedBytes>,
     pub changelog: Option<String>,
-    pub contributors: Option<Vec<(String, Option<AgentPubKey>)>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
 }
@@ -40,8 +37,6 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	zomes: input.zomes,
 	changelog: input.changelog
 	    .unwrap_or( String::from("") ),
-	contributors: input.contributors
-	    .unwrap_or( vec![] ),
 	published_at: input.published_at
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
@@ -101,7 +96,6 @@ pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Collection<Enti
 #[derive(Debug, Deserialize)]
 pub struct DnaVersionUpdateOptions {
     pub changelog: Option<String>,
-    pub contributors: Option<Vec<(String, Option<AgentPubKey>)>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
 }
@@ -124,8 +118,6 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
-		contributors: props.contributors
-		    .unwrap_or( current.contributors ),
 	    })
 	})?;
 

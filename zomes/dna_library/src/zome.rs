@@ -99,7 +99,7 @@ pub fn get_zomes(input: GetZomesInput) -> AppResult<Collection<Entity<ZomeSummar
 
     let zomes = zome_collection.items.into_iter()
 	.filter( |entity| {
-	    entity.content.deprecation.is_none()
+	    !entity.content.deprecation
 	})
 	.collect();
 
@@ -114,7 +114,7 @@ pub fn get_deprecated_zomes(input: GetZomesInput) -> AppResult<Collection<Entity
 
     let zomes = zome_collection.items.into_iter()
 	.filter( |entity| {
-	    entity.content.deprecation.is_some()
+	    entity.content.deprecation
 	})
 	.collect();
 

@@ -124,7 +124,6 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 
 #[derive(Debug, Deserialize)]
 pub struct HappDeprecateInput {
-    pub id: Option<EntryHash>,
     pub addr: EntryHash,
     pub message: String,
 }
