@@ -58,7 +58,7 @@ zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile zomes/%/src/*.rs zo
 	    --package $*
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
 
-$(MERE_MEMORY_WASM):		../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
+$(MERE_MEMORY_WASM):		../hc-zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
 	cp $< $@
 
 crates:				devhub_types
