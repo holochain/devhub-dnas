@@ -11,8 +11,21 @@ use hc_crud::{
     Entity, Collection,
 };
 use hdk::prelude::*;
+use hex;
 
 use crate::constants::{ TAG_HAPP_RELEASE };
+
+
+fn happ_release_path(hash: &str) -> AppResult<Path> {
+    Ok( create_filter_path( "uniqueness_hash", hash )? )
+}
+
+fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    let path = hc_crud::path_from_collection( vec![ "happ_release_by", filter, value ] )?;
+    path.ensure()?;
+
+    Ok( path )
+}
 
 
 
@@ -33,6 +46,11 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
     debug!("Creating HAPPRELEASE: {}", input.name );
     let default_now = now()?;
 
+    let hashes = input.dnas.iter()
+	.map( |dna| hex::decode( dna.wasm_hash.to_owned() ) )
+	.collect::<Result<Vec<Vec<u8>>, hex::FromHexError>>()
+	.or(Err(devhub_types::errors::UserError::CustomError("Bad hex value")))?;
+
     let happ_release = HappReleaseEntry {
 	name: input.name,
 	description: input.description,
@@ -42,14 +60,21 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	manifest: input.manifest,
+	dna_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	dnas: input.dnas,
     };
+
+    let release_path = happ_release_path( &happ_release.dna_hash )?;
+    let release_path_hash = release_path.hash()?;
 
     let entity = create_entity( &happ_release )?
 	.change_model( |release| release.to_info() );
 
     debug!("Linking happ ({}) to ENTRY: {}", input.for_happ, entity.id );
     entity.link_from( &input.for_happ, TAG_HAPP_RELEASE.into() )?;
+
+    debug!("Linking uniqueness 'hash' path ({}) to ENTRY: {}", release_path_hash, entity.id );
+    entity.link_from( &release_path_hash, TAG_HAPP_RELEASE.into() )?;
 
     Ok( entity )
 }
@@ -90,11 +115,26 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
 		manifest: current.manifest,
+		dna_hash: current.dna_hash,
 		dnas: current.dnas,
 	    })
 	})?;
 
     Ok(	entity.change_model( |release| release.to_info() ) )
+}
+
+
+
+fn get_entities_for_links ( links: Links ) -> Vec<Entity<HappReleaseSummary>> {
+    let link_list : Vec<Link> = links.into();
+    link_list.into_iter()
+	.filter_map(|link| {
+	    get_entity::<HappReleaseEntry>( &link.target ).ok()
+	})
+	.map( |entity| {
+	    entity.change_model( |release| release.to_summary() )
+	})
+	.collect()
 }
 
 
@@ -105,7 +145,7 @@ pub struct DeleteInput {
 }
 
 pub fn delete_happ_release(input: DeleteInput) -> AppResult<HeaderHash> {
-    debug!("Delete HAPPRELEASE Version: {}", input.id );
+    debug!("Delete HAPP RELEASE Version: {}", input.id );
     let delete_header = delete_entity::<HappReleaseEntry>( &input.id )?;
     debug!("Deleted hApp release via header ({})", delete_header );
 
@@ -130,6 +170,24 @@ pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Collection<En
 
     Ok(Collection {
 	base: collection.base,
+	items: releases,
+    })
+}
+
+
+pub fn get_happ_releases_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<HappReleaseSummary>>> {
+    let base = create_filter_path( &filter, &keyword )?.hash()?;
+
+    debug!("Getting hApp links for base: {:?}", base );
+    let all_links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_HAPP_RELEASE))
+    )?;
+
+    let releases = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
 	items: releases,
     })
 }

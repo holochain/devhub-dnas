@@ -5,6 +5,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 
 
 const fs				= require('fs');
+const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const { HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
@@ -40,26 +41,59 @@ function basic_tests () {
 	    expect( happs		).to.have.length( 1 );
 	}
 
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_filter", {
+		"filter": "title",
+		"keyword": happ_input.title.toLowerCase(),
+	    });
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
+	}
+
 	let happ_addr			= happ.$addr;
 	{
+	    let title			= "Chess++";
 	    let description		= "New description";
 	    let update			= await alice.call( "happs", "happ_library", "update_happ", {
 		"addr": happ_addr,
 		"properties": {
+		    title,
 		    description,
 		},
 	    });
 	    log.normal("New hApp: %s -> %s", String(update.$addr), update.title );
 	    happ_addr			= update.$addr;
 
+	    expect( update.title	).to.equal( title );
 	    expect( update.description	).to.equal( description );
 
-	    let _happ			= await alice.call( "happs", "happ_library", "get_happ", {
+	    happ			= await alice.call( "happs", "happ_library", "get_happ", {
 		"id": happ.$id,
 	    });
-	    log.normal("Updated hApp: %s -> %s", String(_happ.$addr), _happ.title );
+	    log.normal("Updated hApp: %s -> %s", String(happ.$addr), happ.title );
 
-	    expect( _happ.description	).to.equal( description );
+	    expect( happ.description	).to.equal( description );
+	}
+
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_filter", {
+		"filter": "title",
+		"keyword": happ_input.title.toLowerCase(),
+	    });
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
+	}
+
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_filter", {
+		"filter": "title",
+		"keyword": happ.title.toLowerCase(),
+	    });
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
 	}
 
 	{
@@ -83,6 +117,9 @@ function basic_tests () {
 	    expect( _happ.deprecation.message	).to.equal( message );
 	}
 
+	const dna_id			= new HoloHash("uhCEkh3HCoTRCZD2I7H-gcf5VNdqXUdT4Nq6B8WUo-pzMZ338XDlb");
+	const dna_version_id		= new HoloHash("uhCEkxe-5fTSvh_WVchpAmEvMbN9aGAu_Nm3GwN03IM2kmmyPmLxy");
+	const dna_wasm_hash		= "07bb7ae9898a64c69617a8dc0faf0c9449ccd0c0b2a81be29763b8a95d7bd708";
 	const manifest_yaml		= fs.readFileSync( path.resolve(__dirname, "../test_happ.yaml"), "utf8" );
 	let release_input		= {
 	    "name": "v0.1.0",
@@ -103,8 +140,9 @@ function basic_tests () {
 	    "dnas": [
 		{
 		    "name": "test_dna",
-		    "dna": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
-		    "version": new HoloHash("uhCEkNBaVvGRYmJUqsGNrfO8jC9Ij-t77QcmnAk3E3B8qh6TU09QN"),
+		    "dna": dna_id,
+		    "version": dna_version_id,
+		    "wasm_hash": dna_wasm_hash,
 		}
 	    ],
 	};
@@ -113,6 +151,20 @@ function basic_tests () {
 	log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
 
 	expect( release.description	).to.equal( release_input.description );
+
+	{
+	    let dna_hash_bytes		= Buffer.from( dna_wasm_hash, "hex" );
+	    let hash			= crypto.createHash("sha256");
+	    hash.update( dna_hash_bytes );
+
+	    let versions		= await alice.call( "happs", "happ_library", "get_happ_releases_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": hash.digest("hex"),
+	    });
+	    log.normal("hApp releases by hash: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 1 );
+	}
 
 	{
 	    let _release		= await alice.call( "happs", "happ_library", "get_happ_release", {

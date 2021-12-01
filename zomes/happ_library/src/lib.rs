@@ -1,5 +1,5 @@
 use devhub_types::{
-    DevHubResponse, EntityResponse, EntityCollectionResponse, GetEntityInput,
+    DevHubResponse, EntityResponse, EntityCollectionResponse, GetEntityInput, FilterInput,
     constants::{ VALUE_MD, ENTITY_MD, ENTITY_COLLECTION_MD },
     happ_entry_types::{
 	HappEntry, HappInfo, HappSummary,
@@ -99,6 +99,13 @@ fn get_my_happs(_:()) -> ExternResult<EntityCollectionResponse<HappSummary>> {
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
+#[hdk_extern]
+fn get_happs_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappSummary>> {
+    let collection = catch!( happ::get_happs_by_filter( input.filter, input.keyword ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
 
 // hApp Releases
 #[hdk_extern]
@@ -132,6 +139,13 @@ fn delete_happ_release(input: happ_release::DeleteInput) -> ExternResult<DevHubR
 #[hdk_extern]
 fn get_happ_releases(input: happ_release::GetHappReleasesInput) -> ExternResult<EntityCollectionResponse<HappReleaseSummary>> {
     let collection = catch!( happ_release::get_happ_releases( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_happ_releases_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappReleaseSummary>> {
+    let collection = catch!( happ_release::get_happ_releases_by_filter( input.filter, input.keyword ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

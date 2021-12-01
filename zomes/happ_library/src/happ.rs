@@ -15,6 +15,18 @@ use crate::constants::{ TAG_HAPP };
 
 
 
+fn happ_title_path(title: &str) -> AppResult<Path> {
+    Ok( create_filter_path( "title", title )? )
+}
+
+fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    let path = hc_crud::path_from_collection( vec![ "happs_by", filter, value ] )?;
+    path.ensure()?;
+
+    Ok( path )
+}
+
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GUIConfigInput {
     pub asset_group_id: EntryHash,
@@ -28,7 +40,7 @@ pub struct CreateInput {
     pub description: String,
 
     // optional
-    pub thumbnail_image: Option<SerializedBytes>,
+    pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub gui: Option<GUIConfigInput>,
@@ -44,6 +56,12 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     // 	return Err( UserError::DuplicateHappName(input.title).into() );
     // }
 
+    let title_path = happ_title_path( &input.title )?;
+    let title_path_hash = title_path.hash()?;
+
+    let title_path_lc = happ_title_path( &input.title.to_lowercase() )?;
+    let title_path_lc_hash = title_path_lc.hash()?;
+
     let happ = HappEntry {
 	title: input.title,
 	subtitle: input.subtitle,
@@ -53,7 +71,7 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
-	thumbnail_image: input.thumbnail_image,
+	icon: input.icon,
 	deprecation: None,
 	gui: input.gui.map(|gui| {
 	    HappGUIConfig::new( gui.asset_group_id, gui.uses_web_sdk )
@@ -66,6 +84,12 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 
     debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
     entity.link_from( &base, TAG_HAPP.into() )?;
+
+    debug!("Linking 'title' path ({}) to ENTRY: {}", title_path_hash, entity.id );
+    entity.link_from( &title_path_hash, TAG_HAPP.into() )?;
+
+    debug!("Linking lowercase 'title' path ({}) to ENTRY: {}", title_path_lc_hash, entity.id );
+    entity.link_from( &title_path_lc_hash, TAG_HAPP.into() )?;
 
     Ok( entity )
 }
@@ -84,7 +108,7 @@ pub struct HappUpdateOptions {
     pub title: Option<String>,
     pub subtitle: Option<String>,
     pub description: Option<String>,
-    pub thumbnail_image: Option<SerializedBytes>,
+    pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub gui: Option<HappGUIConfig>,
@@ -94,10 +118,13 @@ pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
 pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Updating hApp: {}", input.addr );
     let props = input.properties;
+    let mut previous_title = String::from("");
 
     let entity = update_entity(
 	&input.addr,
 	|current : HappEntry, _| {
+	    previous_title = current.title.clone();
+
 	    Ok(HappEntry {
 		title: props.title
 		    .unwrap_or( current.title ),
@@ -110,13 +137,29 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
-		thumbnail_image: props.thumbnail_image
-		    .or( current.thumbnail_image ),
+		icon: props.icon
+		    .or( current.icon ),
 		deprecation: current.deprecation,
 		gui: props.gui
 		    .or( current.gui ),
 	    })
 	})?;
+
+    let previous_title_path = happ_title_path( &previous_title )?;
+    let previous_path_hash = previous_title_path.hash()?;
+
+    let new_title_path = happ_title_path( &entity.content.title )?;
+    let new_path_hash = new_title_path.hash()?;
+
+    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
+
+    let previous_title_path = happ_title_path( &previous_title.to_lowercase() )?;
+    let previous_path_hash = previous_title_path.hash()?;
+
+    let new_title_path = happ_title_path( &entity.content.title.to_lowercase() )?;
+    let new_path_hash = new_title_path.hash()?;
+
+    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
 
     Ok( entity.change_model( |happ| happ.to_info() ) )
 }
@@ -144,24 +187,28 @@ pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> 
     Ok( entity.change_model( |happ| happ.to_info() ) )
 }
 
-
-pub fn get_happ_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<HappSummary>>> {
-    let base = crate::root_path_hash( maybe_pubkey )?;
-
-    debug!("Getting hApp links for Agent entry: {}", base );
-    let all_links: Vec<Link> = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_HAPP))
-    )?.into();
-
-    let happs = all_links.into_iter()
+fn get_entities_for_links ( links: Links ) -> Vec<Entity<HappSummary>> {
+    let link_list : Vec<Link> = links.into();
+    link_list.into_iter()
 	.filter_map(|link| {
 	    get_entity::<HappEntry>( &link.target ).ok()
 	})
 	.map( |entity| {
 	    entity.change_model( |happ| happ.to_summary() )
 	})
-	.collect();
+	.collect()
+}
+
+pub fn get_happ_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<HappSummary>>> {
+    let base = crate::root_path_hash( maybe_pubkey )?;
+
+    debug!("Getting hApp links for Agent entry: {}", base );
+    let all_links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_HAPP))
+    )?;
+
+    let happs = get_entities_for_links( all_links );
 
     Ok(Collection {
 	base,
@@ -192,5 +239,23 @@ pub fn get_happs(input: GetHappsInput) -> AppResult<Collection<Entity<HappSummar
 pub fn get_my_happs() -> AppResult<Collection<Entity<HappSummary>>> {
     get_happs(GetHappsInput {
 	agent: None,
+    })
+}
+
+
+pub fn get_happs_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<HappSummary>>> {
+    let base = create_filter_path( &filter, &keyword )?.hash()?;
+
+    debug!("Getting hApp links for base: {:?}", base );
+    let all_links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_HAPP))
+    )?;
+
+    let happs = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
+	items: happs,
     })
 }

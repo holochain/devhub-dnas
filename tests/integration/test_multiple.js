@@ -5,6 +5,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 
 
 const fs				= require('fs');
+const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const { HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
@@ -115,6 +116,7 @@ function basic_tests () {
 		"zome": zome_version_1.for_zome.$id,
 		"version": zome_version_1.$id,
 		"resource": zome_version_1.mere_memory_addr,
+		"resource_hash": zome_version_1.mere_memory_hash,
 	    }],
 	});
 	log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
@@ -158,6 +160,7 @@ function basic_tests () {
 		    "name": "test_dna",
 		    "dna": dna.$id,
 		    "version": version.$id,
+		    "wasm_hash": version.wasm_hash,
 		}
 	    ],
 	};

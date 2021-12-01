@@ -11,6 +11,18 @@ use hdk::prelude::*;
 use crate::constants::{ TAG_DNA };
 
 
+fn dna_name_path(title: &str) -> AppResult<Path> {
+    Ok( create_filter_path( "name", title )? )
+}
+
+fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    let path = hc_crud::path_from_collection( vec![ "dna_by", filter, value ] )?;
+    path.ensure()?;
+
+    Ok( path )
+}
+
+
 
 #[derive(Debug, Deserialize)]
 pub struct DnaInput {
@@ -27,6 +39,12 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Creating DNA: {}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
+
+    let name_path = dna_name_path( &input.name )?;
+    let name_path_hash = name_path.hash()?;
+
+    let name_path_lc = dna_name_path( &input.name.to_lowercase() )?;
+    let name_path_lc_hash = name_path_lc.hash()?;
 
     let dna = DnaEntry {
 	name: input.name,
@@ -49,6 +67,12 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
     entity.link_from( &base, TAG_DNA.into() )?;
 
+    debug!("Linking 'name' path ({}) to ENTRY: {}", name_path_hash, entity.id );
+    entity.link_from( &name_path_hash, TAG_DNA.into() )?;
+
+    debug!("Linking lowercase 'name' path ({}) to ENTRY: {}", name_path_lc_hash, entity.id );
+    entity.link_from( &name_path_lc_hash, TAG_DNA.into() )?;
+
     Ok( entity )
 }
 
@@ -69,23 +93,29 @@ pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaInfo>> {
 
 
 
-pub fn get_dna_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<DnaSummary>>> {
-    let base = crate::root_path_hash( maybe_pubkey )?;
-
-    debug!("Getting DNA links for Agent entry: {}", base );
-    let all_links: Vec<Link> = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_DNA))
-    )?.into();
-
-    let dnas = all_links.into_iter()
+fn get_entities_for_links ( links: Links ) -> Vec<Entity<DnaSummary>> {
+    let link_list : Vec<Link> = links.into();
+    link_list.into_iter()
 	.filter_map(|link| {
 	    get_entity::<DnaEntry>( &link.target ).ok()
 	})
 	.map( |entity| {
 	    entity.change_model( |dna| dna.to_summary() )
 	})
-	.collect();
+	.collect()
+}
+
+
+pub fn get_dna_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<DnaSummary>>> {
+    let base = crate::root_path_hash( maybe_pubkey )?;
+
+    debug!("Getting DNA links for Agent entry: {}", base );
+    let links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_DNA))
+    )?;
+
+    let dnas = get_entities_for_links( links );
 
     Ok(Collection {
 	base,
@@ -156,10 +186,13 @@ pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Updating DNA: {}", input.addr );
     let props = input.properties;
+    let mut previous_name = String::from("");
 
     let entity : Entity<DnaEntry> = update_entity(
 	&input.addr,
 	|current : DnaEntry, _| {
+	    previous_name = current.name.clone();
+
 	    Ok(DnaEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -175,6 +208,22 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 		deprecation: current.deprecation,
 	    })
 	})?;
+
+    let previous_name_path = dna_name_path( &previous_name )?;
+    let previous_path_hash = previous_name_path.hash()?;
+
+    let new_name_path = dna_name_path( &entity.content.name )?;
+    let new_path_hash = new_name_path.hash()?;
+
+    entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
+
+    let previous_name_path = dna_name_path( &previous_name.to_lowercase() )?;
+    let previous_path_hash = previous_name_path.hash()?;
+
+    let new_name_path = dna_name_path( &entity.content.name.to_lowercase() )?;
+    let new_path_hash = new_name_path.hash()?;
+
+    entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
 
     Ok( entity.change_model( |dna| dna.to_info() ) )
 }
@@ -205,4 +254,22 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 	})?;
 
     Ok( entity.change_model( |dna| dna.to_info() ) )
+}
+
+
+pub fn get_dnas_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<DnaSummary>>> {
+    let base = create_filter_path( &filter, &keyword )?.hash()?;
+
+    debug!("Getting hApp links for base: {:?}", base );
+    let all_links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_DNA))
+    )?;
+
+    let dnas = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
+	items: dnas,
+    })
 }

@@ -50,7 +50,7 @@ pub struct HappEntry {
     pub last_updated: u64,
 
     // optional
-    pub thumbnail_image: Option<SerializedBytes>,
+    pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
     pub gui: Option<HappGUIConfig>,
 }
@@ -73,7 +73,7 @@ pub struct HappSummary {
     pub deprecation: bool,
 
     // optional
-    pub thumbnail_image: Option<SerializedBytes>,
+    pub icon: Option<SerializedBytes>,
 }
 impl EntryModel for HappSummary {
     fn get_type(&self) -> EntityType {
@@ -92,7 +92,7 @@ pub struct HappInfo {
     pub last_updated: u64,
 
     // optional
-    pub thumbnail_image: Option<SerializedBytes>,
+    pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
     pub gui: Option<HappGUIConfig>,
 }
@@ -111,7 +111,7 @@ impl HappEntry {
 	    designer: self.designer.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
-	    thumbnail_image: self.thumbnail_image.clone(),
+	    icon: self.icon.clone(),
 	    deprecation: self.deprecation.clone(),
 	    gui: self.gui.clone(),
 	}
@@ -125,7 +125,7 @@ impl HappEntry {
 	    designer: self.designer.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
-	    thumbnail_image: self.thumbnail_image.clone(),
+	    icon: self.icon.clone(),
 	    deprecation: self.deprecation.clone().map_or(false, |_| true),
 	}
     }
@@ -202,6 +202,7 @@ pub struct DnaReference {
     pub name: String,
     pub dna : EntryHash, // Dna ID
     pub version : EntryHash, // Version ID
+    pub wasm_hash : String,
 }
 
 #[hdk_entry(id = "happ_release_details", visibility="public")]
@@ -213,6 +214,7 @@ pub struct HappReleaseEntry {
     pub published_at: u64,
     pub last_updated: u64,
     pub manifest: HappManifest,
+    pub dna_hash : String,
     pub dnas: Vec<DnaReference>,
 }
 
