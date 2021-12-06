@@ -201,6 +201,7 @@ impl EntryModel for DnaVersionEntry {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionSummary {
+    pub for_dna: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -288,6 +289,7 @@ impl DnaVersionEntry {
 
     pub fn to_summary(&self) -> DnaVersionSummary {
 	DnaVersionSummary {
+	    for_dna: self.for_dna.clone(),
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
@@ -408,6 +410,7 @@ impl EntryModel for ZomeVersionEntry {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ZomeVersionSummary {
+    pub for_zome: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -460,6 +463,7 @@ impl ZomeVersionEntry {
 
     pub fn to_summary(&self) -> ZomeVersionSummary {
 	ZomeVersionSummary {
+	    for_zome: self.for_zome.clone(),
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),

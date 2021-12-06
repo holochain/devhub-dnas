@@ -45,9 +45,10 @@ HappRelease.model("info", function ( content ) {
     content.last_updated	= new Date( content.last_updated );
     content.for_happ		= Schema.deconstruct( "entity", content.for_happ );
 
-    for (let k in content.resources ) {
-	content.resources[k]	= new EntryHash( content.resources[k] );
-    }
+    content.dnas.forEach( (dna_ref, i) => {
+	content.dnas[i].dna		= new EntryHash( dna_ref.dna );
+	content.dnas[i].version		= new EntryHash( dna_ref.version );
+    });
 
     return content;
 });
@@ -98,6 +99,12 @@ DnaVersion.model("package", function ( content ) {
     content.last_updated	= new Date( content.last_updated );
     content.bytes		= new Uint8Array(content.bytes);
 
+    content.zomes.forEach( (zome_ref, i) => {
+	content.zomes[i].zome		= new EntryHash( zome_ref.zome );
+	content.zomes[i].version	= new EntryHash( zome_ref.version );
+	content.zomes[i].resource	= new EntryHash( zome_ref.resource );
+    });
+
     return content;
 });
 DnaVersion.model("info", function ( content ) {
@@ -105,11 +112,22 @@ DnaVersion.model("info", function ( content ) {
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
 
+    content.zomes.forEach( (zome_ref, i) => {
+	content.zomes[i].zome		= new EntryHash( zome_ref.zome );
+	content.zomes[i].version	= new EntryHash( zome_ref.version );
+	content.zomes[i].resource	= new EntryHash( zome_ref.resource );
+    });
+
     return content;
 });
 DnaVersion.model("summary", function ( content ) {
+    content.for_dna		= new EntryHash( content.for_dna );
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
+
+    content.zomes.forEach( (addr, i) => {
+	content.zomes[i]	= new EntryHash( addr );
+    });
 
     return content;
 });
@@ -145,6 +163,7 @@ ZomeVersion.model("info", function ( content ) {
     return content;
 });
 ZomeVersion.model("summary", function ( content ) {
+    content.for_zome		= new EntryHash( content.for_zome );
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
     content.mere_memory_addr	= new EntryHash(content.mere_memory_addr);
