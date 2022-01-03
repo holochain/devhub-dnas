@@ -112,7 +112,7 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 	    id: dna_ref.version.to_owned(),
 	})?;
 
-	let path = format!("./{}.dna", dna_ref.name );
+	let path = format!("./{}.dna", dna_ref.role_id );
 
 	debug!("Adding resource pack '{}' with {} bytes", path, version_entity.content.bytes.len() );
 	resources.insert( path, version_entity.content.bytes );

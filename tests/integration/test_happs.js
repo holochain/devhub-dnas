@@ -132,14 +132,14 @@ function basic_tests () {
 			"id": "test_dna",
 			"dna": {
 			    "path": "./this/does/not/matter.dna",
+			    "clone_limit": 0,
 			},
-			"clone_limit": 0,
 		    },
 		],
 	    },
 	    "dnas": [
 		{
-		    "name": "test_dna",
+		    "role_id": "test_dna",
 		    "dna": dna_id,
 		    "version": dna_version_id,
 		    "wasm_hash": dna_wasm_hash,

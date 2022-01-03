@@ -85,7 +85,7 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
     entity.link_from( &base, TAG_HAPP.into() )?;
 
-    debug!("Linking 'title' path ({}) to ENTRY: {}", title_path_hash, entity.id );
+    debug!("Linking 'title' path (length {}) to entity: {}", title_path.as_ref().len(), entity.id );
     entity.link_from( &title_path_hash, TAG_HAPP.into() )?;
 
     debug!("Linking lowercase 'title' path ({}) to ENTRY: {}", title_path_lc_hash, entity.id );

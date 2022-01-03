@@ -199,7 +199,7 @@ pub struct HappManifest {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DnaReference {
-    pub name: String,
+    pub role_id: String,
     pub dna : EntryHash, // Dna ID
     pub version : EntryHash, // Version ID
     pub wasm_hash : String,
@@ -232,6 +232,7 @@ pub struct HappReleaseSummary {
     pub for_happ: EntryHash,
     pub published_at: u64,
     pub last_updated: u64,
+    pub dna_hash : String,
 }
 impl EntryModel for HappReleaseSummary {
     fn get_type(&self) -> EntityType {
@@ -248,6 +249,7 @@ pub struct HappReleaseInfo {
     pub published_at: u64,
     pub last_updated: u64,
     pub manifest: HappManifest,
+    pub dna_hash : String,
     pub dnas: Vec<DnaReference>,
 }
 impl EntryModel for HappReleaseInfo {
@@ -273,6 +275,7 @@ impl HappReleaseEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    manifest: self.manifest.clone(),
+	    dna_hash: self.dna_hash.clone(),
 	    dnas: self.dnas.clone(),
 	}
     }
@@ -284,6 +287,7 @@ impl HappReleaseEntry {
 	    for_happ: self.for_happ.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
+	    dna_hash: self.dna_hash.clone(),
 	}
     }
 }

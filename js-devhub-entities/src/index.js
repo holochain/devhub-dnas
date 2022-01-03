@@ -99,12 +99,6 @@ DnaVersion.model("package", function ( content ) {
     content.last_updated	= new Date( content.last_updated );
     content.bytes		= new Uint8Array(content.bytes);
 
-    content.zomes.forEach( (zome_ref, i) => {
-	content.zomes[i].zome		= new EntryHash( zome_ref.zome );
-	content.zomes[i].version	= new EntryHash( zome_ref.version );
-	content.zomes[i].resource	= new EntryHash( zome_ref.resource );
-    });
-
     return content;
 });
 DnaVersion.model("info", function ( content ) {

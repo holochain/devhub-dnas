@@ -157,7 +157,7 @@ function basic_tests () {
 	    },
 	    "dnas": [
 		{
-		    "name": "test_dna",
+		    "role_id": "test_dna",
 		    "dna": dna.$id,
 		    "version": version.$id,
 		    "wasm_hash": version.wasm_hash,

@@ -67,7 +67,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
     entity.link_from( &base, TAG_DNA.into() )?;
 
-    debug!("Linking 'name' path ({}) to ENTRY: {}", name_path_hash, entity.id );
+    debug!("Linking 'name' path (length {}) to entity: {}", name_path.as_ref().len(), entity.id );
     entity.link_from( &name_path_hash, TAG_DNA.into() )?;
 
     debug!("Linking lowercase 'name' path ({}) to ENTRY: {}", name_path_lc_hash, entity.id );
