@@ -160,9 +160,8 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 
 
 
-fn get_entities_for_links ( links: Links ) -> Vec<Entity<ZomeVersionSummary>> {
-    let link_list : Vec<Link> = links.into();
-    link_list.into_iter()
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<ZomeVersionSummary>> {
+    links.into_iter()
 	.filter_map(|link| {
 	    get_entity::<ZomeVersionEntry>( &link.target ).ok()
 	})

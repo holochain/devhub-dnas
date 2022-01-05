@@ -125,9 +125,8 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 
 
 
-fn get_entities_for_links ( links: Links ) -> Vec<Entity<HappReleaseSummary>> {
-    let link_list : Vec<Link> = links.into();
-    link_list.into_iter()
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<HappReleaseSummary>> {
+    links.into_iter()
 	.filter_map(|link| {
 	    get_entity::<HappReleaseEntry>( &link.target ).ok()
 	})

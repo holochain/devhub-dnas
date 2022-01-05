@@ -187,9 +187,8 @@ pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> 
     Ok( entity.change_model( |happ| happ.to_info() ) )
 }
 
-fn get_entities_for_links ( links: Links ) -> Vec<Entity<HappSummary>> {
-    let link_list : Vec<Link> = links.into();
-    link_list.into_iter()
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<HappSummary>> {
+    links.into_iter()
 	.filter_map(|link| {
 	    get_entity::<HappEntry>( &link.target ).ok()
 	})

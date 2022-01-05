@@ -23,7 +23,7 @@
   "dependencies": {
     "@whi/entity-architect": "^0.1.2",
     "@whi/essence": "^0.1.1",
-    "@whi/holochain-client": "^0.6.0",
+    "@whi/holochain-client": "^0.19.0",
     "@whi/weblogger": "^0.1.4"
   },
   "devDependencies": {

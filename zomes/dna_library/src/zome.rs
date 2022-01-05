@@ -91,9 +91,8 @@ pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeInfo>> {
 
 
 
-fn get_entities_for_links ( links: Links ) -> Vec<Entity<ZomeSummary>> {
-    let link_list : Vec<Link> = links.into();
-    link_list.into_iter()
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<ZomeSummary>> {
+    links.into_iter()
 	.filter_map(|link| {
 	    get_entity::<ZomeEntry>( &link.target ).ok()
 	})

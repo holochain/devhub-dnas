@@ -93,9 +93,8 @@ pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaInfo>> {
 
 
 
-fn get_entities_for_links ( links: Links ) -> Vec<Entity<DnaSummary>> {
-    let link_list : Vec<Link> = links.into();
-    link_list.into_iter()
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<DnaSummary>> {
+    links.into_iter()
 	.filter_map(|link| {
 	    get_entity::<DnaEntry>( &link.target ).ok()
 	})

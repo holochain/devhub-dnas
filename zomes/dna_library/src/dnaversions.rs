@@ -152,9 +152,8 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 
 
 
-fn get_entities_for_links ( links: Links ) -> Vec<Entity<DnaVersionSummary>> {
-    let link_list : Vec<Link> = links.into();
-    link_list.into_iter()
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<DnaVersionSummary>> {
+    links.into_iter()
 	.filter_map(|link| {
 	    get_entity::<DnaVersionEntry>( &link.target ).ok()
 	})
