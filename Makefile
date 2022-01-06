@@ -50,7 +50,7 @@ bundled/%.dna:
 
 zomes/%.wasm:			zomes/target/wasm32-unknown-unknown/release/%.wasm
 	cp $< $@
-zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile zomes/%/src/*.rs zomes/%/Cargo.toml
+zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.rs devhub_types/Cargo.toml zomes/%/src/*.rs zomes/%/Cargo.toml
 	@echo "Building  '$*' WASM: $@"; \
 	cd zomes; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build --release \
@@ -62,7 +62,7 @@ $(MERE_MEMORY_WASM):		../hc-zome-mere-memory/target/wasm32-unknown-unknown/relea
 	cp $< $@
 
 crates:				devhub_types
-devhub_types:			devhub_types/src/*.rs
+devhub_types:			devhub_types/src/*.rs devhub_types/Cargo.toml
 	cd $@; cargo build && touch $@
 
 

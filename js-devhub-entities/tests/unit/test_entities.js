@@ -66,12 +66,15 @@ let dna_version_entity_payload = {
 	"version": 1,
 	"published_at": 1624661323383,
 	"last_updated": 1624661325451,
-	"file_size": 10,
-	"contributors": [],
 	"changelog": "",
-	"chunk_addresses": [
-	    ADDRESS,
-	]
+	"wasm_hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+	"zomes": [{
+	    "name": "zome name",
+	    "zome": ADDRESS,
+	    "version": ADDRESS,
+	    "resource": ADDRESS,
+	    "resource_hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+	}],
     },
 };
 

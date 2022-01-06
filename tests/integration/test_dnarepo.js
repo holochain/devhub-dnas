@@ -5,6 +5,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 
 
 const fs				= require('fs');
+const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const Identicon				= require('identicon.js');
 const { HoloHash }			= require('@whi/holo-hash');
@@ -115,15 +116,14 @@ function basic_tests () {
 	    "description": "A generic API for fs-like data management",
 	};
 
-	let new_entry			= await alice.call( "dnarepo", "dna_library", "create_zome", zome_input );
-	let main_zome			= new_entry;
-	log.normal("New ZOME (metadata): %s -> %s", String(main_zome.$id), new_entry.name );
+	let zome			= await alice.call( "dnarepo", "dna_library", "create_zome", zome_input );
+	log.normal("New ZOME (metadata): %s -> %s", String(zome.$id), zome.name );
 
 	let first_header_hash;
 	{
 	    // Check the created entry
 	    let zome_info		= await alice.call( "dnarepo", "dna_library", "get_zome", {
-		"id": main_zome.$id,
+		"id": zome.$id,
 	    });
 	    log.info("ZOME: %s", zome_info.name );
 
@@ -134,9 +134,19 @@ function basic_tests () {
 	}
 
 	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes_by_filter", {
+		"filter": "name",
+		"keyword": zome_input.name.toLowerCase(),
+	    });
+	    log.normal("Zomes by name: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 1 );
+	}
+
+	{
 	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
-		"for_zome": main_zome.$id,
+		"for_zome": zome.$id,
 		"version": 1,
 		"zome_bytes": zome_bytes,
 	    });
@@ -148,7 +158,7 @@ function basic_tests () {
 	{
 	    log.debug("Big ZOME file bytes (%s): typeof %s", bigzome_bytes.length, typeof bigzome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
-		"for_zome": main_zome.$id,
+		"for_zome": zome.$id,
 		"version": 2,
 		"zome_bytes": bigzome_bytes,
 	    });
@@ -159,7 +169,7 @@ function basic_tests () {
 
 	{
 	    let zome_versions		= await alice.call( "dnarepo", "dna_library", "get_zome_versions", {
-		"for_zome": main_zome.$id,
+		"for_zome": zome.$id,
 	    });
 	    log.info("ZOME Versions: %s", zome_versions.version );
 
@@ -169,6 +179,16 @@ function basic_tests () {
 	    });
 
 	    expect( zome_versions	).to.have.length( 2 );
+	}
+
+	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zome_versions_by_filter", {
+		"filter": "wasm_hash",
+		"keyword": zome_version_1.mere_memory_hash,
+	    });
+	    log.normal("Zomes by name: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 1 );
 	}
 
 	{
@@ -193,9 +213,9 @@ function basic_tests () {
 	{
 	    // Update ZOME
 	    const zome_name		= "Game Turns (new)";
-	    let zome			= await alice.call( "dnarepo", "dna_library", "update_zome", {
-		"id": main_zome.$id,
-		"addr": main_zome.$addr,
+	    zome			= await alice.call( "dnarepo", "dna_library", "update_zome", {
+		"id": zome.$id,
+		"addr": zome.$addr,
 		"properties": {
 		    "name": zome_name,
 		}
@@ -204,7 +224,7 @@ function basic_tests () {
 	    log.normal("Updated ZOME (metadata): %s -> %s", String(zome.$addr), zome.name );
 
 	    let zome_info		= await alice.call( "dnarepo", "dna_library", "get_zome", {
-		"id": main_zome.$id,
+		"id": zome.$id,
 	    });
 	    log.info("ZOME post update: %s", zome_info.name );
 
@@ -212,6 +232,26 @@ function basic_tests () {
 	    expect( zome_info.$header	).to.not.deep.equal( first_header_hash );
 
 	    second_header_hash		= zome.$header;
+	}
+
+	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes_by_filter", {
+		"filter": "name",
+		"keyword": zome_input.name.toLowerCase(),
+	    });
+	    log.normal("Zomes by name: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 0 );
+	}
+
+	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes_by_filter", {
+		"filter": "name",
+		"keyword": zome.name.toLowerCase(),
+	    });
+	    log.normal("Zomes by name: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 1 );
 	}
 
 	{
@@ -240,7 +280,7 @@ function basic_tests () {
 	    log.normal("Deleted ZOME Version hash: %s", String(new HoloHash(deleted_zome_version_hash)) );
 
 	    let zome_versions		= await alice.call( "dnarepo", "dna_library", "get_zome_versions", {
-		"for_zome": main_zome.$id,
+		"for_zome": zome.$id,
 	    });
 	    expect( zome_versions	).to.have.length( 1 );
 	}
@@ -248,8 +288,8 @@ function basic_tests () {
 	{
 	    // Deprecate ZOME
 	    let deprecation_notice	= "No longer maintained";
-	    let zome			= await alice.call( "dnarepo", "dna_library", "deprecate_zome", {
-		"addr": main_zome.$addr,
+	    zome			= await alice.call( "dnarepo", "dna_library", "deprecate_zome", {
+		"addr": zome.$addr,
 		"message": deprecation_notice,
 	    });
 	    log.normal("Deprecated ZOME (metadata): %s -> %s", String(zome.$addr), zome.name );
@@ -257,7 +297,7 @@ function basic_tests () {
 	    expect( zome.$header		).to.not.deep.equal( second_header_hash );
 
 	    let zome_info		= await alice.call( "dnarepo", "dna_library", "get_zome", {
-		"id": main_zome.$id,
+		"id": zome.$id,
 	    });
 	    log.info("ZOME post deprecation: %s", zome_info.name );
 	    expect( zome_info.deprecation.message	).to.equal( deprecation_notice );
@@ -279,16 +319,15 @@ function basic_tests () {
 	    "description": "A tool for turn-based games to track the order of player actions",
 	};
 
-	let new_entry			= await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
-	let main_dna			= new_entry;
-	dna_addr			= main_dna.$addr;
-	log.normal("New DNA (metadata): %s -> %s", String(main_dna.$id), new_entry.name );
+	let dna				= await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
+	dna_addr			= dna.$addr;
+	log.normal("New DNA (metadata): %s -> %s", String(dna.$id), dna.name );
 
 	let first_header_hash;
 	{
 	    // Check the created entry
 	    let dna_info		= await alice.call( "dnarepo", "dna_library", "get_dna", {
-		"id": main_dna.$id,
+		"id": dna.$id,
 	    });
 	    log.info("DNA: %s", dna_info.name );
 
@@ -300,13 +339,14 @@ function basic_tests () {
 
 	{
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
-		"for_dna": main_dna.$id,
+		"for_dna": dna.$id,
 		"version": 1,
 		"zomes": [{
 		    "name": "mere_memory",
 		    "zome": zome_version_1.for_zome.$id,
 		    "version": zome_version_1.$id,
 		    "resource": zome_version_1.mere_memory_addr,
+		    "resource_hash": zome_version_1.mere_memory_hash,
 		}],
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
@@ -315,22 +355,51 @@ function basic_tests () {
 	}
 
 	{
+	    let wasm_hash_bytes		= Buffer.from( zome_version_1.mere_memory_hash, "hex" );
+	    let hash			= crypto.createHash("sha256");
+	    hash.update( wasm_hash_bytes );
+
+	    let versions		= await alice.call( "dnarepo", "dna_library", "get_dna_versions_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": hash.digest("hex"),
+	    });
+	    log.normal("DNA versions by hash: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 1 );
+	}
+
+	{
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
-		"for_dna": main_dna.$id,
+		"for_dna": dna.$id,
 		"version": 2,
 		"zomes": [{
 		    "name": "mere_memory",
 		    "zome": zome_version_2.for_zome.$id,
 		    "version": zome_version_2.$id,
 		    "resource": zome_version_2.mere_memory_addr,
+		    "resource_hash": zome_version_2.mere_memory_hash,
 		}],
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 	}
 
 	{
+	    let wasm_hash_bytes		= Buffer.from( zome_version_2.mere_memory_hash, "hex" );
+	    let hash			= crypto.createHash("sha256");
+	    hash.update( wasm_hash_bytes );
+
+	    let versions		= await alice.call( "dnarepo", "dna_library", "get_dna_versions_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": hash.digest("hex"),
+	    });
+	    log.normal("DNA versions by hash: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 1 );
+	}
+
+	{
 	    let dna_versions		= await alice.call( "dnarepo", "dna_library", "get_dna_versions", {
-		"for_dna": main_dna.$id,
+		"for_dna": dna.$id,
 	    });
 	    log.info("DNA Versions: %s", dna_versions.version );
 
@@ -360,13 +429,23 @@ function basic_tests () {
 	    expect( b_dnas		).to.have.length( 0 );
 	}
 
+	{
+	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas_by_filter", {
+		"filter": "name",
+		"keyword": dna_input.name.toLowerCase(),
+	    });
+	    log.normal("DNAs by name: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas		).to.have.length( 1 );
+	}
+
 	let second_header_hash;
 	{
 	    // Update DNA
 	    const dna_name		= "Game Turns (new)";
-	    let dna			= await alice.call( "dnarepo", "dna_library", "update_dna", {
-		"id": main_dna.$id,
-		"addr": main_dna.$addr,
+	    dna				= await alice.call( "dnarepo", "dna_library", "update_dna", {
+		"id": dna.$id,
+		"addr": dna.$addr,
 		"properties": {
 		    "name": dna_name,
 		}
@@ -375,7 +454,7 @@ function basic_tests () {
 	    log.normal("Updated DNA (metadata): %s -> %s", String(dna.$addr), dna.name );
 
 	    let dna_info		= await alice.call( "dnarepo", "dna_library", "get_dna", {
-		"id": main_dna.$id,
+		"id": dna.$id,
 	    });
 	    log.info("DNA post update: %s", dna_info.name );
 
@@ -383,6 +462,26 @@ function basic_tests () {
 	    expect( dna_info.$header	).to.not.deep.equal( first_header_hash );
 
 	    second_header_hash		= dna.$header;
+	}
+
+	{
+	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas_by_filter", {
+		"filter": "name",
+		"keyword": dna_input.name.toLowerCase(),
+	    });
+	    log.normal("DNAs by name: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas		).to.have.length( 0 );
+	}
+
+	{
+	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas_by_filter", {
+		"filter": "name",
+		"keyword": dna.name.toLowerCase(),
+	    });
+	    log.normal("DNAs by name: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas		).to.have.length( 1 );
 	}
 
 	{
@@ -420,7 +519,7 @@ function basic_tests () {
 	    log.normal("Deleted DNA Version hash: %s", String(new HoloHash(deleted_dna_version_hash)) );
 
 	    let dna_versions		= await alice.call( "dnarepo", "dna_library", "get_dna_versions", {
-		"for_dna": main_dna.$id,
+		"for_dna": dna.$id,
 	    });
 	    expect( dna_versions	).to.have.length( 1 );
 	}
@@ -428,8 +527,8 @@ function basic_tests () {
 	{
 	    // Deprecate DNA
 	    let deprecation_notice	= "No longer maintained";
-	    let dna			= await alice.call( "dnarepo", "dna_library", "deprecate_dna", {
-		"addr": main_dna.$addr,
+	    dna				= await alice.call( "dnarepo", "dna_library", "deprecate_dna", {
+		"addr": dna.$addr,
 		"message": deprecation_notice,
 	    });
 	    log.normal("Deprecated DNA (metadata): %s -> %s", String(dna.$addr), dna.name );
@@ -437,7 +536,7 @@ function basic_tests () {
 	    expect( dna.$header		).to.not.deep.equal( second_header_hash );
 
 	    let dna_info		= await alice.call( "dnarepo", "dna_library", "get_dna", {
-		"id": main_dna.$id,
+		"id": dna.$id,
 	    });
 	    log.info("DNA post deprecation: %s", dna_info.name );
 	    expect( dna_info.deprecation.message	).to.equal( deprecation_notice );

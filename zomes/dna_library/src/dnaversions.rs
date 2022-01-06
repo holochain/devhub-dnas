@@ -10,8 +10,21 @@ use hc_crud::{
     Entity, Collection,
 };
 use hdk::prelude::*;
+use hex;
 
 use crate::constants::{ TAG_DNAVERSION };
+
+
+fn dna_version_path(hash: &str) -> AppResult<Path> {
+    Ok( create_filter_path( "uniqueness_hash", hash )? )
+}
+
+fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    let path = hc_crud::path_from_collection( vec![ "dna_version_by", filter, value ] )?;
+    path.ensure()?;
+
+    Ok( path )
+}
 
 
 
@@ -31,10 +44,16 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     debug!("Creating DNA version ({}) for DNA: {}", input.version, input.for_dna );
     let default_now = now()?;
 
+    let hashes = input.zomes.iter()
+	.map( |zome| hex::decode( zome.resource_hash.to_owned() ) )
+	.collect::<Result<Vec<Vec<u8>>, hex::FromHexError>>()
+	.or(Err(devhub_types::errors::UserError::CustomError("Bad hex value")))?;
+
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
 	version: input.version,
 	zomes: input.zomes,
+	wasm_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	changelog: input.changelog
 	    .unwrap_or( String::from("") ),
 	published_at: input.published_at
@@ -43,11 +62,17 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	    .unwrap_or( default_now ),
     };
 
+    let version_path = dna_version_path( &version.wasm_hash )?;
+    let version_path_hash = version_path.hash()?;
+
     let entity = create_entity( &version )?
 	.change_model( |version| version.to_info() );
 
     debug!("Linking DNA ({}) to ENTRY: {}", input.for_dna, entity.id );
     entity.link_from( &input.for_dna, TAG_DNAVERSION.into() )?;
+
+    debug!("Linking uniqueness 'hash' path ({}) to ENTRY: {}", version_path_hash, entity.id );
+    entity.link_from( &version_path_hash, TAG_DNAVERSION.into() )?;
 
     Ok( entity )
 }
@@ -115,6 +140,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
+		wasm_hash: current.wasm_hash,
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
@@ -122,6 +148,19 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 	})?;
 
     Ok( entity.change_model( |version| version.to_info() ) )
+}
+
+
+
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<DnaVersionSummary>> {
+    links.into_iter()
+	.filter_map(|link| {
+	    get_entity::<DnaVersionEntry>( &link.target ).ok()
+	})
+	.map( |entity| {
+	    entity.change_model( |version| version.to_summary() )
+	})
+	.collect()
 }
 
 
@@ -138,4 +177,22 @@ pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<HeaderHash>
     debug!("Deleted DNA Version via header ({})", delete_header );
 
     Ok( delete_header )
+}
+
+
+pub fn get_dna_versions_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<DnaVersionSummary>>> {
+    let base = create_filter_path( &filter, &keyword )?.hash()?;
+
+    debug!("Getting hApp links for base: {:?}", base );
+    let all_links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_DNAVERSION))
+    )?;
+
+    let versions = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
+	items: versions,
+    })
 }

@@ -1,7 +1,7 @@
 manifest_version: "1"
 name: Holochain DevHub
 description: A hApp for publishing, searching, and organizing hApp resources
-slots:
+roles:
   - id: dnarepo
     provisioning:
       strategy: create

@@ -11,6 +11,18 @@ use hdk::prelude::*;
 use crate::constants::{ TAG_ZOME };
 
 
+fn zome_name_path(title: &str) -> AppResult<Path> {
+    Ok( create_filter_path( "name", title )? )
+}
+
+fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    let path = hc_crud::path_from_collection( vec![ "zome_by", filter, value ] )?;
+    path.ensure()?;
+
+    Ok( path )
+}
+
+
 
 #[derive(Debug, Deserialize)]
 pub struct ZomeInput {
@@ -26,6 +38,12 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Creating ZOME: {}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
+
+    let name_path = zome_name_path( &input.name )?;
+    let name_path_hash = name_path.hash()?;
+
+    let name_path_lc = zome_name_path( &input.name.to_lowercase() )?;
+    let name_path_lc_hash = name_path_lc.hash()?;
 
     let zome = ZomeEntry {
 	name: input.name,
@@ -47,6 +65,12 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Linking pubkey ({}) to ENTRY: {}", pubkey, entity.id );
     entity.link_from( &base, TAG_ZOME.into() )?;
 
+    debug!("Linking 'name' path ({}) to ENTRY: {}", name_path_hash, entity.id );
+    entity.link_from( &name_path_hash, TAG_ZOME.into() )?;
+
+    debug!("Linking lowercase 'name' path ({}) to ENTRY: {}", name_path_lc_hash, entity.id );
+    entity.link_from( &name_path_lc_hash, TAG_ZOME.into() )?;
+
     Ok( entity )
 }
 
@@ -65,23 +89,30 @@ pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeInfo>> {
     Ok( entity.change_model( |zome| zome.to_info() ) )
 }
 
-pub fn get_zome_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<ZomeSummary>>> {
-    let base = crate::root_path_hash( maybe_pubkey )?;
 
-    debug!("Getting ZOME links for Agent entry: {}", base );
-    let links: Vec<Link> = get_links(
-        base.to_owned(),
-	Some( LinkTag::new( TAG_ZOME ) )
-    )?.into();
 
-    let zomes = links.into_iter()
+fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<ZomeSummary>> {
+    links.into_iter()
 	.filter_map(|link| {
 	    get_entity::<ZomeEntry>( &link.target ).ok()
 	})
 	.map( |entity| {
 	    entity.change_model( |zome| zome.to_summary() )
 	})
-	.collect();
+	.collect()
+}
+
+
+pub fn get_zome_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<ZomeSummary>>> {
+    let base = crate::root_path_hash( maybe_pubkey )?;
+
+    debug!("Getting ZOME links for Agent entry: {}", base );
+    let links = get_links(
+        base.to_owned(),
+	Some( LinkTag::new( TAG_ZOME ) )
+    )?;
+
+    let zomes = get_entities_for_links( links );
 
     Ok(Collection {
 	base,
@@ -151,10 +182,13 @@ pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Updating ZOME: {}", input.addr );
     let props = input.properties;
+    let mut previous_name = String::from("");
 
     let entity = update_entity(
 	&input.addr,
 	|current : ZomeEntry, _| {
+	    previous_name = current.name.clone();
+
 	    Ok(ZomeEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -168,6 +202,22 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 		deprecation: current.deprecation,
 	    })
 	})?;
+
+    let previous_name_path = zome_name_path( &previous_name )?;
+    let previous_path_hash = previous_name_path.hash()?;
+
+    let new_name_path = zome_name_path( &entity.content.name )?;
+    let new_path_hash = new_name_path.hash()?;
+
+    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
+
+    let previous_name_path = zome_name_path( &previous_name.to_lowercase() )?;
+    let previous_path_hash = previous_name_path.hash()?;
+
+    let new_name_path = zome_name_path( &entity.content.name.to_lowercase() )?;
+    let new_path_hash = new_name_path.hash()?;
+
+    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
 
     Ok( entity.change_model( |zome| zome.to_info() ) )
 }
@@ -197,4 +247,22 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> 
 	})?;
 
     Ok( entity.change_model( |zome| zome.to_info() ) )
+}
+
+
+pub fn get_zomes_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<ZomeSummary>>> {
+    let base = create_filter_path( &filter, &keyword )?.hash()?;
+
+    debug!("Getting hApp links for base: {:?}", base );
+    let all_links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_ZOME))
+    )?;
+
+    let zomes = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
+	items: zomes,
+    })
 }

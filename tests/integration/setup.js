@@ -52,9 +52,9 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
     log.debug("Creating clients actors: %s", actors.join(", ") );
     await Promise.all( Object.entries( agents ).map( async ([ actor, happ ]) => {
 	const dna_map			= {};
-	await Promise.all( Object.entries( happ.cells ).map( async ([ nick, cell ]) => {
-	    dna_map[nick]		= cell.dna.hash;
-	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, nick, String(cell.dna.hash), String(happ.agent) );
+	await Promise.all( Object.entries( happ.cells ).map( async ([ role_id, cell ]) => {
+	    dna_map[role_id]		= cell.dna.hash;
+	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, role_id, String(cell.dna.hash), String(happ.agent) );
 	}) );
 
 	const client			= new Client( happ.agent, dna_map, app_port, client_options );

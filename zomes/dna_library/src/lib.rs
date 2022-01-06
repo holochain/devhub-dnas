@@ -1,5 +1,5 @@
 use devhub_types::{
-    DevHubResponse, EntityResponse, CollectionResponse, EntityCollectionResponse,
+    DevHubResponse, EntityResponse, CollectionResponse, EntityCollectionResponse, FilterInput,
     constants::{ ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD, VALUE_COLLECTION_MD },
     dnarepo_entry_types::{
 	ProfileEntry, ProfileInfo,
@@ -166,6 +166,13 @@ fn deprecate_dna(input: dna::DeprecateDnaInput) -> ExternResult<EntityResponse<D
     Ok(composition( entity, ENTITY_MD ))
 }
 
+#[hdk_extern]
+fn get_dnas_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<DnaSummary>> {
+    let collection = catch!( dna::get_dnas_by_filter( input.filter, input.keyword ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
 
 // DNA Version zome functions
 #[hdk_extern]
@@ -201,6 +208,13 @@ fn delete_dna_version(input: dnaversions::DeleteDnaVersionInput) -> ExternResult
     let value = catch!( dnaversions::delete_dna_version( input ) );
 
     Ok(composition( value, VALUE_MD ))
+}
+
+#[hdk_extern]
+fn get_dna_versions_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<DnaVersionSummary>> {
+    let collection = catch!( dnaversions::get_dna_versions_by_filter( input.filter, input.keyword ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
 
@@ -270,6 +284,13 @@ fn deprecate_zome(input: zome::DeprecateZomeInput) -> ExternResult<EntityRespons
     Ok(composition( entity, ENTITY_MD ))
 }
 
+#[hdk_extern]
+fn get_zomes_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<ZomeSummary>> {
+    let collection = catch!( zome::get_zomes_by_filter( input.filter, input.keyword ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
 
 // ZOME Version zome functions
 #[hdk_extern]
@@ -305,4 +326,11 @@ fn delete_zome_version(input: zomeversion::DeleteZomeVersionInput) -> ExternResu
     let value = catch!( zomeversion::delete_zome_version( input ) );
 
     Ok(composition( value, VALUE_MD ))
+}
+
+#[hdk_extern]
+fn get_zome_versions_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<ZomeVersionSummary>> {
+    let collection = catch!( zomeversion::get_zome_versions_by_filter( input.filter, input.keyword ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

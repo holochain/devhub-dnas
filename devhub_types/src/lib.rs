@@ -10,6 +10,7 @@ use hdk::prelude::*;
 use essence::{ EssenceResponse };
 use errors::{ ErrorKinds, AppError };
 use hc_crud::{ Collection, Entity };
+use sha2::{ Sha256, Digest };
 
 
 pub type AppResult<T> = Result<T, ErrorKinds>;
@@ -30,6 +31,13 @@ pub struct UpdateEntityInput<T> {
 pub struct Metadata {
     pub composition: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FilterInput {
+    pub filter: String,
+    pub keyword: String,
+}
+
 
 pub type DevHubResponse<T> = EssenceResponse<T, Metadata, ()>;
 
@@ -146,6 +154,20 @@ where
     debug!("Gzipped package bytes: {}", gzipped_package.len() );
 
     Ok( gzipped_package )
+}
+
+
+
+pub fn hash_of_hashes(hash_list: &Vec<Vec<u8>>) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    let mut hashes = hash_list.to_owned();
+
+    hashes.sort();
+
+    hashes.into_iter()
+	.for_each( |bytes| hasher.update( bytes ) );
+
+    hasher.finalize().into()
 }
 
 

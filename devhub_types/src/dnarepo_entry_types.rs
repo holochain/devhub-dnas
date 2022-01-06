@@ -176,6 +176,7 @@ pub struct ZomeReference {
     pub zome : EntryHash, // Zome ID
     pub version : EntryHash, // Version ID
     pub resource : EntryHash, // Mere Memory address for a short-circuit download
+    pub resource_hash : String, // Hash of resource contents
 }
 
 #[hdk_entry(id = "dna_version", visibility="public")]
@@ -186,6 +187,8 @@ pub struct DnaVersionEntry {
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
+    pub wasm_hash : String,
+    // pub properties: Option<serde_yaml::Value>, // does this make sense?  Intended as a DNA's default properties?
     pub zomes: Vec<ZomeReference>,
 }
 
@@ -198,9 +201,11 @@ impl EntryModel for DnaVersionEntry {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionSummary {
+    pub for_dna: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
+    pub wasm_hash : String,
     pub zomes: Vec<EntryHash>,
 }
 impl EntryModel for DnaVersionSummary {
@@ -217,6 +222,7 @@ pub struct DnaVersionInfo {
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
+    pub wasm_hash : String,
     pub zomes: Vec<ZomeReference>,
 }
 impl EntryModel for DnaVersionInfo {
@@ -276,15 +282,18 @@ impl DnaVersionEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    changelog: self.changelog.clone(),
+	    wasm_hash: self.wasm_hash.clone(),
 	    zomes: self.zomes.clone(),
 	}
     }
 
     pub fn to_summary(&self) -> DnaVersionSummary {
 	DnaVersionSummary {
+	    for_dna: self.for_dna.clone(),
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
+	    wasm_hash: self.wasm_hash.clone(),
 	    zomes: self.zomes.clone().into_iter()
 		.map( |zome_ref| zome_ref.resource )
 		.collect(),
@@ -384,10 +393,12 @@ impl ZomeEntry {
 pub struct ZomeVersionEntry {
     pub for_zome: EntryHash,
     pub version: u64,
+    // pub properties: Option<serde_yaml::Value>,
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
     pub mere_memory_addr: EntryHash,
+    pub mere_memory_hash: String,
 }
 
 impl EntryModel for ZomeVersionEntry {
@@ -399,10 +410,12 @@ impl EntryModel for ZomeVersionEntry {
 // Summary
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ZomeVersionSummary {
+    pub for_zome: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
     pub mere_memory_addr: EntryHash,
+    pub mere_memory_hash: String,
 }
 impl EntryModel for ZomeVersionSummary {
     fn get_type(&self) -> EntityType {
@@ -419,6 +432,7 @@ pub struct ZomeVersionInfo {
     pub last_updated: u64,
     pub changelog: String,
     pub mere_memory_addr: EntryHash,
+    pub mere_memory_hash: String,
 }
 impl EntryModel for ZomeVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -443,15 +457,18 @@ impl ZomeVersionEntry {
 	    last_updated: self.last_updated.clone(),
 	    changelog: self.changelog.clone(),
 	    mere_memory_addr: self.mere_memory_addr.clone(),
+	    mere_memory_hash: self.mere_memory_hash.clone(),
 	}
     }
 
     pub fn to_summary(&self) -> ZomeVersionSummary {
 	ZomeVersionSummary {
+	    for_zome: self.for_zome.clone(),
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    mere_memory_addr: self.mere_memory_addr.clone(),
+	    mere_memory_hash: self.mere_memory_hash.clone(),
 	}
     }
 }
