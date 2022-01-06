@@ -209,11 +209,9 @@ const CLIENT_DEFAULT_OPTIONS		= {
 };
 
 class Client {
-    constructor ( agent_pubkey, dnas, address, options = {} ) {
-	this.agent_pubkey		= agent_pubkey;
-	this.dnas			= dnas;
+    constructor ( agent_client, options = {} ) {
+	this._client			= agent_client;
 	this.options			= Object.assign( {}, CLIENT_DEFAULT_OPTIONS, options );
-	this._client			= new AgentClient( this.agent_pubkey, this.dnas, address );
     }
 
     async destroy () {
@@ -314,6 +312,7 @@ module.exports = {
     "EntityArchitect": EntityArchitectLib,
     "HoloHashes": HoloHashTypes,
 
+    AgentClient,
     HolochainClient,
 
     logging ( level = 6 ) {
