@@ -127,7 +127,7 @@ function basic_tests () {
 	    "for_happ": happ.$id,
 	    "manifest": {
 		"manifest_version": "1",
-		"slots": [
+		"roles": [
 		    {
 			"id": "test_dna",
 			"dna": {
@@ -223,6 +223,30 @@ function basic_tests () {
 
 	    expect( failed		).to.be.true;
 	}
+    });
+
+    it("should make multiple asynchronous calls to get_happs_by_filter", async function () {
+	await Promise.all( [1,2].map( async () => {
+	    let happs			= await clients.alice.call( "happs", "happ_library", "get_happs_by_filter", {
+		"filter": "title",
+		"keyword": crypto.randomBytes( 10 ).toString("hex"),
+	    });
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
+	}) );
+    });
+
+    it("should make multiple asynchronous calls to get_happs_releases_by_filter", async function () {
+	await Promise.all( [1,2].map( async () => {
+	    let versions		= await clients.alice.call( "happs", "happ_library", "get_happ_releases_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": crypto.randomBytes( 10 ).toString("hex"),
+	    });
+	    log.normal("hApp releases by hash: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 0 );
+	}) );
     });
 }
 

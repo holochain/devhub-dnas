@@ -3,7 +3,7 @@ manifest_version: "1"
 
 name: Test hApp
 description: A hApp manifest for testing purposes
-slots:
+roles:
   - id: test_dna
     provisioning:
       strategy: create

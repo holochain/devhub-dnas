@@ -137,13 +137,13 @@ impl HappEntry {
 // Happ Release Entry
 //
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SlotProvisioning {
+pub struct RoleProvisioning {
     pub strategy: String,
     pub deferred: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SlotDnaInfo {
+pub struct RoleDnaInfo {
     #[serde(alias = "path", alias = "url")]
     pub bundled: String,
     #[serde(default)]
@@ -156,19 +156,19 @@ pub struct SlotDnaInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SlotInfo {
+pub struct RoleInfo {
     pub id: String,
-    pub dna: SlotDnaInfo,
+    pub dna: RoleDnaInfo,
 
     // Optional fields
-    pub provisioning: Option<SlotProvisioning>,
+    pub provisioning: Option<RoleProvisioning>,
 }
 
 // {
 //     "manifest_version": "1",
 //     "name": "devhub",
 //     "description": "Holochain App Store",
-//     "slots": [
+//     "roles": [
 //         {
 //             "id": "file_storage",
 //             "provisioning": {
@@ -190,7 +190,7 @@ pub struct SlotInfo {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HappManifest {
     pub manifest_version: String,
-    pub slots: Vec<SlotInfo>,
+    pub roles: Vec<RoleInfo>,
 
     // Optional fields
     pub name: Option<String>,

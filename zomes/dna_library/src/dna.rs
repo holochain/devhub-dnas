@@ -15,8 +15,12 @@ fn dna_name_path(title: &str) -> AppResult<Path> {
     Ok( create_filter_path( "name", title )? )
 }
 
+fn filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    Ok( hc_crud::path_from_collection( vec![ "dna_by", filter, value ] )? )
+}
+
 fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    let path = hc_crud::path_from_collection( vec![ "dna_by", filter, value ] )?;
+    let path = filter_path( filter, value )?;
     path.ensure()?;
 
     Ok( path )
@@ -257,7 +261,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 
 
 pub fn get_dnas_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<DnaSummary>>> {
-    let base = create_filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

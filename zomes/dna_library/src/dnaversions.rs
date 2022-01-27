@@ -19,8 +19,12 @@ fn dna_version_path(hash: &str) -> AppResult<Path> {
     Ok( create_filter_path( "uniqueness_hash", hash )? )
 }
 
+fn filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    Ok( hc_crud::path_from_collection( vec![ "dna_version_by", filter, value ] )? )
+}
+
 fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    let path = hc_crud::path_from_collection( vec![ "dna_version_by", filter, value ] )?;
+    let path = filter_path( filter, value )?;
     path.ensure()?;
 
     Ok( path )
@@ -181,7 +185,9 @@ pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<HeaderHash>
 
 
 pub fn get_dna_versions_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<DnaVersionSummary>>> {
-    let base = create_filter_path( &filter, &keyword )?.hash()?;
+    // We don't want to create the path here.  We are just getting things if they exist.  It should
+    // not move the chain.
+    let base = filter_path( &filter, &keyword )?.hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

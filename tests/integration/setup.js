@@ -4,7 +4,8 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 });
 
 global.WebSocket			= require('ws');
-const { Client, logging }		= require('@holochain/devhub-entities');
+const { Client, AgentClient,
+	logging }			= require('@holochain/devhub-entities');
 
 if ( process.env.LOG_LEVEL )
     logging( process.env.LOG_LEVEL.replace("silly", "trace") );
@@ -40,7 +41,7 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
     });
 
     log.debug("Waiting for holochain to start...");
-    await holochain.start();
+    await holochain.start( 5_000 );
 
     const app_id			= "test";
     const app_port			= 44910;
@@ -57,7 +58,8 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
 	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, role_id, String(cell.dna.hash), String(happ.agent) );
 	}) );
 
-	const client			= new Client( happ.agent, dna_map, app_port, client_options );
+	const agent_client		= new AgentClient( happ.agent, dna_map, app_port );
+	const client			= new Client( agent_client, client_options );
 	clients[actor]			= client
 
 	all_clients.push( client );

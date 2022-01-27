@@ -141,9 +141,9 @@ Source [../devhub_types/src/happ_entry_types.rs](../devhub_types/src/happ_entry_
   [`holochain_types/app/AppManifestV1`](https://docs.rs/holochain_types/0.0.*/holochain_types/app/struct.AppManifestV1.html)
   for source material)
   - `manifest_version` - Indicates the manifest format
-  - `slots` - A list of Cell configuration
-    - `id` - The slot ID which will be given to the installed Cell for this DNA
-    - `dna` - Info about the DNA for this slot
+  - `roles` - A list of Cell configuration
+    - `id` - The role ID which will be given to the installed Cell for this DNA
+    - `dna` - Info about the DNA for this role
       - `bundled` - An identifier that matches one of `this.dnas[].name`
       - `clone_limit` - The number of clones to be created at runtime
       - `uid` - A value for forcing a unique DNA hash

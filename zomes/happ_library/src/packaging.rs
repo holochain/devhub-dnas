@@ -54,7 +54,7 @@ pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
 //         "manifest_version": "1",
 //         "name": "devhub",
 //         "description": "Holochain App Store",
-//         "slots": [
+//         "roles": [
 //             {
 //                 "id": "file_storage",
 //                 "provisioning": {
@@ -125,8 +125,8 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 	resources: resources,
     };
 
-    for slot in package.manifest.slots.iter_mut() {
-	slot.dna.bundled = format!("./{}.dna", slot.id );
+    for role in package.manifest.roles.iter_mut() {
+	role.dna.bundled = format!("./{}.dna", role.id );
     }
 
     let happ_pack_bytes = encode_bundle( package )?;

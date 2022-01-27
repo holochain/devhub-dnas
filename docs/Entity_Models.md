@@ -303,7 +303,7 @@ A `HappEntry` is fetched for this model.
     "last_updated": Number,
     "manifest": {
         "manifest_version": String,
-        "slots": [
+        "roles": [
             "id": String,
             "dna": {
                 "bundled": String,

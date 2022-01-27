@@ -44,7 +44,7 @@ function basic_tests () {
 	let profile_input		= {
 	    "name": "Zed Shaw",
 	    "email": "zed.shaw@example.com",
-	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( clients.alice.agent_pubkey ).toString("hex"), 10)).toString(), "base64"),
+	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( alice._client._agent ).toString("hex"), 10)).toString(), "base64"),
 	};
 
 	{
@@ -63,12 +63,12 @@ function basic_tests () {
 
 	{
 	    let header_hash		= await alice.call( "dnarepo", "dna_library", "follow_developer", {
-		"agent": clients.bobby.agent_pubkey,
+		"agent": clients.bobby._client._agent,
 	    });
 	    log.normal("Following link hash: %s", String(new HoloHash(header_hash)) );
 
 	    await alice.call( "dnarepo", "dna_library", "follow_developer", {
-		"agent": clients.carol.agent_pubkey,
+		"agent": clients.carol._client._agent,
 	    });
 
 	    let following		= await alice.call( "dnarepo", "dna_library", "get_following", null );
@@ -77,7 +77,7 @@ function basic_tests () {
 	    expect( following		).to.have.length( 2 );
 
 	    let delete_hash		= await alice.call( "dnarepo", "dna_library", "unfollow_developer", {
-		"agent": clients.carol.agent_pubkey,
+		"agent": clients.carol._client._agent,
 	    });
 	    log.normal("Unfollowing link hash: %s", String(new HoloHash(delete_hash)) );
 
@@ -203,7 +203,7 @@ function basic_tests () {
 	    expect( zomes		).to.have.length( 1 );
 
 	    let b_zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes", {
-		"agent": clients.bobby.agent_pubkey,
+		"agent": clients.bobby._client._agent,
 	    });
 	    log.normal("Bobby ZOMEs: %s", b_zomes.length );
 	    expect( b_zomes		).to.have.length( 0 );
@@ -423,7 +423,7 @@ function basic_tests () {
 	    expect( dnas		).to.have.length( 1 );
 
 	    let b_dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas", {
-		"agent": clients.bobby.agent_pubkey,
+		"agent": clients.bobby._client._agent,
 	    });
 	    log.normal("Bobby DNAs: %s", b_dnas.length );
 	    expect( b_dnas		).to.have.length( 0 );
@@ -545,6 +545,54 @@ function basic_tests () {
 	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_my_dnas", null);
 	    expect( dnas		).to.have.length( 0 );
 	}
+    });
+
+    it("should make multiple asynchronous calls to get_zomes_by_filter", async function () {
+	await Promise.all( [1,2].map( async () => {
+	    let zomes		= await clients.alice.call( "dnarepo", "dna_library", "get_zomes_by_filter", {
+		"filter": "name",
+		"keyword": crypto.randomBytes( 10 ).toString("hex"),
+	    });
+	    log.normal("Zomes by name: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 0 );
+	}) );
+    });
+
+    it("should make multiple asynchronous calls to get_zome_versions_by_filter", async function () {
+	await Promise.all( [1,2].map( async () => {
+	    let versions		= await clients.alice.call( "dnarepo", "dna_library", "get_zome_versions_by_filter", {
+		"filter": "wasm_hash",
+		"keyword": crypto.randomBytes( 10 ).toString("hex"),
+	    });
+	    log.normal("Versions by name: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 0 );
+	}) );
+    });
+
+    it("should make multiple asynchronous calls to get_dnas_by_filter", async function () {
+	await Promise.all( [1,2].map( async () => {
+	    let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_dnas_by_filter", {
+		"filter": "name",
+		"keyword": crypto.randomBytes( 10 ).toString("hex"),
+	    });
+	    log.normal("DNAs by name: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas		).to.have.length( 0 );
+	}) );
+    });
+
+    it("should make multiple asynchronous calls to get_dna_versions_by_filter", async function () {
+	await Promise.all( [1,2].map( async () => {
+	    let versions		= await clients.alice.call( "dnarepo", "dna_library", "get_dna_versions_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": crypto.randomBytes( 10 ).toString("hex"),
+	    });
+	    log.normal("DNA versions by hash: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 0 );
+	}) );
     });
 }
 

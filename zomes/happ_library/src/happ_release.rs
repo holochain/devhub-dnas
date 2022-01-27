@@ -20,8 +20,12 @@ fn happ_release_path(hash: &str) -> AppResult<Path> {
     Ok( create_filter_path( "uniqueness_hash", hash )? )
 }
 
+fn filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    Ok( hc_crud::path_from_collection( vec![ "happ_release_by", filter, value ] )? )
+}
+
 fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    let path = hc_crud::path_from_collection( vec![ "happ_release_by", filter, value ] )?;
+    let path = filter_path( filter, value )?;
     path.ensure()?;
 
     Ok( path )
@@ -175,7 +179,7 @@ pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Collection<En
 
 
 pub fn get_happ_releases_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<HappReleaseSummary>>> {
-    let base = create_filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

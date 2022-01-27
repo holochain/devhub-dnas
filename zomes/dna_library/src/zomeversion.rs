@@ -21,8 +21,12 @@ fn wasm_hash_path(hash: &str) -> AppResult<Path> {
     Ok( create_filter_path( "wasm_hash", hash )? )
 }
 
+fn filter_path(filter: &str, value: &str) -> AppResult<Path> {
+    Ok( hc_crud::path_from_collection( vec![ "zome_version_by", filter, value ] )? )
+}
+
 fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    let path = hc_crud::path_from_collection( vec![ "zome_version_by", filter, value ] )?;
+    let path = filter_path( filter, value )?;
     path.ensure()?;
 
     Ok( path )
@@ -188,7 +192,7 @@ pub fn delete_zome_version(input: DeleteZomeVersionInput) -> AppResult<HeaderHas
 
 
 pub fn get_zome_versions_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<ZomeVersionSummary>>> {
-    let base = create_filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

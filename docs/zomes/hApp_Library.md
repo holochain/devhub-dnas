@@ -142,17 +142,17 @@ Create a new hApp Release for a specific hApp.
 - `input.description` - (*required*) `String`
 - `input.manifest` - (*required*) `Object`
 - `input.manifest.manifest_version` - (*required*) `String`
-- `input.manifest.slots` - (*required*) `Object`
-- `input.manifest.slots[].id` - (*required*) `String`
-- `input.manifest.slots[].dna` - (*required*) `Object`
-- `input.manifest.slots[].dna.bundled` - (*required*) `String`
-- `input.manifest.slots[].dna.clone_limit` - (*required*) `Number`
-- `input.manifest.slots[].dna.uid` - (*optional*) `String`
-- `input.manifest.slots[].dna.version` - (*optional*) `String`
-- `input.manifest.slots[].dna.properties` - (*optional*) `Object` any key/values allowed
-- `input.manifest.slots[].provisioning` - (*optional*) `Object`
-- `input.manifest.slots[].provisioning.strategy` - (*required*) `String`
-- `input.manifest.slots[].provisioning.deferred` - (*required*) `Boolean`
+- `input.manifest.roles` - (*required*) `Object`
+- `input.manifest.roles[].id` - (*required*) `String`
+- `input.manifest.roles[].dna` - (*required*) `Object`
+- `input.manifest.roles[].dna.bundled` - (*required*) `String`
+- `input.manifest.roles[].dna.clone_limit` - (*required*) `Number`
+- `input.manifest.roles[].dna.uid` - (*optional*) `String`
+- `input.manifest.roles[].dna.version` - (*optional*) `String`
+- `input.manifest.roles[].dna.properties` - (*optional*) `Object` any key/values allowed
+- `input.manifest.roles[].provisioning` - (*optional*) `Object`
+- `input.manifest.roles[].provisioning.strategy` - (*required*) `String`
+- `input.manifest.roles[].provisioning.deferred` - (*required*) `Boolean`
 - `input.manifest.name` - (*optional*) `String`
 - `input.manifest.description` - (*optional*) `String`
 - `input.dnas` - (*required*) `Array`

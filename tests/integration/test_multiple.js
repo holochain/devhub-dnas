@@ -72,7 +72,7 @@ function basic_tests () {
 
 	{
 	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
-		"dna_hash": alice.dnas.webassets,
+		"dna_hash": alice._client._app_schema._dnas.webassets._hash,
 		"id": gz_file_hash,
 	    });
 	    log.normal("Updated hApp UI: %s", gui.file_size );
@@ -145,7 +145,7 @@ function basic_tests () {
 	    "for_happ": happ.$id,
 	    "manifest": {
 		"manifest_version": "1",
-		"slots": [
+		"roles": [
 		    {
 			"id": "test_dna",
 			"dna": {
@@ -174,7 +174,7 @@ function basic_tests () {
 	{
 	    let happ_package		= await alice.call( "happs", "happ_library", "get_release_package", {
 		"id": release.$id,
-		"dnarepo_dna_hash": alice.dnas.dnarepo,
+		"dnarepo_dna_hash": alice._client._app_schema._dnas.dnarepo._hash,
 	    });
 	    log.normal("hApp release package bytes: (%s) %s", happ_package.constructor.name, happ_package.length );
 
