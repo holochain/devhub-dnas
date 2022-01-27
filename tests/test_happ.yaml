@@ -1,0 +1,12 @@
+---
+manifest_version: "1"
+
+name: Test hApp
+description: A hApp manifest for testing purposes
+roles:
+  - id: test_dna
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      path: ./this/does/not/matter.dna

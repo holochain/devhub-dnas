@@ -1,0 +1,22 @@
+manifest_version: "1"
+name: Holochain DevHub
+description: A hApp for publishing, searching, and organizing hApp resources
+roles:
+  - id: dnarepo
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: ./dnarepo.dna
+  - id: happs
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: ./happs.dna
+  - id: web_assets
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: ./web_assets.dna

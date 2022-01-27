@@ -1,0 +1,22 @@
+[package]
+name = "dna_library"
+version = "0.1.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "dna_library"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+devhub_types = {path = "../../devhub_types"}
+hc_crud_ceps = "0.13.0" # = {path = "../../../rust-hc-crud-ceps"}
+mere_memory_types = "0.16.0" # = {path = "../../../zome-mere-memory/mere_memory_type"}
+hdk = "0.0.116"
+hex = "0"
+serde = "1"
+serde_yaml = "0.8.17"
+thiserror = "1"
+
+[dev-dependencies]
+rand = "0.8.3"

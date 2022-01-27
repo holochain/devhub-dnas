@@ -1,0 +1,11 @@
+DevHub.happ
+bundled/*.dna
+zomes/*.wasm
+tests/node_modules
+tests/test.dna
+tests/dnas/*/*.dna
+tests/test.gz
+.cargo
+target
+devhub_types/target
+tests/multitesting.happ

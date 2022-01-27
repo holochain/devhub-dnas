@@ -1,0 +1,26 @@
+[package]
+name = "devhub_types"
+version = "0.1.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "devhub_types"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+essence_payloads = "0.1"
+flate2 = "1"
+hc_crud_ceps = "0.13.0" # = {path = "../../../rust-hc-crud-ceps"}
+hdk = "0.0.116"
+hex = "0"
+rmp-serde = "0.15.5"
+serde = "1"
+serde_yaml = "0.8.17"
+sha2 = "0"
+thiserror = "1"
+
+[dev-dependencies]
+holo_hash = { version = "0.0.13", features = [ "hashing", "encoding" ] }
+rand = "0.8.3"
+serde_json = "1"

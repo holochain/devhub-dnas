@@ -1,0 +1,19 @@
+[package]
+name = "web_assets"
+version = "0.1.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "web_assets"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+devhub_types = {path = "../../devhub_types"}
+hc_crud_ceps = "0.13.0" # = {path = "../../../rust-hc-crud-ceps"}
+hdk = "0.0.116"
+serde = "1"
+thiserror = "1"
+
+[dev-dependencies]
+rand = "0.8.3"
