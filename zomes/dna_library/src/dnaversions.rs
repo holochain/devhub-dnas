@@ -67,7 +67,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     };
 
     let version_path = dna_version_path( &version.wasm_hash )?;
-    let version_path_hash = version_path.hash()?;
+    let version_path_hash = version_path.path_entry_hash()?;
 
     let entity = create_entity( &version )?
 	.change_model( |version| version.to_info() );
@@ -187,7 +187,7 @@ pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<HeaderHash>
 pub fn get_dna_versions_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<DnaVersionSummary>>> {
     // We don't want to create the path here.  We are just getting things if they exist.  It should
     // not move the chain.
-    let base = filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

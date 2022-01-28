@@ -43,10 +43,10 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     let default_now = now()?;
 
     let name_path = zome_name_path( &input.name )?;
-    let name_path_hash = name_path.hash()?;
+    let name_path_hash = name_path.path_entry_hash()?;
 
     let name_path_lc = zome_name_path( &input.name.to_lowercase() )?;
-    let name_path_lc_hash = name_path_lc.hash()?;
+    let name_path_lc_hash = name_path_lc.path_entry_hash()?;
 
     let zome = ZomeEntry {
 	name: input.name,
@@ -207,18 +207,18 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 	})?;
 
     let previous_name_path = zome_name_path( &previous_name )?;
-    let previous_path_hash = previous_name_path.hash()?;
+    let previous_path_hash = previous_name_path.path_entry_hash()?;
 
     let new_name_path = zome_name_path( &entity.content.name )?;
-    let new_path_hash = new_name_path.hash()?;
+    let new_path_hash = new_name_path.path_entry_hash()?;
 
     entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
 
     let previous_name_path = zome_name_path( &previous_name.to_lowercase() )?;
-    let previous_path_hash = previous_name_path.hash()?;
+    let previous_path_hash = previous_name_path.path_entry_hash()?;
 
     let new_name_path = zome_name_path( &entity.content.name.to_lowercase() )?;
-    let new_path_hash = new_name_path.hash()?;
+    let new_path_hash = new_name_path.path_entry_hash()?;
 
     entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
 
@@ -254,7 +254,7 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> 
 
 
 pub fn get_zomes_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<ZomeSummary>>> {
-    let base = filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

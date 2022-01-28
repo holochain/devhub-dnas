@@ -78,7 +78,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 	.change_model( |version| version.to_info() );
 
     let wasm_hash_path = wasm_hash_path( &entity.content.mere_memory_hash )?;
-    let wasm_path_hash = wasm_hash_path.hash()?;
+    let wasm_path_hash = wasm_hash_path.path_entry_hash()?;
 
     debug!("Linking ZOME ({}) to ENTRY: {}", input.for_zome, entity.id );
     entity.link_from( &input.for_zome, TAG_ZOMEVERSION.into() )?;
@@ -192,7 +192,7 @@ pub fn delete_zome_version(input: DeleteZomeVersionInput) -> AppResult<HeaderHas
 
 
 pub fn get_zome_versions_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<ZomeVersionSummary>>> {
-    let base = filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

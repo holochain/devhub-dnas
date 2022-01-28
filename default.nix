@@ -11,11 +11,11 @@ let
     };
 
     holochainVersionId = "custom";
-    holochainVersion = { # v0.0.119
+    holochainVersion = { # v0.0.124
       url = "https://github.com/holochain/holochain";
 
-      rev = "9d9a556e8236234bcca64ee33620012c8a6ab095"; # Dec 8, 2021
-      sha256 = "0d9bzbxli99ra4abi8dcb6mn5sl0cm1j70magxd7acbm51836bnx";
+      rev = "4a449ee985053f5b8ee0f0688b949bd26bfcb3fc"; # Jan 26, 2022
+      sha256 = "0mbamx8njs0gs28s5rbfni3p4jdf6jrhaqj1b2aqbzl7ah2nb02c";
       cargoLock = {
         outputHashes = {
           "cargo-test-macro-0.1.0" = "1yy1y1d523xdzwg1gc77pigbcwsbawmy4b7vw8v21m7q957sk0c4";

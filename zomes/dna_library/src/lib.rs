@@ -25,7 +25,7 @@ mod constants;
 
 
 entry_defs![
-    Path::entry_def(),
+    PathEntry::entry_def(),
     ProfileEntry::entry_def(),
     DnaEntry::entry_def(),
     DnaVersionEntry::entry_def(),
@@ -39,11 +39,11 @@ pub fn root_path(pubkey: Option<AgentPubKey>) -> ExternResult<Path> {
 	.unwrap_or( agent_info()?.agent_initial_pubkey );
     let path = Path::from( format!("{:?}", pubkey ) );
 
-    debug!("Agent ({:?}) root path is: {:?}", pubkey, path.hash()? );
+    debug!("Agent ({:?}) root path is: {:?}", pubkey, path.path_entry_hash()? );
     Ok( path )
 }
 pub fn root_path_hash(pubkey: Option<AgentPubKey>) -> ExternResult<EntryHash> {
-    Ok( root_path( pubkey )?.hash()? )
+    Ok( root_path( pubkey )?.path_entry_hash()? )
 }
 
 
@@ -52,7 +52,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     let agent = agent_info()?.agent_initial_pubkey;
     let path = root_path( Some(agent.to_owned()) )?;
 
-    debug!("Ensure the agent ({:?}) root path is there: {:?}", agent, path.hash()? );
+    debug!("Ensure the agent ({:?}) root path is there: {:?}", agent, path.path_entry_hash()? );
     path.ensure()?;
 
     Ok(InitCallbackResult::Pass)

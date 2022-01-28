@@ -110,7 +110,7 @@ where
     A: serde::Serialize + std::fmt::Debug
 {
     let response = call(
-	None,
+	CallTargetCell::Local,
 	zome.into(),
 	func.into(),
 	None,
@@ -126,7 +126,7 @@ where
     A: serde::Serialize + std::fmt::Debug,
 {
     let response = call(
-	Some( cell_id.to_owned() ),
+	CallTargetCell::Other( cell_id.to_owned() ),
 	zome.into(),
 	func.into(),
 	None,

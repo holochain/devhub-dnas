@@ -45,10 +45,10 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
     let default_now = now()?;
 
     let name_path = dna_name_path( &input.name )?;
-    let name_path_hash = name_path.hash()?;
+    let name_path_hash = name_path.path_entry_hash()?;
 
     let name_path_lc = dna_name_path( &input.name.to_lowercase() )?;
-    let name_path_lc_hash = name_path_lc.hash()?;
+    let name_path_lc_hash = name_path_lc.path_entry_hash()?;
 
     let dna = DnaEntry {
 	name: input.name,
@@ -213,18 +213,18 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 	})?;
 
     let previous_name_path = dna_name_path( &previous_name )?;
-    let previous_path_hash = previous_name_path.hash()?;
+    let previous_path_hash = previous_name_path.path_entry_hash()?;
 
     let new_name_path = dna_name_path( &entity.content.name )?;
-    let new_path_hash = new_name_path.hash()?;
+    let new_path_hash = new_name_path.path_entry_hash()?;
 
     entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
 
     let previous_name_path = dna_name_path( &previous_name.to_lowercase() )?;
-    let previous_path_hash = previous_name_path.hash()?;
+    let previous_path_hash = previous_name_path.path_entry_hash()?;
 
     let new_name_path = dna_name_path( &entity.content.name.to_lowercase() )?;
-    let new_path_hash = new_name_path.hash()?;
+    let new_path_hash = new_name_path.path_entry_hash()?;
 
     entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
 
@@ -261,7 +261,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 
 
 pub fn get_dnas_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<DnaSummary>>> {
-    let base = filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

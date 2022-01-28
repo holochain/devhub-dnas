@@ -69,7 +69,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
     };
 
     let release_path = happ_release_path( &happ_release.dna_hash )?;
-    let release_path_hash = release_path.hash()?;
+    let release_path_hash = release_path.path_entry_hash()?;
 
     let entity = create_entity( &happ_release )?
 	.change_model( |release| release.to_info() );
@@ -179,7 +179,7 @@ pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Collection<En
 
 
 pub fn get_happ_releases_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<HappReleaseSummary>>> {
-    let base = filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(

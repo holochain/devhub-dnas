@@ -42,7 +42,7 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
 	.change_model( |profile| profile.to_info() );
 
     let root_path = crate::root_path( None )?;
-    let base = root_path.hash()?;
+    let base = root_path.path_entry_hash()?;
 
     debug!("Linking agent root path ({}) to Profile: {}", base, entity.id );
     entity.link_from( &base, TAG_PROFILE.into() )?;
@@ -54,7 +54,7 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
 
 pub fn get_profile_links(maybe_pubkey: Option<AgentPubKey> ) -> ExternResult<Vec<Link>> {
     let root_path = crate::root_path( maybe_pubkey )?;
-    let base = root_path.hash()?;
+    let base = root_path.path_entry_hash()?;
 
     debug!("Getting Profile links for Agent: {}", base );
     let all_links: Vec<Link> = get_links(
@@ -130,8 +130,8 @@ pub struct FollowInput {
 }
 
 pub fn follow_developer(input: FollowInput) -> AppResult<HeaderHash> {
-    let my_agent = crate::root_path( None )?.hash()?;
-    let other_agent = crate::root_path( Some(input.agent) )?.hash()?;
+    let my_agent = crate::root_path( None )?.path_entry_hash()?;
+    let other_agent = crate::root_path( Some(input.agent) )?.path_entry_hash()?;
 
     debug!("Creating follow link from this agent ({}) to agent: {}", my_agent, other_agent );
 
@@ -152,7 +152,7 @@ pub struct UnfollowInput {
 
 pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>> {
     let links = get_following()?.items;
-    let other_agent = crate::root_path( Some(input.agent.to_owned()) )?.hash()?;
+    let other_agent = crate::root_path( Some(input.agent.to_owned()) )?.path_entry_hash()?;
 
     let maybe_link = links
 	.into_iter()
@@ -172,7 +172,7 @@ pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>>
 
 
 pub fn get_following() -> AppResult<Collection<Link>> {
-    let my_agent = crate::root_path( None )?.hash()?;
+    let my_agent = crate::root_path( None )?.path_entry_hash()?;
 
     debug!("Getting Profile links for Agent: {}", my_agent );
     let all_links: Vec<Link> = get_links(

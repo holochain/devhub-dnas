@@ -61,10 +61,10 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     // }
 
     let title_path = happ_title_path( &input.title )?;
-    let title_path_hash = title_path.hash()?;
+    let title_path_hash = title_path.path_entry_hash()?;
 
     let title_path_lc = happ_title_path( &input.title.to_lowercase() )?;
-    let title_path_lc_hash = title_path_lc.hash()?;
+    let title_path_lc_hash = title_path_lc.path_entry_hash()?;
 
     let happ = HappEntry {
 	title: input.title,
@@ -150,18 +150,18 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 	})?;
 
     let previous_title_path = happ_title_path( &previous_title )?;
-    let previous_path_hash = previous_title_path.hash()?;
+    let previous_path_hash = previous_title_path.path_entry_hash()?;
 
     let new_title_path = happ_title_path( &entity.content.title )?;
-    let new_path_hash = new_title_path.hash()?;
+    let new_path_hash = new_title_path.path_entry_hash()?;
 
     entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
 
     let previous_title_path = happ_title_path( &previous_title.to_lowercase() )?;
-    let previous_path_hash = previous_title_path.hash()?;
+    let previous_path_hash = previous_title_path.path_entry_hash()?;
 
     let new_title_path = happ_title_path( &entity.content.title.to_lowercase() )?;
-    let new_path_hash = new_title_path.hash()?;
+    let new_path_hash = new_title_path.path_entry_hash()?;
 
     entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
 
@@ -247,7 +247,7 @@ pub fn get_my_happs() -> AppResult<Collection<Entity<HappSummary>>> {
 
 
 pub fn get_happs_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<HappSummary>>> {
-    let base = filter_path( &filter, &keyword )?.hash()?;
+    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
 
     debug!("Getting hApp links for base: {:?}", base );
     let all_links = get_links(
