@@ -9,3 +9,4 @@ tests/test.gz
 target
 devhub_types/target
 tests/multitesting.happ
+js-devhub-entities/holochain-devhub-entities-*.tgz
