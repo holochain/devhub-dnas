@@ -77,6 +77,12 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Linking lowercase 'name' path ({}) to ENTRY: {}", name_path_lc_hash, entity.id );
     entity.link_from( &name_path_lc_hash, TAG_DNA.into() )?;
 
+    let all_dnas_path = crate::all_dnas_path();
+    let all_dnas_hash = all_dnas_path.path_entry_hash()?;
+    all_dnas_path.ensure()?;
+    debug!("Linking all DNAs path ({}) to ENTRY: {}", all_dnas_hash, entity.id );
+    entity.link_from( &all_dnas_hash, TAG_DNA.into() )?;
+
     Ok( entity )
 }
 
@@ -270,6 +276,24 @@ pub fn get_dnas_by_filter( filter: String, keyword: String ) -> AppResult<Collec
     )?;
 
     let dnas = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
+	items: dnas,
+    })
+}
+
+
+pub fn get_all_dnas() -> AppResult<Collection<Entity<DnaSummary>>> {
+    let base = crate::all_dnas_path().path_entry_hash()?;
+
+    debug!("Getting DNA links for base: {}", base );
+    let links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_DNA))
+    )?;
+
+    let dnas = get_entities_for_links( links );
 
     Ok(Collection {
 	base,

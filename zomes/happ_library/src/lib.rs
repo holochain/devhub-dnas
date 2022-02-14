@@ -25,6 +25,9 @@ entry_defs![
 ];
 
 
+pub fn all_happs_path() -> Path {
+    Path::from( "happs" )
+}
 pub fn root_path(pubkey: Option<AgentPubKey>) -> ExternResult<Path> {
     let pubkey = pubkey
 	.unwrap_or( agent_info()?.agent_initial_pubkey );
@@ -102,6 +105,13 @@ fn get_my_happs(_:()) -> ExternResult<EntityCollectionResponse<HappSummary>> {
 #[hdk_extern]
 fn get_happs_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappSummary>> {
     let collection = catch!( happ::get_happs_by_filter( input.filter, input.keyword ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_all_happs(_:()) -> ExternResult<EntityCollectionResponse<HappSummary>> {
+    let collection = catch!( happ::get_all_happs() );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

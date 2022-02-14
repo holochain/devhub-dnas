@@ -33,7 +33,12 @@ entry_defs![
     ZomeVersionEntry::entry_def()
 ];
 
-
+pub fn all_dnas_path() -> Path {
+    Path::from( "dnas" )
+}
+pub fn all_zomes_path() -> Path {
+    Path::from( "zomes" )
+}
 pub fn root_path(pubkey: Option<AgentPubKey>) -> ExternResult<Path> {
     let pubkey = pubkey
 	.unwrap_or( agent_info()?.agent_initial_pubkey );
@@ -173,6 +178,13 @@ fn get_dnas_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResp
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
+#[hdk_extern]
+fn get_all_dnas(_:()) -> ExternResult<EntityCollectionResponse<DnaSummary>> {
+    let collection = catch!( dna::get_all_dnas() );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
 
 // DNA Version zome functions
 #[hdk_extern]
@@ -287,6 +299,13 @@ fn deprecate_zome(input: zome::DeprecateZomeInput) -> ExternResult<EntityRespons
 #[hdk_extern]
 fn get_zomes_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<ZomeSummary>> {
     let collection = catch!( zome::get_zomes_by_filter( input.filter, input.keyword ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_all_zomes(_:()) -> ExternResult<EntityCollectionResponse<ZomeSummary>> {
+    let collection = catch!( zome::get_all_zomes() );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

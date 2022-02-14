@@ -594,6 +594,20 @@ function basic_tests () {
 	    expect( versions		).to.have.length( 0 );
 	}) );
     });
+
+    it("should get all DNAs", async function () {
+	let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_all_dnas");
+	log.normal("DNAs by hash: %s -> %s", dnas.length, String(dnas.$base) );
+
+	expect( dnas			).to.have.length( 1 );
+    });
+
+    it("should get all Zomes", async function () {
+	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_all_zomes");
+	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
+
+	expect( zomes			).to.have.length( 1 );
+    });
 }
 
 function errors_tests () {

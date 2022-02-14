@@ -74,6 +74,12 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Linking lowercase 'name' path ({}) to ENTRY: {}", name_path_lc_hash, entity.id );
     entity.link_from( &name_path_lc_hash, TAG_ZOME.into() )?;
 
+    let all_zomes_path = crate::all_zomes_path();
+    let all_zomes_hash = all_zomes_path.path_entry_hash()?;
+    all_zomes_path.ensure()?;
+    debug!("Linking all Zome path ({}) to ENTRY: {}", all_zomes_hash, entity.id );
+    entity.link_from( &all_zomes_hash, TAG_ZOME.into() )?;
+
     Ok( entity )
 }
 
@@ -263,6 +269,24 @@ pub fn get_zomes_by_filter( filter: String, keyword: String ) -> AppResult<Colle
     )?;
 
     let zomes = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
+	items: zomes,
+    })
+}
+
+
+pub fn get_all_zomes() -> AppResult<Collection<Entity<ZomeSummary>>> {
+    let base = crate::all_zomes_path().path_entry_hash()?;
+
+    debug!("Getting Zome links for base: {}", base );
+    let links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_ZOME))
+    )?;
+
+    let zomes = get_entities_for_links( links );
 
     Ok(Collection {
 	base,

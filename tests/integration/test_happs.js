@@ -248,6 +248,13 @@ function basic_tests () {
 	    expect( versions		).to.have.length( 0 );
 	}) );
     });
+
+    it("should get all hApps", async function () {
+	let happs			= await clients.alice.call( "happs", "happ_library", "get_all_happs");
+	log.normal("hApps by hash: %s -> %s", happs.length, String(happs.$base) );
+
+	expect( happs			).to.have.length( 1 );
+    });
 }
 
 function errors_tests () {

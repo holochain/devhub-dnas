@@ -95,6 +95,12 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Linking lowercase 'title' path ({}) to ENTRY: {}", title_path_lc_hash, entity.id );
     entity.link_from( &title_path_lc_hash, TAG_HAPP.into() )?;
 
+    let all_happs_path = crate::all_happs_path();
+    let all_happs_hash = all_happs_path.path_entry_hash()?;
+    all_happs_path.ensure()?;
+    debug!("Linking all hApp path ({}) to ENTRY: {}", all_happs_hash, entity.id );
+    entity.link_from( &all_happs_hash, TAG_HAPP.into() )?;
+
     Ok( entity )
 }
 
@@ -256,6 +262,24 @@ pub fn get_happs_by_filter( filter: String, keyword: String ) -> AppResult<Colle
     )?;
 
     let happs = get_entities_for_links( all_links );
+
+    Ok(Collection {
+	base,
+	items: happs,
+    })
+}
+
+
+pub fn get_all_happs() -> AppResult<Collection<Entity<HappSummary>>> {
+    let base = crate::all_happs_path().path_entry_hash()?;
+
+    debug!("Getting hApp links for base: {}", base );
+    let links = get_links(
+        base.clone(),
+	Some(LinkTag::new(TAG_HAPP))
+    )?;
+
+    let happs = get_entities_for_links( links );
 
     Ok(Collection {
 	base,

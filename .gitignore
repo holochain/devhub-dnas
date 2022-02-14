@@ -1,6 +1,7 @@
 DevHub.happ
 bundled/*.dna
 zomes/*.wasm
+node_modules
 tests/node_modules
 tests/test.dna
 tests/dnas/*/*.dna
