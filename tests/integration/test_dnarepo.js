@@ -149,6 +149,7 @@ function basic_tests () {
 		"for_zome": zome.$id,
 		"version": 1,
 		"zome_bytes": zome_bytes,
+		"hdk_version": "v0.0.120",
 	    });
 	    log.normal("New ZOME version: %s -> %s", String(version.$address), version.version );
 
@@ -161,6 +162,7 @@ function basic_tests () {
 		"for_zome": zome.$id,
 		"version": 2,
 		"zome_bytes": bigzome_bytes,
+		"hdk_version": "v0.0.120",
 	    });
 	    log.normal("New ZOME version: %s -> %s", String(version.$address), version.version );
 
@@ -341,6 +343,7 @@ function basic_tests () {
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna.$id,
 		"version": 1,
+		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
 		    "zome": zome_version_1.for_zome.$id,
@@ -372,6 +375,7 @@ function basic_tests () {
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna.$id,
 		"version": 2,
+		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
 		    "zome": zome_version_2.for_zome.$id,
@@ -608,6 +612,26 @@ function basic_tests () {
 
 	expect( zomes			).to.have.length( 1 );
     });
+
+    it("should get HDK version list", async function () {
+	let hdkvs			= await clients.alice.call( "dnarepo", "dna_library", "get_hdk_versions");
+	log.normal("HDK versions: %s -> %s", hdkvs.length, String(hdkvs.$base) );
+
+	expect( hdkvs			).to.have.length( 1 );
+	expect( hdkvs[0]		).to.equal("v0.0.120");
+
+	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_zome_versions_by_hdk_version", hdkvs[0] );
+	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
+
+	expect( zomes			).to.have.length( 1 );
+    });
+
+    it("should get Zome by HDK version", async function () {
+	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_all_zomes");
+	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
+
+	expect( zomes			).to.have.length( 1 );
+    });
 }
 
 function errors_tests () {
@@ -659,6 +683,7 @@ function errors_tests () {
 		    "for_zome": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
 		    "version": 1,
 		    "file_size": 0,
+		    "hdk_version": "v0.0.120",
 		});
 	    } catch (err) {
 		expect( err.kind	).to.equal( "UserError" );

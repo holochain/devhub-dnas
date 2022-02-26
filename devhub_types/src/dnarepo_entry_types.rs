@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use hc_crud::{
     get_entity,
     EntryModel, EntityType, Entity
@@ -189,6 +190,7 @@ pub struct DnaVersionEntry {
     pub changelog: String,
     pub wasm_hash : String,
     // pub properties: Option<serde_yaml::Value>, // does this make sense?  Intended as a DNA's default properties?
+    pub hdk_version: String,
     pub zomes: Vec<ZomeReference>,
 }
 
@@ -206,7 +208,8 @@ pub struct DnaVersionSummary {
     pub published_at: u64,
     pub last_updated: u64,
     pub wasm_hash : String,
-    pub zomes: Vec<EntryHash>,
+    pub hdk_version: String,
+    pub zomes: Vec<ZomeReference>,
 }
 impl EntryModel for DnaVersionSummary {
     fn get_type(&self) -> EntityType {
@@ -223,7 +226,8 @@ pub struct DnaVersionInfo {
     pub last_updated: u64,
     pub changelog: String,
     pub wasm_hash : String,
-    pub zomes: Vec<ZomeReference>,
+    pub hdk_version: String,
+    pub zomes: HashMap<String, Entity<ZomeVersionSummary>>,
 }
 impl EntryModel for DnaVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -239,6 +243,7 @@ pub struct DnaVersionPackage {
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
+    pub hdk_version: String,
     pub bytes: Vec<u8>,
 }
 impl EntryModel for DnaVersionPackage {
@@ -263,6 +268,7 @@ impl DnaVersionEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    changelog: self.changelog.clone(),
+	    hdk_version: self.hdk_version.clone(),
 	    bytes: dna_bytes,
 	}
     }
@@ -283,7 +289,14 @@ impl DnaVersionEntry {
 	    last_updated: self.last_updated.clone(),
 	    changelog: self.changelog.clone(),
 	    wasm_hash: self.wasm_hash.clone(),
-	    zomes: self.zomes.clone(),
+	    hdk_version: self.hdk_version.clone(),
+	    zomes: self.zomes.iter()
+		.filter_map( |zome_ref| {
+		    get_entity::<ZomeVersionEntry>( &zome_ref.version ).ok().map( |entity| {
+			( zome_ref.name.clone(), entity.change_model( |version| version.to_summary() ) )
+		    })
+		})
+		.collect(),
 	}
     }
 
@@ -294,9 +307,8 @@ impl DnaVersionEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    wasm_hash: self.wasm_hash.clone(),
-	    zomes: self.zomes.clone().into_iter()
-		.map( |zome_ref| zome_ref.resource )
-		.collect(),
+	    hdk_version: self.hdk_version.clone(),
+	    zomes: self.zomes.clone(),
 	}
     }
 }
@@ -399,6 +411,7 @@ pub struct ZomeVersionEntry {
     pub changelog: String,
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
+    pub hdk_version: String,
 }
 
 impl EntryModel for ZomeVersionEntry {
@@ -416,6 +429,7 @@ pub struct ZomeVersionSummary {
     pub last_updated: u64,
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
+    pub hdk_version: String,
 }
 impl EntryModel for ZomeVersionSummary {
     fn get_type(&self) -> EntityType {
@@ -433,6 +447,7 @@ pub struct ZomeVersionInfo {
     pub changelog: String,
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
+    pub hdk_version: String,
 }
 impl EntryModel for ZomeVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -458,6 +473,7 @@ impl ZomeVersionEntry {
 	    changelog: self.changelog.clone(),
 	    mere_memory_addr: self.mere_memory_addr.clone(),
 	    mere_memory_hash: self.mere_memory_hash.clone(),
+	    hdk_version: self.hdk_version.clone(),
 	}
     }
 
@@ -469,6 +485,7 @@ impl ZomeVersionEntry {
 	    last_updated: self.last_updated.clone(),
 	    mere_memory_addr: self.mere_memory_addr.clone(),
 	    mere_memory_hash: self.mere_memory_hash.clone(),
+	    hdk_version: self.hdk_version.clone(),
 	}
     }
 }

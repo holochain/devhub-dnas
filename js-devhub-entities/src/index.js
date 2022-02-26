@@ -58,6 +58,11 @@ HappRelease.model("summary", function ( content ) {
     content.last_updated	= new Date( content.last_updated );
     content.for_happ		= new EntryHash( content.for_happ );
 
+    content.dnas.forEach( (dna_ref, i) => {
+	content.dnas[i].dna		= new EntryHash( dna_ref.dna );
+	content.dnas[i].version		= new EntryHash( dna_ref.version );
+    });
+
     return content;
 });
 
@@ -106,10 +111,8 @@ DnaVersion.model("info", function ( content ) {
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
 
-    content.zomes.forEach( (zome_ref, i) => {
-	content.zomes[i].zome		= new EntryHash( zome_ref.zome );
-	content.zomes[i].version	= new EntryHash( zome_ref.version );
-	content.zomes[i].resource	= new EntryHash( zome_ref.resource );
+    Object.entries( content.zomes ).forEach( ([name, zome_version_summary]) => {
+	content.zomes[name]	= Schema.deconstruct( "entity", zome_version_summary );
     });
 
     return content;
@@ -119,8 +122,10 @@ DnaVersion.model("summary", function ( content ) {
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
 
-    content.zomes.forEach( (addr, i) => {
-	content.zomes[i]	= new EntryHash( addr );
+    content.zomes.forEach( (zome_ref, i) => {
+	content.zomes[i].zome		= new EntryHash( zome_ref.zome );
+	content.zomes[i].version	= new EntryHash( zome_ref.version );
+	content.zomes[i].resource	= new EntryHash( zome_ref.resource );
     });
 
     return content;

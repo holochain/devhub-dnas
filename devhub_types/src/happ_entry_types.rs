@@ -215,6 +215,7 @@ pub struct HappReleaseEntry {
     pub last_updated: u64,
     pub manifest: HappManifest,
     pub dna_hash : String,
+    pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
 }
 
@@ -233,6 +234,8 @@ pub struct HappReleaseSummary {
     pub published_at: u64,
     pub last_updated: u64,
     pub dna_hash : String,
+    pub hdk_version: String,
+    pub dnas: Vec<DnaReference>,
 }
 impl EntryModel for HappReleaseSummary {
     fn get_type(&self) -> EntityType {
@@ -250,6 +253,7 @@ pub struct HappReleaseInfo {
     pub last_updated: u64,
     pub manifest: HappManifest,
     pub dna_hash : String,
+    pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
 }
 impl EntryModel for HappReleaseInfo {
@@ -276,6 +280,7 @@ impl HappReleaseEntry {
 	    last_updated: self.last_updated.clone(),
 	    manifest: self.manifest.clone(),
 	    dna_hash: self.dna_hash.clone(),
+	    hdk_version: self.hdk_version.clone(),
 	    dnas: self.dnas.clone(),
 	}
     }
@@ -288,6 +293,8 @@ impl HappReleaseEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    dna_hash: self.dna_hash.clone(),
+	    hdk_version: self.hdk_version.clone(),
+	    dnas: self.dnas.clone(),
 	}
     }
 }

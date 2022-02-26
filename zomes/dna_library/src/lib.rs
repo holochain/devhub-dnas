@@ -353,3 +353,17 @@ fn get_zome_versions_by_filter( input: FilterInput ) -> ExternResult<EntityColle
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
+
+#[hdk_extern]
+fn get_hdk_versions(_:()) -> ExternResult<CollectionResponse<String>> {
+    let list = catch!( zomeversion::get_hdk_versions() );
+
+    Ok(composition( list, VALUE_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_zome_versions_by_hdk_version( input: String ) -> ExternResult<EntityCollectionResponse<ZomeVersionSummary>> {
+    let collection = catch!( zomeversion::get_zome_versions_by_hdk_version( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
