@@ -7,6 +7,7 @@ pub mod web_asset_entry_types;
 use std::io::Write;
 
 use hdk::prelude::*;
+use hdk::hash_path::path::Component;
 use essence::{ EssenceResponse };
 use errors::{ ErrorKinds, AppError };
 use hc_crud::{ Collection, Entity };
@@ -168,6 +169,23 @@ pub fn hash_of_hashes(hash_list: &Vec<Vec<u8>>) -> [u8; 32] {
 	.for_each( |bytes| hasher.update( bytes ) );
 
     hasher.finalize().into()
+}
+
+pub fn hdk_version_anchor(version: &str) -> Path {
+    let path_components = vec![
+	Component::from( "hdk_versions" ),
+	Component::from( version.replace(".", "[dot]").as_bytes().to_vec() ),
+    ];
+    Path::from( path_components )
+}
+
+pub fn zome_hdk_anchor(entry: &dnarepo_entry_types::ZomeVersionEntry, version: &str) -> AppResult<Path> {
+    let path_components = vec![
+	Component::from( format!("{}", hash_entry( entry.to_owned() )? ) ),
+	Component::from("hdk_versions"),
+	Component::from( version.replace(".", "[dot]").as_bytes().to_vec() ),
+    ];
+    Ok( Path::from( path_components ) )
 }
 
 

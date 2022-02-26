@@ -36,6 +36,7 @@ fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
 pub struct DnaVersionInput {
     pub for_dna: EntryHash,
     pub version: u64,
+    pub hdk_version: String,
     pub zomes: Vec<ZomeReference>,
 
     // optional
@@ -56,6 +57,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
 	version: input.version,
+	hdk_version: input.hdk_version,
 	zomes: input.zomes,
 	wasm_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	changelog: input.changelog
@@ -145,6 +147,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
 		wasm_hash: current.wasm_hash,
+		hdk_version: current.hdk_version,
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),

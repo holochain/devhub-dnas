@@ -137,6 +137,7 @@ function basic_tests () {
 		    },
 		],
 	    },
+	    "hdk_version": "v0.0.120",
 	    "dnas": [
 		{
 		    "role_id": "test_dna",

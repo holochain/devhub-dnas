@@ -94,6 +94,7 @@ function basic_tests () {
 	    "for_zome": zome_1.$id,
 	    "version": 1,
 	    "zome_bytes": zome_bytes,
+	    "hdk_version": "v0.0.120",
 	});
 	log.normal("New ZOME version: %s -> %s", String(zome_version_1.$address), zome_version_1.version );
 
@@ -111,6 +112,7 @@ function basic_tests () {
 	let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 	    "for_dna": dna.$id,
 	    "version": 1,
+	    "hdk_version": "v0.0.120",
 	    "zomes": [{
 		"name": "mere_memory",
 		"zome": zome_version_1.for_zome.$id,
@@ -155,6 +157,7 @@ function basic_tests () {
 		    },
 		],
 	    },
+	    "hdk_version": "v0.0.120",
 	    "dnas": [
 		{
 		    "role_id": "test_dna",

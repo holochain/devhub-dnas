@@ -42,31 +42,13 @@ let dna_version_entity_payload = {
     "address": ADDRESS,
     "type": {
 	"name": "dna_version",
-	"model": "info",
+	"model": "summary",
     },
     "content": {
-	"for_dna": {
-	    "id": ID,
-	    "header": HEADER,
-	    "address": ADDRESS,
-	    "type": {
-		"name": "dna",
-		"model": "summary"
-	    },
-	    "content": {
-		"name": "Game Turns",
-		"description": "A tool for turn-based games to track the order of player actions",
-		"published_at": 1624661323383,
-		"last_updated": 1624661325451,
-		"developer": AGENT,
-		"icon": null,
-		"deprecation": null
-	    }
-	},
+	"for_dna": ID,
 	"version": 1,
 	"published_at": 1624661323383,
 	"last_updated": 1624661325451,
-	"changelog": "",
 	"wasm_hash": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
 	"zomes": [{
 	    "name": "zome name",

@@ -39,6 +39,7 @@ pub struct CreateInput {
     pub description: String,
     pub for_happ: EntryHash,
     pub manifest: HappManifest,
+    pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
 
     // optional
@@ -65,6 +66,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	    .unwrap_or( default_now ),
 	manifest: input.manifest,
 	dna_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
+	hdk_version: input.hdk_version,
 	dnas: input.dnas,
     };
 
@@ -120,6 +122,7 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		    .unwrap_or( now()? ),
 		manifest: current.manifest,
 		dna_hash: current.dna_hash,
+		hdk_version: current.hdk_version,
 		dnas: current.dnas,
 	    })
 	})?;
