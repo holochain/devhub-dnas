@@ -319,6 +319,9 @@ function basic_tests () {
 	let dna_input			= {
 	    "name": "Game Turns",
 	    "description": "A tool for turn-based games to track the order of player actions",
+	    "metadata": {
+		"labels": [ "game" ]
+	    }
 	};
 
 	let dna				= await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
@@ -335,6 +338,7 @@ function basic_tests () {
 
 	    expect( dna_info.name		).to.equal( dna_input.name );
 	    expect( dna_info.description	).to.equal( dna_input.description );
+	    expect( dna_info.metadata.labels[0]	).to.equal( "game" );
 
 	    first_header_hash		= dna_info.$header;
 	}

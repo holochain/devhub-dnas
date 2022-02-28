@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
@@ -45,6 +46,7 @@ pub struct CreateInput {
     // optional
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseInfo>> {
@@ -68,6 +70,8 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	dna_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	hdk_version: input.hdk_version,
 	dnas: input.dnas,
+	metadata: input.metadata
+	    .unwrap_or( HashMap::new() ),
     };
 
     let release_path = happ_release_path( &happ_release.dna_hash )?;
@@ -100,6 +104,7 @@ pub struct HappReleaseUpdateOptions {
     pub description: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 pub type HappReleaseUpdateInput = UpdateEntityInput<HappReleaseUpdateOptions>;
 
@@ -124,6 +129,8 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		dna_hash: current.dna_hash,
 		hdk_version: current.hdk_version,
 		dnas: current.dnas,
+		metadata: props.metadata
+		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 

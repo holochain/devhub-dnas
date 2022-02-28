@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{ DnaEntry, DnaInfo, DnaSummary, DeveloperProfileLocation, DeprecationNotice },
@@ -37,6 +38,7 @@ pub struct DnaInput {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
@@ -62,6 +64,8 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
 	    pubkey: pubkey.clone(),
 	},
 	deprecation: None,
+	metadata: input.metadata
+	    .unwrap_or( HashMap::new() ),
     };
 
     let entity = create_entity( &dna )?
@@ -189,6 +193,7 @@ pub struct DnaUpdateOptions {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 
@@ -215,6 +220,8 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 		    .unwrap_or( now()? ),
 		developer: current.developer,
 		deprecation: current.deprecation,
+		metadata: props.metadata
+		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 
@@ -259,6 +266,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 		last_updated: current.last_updated,
 		developer: current.developer,
 		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
+		metadata: current.metadata,
 	    })
 	})?;
 

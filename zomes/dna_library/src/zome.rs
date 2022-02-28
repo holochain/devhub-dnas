@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{ ZomeEntry, ZomeInfo, ZomeSummary, DeveloperProfileLocation, DeprecationNotice },
@@ -35,6 +36,7 @@ pub struct ZomeInput {
     // optional
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
@@ -59,6 +61,8 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
 	    pubkey: pubkey.clone(),
 	},
 	deprecation: None,
+	metadata: input.metadata
+	    .unwrap_or( HashMap::new() ),
     };
 
     let entity = create_entity( &zome )?
@@ -185,6 +189,7 @@ pub struct ZomeUpdateOptions {
     pub description: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 
@@ -209,6 +214,8 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 		    .unwrap_or( now()? ),
 		developer: current.developer,
 		deprecation: current.deprecation,
+		metadata: props.metadata
+		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 
@@ -252,6 +259,7 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> 
 		last_updated: current.last_updated,
 		developer: current.developer,
 		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
+		metadata: current.metadata,
 	    })
 	})?;
 
