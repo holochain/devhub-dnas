@@ -90,6 +90,7 @@ pub struct DnaEntry {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub icon: Option<SerializedBytes>,
@@ -111,6 +112,7 @@ pub struct DnaSummary {
     pub last_updated: u64,
     pub developer: AgentPubKey,
     pub deprecation: bool,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub icon: Option<SerializedBytes>,
@@ -129,6 +131,7 @@ pub struct DnaInfo {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub icon: Option<SerializedBytes>,
@@ -150,6 +153,7 @@ impl DnaEntry {
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.clone(),
 	    deprecation: self.deprecation.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 
@@ -162,6 +166,7 @@ impl DnaEntry {
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.pubkey.clone(),
 	    deprecation: self.deprecation.clone().map_or(false, |_| true),
+	    metadata: self.metadata.clone(),
 	}
     }
 }
@@ -192,6 +197,7 @@ pub struct DnaVersionEntry {
     // pub properties: Option<serde_yaml::Value>, // does this make sense?  Intended as a DNA's default properties?
     pub hdk_version: String,
     pub zomes: Vec<ZomeReference>,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 
 impl EntryModel for DnaVersionEntry {
@@ -210,6 +216,7 @@ pub struct DnaVersionSummary {
     pub wasm_hash : String,
     pub hdk_version: String,
     pub zomes: Vec<ZomeReference>,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for DnaVersionSummary {
     fn get_type(&self) -> EntityType {
@@ -228,6 +235,7 @@ pub struct DnaVersionInfo {
     pub wasm_hash : String,
     pub hdk_version: String,
     pub zomes: HashMap<String, Entity<ZomeVersionSummary>>,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for DnaVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -297,6 +305,7 @@ impl DnaVersionEntry {
 		    })
 		})
 		.collect(),
+	    metadata: self.metadata.clone(),
 	}
     }
 
@@ -309,6 +318,7 @@ impl DnaVersionEntry {
 	    wasm_hash: self.wasm_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
 	    zomes: self.zomes.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 }
@@ -326,6 +336,7 @@ pub struct ZomeEntry {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub deprecation: Option<DeprecationNotice>,
@@ -346,6 +357,7 @@ pub struct ZomeSummary {
     pub last_updated: u64,
     pub developer: AgentPubKey,
     pub deprecation: bool,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for ZomeSummary {
     fn get_type(&self) -> EntityType {
@@ -361,6 +373,7 @@ pub struct ZomeInfo {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub deprecation: Option<DeprecationNotice>,
@@ -380,6 +393,7 @@ impl ZomeEntry {
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.clone(),
 	    deprecation: self.deprecation.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 
@@ -391,6 +405,7 @@ impl ZomeEntry {
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.pubkey.clone(),
 	    deprecation: self.deprecation.clone().map_or(false, |_| true),
+	    metadata: self.metadata.clone(),
 	}
     }
 }
@@ -412,6 +427,7 @@ pub struct ZomeVersionEntry {
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
     pub hdk_version: String,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 
 impl EntryModel for ZomeVersionEntry {
@@ -430,6 +446,7 @@ pub struct ZomeVersionSummary {
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
     pub hdk_version: String,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for ZomeVersionSummary {
     fn get_type(&self) -> EntityType {
@@ -448,6 +465,7 @@ pub struct ZomeVersionInfo {
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
     pub hdk_version: String,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for ZomeVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -474,6 +492,7 @@ impl ZomeVersionEntry {
 	    mere_memory_addr: self.mere_memory_addr.clone(),
 	    mere_memory_hash: self.mere_memory_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 
@@ -486,6 +505,7 @@ impl ZomeVersionEntry {
 	    mere_memory_addr: self.mere_memory_addr.clone(),
 	    mere_memory_hash: self.mere_memory_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 }
@@ -528,6 +548,7 @@ pub mod tests {
 		pubkey: hash.into(),
 	    },
 	    deprecation: None,
+	    metadata: HashMap::new(),
 	}
     }
 

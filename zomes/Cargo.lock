@@ -355,6 +355,7 @@ dependencies = [
  "hex",
  "rand",
  "serde",
+ "serde_yaml",
  "thiserror",
 ]
 

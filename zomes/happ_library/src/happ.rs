@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
@@ -48,6 +49,7 @@ pub struct CreateInput {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub gui: Option<GUIConfigInput>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 
 
@@ -80,6 +82,8 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	gui: input.gui.map(|gui| {
 	    HappGUIConfig::new( gui.asset_group_id, gui.uses_web_sdk )
 	}),
+	metadata: input.metadata
+	    .unwrap_or( HashMap::new() ),
     };
 
     let entity = create_entity( &happ )?
@@ -122,6 +126,7 @@ pub struct HappUpdateOptions {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub gui: Option<HappGUIConfig>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
 
@@ -152,6 +157,8 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		deprecation: current.deprecation,
 		gui: props.gui
 		    .or( current.gui ),
+		metadata: props.metadata
+		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 

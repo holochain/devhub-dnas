@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
@@ -43,6 +44,7 @@ pub struct DnaVersionInput {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
@@ -66,6 +68,8 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
+	metadata: input.metadata
+	    .unwrap_or( HashMap::new() ),
     };
 
     let version_path = dna_version_path( &version.wasm_hash )?;
@@ -129,6 +133,7 @@ pub struct DnaVersionUpdateOptions {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 pub type DnaVersionUpdateInput = UpdateEntityInput<DnaVersionUpdateOptions>;
 
@@ -151,6 +156,8 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
+		metadata: props.metadata
+		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 
