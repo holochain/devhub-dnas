@@ -175,3 +175,10 @@ fn get_release_package(input: packaging::GetReleasePackageInput) -> ExternResult
 
     Ok(composition( value, VALUE_MD ))
 }
+
+#[hdk_extern]
+fn get_webhapp_package(input: packaging::GetWebHappPackageInput) -> ExternResult<DevHubResponse<Vec<u8>>> {
+    let value = catch!( packaging::get_webhapp_package( input ) );
+
+    Ok(composition( value, VALUE_MD ))
+}

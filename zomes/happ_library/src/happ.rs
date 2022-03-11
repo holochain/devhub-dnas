@@ -3,7 +3,7 @@ use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
 	HappEntry, HappInfo, HappSummary,
-	DeprecationNotice, HappGUIConfig,
+	DeprecationNotice,
     },
 };
 use hc_crud::{
@@ -32,12 +32,6 @@ fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
 }
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GUIConfigInput {
-    pub asset_group_id: EntryHash,
-    pub uses_web_sdk: bool,
-}
-
 #[derive(Debug, Deserialize)]
 pub struct CreateInput {
     pub title: String,
@@ -48,7 +42,6 @@ pub struct CreateInput {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub gui: Option<GUIConfigInput>,
     pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 
@@ -79,9 +72,6 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	    .unwrap_or( default_now ),
 	icon: input.icon,
 	deprecation: None,
-	gui: input.gui.map(|gui| {
-	    HappGUIConfig::new( gui.asset_group_id, gui.uses_web_sdk )
-	}),
 	metadata: input.metadata
 	    .unwrap_or( HashMap::new() ),
     };
@@ -125,7 +115,6 @@ pub struct HappUpdateOptions {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub gui: Option<HappGUIConfig>,
     pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
@@ -155,8 +144,6 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		icon: props.icon
 		    .or( current.icon ),
 		deprecation: current.deprecation,
-		gui: props.gui
-		    .or( current.gui ),
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })
