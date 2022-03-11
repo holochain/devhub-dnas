@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
 use devhub_types::{
-    DevHubResponse, AppResult, GetEntityInput,
+    AppResult, GetEntityInput,
     errors::{ AppError },
     dnarepo_entry_types::{ DnaVersionPackage },
-    happ_entry_types::{ HappManifest },
+    happ_entry_types::{ HappManifest, WebHappManifest, ResourceRef },
     web_asset_entry_types::{ FileInfo },
     call_local_dna_zome,
     encode_bundle,
@@ -25,27 +25,13 @@ pub struct GetGUIInput {
 pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
     debug!("Get GUI from: {}", input.id );
     let pubkey = agent_info()?.agent_initial_pubkey;
+    let cell_id = CellId::new( input.dna_hash, pubkey );
 
-    let zome_call_response = call(
-	CallTargetCell::Other( CellId::new( input.dna_hash, pubkey ) ),
-	"web_assets".into(),
-	"get_file".into(),
-	None,
-	GetEntityInput {
-	    id: input.id,
-	},
-    )?;
+    let file_info = call_local_dna_zome( &cell_id, "web_assets", "get_file", GetEntityInput {
+	id: input.id,
+    })?;
 
-    if let ZomeCallResponse::Ok(result_io) = zome_call_response {
-	let response : DevHubResponse<Entity<FileInfo>> = result_io.decode()
-	    .map_err( |e| AppError::UnexpectedStateError(format!("Failed to call another DNA: {:?}", e )) )?;
-
-	if let DevHubResponse::Success(pack) = response {
-	    return Ok( pack.payload );
-	}
-    };
-
-    Err( AppError::UnexpectedStateError("Failed to call another DNA".into()).into() )
+    Ok( file_info )
 }
 
 
@@ -128,6 +114,83 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
     for role in package.manifest.roles.iter_mut() {
 	role.dna.bundled = format!("./{}.dna", role.id );
     }
+
+    let happ_pack_bytes = encode_bundle( package )?;
+
+    Ok( happ_pack_bytes )
+}
+
+// {
+//     "manifest": {
+//         "manifest_version": "1",
+//         "name": "DevHub",
+//         "ui": {
+//             "bundled": "../web_assets.zip"
+//         },
+//         "happ_manifest": {
+//             "bundled": "DevHub.happ"
+//         }
+//     },
+//     "resources": {
+//         "../web_assets.zip": <Buffer 50 4b 03 04 ... 601482 more bytes>,
+//         "DevHub.happ": <Buffer 1f 8b 08 00 ... 4945860 more bytes>
+//     }
+// }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WebHappBundle {
+    pub manifest: WebHappManifest,
+    pub resources: BTreeMap<String, Vec<u8>>,
+}
+#[derive(Debug, Deserialize)]
+pub struct GetWebHappPackageInput {
+    pub name: String,
+    pub id: EntryHash,
+    pub dnarepo_dna_hash: holo_hash::DnaHash,
+    pub webassets_dna_hash: holo_hash::DnaHash,
+}
+pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> {
+    let happ_release = crate::happ_release::get_happ_release(GetEntityInput {
+	id: input.id.clone(),
+    })?;
+
+    debug!("Get release package: {}", input.id );
+    let happ_pack_bytes = get_release_package(GetReleasePackageInput {
+	id: input.id.clone(),
+	dnarepo_dna_hash: input.dnarepo_dna_hash.clone(),
+    })?;
+
+    let _ui_bytes = get_gui(GetGUIInput {
+	id: happ_release.content.gui.ok_or(AppError::UnexpectedStateError(String::from("Missing GUI asset")))?.asset_group_id,
+	dna_hash: input.webassets_dna_hash,
+    })?;
+
+    let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
+
+    // add UI resource
+    let ui_ref = String::from("./ui.zip");
+    debug!("Adding UI resource with {} bytes", 0 );
+    resources.insert( ui_ref.clone(), vec![] );
+
+    // add hApp bundle resource
+    let happ_ref = String::from("./bundle.happ");
+    debug!("Adding hApp bundle resource with {} bytes", happ_pack_bytes.len() );
+    resources.insert( happ_ref.clone(), happ_pack_bytes );
+
+    debug!("Assembling 'webhapp' package: {:?}", happ_release.content.for_happ.ok_or(AppError::UnexpectedStateError(String::from("Missing parent hApp")))?.content.title );
+    let package = WebHappBundle {
+	manifest: WebHappManifest {
+	    manifest_version: String::from("1"),
+	    name: input.name,
+	    ui: ResourceRef {
+		bundled: ui_ref,
+	    },
+	    happ_manifest: ResourceRef {
+		bundled: happ_ref,
+	    },
+	},
+	resources: resources,
+    };
 
     let happ_pack_bytes = encode_bundle( package )?;
 

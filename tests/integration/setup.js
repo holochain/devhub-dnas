@@ -4,41 +4,18 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 });
 
 global.WebSocket			= require('ws');
-const { Client, AgentClient,
-	logging }			= require('@holochain/devhub-entities');
-
-if ( process.env.LOG_LEVEL )
-    logging( process.env.LOG_LEVEL.replace("silly", "trace") );
+const { AgentClient }			= require('@whi/holochain-client');
+const { CruxConfig }			= require('@whi/crux-payload-parser');
 
 const all_clients			= [];
 function exit_cleanup () {
-    all_clients.forEach( client => client.destroy() );
+    all_clients.forEach( client => client.close() );
 }
 process.once("exit", exit_cleanup );
 
 
 async function backdrop ( holochain, dnas, actors, client_options ) {
     log.normal("Setting up backdrop with %s DNAs and %s Agents", Object.keys(dnas).length, actors.length );
-
-    log.debug("Adding stdout/stderr line event logging hooks");
-    holochain.on("lair:stdout", (line, parts) => {
-	log.debug( "\x1b[39;1m     Lair STDOUT:\x1b[22;37m %s", line );
-    });
-
-    holochain.on("lair:stderr", (line, parts) => {
-	log.debug( "\x1b[31;1m     Lair STDERR:\x1b[22m %s", line );
-    });
-
-    holochain.on("conductor:stdout", (line, parts) => {
-	log.debug( "\x1b[39;1mConductor STDOUT:\x1b[22;37m %s", line );
-    });
-
-    holochain.on("conductor:stderr", (line, parts) => {
-	if ( line.includes("func_translator") )
-	    return;
-
-	log.debug( "\x1b[31;1mConductor STDERR:\x1b[22m %s", line );
-    });
 
     log.debug("Waiting for holochain to start...");
     await holochain.start( 5_000 );
@@ -49,6 +26,7 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
 
     log.debug("Waiting for DNAs and actors to be set up...");
     const agents			= await holochain.backdrop( app_id, app_port, dnas, actors );
+    const crux_config			= new CruxConfig();
 
     log.debug("Creating clients actors: %s", actors.join(", ") );
     await Promise.all( Object.entries( agents ).map( async ([ actor, happ ]) => {
@@ -58,8 +36,8 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
 	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, role_id, String(cell.dna.hash), String(happ.agent) );
 	}) );
 
-	const agent_client		= new AgentClient( happ.agent, dna_map, app_port );
-	const client			= new Client( agent_client, client_options );
+	const client			= new AgentClient( happ.agent, dna_map, app_port, client_options );
+	crux_config.upgrade( client );
 	clients[actor]			= client
 
 	all_clients.push( client );

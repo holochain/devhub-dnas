@@ -8,7 +8,8 @@ const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const Identicon				= require('identicon.js');
-const { HoloHash }			= require('@whi/holo-hash');
+const { EntryHash,
+	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
 const why				= require('why-is-node-running');
@@ -44,7 +45,7 @@ function basic_tests () {
 	let profile_input		= {
 	    "name": "Zed Shaw",
 	    "email": "zed.shaw@example.com",
-	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( alice._client._agent ).toString("hex"), 10)).toString(), "base64"),
+	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( alice._agent ).toString("hex"), 10)).toString(), "base64"),
 	};
 
 	{
@@ -63,12 +64,12 @@ function basic_tests () {
 
 	{
 	    let header_hash		= await alice.call( "dnarepo", "dna_library", "follow_developer", {
-		"agent": clients.bobby._client._agent,
+		"agent": clients.bobby._agent,
 	    });
 	    log.normal("Following link hash: %s", String(new HoloHash(header_hash)) );
 
 	    await alice.call( "dnarepo", "dna_library", "follow_developer", {
-		"agent": clients.carol._client._agent,
+		"agent": clients.carol._agent,
 	    });
 
 	    let following		= await alice.call( "dnarepo", "dna_library", "get_following", null );
@@ -77,7 +78,7 @@ function basic_tests () {
 	    expect( following		).to.have.length( 2 );
 
 	    let delete_hash		= await alice.call( "dnarepo", "dna_library", "unfollow_developer", {
-		"agent": clients.carol._client._agent,
+		"agent": clients.carol._agent,
 	    });
 	    log.normal("Unfollowing link hash: %s", String(new HoloHash(delete_hash)) );
 
@@ -205,7 +206,7 @@ function basic_tests () {
 	    expect( zomes		).to.have.length( 1 );
 
 	    let b_zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes", {
-		"agent": clients.bobby._client._agent,
+		"agent": clients.bobby._agent,
 	    });
 	    log.normal("Bobby ZOMEs: %s", b_zomes.length );
 	    expect( b_zomes		).to.have.length( 0 );
@@ -350,9 +351,9 @@ function basic_tests () {
 		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
-		    "zome": zome_version_1.for_zome.$id,
+		    "zome": new EntryHash( zome_version_1.for_zome.id ),
 		    "version": zome_version_1.$id,
-		    "resource": zome_version_1.mere_memory_addr,
+		    "resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		    "resource_hash": zome_version_1.mere_memory_hash,
 		}],
 	    });
@@ -382,9 +383,9 @@ function basic_tests () {
 		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
-		    "zome": zome_version_2.for_zome.$id,
+		    "zome": new EntryHash( zome_version_2.for_zome.id ),
 		    "version": zome_version_2.$id,
-		    "resource": zome_version_2.mere_memory_addr,
+		    "resource": new EntryHash( zome_version_2.mere_memory_addr ),
 		    "resource_hash": zome_version_2.mere_memory_hash,
 		}],
 	    });
@@ -431,7 +432,7 @@ function basic_tests () {
 	    expect( dnas		).to.have.length( 1 );
 
 	    let b_dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas", {
-		"agent": clients.bobby._client._agent,
+		"agent": clients.bobby._agent,
 	    });
 	    log.normal("Bobby DNAs: %s", b_dnas.length );
 	    expect( b_dnas		).to.have.length( 0 );
@@ -516,7 +517,7 @@ function basic_tests () {
 	    });
 	    log.info("DNA Package bytes: %s", pack.bytes.length );
 
-	    expect( pack.bytes.constructor.name		).to.equal("Uint8Array");
+	    expect( pack.bytes.constructor.name		).to.equal("Array");
 	}
 
 	{
@@ -724,7 +725,9 @@ function errors_tests () {
 
 describe("DNArepo", () => {
 
-    const holochain			= new Holochain();
+    const holochain			= new Holochain({
+	"default_stdout_loggers": true,
+    });
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -756,7 +759,6 @@ describe("DNArepo", () => {
     describe("Errors", errors_tests.bind( this, holochain ) );
 
     after(async () => {
-	await holochain.stop();
 	await holochain.destroy();
     });
 

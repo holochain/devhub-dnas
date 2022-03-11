@@ -263,7 +263,9 @@ function errors_tests () {
 
 describe("hApps", () => {
 
-    const holochain			= new Holochain();
+    const holochain			= new Holochain({
+	"default_stdout_loggers": true,
+    });
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -285,7 +287,6 @@ describe("hApps", () => {
     describe("Errors", errors_tests.bind( this, holochain ) );
 
     after(async () => {
-	await holochain.stop();
 	await holochain.destroy();
     });
 
