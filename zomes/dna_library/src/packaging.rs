@@ -2,7 +2,10 @@ use std::collections::BTreeMap;
 
 use devhub_types::{
     AppResult,
-    dnarepo_entry_types::{ DnaVersionEntry, DnaVersionPackage },
+    dnarepo_entry_types::{
+	DnaEntry,
+	DnaVersionEntry, DnaVersionPackage,
+    },
     call_local_zome,
     encode_bundle,
 };
@@ -42,7 +45,7 @@ use hdk::prelude::*;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BundleZomeInfo {
     pub name: String,
-    pub bundle: String,
+    pub bundled: String,
 
     // Optional fields
     pub hash: Option<String>,
@@ -54,7 +57,7 @@ pub struct Manifest {
     pub zomes: Vec<BundleZomeInfo>,
 
     // Optional fields
-    pub name: Option<String>,
+    pub name: String,
     pub uid: Option<String>,
     pub properties: Option<serde_yaml::Value>,
 }
@@ -76,6 +79,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     debug!("Get DNA Version: {}", input.id );
     let entity = get_entity::<DnaVersionEntry>( &input.id )?;
     let entry = &entity.content;
+    let dna = get_entity::<DnaEntry>( &entry.for_dna )?;
 
     let mut manifest_zomes : Vec<BundleZomeInfo> = vec![];
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
@@ -86,7 +90,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 
 	manifest_zomes.push( BundleZomeInfo {
 	    name: zome_ref.name.clone(),
-	    bundle: path,
+	    bundled: path,
 	    hash: None,
 	});
 
@@ -100,7 +104,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 	manifest: Manifest {
 	    manifest_version: "1".into(),
 	    zomes: manifest_zomes,
-	    name: None,
+	    name: dna.content.name,
 	    uid: None,
 	    properties: None,
 	},

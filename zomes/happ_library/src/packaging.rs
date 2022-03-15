@@ -160,7 +160,7 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
 	dnarepo_dna_hash: input.dnarepo_dna_hash.clone(),
     })?;
 
-    let _ui_bytes = get_gui(GetGUIInput {
+    let web_asset_entity = get_gui(GetGUIInput {
 	id: happ_release.content.gui.ok_or(AppError::UnexpectedStateError(String::from("Missing GUI asset")))?.asset_group_id,
 	dna_hash: input.webassets_dna_hash,
     })?;
@@ -168,9 +168,10 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
 
     // add UI resource
+    let ui_bytes = web_asset_entity.content.bytes.ok_or(AppError::UnexpectedStateError(String::from("Missing GUI asset bytes")))?;
     let ui_ref = String::from("./ui.zip");
-    debug!("Adding UI resource with {} bytes", 0 );
-    resources.insert( ui_ref.clone(), vec![] );
+    debug!("Adding UI resource with {} bytes", ui_bytes.len() );
+    resources.insert( ui_ref.clone(), ui_bytes );
 
     // add hApp bundle resource
     let happ_ref = String::from("./bundle.happ");
