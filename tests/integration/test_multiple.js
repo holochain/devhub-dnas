@@ -7,7 +7,8 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
-const { HoloHash }			= require('@whi/holo-hash');
+const { EntryHash,
+	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
 const YAML				= require('yaml');
@@ -41,39 +42,22 @@ function basic_tests () {
 
 	const alice			= clients.alice;
 
-	const file_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.gz") );
-	log.debug("GZ file bytes (%s): typeof %s", file_bytes.length, typeof file_bytes );
+	const file_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.zip") );
+	log.debug("Zip file bytes (%s): typeof %s", file_bytes.length, typeof file_bytes );
 
-	let gz_file_hash;
+	let file_addr;
 	{
-	    let chunk_hashes		= [];
-	    let chunk_count		= Math.ceil( file_bytes.length / chunk_size );
-	    for (let i=0; i < chunk_count; i++) {
-		let chunk		= await alice.call( "webassets", "web_assets", "create_file_chunk", {
-		    "sequence": {
-			"position": i+1,
-			"length": chunk_count,
-		    },
-		    "bytes": file_bytes.slice( i*chunk_size, (i+1)*chunk_size ),
-		});
-		log.info("Chunk %s/%s hash: %s", i+1, chunk_count, String(chunk.$address) );
-
-		chunk_hashes.push( chunk.$address );
-	    }
-	    log.debug("Final chunks:", json.debug(chunk_hashes) );
-
 	    let file			= await alice.call( "webassets", "web_assets", "create_file", {
-		"file_size": file_bytes.length,
-		"chunk_addresses": chunk_hashes,
+		"file_bytes": file_bytes,
 	    });
-	    log.normal("New GZ file: %s -> %s", String(file.$address), file.file_size );
-	    gz_file_hash		= file.$address;
+	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
+	    file_addr			= file.$address;
 	}
 
 	{
 	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
-		"dna_hash": alice._client._app_schema._dnas.webassets._hash,
-		"id": gz_file_hash,
+		"dna_hash": alice._app_schema._dnas.webassets._hash,
+		"id": file_addr,
 	    });
 	    log.normal("Updated hApp UI: %s", gui.file_size );
 
@@ -115,9 +99,9 @@ function basic_tests () {
 	    "hdk_version": "v0.0.120",
 	    "zomes": [{
 		"name": "mere_memory",
-		"zome": zome_version_1.for_zome.$id,
+		"zome": new EntryHash( zome_version_1.for_zome.id ),
 		"version": zome_version_1.$id,
-		"resource": zome_version_1.mere_memory_addr,
+		"resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		"resource_hash": zome_version_1.mere_memory_hash,
 	    }],
 	});
@@ -128,10 +112,6 @@ function basic_tests () {
 	    "title": "Chess",
 	    "subtitle": "Super fun board game",
 	    "description": "Play chess with friends :)",
-	    "gui": {
-		"asset_group_id": gz_file_hash,
-		"uses_web_sdk": false,
-	    }
 	};
 
 	let happ			= await alice.call( "happs", "happ_library", "create_happ", happ_input );
@@ -145,6 +125,10 @@ function basic_tests () {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
+	    "gui": {
+		"asset_group_id": file_addr,
+		"uses_web_sdk": false,
+	    },
 	    "manifest": {
 		"manifest_version": "1",
 		"roles": [
@@ -177,13 +161,27 @@ function basic_tests () {
 	{
 	    let happ_package		= await alice.call( "happs", "happ_library", "get_release_package", {
 		"id": release.$id,
-		"dnarepo_dna_hash": alice._client._app_schema._dnas.dnarepo._hash,
+		"dnarepo_dna_hash": alice._app_schema._dnas.dnarepo._hash,
 	    });
 	    log.normal("hApp release package bytes: (%s) %s", happ_package.constructor.name, happ_package.length );
 
 	    expect( happ_package.constructor.name	).to.equal("Array");
 
 	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.happ"), Buffer.from(happ_package) );
+	}
+
+	{
+	    let webhapp_package		= await alice.call( "happs", "happ_library", "get_webhapp_package", {
+		"name": "Test Web hApp Package",
+		"id": release.$id,
+		"dnarepo_dna_hash": alice._app_schema._dnas.dnarepo._hash,
+		"webassets_dna_hash": alice._app_schema._dnas.webassets._hash,
+	    });
+	    log.normal("Web hApp package bytes: (%s) %s", webhapp_package.constructor.name, webhapp_package.length );
+
+	    expect( webhapp_package.constructor.name	).to.equal("Array");
+
+	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.webhapp"), Buffer.from(webhapp_package) );
 	}
     });
 }
@@ -194,7 +192,9 @@ function errors_tests () {
 
 describe("All DNAs", () => {
 
-    const holochain			= new Holochain();
+    const holochain			= new Holochain({
+	"default_stdout_loggers": true,
+    });
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -226,7 +226,6 @@ describe("All DNAs", () => {
     describe("Errors", errors_tests.bind( this, holochain ) );
 
     after(async () => {
-	await holochain.stop();
 	await holochain.destroy();
     });
 

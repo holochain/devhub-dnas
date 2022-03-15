@@ -1,7 +1,7 @@
 use devhub_types::{
     DevHubResponse, EntityResponse, GetEntityInput,
     constants::{ VALUE_MD, ENTITY_MD },
-    web_asset_entry_types::{ FileEntry, FileInfo, FileChunkEntry },
+    web_asset_entry_types::{ FileEntry, FileInfo },
     composition,
     catch,
 };
@@ -14,8 +14,7 @@ mod constants;
 
 entry_defs![
     PathEntry::entry_def(),
-    FileEntry::entry_def(),
-    FileChunkEntry::entry_def()
+    FileEntry::entry_def()
 ];
 
 
@@ -61,22 +60,6 @@ fn create_file(input: files::CreateInput) -> ExternResult<EntityResponse<FileInf
 #[hdk_extern]
 fn get_file(input: GetEntityInput) -> ExternResult<EntityResponse<FileInfo>> {
     let entity = catch!( files::get_file( input ) );
-
-    Ok(composition( entity, ENTITY_MD ))
-}
-
-
-// File Chunks
-#[hdk_extern]
-fn create_file_chunk(input: FileChunkEntry) -> ExternResult<EntityResponse<FileChunkEntry>> {
-    let entity = catch!( files::create_file_chunk( input ) );
-
-    Ok(composition( entity, ENTITY_MD ))
-}
-
-#[hdk_extern]
-fn get_file_chunk(input: files::GetFileChunkInput) -> ExternResult<EntityResponse<FileChunkEntry>> {
-    let entity = catch!( files::get_file_chunk( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }

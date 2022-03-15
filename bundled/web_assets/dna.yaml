@@ -5,3 +5,5 @@ properties: ~
 zomes:
   - name: web_assets
     bundled: ../../zomes/web_assets.wasm
+  - name: mere_memory
+    bundled: ../../zomes/mere_memory.wasm

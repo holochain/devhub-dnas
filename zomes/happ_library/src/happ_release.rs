@@ -1,9 +1,10 @@
+use std::collections::HashMap;
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
 	HappEntry,
 	HappReleaseEntry, HappReleaseInfo, HappReleaseSummary,
-	HappManifest, DnaReference,
+	HappManifest, DnaReference, HappGUIConfig,
     },
 };
 use hc_crud::{
@@ -33,6 +34,12 @@ fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
 
 
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GUIConfigInput {
+    pub asset_group_id: EntryHash,
+    pub uses_web_sdk: bool,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CreateInput {
     pub name: String,
@@ -45,6 +52,8 @@ pub struct CreateInput {
     // optional
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub gui: Option<GUIConfigInput>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseInfo>> {
@@ -68,6 +77,11 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	dna_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	hdk_version: input.hdk_version,
 	dnas: input.dnas,
+	gui: input.gui.map(|gui| {
+	    HappGUIConfig::new( gui.asset_group_id, gui.uses_web_sdk )
+	}),
+	metadata: input.metadata
+	    .unwrap_or( HashMap::new() ),
     };
 
     let release_path = happ_release_path( &happ_release.dna_hash )?;
@@ -100,6 +114,8 @@ pub struct HappReleaseUpdateOptions {
     pub description: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub gui: Option<HappGUIConfig>,
+    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
 }
 pub type HappReleaseUpdateInput = UpdateEntityInput<HappReleaseUpdateOptions>;
 
@@ -124,6 +140,10 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		dna_hash: current.dna_hash,
 		hdk_version: current.hdk_version,
 		dnas: current.dnas,
+		gui: props.gui
+		    .or( current.gui ),
+		metadata: props.metadata
+		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 

@@ -355,6 +355,7 @@ dependencies = [
  "hex",
  "rand",
  "serde",
+ "serde_yaml",
  "thiserror",
 ]
 
@@ -1167,8 +1168,10 @@ dependencies = [
  "devhub_types",
  "hc_crud_ceps",
  "hdk",
+ "mere_memory_types",
  "rand",
  "serde",
+ "serde_yaml",
  "thiserror",
 ]
 

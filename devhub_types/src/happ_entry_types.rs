@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use hc_crud::{
     get_entity,
     EntryModel, EntityType, Entity
@@ -48,11 +49,11 @@ pub struct HappEntry {
     pub designer: AgentPubKey,
     pub published_at: u64,
     pub last_updated: u64,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
-    pub gui: Option<HappGUIConfig>,
 }
 
 impl EntryModel for HappEntry {
@@ -71,6 +72,7 @@ pub struct HappSummary {
     pub published_at: u64,
     pub last_updated: u64,
     pub deprecation: bool,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub icon: Option<SerializedBytes>,
@@ -90,11 +92,11 @@ pub struct HappInfo {
     pub designer: AgentPubKey,
     pub published_at: u64,
     pub last_updated: u64,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
-    pub gui: Option<HappGUIConfig>,
 }
 impl EntryModel for HappInfo {
     fn get_type(&self) -> EntityType {
@@ -113,7 +115,7 @@ impl HappEntry {
 	    last_updated: self.last_updated.clone(),
 	    icon: self.icon.clone(),
 	    deprecation: self.deprecation.clone(),
-	    gui: self.gui.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 
@@ -127,6 +129,7 @@ impl HappEntry {
 	    last_updated: self.last_updated.clone(),
 	    icon: self.icon.clone(),
 	    deprecation: self.deprecation.clone().map_or(false, |_| true),
+	    metadata: self.metadata.clone(),
 	}
     }
 }
@@ -197,6 +200,36 @@ pub struct HappManifest {
     pub description: Option<String>,
 }
 
+
+
+// {
+//     "manifest": {
+//         "manifest_version": "1",
+//         "name": "DevHub",
+//         "ui": {
+//             "bundled": "../web_assets.zip"
+//         },
+//         "happ_manifest": {
+//             "bundled": "DevHub.happ"
+//         }
+//     },
+//     "resources": {
+//         "../web_assets.zip": <Buffer 50 4b 03 04 ... 601482 more bytes>,
+//         "DevHub.happ": <Buffer 1f 8b 08 00 ... 4945860 more bytes>
+//     }
+// }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResourceRef {
+    pub bundled: String,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WebHappManifest {
+    pub manifest_version: String,
+    pub name: String,
+    pub ui: ResourceRef,
+    pub happ_manifest: ResourceRef,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DnaReference {
     pub role_id: String,
@@ -217,6 +250,8 @@ pub struct HappReleaseEntry {
     pub dna_hash : String,
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
+    pub gui: Option<HappGUIConfig>,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 
 impl EntryModel for HappReleaseEntry {
@@ -236,6 +271,8 @@ pub struct HappReleaseSummary {
     pub dna_hash : String,
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
+    pub gui: Option<HappGUIConfig>,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for HappReleaseSummary {
     fn get_type(&self) -> EntityType {
@@ -255,6 +292,8 @@ pub struct HappReleaseInfo {
     pub dna_hash : String,
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
+    pub gui: Option<HappGUIConfig>,
+    pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for HappReleaseInfo {
     fn get_type(&self) -> EntityType {
@@ -282,6 +321,8 @@ impl HappReleaseEntry {
 	    dna_hash: self.dna_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
 	    dnas: self.dnas.clone(),
+	    gui: self.gui.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 
@@ -295,6 +336,8 @@ impl HappReleaseEntry {
 	    dna_hash: self.dna_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
 	    dnas: self.dnas.clone(),
+	    gui: self.gui.clone(),
+	    metadata: self.metadata.clone(),
 	}
     }
 }
