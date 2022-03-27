@@ -5,14 +5,23 @@ pub mod happ_entry_types;
 pub mod web_asset_entry_types;
 
 use std::io::Write;
+use std::collections::HashMap;
 
 use hdk::prelude::*;
 use hdk::hash_path::path::Component;
 use essence::{ EssenceResponse };
-use errors::{ ErrorKinds, AppError };
-use hc_crud::{ Collection, Entity };
+use errors::{ ErrorKinds, AppError, UserError };
 use sha2::{ Sha256, Digest };
+pub use hc_crud::{
+    get_entity,
+    Collection, Entity, EntryModel,
+};
 
+use crate::constants::{
+    ANCHOR_TAGS,
+    ANCHOR_FILTERS,
+    ANCHOR_HDK_VERSIONS,
+};
 
 pub type AppResult<T> = Result<T, ErrorKinds>;
 
@@ -78,6 +87,29 @@ macro_rules! catch { // could change to "trap", "snare", or "capture"
 	    Err(e) => return Ok(devhub_types::DevHubResponse::failure( (&$e).into(), None )),
 	}
     };
+}
+
+
+pub fn fmt_path( path: &Path ) -> String {
+    format!(
+	"Path({})[{}]",
+	path.as_ref()
+	    .iter()
+	    .map( |component| {
+		let bytes = component.as_ref();
+		let fallback = format!("{:?}", bytes );
+
+		format!("\"{}\"", std::str::from_utf8( bytes ).unwrap_or( &fallback ) ).to_string()
+	    })
+	    .collect::<Vec<String>>()
+	    .join("."),
+	path.path_entry_hash().unwrap()
+    )
+}
+
+
+fn fmt_tag( tag: &Vec<u8> ) -> String {
+    std::str::from_utf8( tag ).unwrap_or( &format!("{:?}", tag ) ).to_string()
 }
 
 
@@ -158,7 +190,6 @@ where
 }
 
 
-
 pub fn hash_of_hashes(hash_list: &Vec<Vec<u8>>) -> [u8; 32] {
     let mut hasher = Sha256::new();
     let mut hashes = hash_list.to_owned();
@@ -171,21 +202,201 @@ pub fn hash_of_hashes(hash_list: &Vec<Vec<u8>>) -> [u8; 32] {
     hasher.finalize().into()
 }
 
-pub fn hdk_version_anchor(version: &str) -> Path {
-    let path_components = vec![
-	Component::from( "hdk_versions" ),
-	Component::from( version.replace(".", "[dot]").as_bytes().to_vec() ),
-    ];
-    Path::from( path_components )
+
+pub fn create_path<T>( base: &str, segments: T ) -> (Path, EntryHash)
+where
+    T: IntoIterator,
+    T::Item: std::fmt::Display,
+{
+    let mut components : Vec<Component> = vec![];
+
+    for seg in base.split(".") {
+	let component = Component::from( format!("{}", seg ).as_bytes().to_vec() );
+	components.push( component );
+    }
+
+    for seg in segments {
+	let component = Component::from( format!("{}", seg ).as_bytes().to_vec() );
+	components.push( component );
+    }
+
+    let path = Path::from( components );
+    let hash = path.path_entry_hash().unwrap();
+
+    ( path, hash )
 }
 
-pub fn zome_hdk_anchor(entry: &dnarepo_entry_types::ZomeVersionEntry, version: &str) -> AppResult<Path> {
-    let path_components = vec![
-	Component::from( format!("{}", hash_entry( entry.to_owned() )? ) ),
-	Component::from("hdk_versions"),
-	Component::from( version.replace(".", "[dot]").as_bytes().to_vec() ),
-    ];
-    Ok( Path::from( path_components ) )
+
+pub fn ensure_path<T>( base: &str, segments: T ) -> AppResult<(Path, EntryHash)>
+where
+    T: IntoIterator,
+    T::Item: std::fmt::Display,
+{
+    let result = create_path( base, segments );
+    result.0.ensure()?;
+
+    Ok( result )
+}
+
+
+pub fn get_entities_for_path<T>( tag: Vec<u8>, path : Path ) -> AppResult<Collection<Entity<T>>>
+where
+    T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
+    Entry: TryFrom<T, Error = WasmError>,
+{
+    debug!("Getting all '{}' entities: {}", fmt_tag( &tag ), fmt_path( &path ) );
+
+    let path_hash = path.path_entry_hash().unwrap();
+    let links = get_links(
+        path_hash.clone(),
+	Some(LinkTag::new( tag ))
+    )?;
+
+    let list = links.into_iter()
+	.filter_map(|link| {
+	    get_entity::<T>( &link.target ).ok()
+	})
+	.collect();
+
+    Ok(Collection {
+	base: path_hash,
+	items: list,
+    })
+}
+
+
+pub fn get_entities_for_path_filtered<T,F>( tag: Vec<u8>, path : Path, filter: F ) -> AppResult<Collection<Entity<T>>>
+where
+    T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
+    Entry: TryFrom<T, Error = WasmError>,
+    F: FnOnce(Vec<Entity<T>>) -> AppResult<Vec<Entity<T>>>,
+{
+    let collection = get_entities_for_path( tag, path )?;
+
+    Ok(Collection {
+	base: collection.base,
+	items: filter( collection.items )?,
+    })
+}
+
+
+pub fn get_hdk_version_entities<T>( entity_tag: Vec<u8>, hdk_version: String ) -> AppResult<Collection<Entity<T>>>
+where
+    T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
+    Entry: TryFrom<T, Error = WasmError>,
+{
+    let (base_path, base_hash) = create_path( ANCHOR_HDK_VERSIONS, vec![ &hdk_version ] );
+
+    debug!("Getting entities with tag '{}' and HDK Version '{}': {}", fmt_tag( &entity_tag ), hdk_version, fmt_path( &base_path ) );
+    let links = get_links(
+        base_hash.clone(),
+	Some(LinkTag::new(entity_tag))
+    )?;
+
+    let list = links.into_iter()
+	.filter_map(|link| {
+	    get_entity( &link.target ).ok()
+	})
+	.collect();
+
+    Ok(Collection {
+	base: base_hash,
+	items: list,
+    })
+}
+
+
+pub fn get_by_filter<T>( entity_tag: Vec<u8>, filter: String, keyword: String ) -> AppResult<Collection<Entity<T>>>
+where
+    T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
+    Entry: TryFrom<T, Error = WasmError>,
+{
+    let (base_path, base_hash) = create_path( ANCHOR_FILTERS, vec![ &filter, &keyword ] );
+
+    debug!("Getting '{}' links for filter: {} => {:?}", fmt_tag( &entity_tag ), fmt_path( &base_path ), base_path );
+    let links = get_links(
+        base_hash.clone(),
+	Some(LinkTag::new( entity_tag ))
+    )?;
+
+    let list = links.into_iter()
+	.filter_map(|link| {
+	    get_entity( &link.target ).ok()
+	})
+	.collect();
+
+    Ok(Collection {
+	base: base_hash,
+	items: list,
+    })
+}
+
+
+pub fn get_by_tags<T>( entity_tag: Vec<u8>, tags: Vec<String> ) -> AppResult<Vec<Entity<T>>>
+where
+    T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
+    Entry: TryFrom<T, Error = WasmError>,
+{
+    if tags.len() == 0 {
+	return Err( UserError::CustomError("Tag list cannot be empty").into() );
+    }
+
+    let tag_count = tags.len();
+    let mut match_count = HashMap::new();
+
+    debug!("Gathering links for tags: {:?}", tags );
+    for tag_name in tags.into_iter() {
+	let (base, base_hash) = create_path( ANCHOR_TAGS, vec![ &tag_name.to_lowercase() ] );
+
+	debug!("Getting '{}' links for tag '{}': {} => {:?}", fmt_tag( &entity_tag ), tag_name, fmt_path( &base ), base );
+	let links = get_links(
+            base_hash.clone(),
+	    Some(LinkTag::new( entity_tag.clone() ))
+	)?;
+
+	for link in links {
+	    if let Some((count, _)) = match_count.get_mut( &link.target ) {
+		*count += 1;
+	    } else {
+		match_count.insert( link.target.to_owned(), (1, link) );
+	    }
+	}
+    }
+
+    let mut full_matches = Vec::new();
+    for (count, link) in match_count.values() {
+	if *count == tag_count {
+	    full_matches.push( link.to_owned() );
+	}
+    }
+
+    let list = full_matches.into_iter()
+	.filter_map(|link| {
+	    get_entity( &link.target ).ok()
+	})
+	.collect();
+
+    Ok( list )
+}
+
+
+pub fn get_hdk_versions() -> AppResult<Collection<String>> {
+    let (hdkv_path, hdkv_hash) = create_path( ANCHOR_HDK_VERSIONS, Vec::<String>::new() );
+
+    let hdk_versions : Vec<String> = hdkv_path.children_paths()?.into_iter()
+	.filter_map( |path| {
+	    debug!("HDK Version PATH: {}", fmt_path( &path ) );
+	    match std::str::from_utf8( path.as_ref().clone().last().unwrap().as_ref() ) {
+		Err(_) => None,
+		Ok(path_str) => Some( path_str.to_string() ),
+	    }
+	})
+	.collect();
+
+    Ok(Collection {
+	base: hdkv_hash,
+	items: hdk_versions,
+    })
 }
 
 

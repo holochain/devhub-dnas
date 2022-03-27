@@ -3,8 +3,13 @@ use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
 	DnaEntry,
-	DnaVersionEntry, DnaVersionInfo, DnaVersionSummary, ZomeReference,
+	DnaVersionEntry, DnaVersionInfo, ZomeReference,
     },
+    constants::{
+	ANCHOR_UNIQUENESS,
+	ANCHOR_HDK_VERSIONS,
+    },
+    fmt_path,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity, delete_entity, get_entities,
@@ -13,23 +18,9 @@ use hc_crud::{
 use hdk::prelude::*;
 use hex;
 
-use crate::constants::{ TAG_DNAVERSION };
-
-
-fn dna_version_path(hash: &str) -> AppResult<Path> {
-    Ok( create_filter_path( "uniqueness_hash", hash )? )
-}
-
-fn filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    Ok( hc_crud::path_from_collection( vec![ "dna_version_by", filter, value ] )? )
-}
-
-fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    let path = filter_path( filter, value )?;
-    path.ensure()?;
-
-    Ok( path )
-}
+use crate::constants::{
+    TAG_DNAVERSION,
+};
 
 
 
@@ -59,7 +50,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
 	version: input.version,
-	hdk_version: input.hdk_version,
+	hdk_version: input.hdk_version.clone(),
 	zomes: input.zomes,
 	wasm_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	changelog: input.changelog
@@ -72,17 +63,22 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	    .unwrap_or( HashMap::new() ),
     };
 
-    let version_path = dna_version_path( &version.wasm_hash )?;
-    let version_path_hash = version_path.path_entry_hash()?;
-
     let entity = create_entity( &version )?
 	.change_model( |version| version.to_info() );
 
+    // Parent anchor
     debug!("Linking DNA ({}) to ENTRY: {}", input.for_dna, entity.id );
     entity.link_from( &input.for_dna, TAG_DNAVERSION.into() )?;
 
-    debug!("Linking uniqueness 'hash' path ({}) to ENTRY: {}", version_path_hash, entity.id );
-    entity.link_from( &version_path_hash, TAG_DNAVERSION.into() )?;
+    // Uniqueness anchor
+    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &version.wasm_hash ] )?;
+    debug!("Linking uniqueness path ({}) to ENTRY: {}", fmt_path( &wasm_path ), entity.id );
+    entity.link_from( &wasm_path_hash, TAG_DNAVERSION.into() )?;
+
+    // HDK anchor
+    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
+    debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
+    entity.link_from( &hdkv_hash, TAG_DNAVERSION.into() )?;
 
     Ok( entity )
 }
@@ -110,19 +106,8 @@ pub struct GetDnaVersionsInput {
     pub for_dna: EntryHash,
 }
 
-pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Collection<Entity<DnaVersionSummary>>> {
-    let collection = get_entities::<DnaEntry, DnaVersionEntry>( &input.for_dna, TAG_DNAVERSION.into() )?;
-
-    let versions = collection.items.into_iter()
-	.map(|entity| {
-	    entity.change_model( |version| version.to_summary() )
-	})
-	.collect();
-
-    Ok(Collection {
-	base: collection.base,
-	items: versions,
-    })
+pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Collection<Entity<DnaVersionEntry>>> {
+    Ok( get_entities::<DnaEntry, DnaVersionEntry>( &input.for_dna, TAG_DNAVERSION.into() )? )
 }
 
 
@@ -166,19 +151,6 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 
 
 
-fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<DnaVersionSummary>> {
-    links.into_iter()
-	.filter_map(|link| {
-	    get_entity::<DnaVersionEntry>( &link.target ).ok()
-	})
-	.map( |entity| {
-	    entity.change_model( |version| version.to_summary() )
-	})
-	.collect()
-}
-
-
-
 
 #[derive(Debug, Deserialize)]
 pub struct DeleteDnaVersionInput {
@@ -191,24 +163,4 @@ pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<HeaderHash>
     debug!("Deleted DNA Version via header ({})", delete_header );
 
     Ok( delete_header )
-}
-
-
-pub fn get_dna_versions_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<DnaVersionSummary>>> {
-    // We don't want to create the path here.  We are just getting things if they exist.  It should
-    // not move the chain.
-    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
-
-    debug!("Getting hApp links for base: {:?}", base );
-    let all_links = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_DNAVERSION))
-    )?;
-
-    let versions = get_entities_for_links( all_links );
-
-    Ok(Collection {
-	base,
-	items: versions,
-    })
 }

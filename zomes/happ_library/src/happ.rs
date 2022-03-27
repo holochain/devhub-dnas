@@ -2,34 +2,26 @@ use std::collections::HashMap;
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
-	HappEntry, HappInfo, HappSummary,
+	HappEntry, HappInfo,
 	DeprecationNotice,
     },
+    constants::{
+	ANCHOR_TAGS,
+	ANCHOR_TITLES,
+    },
+    fmt_path,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
-    Entity, Collection,
+    Entity,
 };
 use hdk::prelude::*;
 
-use crate::constants::{ TAG_HAPP };
+use crate::constants::{
+    TAG_HAPP,
+    ANCHOR_HAPPS,
+};
 
-
-
-fn happ_title_path(title: &str) -> AppResult<Path> {
-    Ok( create_filter_path( "title", title )? )
-}
-
-fn filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    Ok( hc_crud::path_from_collection( vec![ "happs_by", filter, value ] )? )
-}
-
-fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    let path = filter_path( filter, value )?;
-    path.ensure()?;
-
-    Ok( path )
-}
 
 
 #[derive(Debug, Deserialize)]
@@ -39,6 +31,7 @@ pub struct CreateInput {
     pub description: String,
 
     // optional
+    pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -55,11 +48,8 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     // 	return Err( UserError::DuplicateHappName(input.title).into() );
     // }
 
-    let title_path = happ_title_path( &input.title )?;
-    let title_path_hash = title_path.path_entry_hash()?;
-
-    let title_path_lc = happ_title_path( &input.title.to_lowercase() )?;
-    let title_path_lc_hash = title_path_lc.path_entry_hash()?;
+    let (title_path, title_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &input.title ] )?;
+    let (title_path_lc, title_path_lc_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &input.title.to_lowercase() ] )?;
 
     let happ = HappEntry {
 	title: input.title,
@@ -71,6 +61,7 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	icon: input.icon,
+	tags: input.tags.to_owned(),
 	deprecation: None,
 	metadata: input.metadata
 	    .unwrap_or( HashMap::new() ),
@@ -78,22 +69,31 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 
     let entity = create_entity( &happ )?
 	.change_model( |happ| happ.to_info() );
-    let base = crate::root_path_hash( None )?;
 
-    debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
-    entity.link_from( &base, TAG_HAPP.into() )?;
+    // Designer (Agent) anchor
+    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_HAPPS ] )?;
+    debug!("Linking agent ({}) to entity: {}", fmt_path( &agent_base ), entity.id );
+    entity.link_from( &agent_base_hash, TAG_HAPP.into() )?;
 
-    debug!("Linking 'title' path (length {}) to entity: {}", title_path.as_ref().len(), entity.id );
+    // Title anchors (case sensitive/insensitive)
+    debug!("Linking title path ({}) to entity: {}", fmt_path( &title_path ), entity.id );
     entity.link_from( &title_path_hash, TAG_HAPP.into() )?;
-
-    debug!("Linking lowercase 'title' path ({}) to ENTRY: {}", title_path_lc_hash, entity.id );
+    debug!("Linking title (lowercase) path ({}) to entity: {}", fmt_path( &title_path_lc ), entity.id );
     entity.link_from( &title_path_lc_hash, TAG_HAPP.into() )?;
 
-    let all_happs_path = crate::all_happs_path();
-    let all_happs_hash = all_happs_path.path_entry_hash()?;
-    all_happs_path.ensure()?;
-    debug!("Linking all hApp path ({}) to ENTRY: {}", all_happs_hash, entity.id );
+    // Global anchor
+    let (all_happs_path, all_happs_hash) = devhub_types::ensure_path( ANCHOR_HAPPS, Vec::<String>::new() )?;
+    debug!("Linking all hApps path ({}) to ENTRY: {}", fmt_path( &all_happs_path ), entity.id );
     entity.link_from( &all_happs_hash, TAG_HAPP.into() )?;
+
+    // Tag anchors
+    if input.tags.is_some() {
+	for tag in input.tags.unwrap() {
+	    let (tag_path, tag_hash) = devhub_types::ensure_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ] )?;
+	    debug!("Linking TAG anchor ({}) to entry: {}", fmt_path( &tag_path ), entity.id );
+	    entity.link_from( &tag_hash, TAG_HAPP.into() )?;
+	}
+    }
 
     Ok( entity )
 }
@@ -143,26 +143,21 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		    .unwrap_or( now()? ),
 		icon: props.icon
 		    .or( current.icon ),
+		tags: current.tags,
 		deprecation: current.deprecation,
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 
-    let previous_title_path = happ_title_path( &previous_title )?;
-    let previous_path_hash = previous_title_path.path_entry_hash()?;
-
-    let new_title_path = happ_title_path( &entity.content.title )?;
-    let new_path_hash = new_title_path.path_entry_hash()?;
-
+    let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous_title ] );
+    let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title ] )?;
+    debug!("Moving title link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
     entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
 
-    let previous_title_path = happ_title_path( &previous_title.to_lowercase() )?;
-    let previous_path_hash = previous_title_path.path_entry_hash()?;
-
-    let new_title_path = happ_title_path( &entity.content.title.to_lowercase() )?;
-    let new_path_hash = new_title_path.path_entry_hash()?;
-
+    let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous_title.to_lowercase() ] );
+    let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title.to_lowercase() ] )?;
+    debug!("Moving title (lowercase) link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
     entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
 
     Ok( entity.change_model( |happ| happ.to_info() ) )
@@ -189,94 +184,4 @@ pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> 
 	})?;
 
     Ok( entity.change_model( |happ| happ.to_info() ) )
-}
-
-fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<HappSummary>> {
-    links.into_iter()
-	.filter_map(|link| {
-	    get_entity::<HappEntry>( &link.target ).ok()
-	})
-	.map( |entity| {
-	    entity.change_model( |happ| happ.to_summary() )
-	})
-	.collect()
-}
-
-pub fn get_happ_collection(maybe_pubkey: Option<AgentPubKey>) -> AppResult<Collection<Entity<HappSummary>>> {
-    let base = crate::root_path_hash( maybe_pubkey )?;
-
-    debug!("Getting hApp links for Agent entry: {}", base );
-    let all_links = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_HAPP))
-    )?;
-
-    let happs = get_entities_for_links( all_links );
-
-    Ok(Collection {
-	base,
-	items: happs,
-    })
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GetHappsInput {
-    pub agent: Option<AgentPubKey>,
-}
-
-pub fn get_happs(input: GetHappsInput) -> AppResult<Collection<Entity<HappSummary>>> {
-    let happ_collection = get_happ_collection( input.agent.clone() )?;
-
-    let happs = happ_collection.items.into_iter()
-	.filter(|entity| {
-	    !entity.content.deprecation
-	})
-	.collect();
-
-    Ok(Collection {
-	base: happ_collection.base,
-	items: happs,
-    })
-}
-
-pub fn get_my_happs() -> AppResult<Collection<Entity<HappSummary>>> {
-    get_happs(GetHappsInput {
-	agent: None,
-    })
-}
-
-
-pub fn get_happs_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<HappSummary>>> {
-    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
-
-    debug!("Getting hApp links for base: {:?}", base );
-    let all_links = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_HAPP))
-    )?;
-
-    let happs = get_entities_for_links( all_links );
-
-    Ok(Collection {
-	base,
-	items: happs,
-    })
-}
-
-
-pub fn get_all_happs() -> AppResult<Collection<Entity<HappSummary>>> {
-    let base = crate::all_happs_path().path_entry_hash()?;
-
-    debug!("Getting hApp links for base: {}", base );
-    let links = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_HAPP))
-    )?;
-
-    let happs = get_entities_for_links( links );
-
-    Ok(Collection {
-	base,
-	items: happs,
-    })
 }

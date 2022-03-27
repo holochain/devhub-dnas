@@ -27,6 +27,7 @@ function basic_tests () {
 	    "title": "Chess",
 	    "subtitle": "Super fun board game",
 	    "description": "Play chess with friends :)",
+	    "tags": [ "Games", "Strategy" ],
 	};
 
 	let happ			= await alice.call( "happs", "happ_library", "create_happ", happ_input );
@@ -49,6 +50,25 @@ function basic_tests () {
 	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
 
 	    expect( happs		).to.have.length( 1 );
+	}
+
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "Games" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
+	}
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "strategy" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
+	}
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "Games", "Action" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
 	}
 
 	let happ_addr			= happ.$addr;
@@ -264,7 +284,7 @@ function errors_tests () {
 describe("hApps", () => {
 
     const holochain			= new Holochain({
-	"default_stdout_loggers": true,
+	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
     });
 
     before(async function () {

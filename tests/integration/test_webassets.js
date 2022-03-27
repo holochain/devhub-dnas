@@ -57,7 +57,7 @@ function errors_tests () {
 describe("Web Assets", () => {
 
     const holochain			= new Holochain({
-	"default_stdout_loggers": true,
+	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
     });
 
     before(async function () {

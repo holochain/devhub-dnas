@@ -37,7 +37,7 @@ rebuild:			clean build
 build:				$(HAPP_BUNDLE)
 
 
-$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA)
+$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
 $(DNAREPO):			$(DNA_LIBRARY_WASM) $(MERE_MEMORY_WASM)
