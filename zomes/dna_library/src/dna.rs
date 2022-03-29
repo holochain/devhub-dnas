@@ -111,10 +111,11 @@ pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaInfo>> {
 
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct DnaUpdateOptions {
     pub name: Option<String>,
     pub description: Option<String>,
+    pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -124,14 +125,12 @@ pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 
 pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
     debug!("Updating DNA: {}", input.addr );
-    let props = input.properties;
-    let mut previous_name = String::from("");
+    let props = input.properties.clone();
+    let previous = get_entity::<DnaEntry>( &input.addr )?.content;
 
     let entity : Entity<DnaEntry> = update_entity(
 	&input.addr,
 	|current : DnaEntry, _| {
-	    previous_name = current.name.clone();
-
 	    Ok(DnaEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -139,7 +138,8 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 		    .unwrap_or( current.description ),
 		icon: props.icon
 		    .or( current.icon ),
-		tags: current.tags,
+		tags: props.tags
+		    .or( current.tags ),
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
@@ -151,15 +151,25 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 	    })
 	})?;
 
-    let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous_name ] );
-    let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name ] )?;
-    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-    entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
+    if input.properties.name.is_some() {
+	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );
+	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name ] )?;
 
-    let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous_name.to_lowercase() ] );
-    let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ] )?;
-    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-    entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
+	if previous_path_hash != new_path_hash {
+	    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
+	    entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
+	}
+
+	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name.to_lowercase() ] );
+	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ] )?;
+
+	if previous_path_hash != new_path_hash {
+	    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
+	    entity.move_link_from( TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
+	}
+    }
+
+    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, TAG_DNA.into() )?;
 
     Ok( entity.change_model( |dna| dna.to_info() ) )
 }

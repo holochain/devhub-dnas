@@ -110,10 +110,11 @@ pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeInfo>> {
 
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ZomeUpdateOptions {
     pub name: Option<String>,
     pub description: Option<String>,
+    pub tags: Option<Vec<String>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<HashMap<String, serde_yaml::Value>>,
@@ -122,14 +123,12 @@ pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 
 pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
     debug!("Updating ZOME: {}", input.addr );
-    let props = input.properties;
-    let mut previous_name = String::from("");
+    let props = input.properties.clone();
+    let previous = get_entity::<ZomeEntry>( &input.addr )?.content;
 
     let entity = update_entity(
 	&input.addr,
 	|current : ZomeEntry, _| {
-	    previous_name = current.name.clone();
-
 	    Ok(ZomeEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -143,19 +142,30 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 		deprecation: current.deprecation,
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
-		tags: current.tags,
+		tags: props.tags
+		    .or( current.tags ),
 	    })
 	})?;
 
-    let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous_name ] );
-    let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name ] )?;
-    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
+    if input.properties.name.is_some() {
+	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );
+	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name ] )?;
 
-    let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous_name.to_lowercase() ] );
-    let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ] )?;
-    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
+	if previous_path_hash != new_path_hash {
+	    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
+	    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
+	}
+
+	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name.to_lowercase() ] );
+	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ] )?;
+
+	if previous_path_hash != new_path_hash {
+	    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
+	    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
+	}
+    }
+
+    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, TAG_ZOME.into() )?;
 
     Ok( entity.change_model( |zome| zome.to_info() ) )
 }

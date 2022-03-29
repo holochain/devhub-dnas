@@ -75,11 +75,13 @@ function basic_tests () {
 	{
 	    let title			= "Chess++";
 	    let description		= "New description";
+	    let tags			= [ "Games", "Boardgame" ];
 	    let update			= await alice.call( "happs", "happ_library", "update_happ", {
 		"addr": happ_addr,
 		"properties": {
 		    title,
 		    description,
+		    tags,
 		},
 	    });
 	    log.normal("New hApp: %s -> %s", String(update.$addr), update.title );
@@ -94,6 +96,19 @@ function basic_tests () {
 	    log.normal("Updated hApp: %s -> %s", String(happ.$addr), happ.title );
 
 	    expect( happ.description	).to.equal( description );
+	}
+
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "strategy" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
+	}
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "boardgame" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
 	}
 
 	{
@@ -225,7 +240,7 @@ function basic_tests () {
 	    let header			= await alice.call( "happs", "happ_library", "delete_happ_release", {
 		"id": release.$id,
 	    });
-	    log.normal("Delete hApp: %s", header );
+	    log.normal("Delete hApp: %s", new HoloHash( header ) );
 	}
 
 	{

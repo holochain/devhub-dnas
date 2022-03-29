@@ -236,11 +236,13 @@ function basic_tests () {
 	{
 	    // Update ZOME
 	    const zome_name		= "Game Turns (new)";
+	    const tags			= [ "Storage", "Tool" ];
 	    zome			= await alice.call( "dnarepo", "dna_library", "update_zome", {
 		"id": zome.$id,
 		"addr": zome.$addr,
 		"properties": {
 		    "name": zome_name,
+		    tags,
 		}
 	    });
 	    expect( zome.$header		).to.not.deep.equal( first_header_hash );
@@ -255,6 +257,19 @@ function basic_tests () {
 	    expect( zome_info.$header	).to.not.deep.equal( first_header_hash );
 
 	    second_header_hash		= zome.$header;
+	}
+
+	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes_by_tags", [ "general-use" ] );
+	    log.normal("Zomes by title: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 0 );
+	}
+	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes_by_tags", [ "storage", "tool" ] );
+	    log.normal("Zomes by title: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 1 );
 	}
 
 	{
@@ -492,11 +507,13 @@ function basic_tests () {
 	{
 	    // Update DNA
 	    const dna_name		= "Game Turns (new)";
+	    const tags			= [ "Games", "Turns" ];
 	    dna				= await alice.call( "dnarepo", "dna_library", "update_dna", {
 		"id": dna.$id,
 		"addr": dna.$addr,
 		"properties": {
 		    "name": dna_name,
+		    tags,
 		}
 	    });
 	    expect( dna.$header		).to.not.deep.equal( first_header_hash );
@@ -511,6 +528,19 @@ function basic_tests () {
 	    expect( dna_info.$header	).to.not.deep.equal( first_header_hash );
 
 	    second_header_hash		= dna.$header;
+	}
+
+	{
+	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas_by_tags", [ "turn-based" ] );
+	    log.normal("DNAs by title: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas		).to.have.length( 0 );
+	}
+	{
+	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas_by_tags", [ "games", "turns" ] );
+	    log.normal("DNAs by title: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas		).to.have.length( 1 );
 	}
 
 	{

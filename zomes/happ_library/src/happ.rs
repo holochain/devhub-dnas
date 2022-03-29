@@ -107,11 +107,12 @@ pub fn get_happ(input: GetEntityInput) -> AppResult<Entity<HappInfo>> {
 }
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct HappUpdateOptions {
     pub title: Option<String>,
     pub subtitle: Option<String>,
     pub description: Option<String>,
+    pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -121,14 +122,12 @@ pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
 
 pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
     debug!("Updating hApp: {}", input.addr );
-    let props = input.properties;
-    let mut previous_title = String::from("");
+    let props = input.properties.clone();
+    let previous = get_entity::<HappEntry>( &input.addr )?.content;
 
     let entity = update_entity(
 	&input.addr,
 	|current : HappEntry, _| {
-	    previous_title = current.title.clone();
-
 	    Ok(HappEntry {
 		title: props.title
 		    .unwrap_or( current.title ),
@@ -143,22 +142,33 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 		    .unwrap_or( now()? ),
 		icon: props.icon
 		    .or( current.icon ),
-		tags: current.tags,
+		tags: props.tags
+		    .or( current.tags ),
 		deprecation: current.deprecation,
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })
 	})?;
 
-    let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous_title ] );
-    let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title ] )?;
-    debug!("Moving title link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
-    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
+    if input.properties.title.is_some() {
+	let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous.title ] );
+	let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title ] )?;
 
-    let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous_title.to_lowercase() ] );
-    let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title.to_lowercase() ] )?;
-    debug!("Moving title (lowercase) link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
-    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
+	if previous_path_hash != new_path_hash {
+	    debug!("Moving title link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
+	    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
+	}
+
+	let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous.title.to_lowercase() ] );
+	let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title.to_lowercase() ] )?;
+
+	if previous_path_hash != new_path_hash {
+	    debug!("Moving title (lowercase) link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
+	    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
+	}
+    }
+
+    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, TAG_HAPP.into() )?;
 
     Ok( entity.change_model( |happ| happ.to_info() ) )
 }

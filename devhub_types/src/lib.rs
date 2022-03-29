@@ -4,8 +4,9 @@ pub mod dnarepo_entry_types;
 pub mod happ_entry_types;
 pub mod web_asset_entry_types;
 
+use std::collections::{ HashMap, HashSet };
+use std::iter::FromIterator;
 use std::io::Write;
-use std::collections::HashMap;
 
 use hdk::prelude::*;
 use hdk::hash_path::path::Component;
@@ -108,7 +109,7 @@ pub fn fmt_path( path: &Path ) -> String {
 }
 
 
-fn fmt_tag( tag: &Vec<u8> ) -> String {
+pub fn fmt_tag( tag: &Vec<u8> ) -> String {
     std::str::from_utf8( tag ).unwrap_or( &format!("{:?}", tag ) ).to_string()
 }
 
@@ -399,6 +400,52 @@ pub fn get_hdk_versions() -> AppResult<Collection<String>> {
     })
 }
 
+
+pub fn update_tag_links<T>(prev_tags: Option<Vec<String>>, new_tags: Option<Vec<String>>, entity: &Entity<T>, tag: Vec<u8>) -> AppResult<()>
+where
+    T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
+    Entry: TryFrom<T, Error = WasmError>,
+{
+    debug!("Update tag ({}) list for {} from {:?} to {:?}", fmt_tag( &tag ), entity.id, prev_tags, new_tags );
+    if new_tags.is_none() {
+	return Ok(());
+    }
+    // current.tags vs given tags
+    //
+    //   - create a list of removed tags
+    //   - create a list of added tags
+    //
+    let prev_tags : HashSet<String> = HashSet::from_iter( prev_tags.unwrap_or( vec![] ).iter().cloned() );
+    let new_tags : HashSet<String> = HashSet::from_iter( new_tags.unwrap_or( vec![] ).iter().cloned() );
+
+    for rm_tag in prev_tags.difference( &new_tags ) {
+	let (tag_path, tag_hash) = ensure_path( ANCHOR_TAGS, vec![ &rm_tag.to_lowercase() ] )?;
+
+	let links = get_links(
+	    tag_hash.clone(),
+	    Some( LinkTag::new( tag.to_owned() ) )
+	)?;
+
+	debug!("Removing tag link: {}", fmt_path( &tag_path ) );
+	if let Some(link) = links.iter().find(|link| {
+	    debug!("Finding tag link match: {:?} == {:?}", link.target, entity.id );
+	    link.target == entity.id
+	}) {
+	    delete_link( link.create_link_hash.clone() )?;
+	}
+	else {
+	    debug!("Expected to remove tag link '{}' but it wasn't found", fmt_path( &tag_path ) );
+	}
+    }
+
+    for add_tag in new_tags.difference( &prev_tags ) {
+	let (tag_path, tag_hash) = ensure_path( ANCHOR_TAGS, vec![ &add_tag.to_lowercase() ] )?;
+	debug!("Adding tag link: {}", fmt_path( &tag_path ) );
+	entity.link_from( &tag_hash, tag.to_owned() )?;
+    }
+
+    Ok(())
+}
 
 
 #[cfg(test)]
