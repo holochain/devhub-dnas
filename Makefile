@@ -37,7 +37,7 @@ rebuild:			clean build
 build:				$(HAPP_BUNDLE)
 
 
-$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA)
+$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
 $(DNAREPO):			$(DNA_LIBRARY_WASM) $(MERE_MEMORY_WASM)
@@ -60,7 +60,8 @@ zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.
 
 ../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm:
 	$(error Missing mere memory zome @ $@ - Build it from https://github.com/mjbrisebois/hc-zome-mere-memory)
-$(MERE_MEMORY_WASM):		../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
+$(MERE_MEMORY_WASM):
+	make ../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
 	cp $< $@
 
 crates:				devhub_types

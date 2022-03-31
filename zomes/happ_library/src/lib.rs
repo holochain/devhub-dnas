@@ -1,9 +1,9 @@
 use devhub_types::{
-    DevHubResponse, EntityResponse, EntityCollectionResponse, GetEntityInput, FilterInput,
+    DevHubResponse, Entity, EntityResponse, EntityCollectionResponse, GetEntityInput, FilterInput,
     constants::{ VALUE_MD, ENTITY_MD, ENTITY_COLLECTION_MD },
     happ_entry_types::{
-	HappEntry, HappInfo, HappSummary,
-	HappReleaseEntry, HappReleaseInfo, HappReleaseSummary,
+	HappEntry, HappInfo,
+	HappReleaseEntry, HappReleaseInfo,
     },
     web_asset_entry_types::{ FileInfo },
     composition,
@@ -17,6 +17,12 @@ mod packaging;
 mod constants;
 
 
+use constants::{
+    TAG_HAPP,
+    TAG_HAPP_RELEASE,
+    ANCHOR_HAPPS,
+};
+
 
 entry_defs![
     PathEntry::entry_def(),
@@ -25,29 +31,25 @@ entry_defs![
 ];
 
 
-pub fn all_happs_path() -> Path {
-    Path::from( "happs" )
+#[derive(Debug, Deserialize)]
+pub struct GetAgentItemsInput {
+    pub agent: Option<AgentPubKey>,
 }
-pub fn root_path(pubkey: Option<AgentPubKey>) -> ExternResult<Path> {
-    let pubkey = pubkey
-	.unwrap_or( agent_info()?.agent_initial_pubkey );
-    let path = Path::from( format!("{:?}", pubkey ) );
 
-    debug!("Agent ({:?}) root path is: {:?}", pubkey, path.path_entry_hash()? );
-    Ok( path )
-}
-pub fn root_path_hash(pubkey: Option<AgentPubKey>) -> ExternResult<EntryHash> {
-    Ok( root_path( pubkey )?.path_entry_hash()? )
+
+pub fn agent_path_base(pubkey: Option<AgentPubKey>) -> String {
+    match agent_info() {
+	Ok(agent_info) => format!("{}", pubkey.unwrap_or( agent_info.agent_initial_pubkey ) ),
+	Err(_) => String::from("unknown_agent"),
+    }
 }
 
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let agent = agent_info()?.agent_initial_pubkey;
-    let path = root_path( Some(agent.to_owned()) )?;
-
-    debug!("Ensure the agent ({:?}) root path is there: {:?}", agent, path.path_entry_hash()? );
-    path.ensure()?;
+    let agent_path = agent_path_base( None );
+    debug!("Ensure the agent '{}' root path exists", agent_path );
+    devhub_types::ensure_path( &agent_path, Vec::<String>::new() )?;
 
     Ok(InitCallbackResult::Pass)
 }
@@ -89,29 +91,44 @@ fn deprecate_happ(input: happ::HappDeprecateInput) -> ExternResult<EntityRespons
 }
 
 #[hdk_extern]
-fn get_happs(input: happ::GetHappsInput) -> ExternResult<EntityCollectionResponse<HappSummary>> {
-    let collection = catch!( happ::get_happs( input ) );
+fn get_happs(input: GetAgentItemsInput) -> ExternResult<EntityCollectionResponse<HappEntry>> {
+    let (base_path, _) = devhub_types::create_path( &agent_path_base( input.agent ), vec![ ANCHOR_HAPPS ] );
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_HAPP.into(), base_path, |items : Vec<Entity<HappEntry>>| {
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect() )
+    }) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
 #[hdk_extern]
-fn get_my_happs(_:()) -> ExternResult<EntityCollectionResponse<HappSummary>> {
-    let collection = catch!( happ::get_my_happs() );
+fn get_my_happs(_:()) -> ExternResult<EntityCollectionResponse<HappEntry>> {
+    get_happs( GetAgentItemsInput {
+	agent: None
+    })
+}
+
+#[hdk_extern]
+fn get_happs_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappEntry>> {
+    let collection = catch!( devhub_types::get_by_filter( TAG_HAPP.into(), input.filter, input.keyword ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
 #[hdk_extern]
-fn get_happs_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappSummary>> {
-    let collection = catch!( happ::get_happs_by_filter( input.filter, input.keyword ) );
+fn get_happs_by_tags( input: Vec<String> ) -> ExternResult<DevHubResponse<Vec<Entity<HappEntry>>>> {
+    let list = catch!( devhub_types::get_by_tags( TAG_HAPP.into(), input ) );
 
-    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+    Ok(composition( list, VALUE_MD ))
 }
 
 #[hdk_extern]
-fn get_all_happs(_:()) -> ExternResult<EntityCollectionResponse<HappSummary>> {
-    let collection = catch!( happ::get_all_happs() );
+fn get_all_happs(_:()) -> ExternResult<EntityCollectionResponse<HappEntry>> {
+    let (base_path, _) = devhub_types::create_path( ANCHOR_HAPPS, Vec::<String>::new() );
+    let collection = catch!( devhub_types::get_entities_for_path( TAG_HAPP.into(), base_path ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
@@ -147,15 +164,15 @@ fn delete_happ_release(input: happ_release::DeleteInput) -> ExternResult<DevHubR
 }
 
 #[hdk_extern]
-fn get_happ_releases(input: happ_release::GetHappReleasesInput) -> ExternResult<EntityCollectionResponse<HappReleaseSummary>> {
+fn get_happ_releases(input: happ_release::GetHappReleasesInput) -> ExternResult<EntityCollectionResponse<HappReleaseEntry>> {
     let collection = catch!( happ_release::get_happ_releases( input ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
 #[hdk_extern]
-fn get_happ_releases_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappReleaseSummary>> {
-    let collection = catch!( happ_release::get_happ_releases_by_filter( input.filter, input.keyword ) );
+fn get_happ_releases_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappReleaseEntry>> {
+    let collection = catch!( devhub_types::get_by_filter( TAG_HAPP_RELEASE.into(), input.filter, input.keyword ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

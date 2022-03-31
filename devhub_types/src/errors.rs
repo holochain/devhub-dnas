@@ -56,19 +56,19 @@ pub enum ErrorKinds {
     HDKError(WasmError), // catch all for unhandled errors
 }
 
-impl From<AppError> for ErrorKinds  {
+impl From<AppError> for ErrorKinds {
     fn from(error: AppError) -> Self {
         ErrorKinds::AppError(error)
     }
 }
 
-impl From<UserError> for ErrorKinds  {
+impl From<UserError> for ErrorKinds {
     fn from(error: UserError) -> Self {
         ErrorKinds::UserError(error)
     }
 }
 
-impl From<UtilsError> for ErrorKinds  {
+impl From<UtilsError> for ErrorKinds {
     fn from(error: UtilsError) -> Self {
 	if let UtilsError::EntryNotFoundError(_) = error {
 	    UserError::EntryNotFoundError(error).into()
@@ -79,14 +79,20 @@ impl From<UtilsError> for ErrorKinds  {
     }
 }
 
-impl From<EssenceError> for ErrorKinds  {
+impl From<EssenceError> for ErrorKinds {
     fn from(error: EssenceError) -> Self {
         ErrorKinds::FailureResponseError(error)
     }
 }
 
-impl From<WasmError> for ErrorKinds  {
+impl From<WasmError> for ErrorKinds {
     fn from(error: WasmError) -> Self {
         ErrorKinds::HDKError(error)
+    }
+}
+
+impl From<ErrorKinds> for WasmError {
+    fn from(error: ErrorKinds) -> Self {
+        WasmError::Guest( format!("{:?}", error ) )
     }
 }

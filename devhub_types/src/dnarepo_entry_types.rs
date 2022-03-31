@@ -93,31 +93,12 @@ pub struct DnaEntry {
     pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
+    pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
 }
 
 impl EntryModel for DnaEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna", "entry" )
-    }
-}
-
-// Summary
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DnaSummary {
-    pub name: String,
-    pub description: String,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub developer: AgentPubKey,
-    pub deprecation: bool,
-    pub metadata: HashMap<String, serde_yaml::Value>,
-
-    // optional
-    pub icon: Option<SerializedBytes>,
-}
-impl EntryModel for DnaSummary {
     fn get_type(&self) -> EntityType {
 	EntityType::new( "dna", "summary" )
     }
@@ -134,6 +115,7 @@ pub struct DnaInfo {
     pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
+    pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
 }
@@ -149,23 +131,11 @@ impl DnaEntry {
 	    name: self.name.clone(),
 	    description: self.description.clone(),
 	    icon: self.icon.clone(),
+	    tags: self.tags.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    developer: self.developer.clone(),
 	    deprecation: self.deprecation.clone(),
-	    metadata: self.metadata.clone(),
-	}
-    }
-
-    pub fn to_summary(&self) -> DnaSummary {
-	DnaSummary {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    icon: self.icon.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    developer: self.developer.pubkey.clone(),
-	    deprecation: self.deprecation.clone().map_or(false, |_| true),
 	    metadata: self.metadata.clone(),
 	}
     }
@@ -202,24 +172,6 @@ pub struct DnaVersionEntry {
 
 impl EntryModel for DnaVersionEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "entry" )
-    }
-}
-
-// Summary
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DnaVersionSummary {
-    pub for_dna: EntryHash,
-    pub version: u64,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub wasm_hash : String,
-    pub hdk_version: String,
-    pub zomes: Vec<ZomeReference>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
-}
-impl EntryModel for DnaVersionSummary {
-    fn get_type(&self) -> EntityType {
 	EntityType::new( "dna_version", "summary" )
     }
 }
@@ -227,14 +179,14 @@ impl EntryModel for DnaVersionSummary {
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionInfo {
-    pub for_dna: Option<Entity<DnaSummary>>,
+    pub for_dna: Option<Entity<DnaEntry>>,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
-    pub zomes: HashMap<String, Entity<ZomeVersionSummary>>,
+    pub zomes: HashMap<String, Entity<ZomeVersionEntry>>,
     pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for DnaVersionInfo {
@@ -246,7 +198,7 @@ impl EntryModel for DnaVersionInfo {
 // Package
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionPackage {
-    pub for_dna: Option<Entity<DnaSummary>>,
+    pub for_dna: Option<Entity<DnaEntry>>,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -262,13 +214,7 @@ impl EntryModel for DnaVersionPackage {
 
 impl DnaVersionEntry {
     pub fn to_package(&self, dna_bytes: Vec<u8>) -> DnaVersionPackage {
-	let mut dna_entity : Option<Entity<DnaSummary>> = None;
-
-	if let Some(entity) = get_entity::<DnaEntry>( &self.for_dna ).ok() {
-	    dna_entity = Some( entity.change_model(
-		|version| version.to_summary()
-	    ));
-	};
+	let dna_entity = get_entity::<DnaEntry>( &self.for_dna ).ok();
 
 	DnaVersionPackage {
 	    for_dna: dna_entity,
@@ -282,13 +228,7 @@ impl DnaVersionEntry {
     }
 
     pub fn to_info(&self) -> DnaVersionInfo {
-	let mut dna_entity : Option<Entity<DnaSummary>> = None;
-
-	if let Some(entity) = get_entity::<DnaEntry>( &self.for_dna ).ok() {
-	    dna_entity = Some( entity.change_model(
-		|version| version.to_summary()
-	    ));
-	};
+	let dna_entity = get_entity::<DnaEntry>( &self.for_dna ).ok();
 
 	DnaVersionInfo {
 	    for_dna: dna_entity,
@@ -301,23 +241,10 @@ impl DnaVersionEntry {
 	    zomes: self.zomes.iter()
 		.filter_map( |zome_ref| {
 		    get_entity::<ZomeVersionEntry>( &zome_ref.version ).ok().map( |entity| {
-			( zome_ref.name.clone(), entity.change_model( |version| version.to_summary() ) )
+			( zome_ref.name.clone(), entity )
 		    })
 		})
 		.collect(),
-	    metadata: self.metadata.clone(),
-	}
-    }
-
-    pub fn to_summary(&self) -> DnaVersionSummary {
-	DnaVersionSummary {
-	    for_dna: self.for_dna.clone(),
-	    version: self.version.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    wasm_hash: self.wasm_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    zomes: self.zomes.clone(),
 	    metadata: self.metadata.clone(),
 	}
     }
@@ -339,27 +266,11 @@ pub struct ZomeEntry {
     pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
+    pub tags: Option<Vec<String>>,
     pub deprecation: Option<DeprecationNotice>,
 }
 
 impl EntryModel for ZomeEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome", "entry" )
-    }
-}
-
-// Summary
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ZomeSummary {
-    pub name: String,
-    pub description: String,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub developer: AgentPubKey,
-    pub deprecation: bool,
-    pub metadata: HashMap<String, serde_yaml::Value>,
-}
-impl EntryModel for ZomeSummary {
     fn get_type(&self) -> EntityType {
 	EntityType::new( "zome", "summary" )
     }
@@ -376,6 +287,7 @@ pub struct ZomeInfo {
     pub metadata: HashMap<String, serde_yaml::Value>,
 
     // optional
+    pub tags: Option<Vec<String>>,
     pub deprecation: Option<DeprecationNotice>,
 }
 impl EntryModel for ZomeInfo {
@@ -394,18 +306,7 @@ impl ZomeEntry {
 	    developer: self.developer.clone(),
 	    deprecation: self.deprecation.clone(),
 	    metadata: self.metadata.clone(),
-	}
-    }
-
-    pub fn to_summary(&self) -> ZomeSummary {
-	ZomeSummary {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    developer: self.developer.pubkey.clone(),
-	    deprecation: self.deprecation.clone().map_or(false, |_| true),
-	    metadata: self.metadata.clone(),
+	    tags: self.tags.clone(),
 	}
     }
 }
@@ -432,24 +333,6 @@ pub struct ZomeVersionEntry {
 
 impl EntryModel for ZomeVersionEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "zome_version", "entry" )
-    }
-}
-
-// Summary
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ZomeVersionSummary {
-    pub for_zome: EntryHash,
-    pub version: u64,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub mere_memory_addr: EntryHash,
-    pub mere_memory_hash: String,
-    pub hdk_version: String,
-    pub metadata: HashMap<String, serde_yaml::Value>,
-}
-impl EntryModel for ZomeVersionSummary {
-    fn get_type(&self) -> EntityType {
 	EntityType::new( "zome_version", "summary" )
     }
 }
@@ -457,7 +340,7 @@ impl EntryModel for ZomeVersionSummary {
 // Full
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ZomeVersionInfo {
-    pub for_zome: Option<Entity<ZomeSummary>>,
+    pub for_zome: Option<Entity<ZomeEntry>>,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -475,13 +358,7 @@ impl EntryModel for ZomeVersionInfo {
 
 impl ZomeVersionEntry {
     pub fn to_info(&self) -> ZomeVersionInfo {
-	let mut zome_entity : Option<Entity<ZomeSummary>> = None;
-
-	if let Some(entity) = get_entity::<ZomeEntry>( &self.for_zome ).ok() {
-	    zome_entity = Some( entity.change_model(
-		|version| version.to_summary()
-	    ));
-	};
+	let zome_entity = get_entity::<ZomeEntry>( &self.for_zome ).ok();
 
 	ZomeVersionInfo {
 	    for_zome: zome_entity,
@@ -489,19 +366,6 @@ impl ZomeVersionEntry {
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    changelog: self.changelog.clone(),
-	    mere_memory_addr: self.mere_memory_addr.clone(),
-	    mere_memory_hash: self.mere_memory_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    metadata: self.metadata.clone(),
-	}
-    }
-
-    pub fn to_summary(&self) -> ZomeVersionSummary {
-	ZomeVersionSummary {
-	    for_zome: self.for_zome.clone(),
-	    version: self.version.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
 	    mere_memory_addr: self.mere_memory_addr.clone(),
 	    mere_memory_hash: self.mere_memory_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
@@ -540,6 +404,7 @@ pub mod tests {
 	    name: String::from("Game Turns"),
 	    description: String::from("A tool for turn-based games to track the order of player actions"),
 	    icon: Some(SerializedBytes::try_from(()).unwrap()),
+	    tags: Some(vec![ String::from("Games") ]),
 	    published_at: 1618855430,
 	    last_updated: 1618855430,
 
@@ -554,7 +419,7 @@ pub mod tests {
 
     #[test]
     ///
-    fn dna_to_summary_test() {
+    fn dna_to_info_test() {
 	let dna1 = create_dnaentry();
 	let dna2 = create_dnaentry();
 
@@ -564,8 +429,8 @@ pub mod tests {
 
 	assert_eq!(dna_info.name, "Game Turns");
 
-	let dna_summary = dna2.to_summary();
+	let dna_info = dna2.to_info();
 
-	assert_eq!(dna_summary.name, "Game Turns");
+	assert_eq!(dna_info.name, "Game Turns");
     }
 }

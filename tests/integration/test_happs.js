@@ -27,6 +27,7 @@ function basic_tests () {
 	    "title": "Chess",
 	    "subtitle": "Super fun board game",
 	    "description": "Play chess with friends :)",
+	    "tags": [ "Games", "Strategy" ],
 	};
 
 	let happ			= await alice.call( "happs", "happ_library", "create_happ", happ_input );
@@ -51,15 +52,36 @@ function basic_tests () {
 	    expect( happs		).to.have.length( 1 );
 	}
 
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "Games" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
+	}
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "strategy" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
+	}
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "Games", "Action" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
+	}
+
 	let happ_addr			= happ.$addr;
 	{
 	    let title			= "Chess++";
 	    let description		= "New description";
+	    let tags			= [ "Games", "Boardgame" ];
 	    let update			= await alice.call( "happs", "happ_library", "update_happ", {
 		"addr": happ_addr,
 		"properties": {
 		    title,
 		    description,
+		    tags,
 		},
 	    });
 	    log.normal("New hApp: %s -> %s", String(update.$addr), update.title );
@@ -74,6 +96,19 @@ function basic_tests () {
 	    log.normal("Updated hApp: %s -> %s", String(happ.$addr), happ.title );
 
 	    expect( happ.description	).to.equal( description );
+	}
+
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "strategy" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
+	}
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "boardgame" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
 	}
 
 	{
@@ -205,7 +240,7 @@ function basic_tests () {
 	    let header			= await alice.call( "happs", "happ_library", "delete_happ_release", {
 		"id": release.$id,
 	    });
-	    log.normal("Delete hApp: %s", header );
+	    log.normal("Delete hApp: %s", new HoloHash( header ) );
 	}
 
 	{
@@ -264,7 +299,7 @@ function errors_tests () {
 describe("hApps", () => {
 
     const holochain			= new Holochain({
-	"default_stdout_loggers": true,
+	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
     });
 
     before(async function () {

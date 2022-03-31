@@ -2,6 +2,7 @@ use devhub_types::{
     AppResult,
     errors::{ UserError },
     dnarepo_entry_types::{ ProfileEntry, ProfileInfo },
+    fmt_path,
 };
 use hc_crud::{
     create_entity, get_entity, update_entity, find_latest_link,
@@ -41,11 +42,9 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
     let entity = create_entity( &profile )?
 	.change_model( |profile| profile.to_info() );
 
-    let root_path = crate::root_path( None )?;
-    let base = root_path.path_entry_hash()?;
-
-    debug!("Linking agent root path ({}) to Profile: {}", base, entity.id );
-    entity.link_from( &base, TAG_PROFILE.into() )?;
+    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ "profiles" ] )?;
+    debug!("Linking agent root path ({}) to Profile: {}", fmt_path( &agent_base ), entity.id );
+    entity.link_from( &agent_base_hash, TAG_PROFILE.into() )?;
 
     Ok( entity )
 }
@@ -53,12 +52,11 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
 
 
 pub fn get_profile_links(maybe_pubkey: Option<AgentPubKey> ) -> ExternResult<Vec<Link>> {
-    let root_path = crate::root_path( maybe_pubkey )?;
-    let base = root_path.path_entry_hash()?;
+    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( maybe_pubkey ), vec![ "profiles" ] )?;
 
-    debug!("Getting Profile links for Agent: {}", base );
+    debug!("Getting Profile links for path '{}'", fmt_path( &agent_base ) );
     let all_links: Vec<Link> = get_links(
-        base.clone(),
+        agent_base_hash,
 	Some(LinkTag::new(TAG_PROFILE))
     )?.into();
 
@@ -130,14 +128,14 @@ pub struct FollowInput {
 }
 
 pub fn follow_developer(input: FollowInput) -> AppResult<HeaderHash> {
-    let my_agent = crate::root_path( None )?.path_entry_hash()?;
-    let other_agent = crate::root_path( Some(input.agent) )?.path_entry_hash()?;
+    let (my_agent_base, my_agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( None ), Vec::<String>::new() );
+    let (other_agent_base, other_agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( Some(input.agent) ), Vec::<String>::new() );
 
-    debug!("Creating follow link from this agent ({}) to agent: {}", my_agent, other_agent );
+    debug!("Creating follow link from this agent ({}) to agent: {}", fmt_path( &my_agent_base ), fmt_path( &other_agent_base ) );
 
     let header_hash = create_link(
-	my_agent,
-	other_agent,
+	my_agent_base_hash,
+	other_agent_base_hash,
 	LinkTag::new( TAG_FOLLOW )
     )?;
 
@@ -152,11 +150,12 @@ pub struct UnfollowInput {
 
 pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>> {
     let links = get_following()?.items;
-    let other_agent = crate::root_path( Some(input.agent.to_owned()) )?.path_entry_hash()?;
+    let (other_agent_base, other_agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( Some(input.agent.to_owned()) ), Vec::<String>::new() );
 
+    debug!("Unfollow Agent: {}", fmt_path( &other_agent_base ) );
     let maybe_link = links
 	.into_iter()
-	.find(|link| link.target == other_agent );
+	.find(|link| link.target == other_agent_base_hash );
     let mut maybe_header : Option<HeaderHash> = None;
 
     if let Some(link) = maybe_link {
@@ -172,16 +171,16 @@ pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>>
 
 
 pub fn get_following() -> AppResult<Collection<Link>> {
-    let my_agent = crate::root_path( None )?.path_entry_hash()?;
+    let (my_agent_base, my_agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( None ), Vec::<String>::new() );
 
-    debug!("Getting Profile links for Agent: {}", my_agent );
+    debug!("Getting Profile links for Agent: {}", fmt_path( &my_agent_base ) );
     let all_links: Vec<Link> = get_links(
-        my_agent.to_owned(),
+        my_agent_base_hash.to_owned(),
 	Some(LinkTag::new(TAG_FOLLOW))
     )?.into();
 
     Ok(Collection {
-	base: my_agent,
+	base: my_agent_base_hash,
 	items: all_links
     })
 }

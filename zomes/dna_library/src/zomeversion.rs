@@ -4,9 +4,14 @@ use devhub_types::{
     errors::{ UserError },
     dnarepo_entry_types::{
 	ZomeEntry,
-	ZomeVersionEntry, ZomeVersionInfo, ZomeVersionSummary,
+	ZomeVersionEntry, ZomeVersionInfo,
+    },
+    constants::{
+	ANCHOR_UNIQUENESS,
+	ANCHOR_HDK_VERSIONS,
     },
     call_local_zome,
+    fmt_path,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity, delete_entity, get_entities,
@@ -15,23 +20,10 @@ use hc_crud::{
 use mere_memory_types::{ MemoryEntry };
 use hdk::prelude::*;
 
-use crate::constants::{ TAG_ZOMEVERSION };
+use crate::constants::{
+    TAG_ZOMEVERSION,
+};
 
-
-fn wasm_hash_path(hash: &str) -> AppResult<Path> {
-    Ok( create_filter_path( "wasm_hash", hash )? )
-}
-
-fn filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    Ok( hc_crud::path_from_collection( vec![ "zome_version_by", filter, value ] )? )
-}
-
-fn create_filter_path(filter: &str, value: &str) -> AppResult<Path> {
-    let path = filter_path( filter, value )?;
-    path.ensure()?;
-
-    Ok( path )
-}
 
 
 
@@ -83,28 +75,19 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
     let entity = create_entity( &version )?
 	.change_model( |version| version.to_info() );
 
-    let wasm_hash_path = wasm_hash_path( &entity.content.mere_memory_hash )?;
-    let wasm_path_hash = wasm_hash_path.path_entry_hash()?;
-
+    // Parent anchor
     debug!("Linking Zome ({}) to entry: {}", input.for_zome, entity.id );
     entity.link_from( &input.for_zome, TAG_ZOMEVERSION.into() )?;
 
-    debug!("Linking 'wasm' path ({}) to entry: {}", wasm_path_hash, entity.id );
+    // Uniqueness anchor
+    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &entity.content.mere_memory_hash ] )?;
+    debug!("Linking uniqueness path ({} => {:?}) to entry: {}", fmt_path( &wasm_path ), wasm_path, entity.id );
     entity.link_from( &wasm_path_hash, TAG_ZOMEVERSION.into() )?;
 
-
-    let hdk_anchor = devhub_types::hdk_version_anchor( &input.hdk_version );
-    hdk_anchor.ensure()?;
-
-    debug!("Linking HDK version global anchor ({:?}) to entry: {}", hdk_anchor, entity.id );
-    entity.link_from( &hdk_anchor.path_entry_hash()?, TAG_ZOMEVERSION.into() )?;
-
-
-    // let zome_hdk_anchor = devhub_types::zome_hdk_anchor( &version, &input.hdk_version )?;
-    // zome_hdk_anchor.ensure()?;
-
-    // debug!("Linking HDK version local anchor ({:?}) to entry: {}", zome_hdk_anchor, entity.id );
-    // entity.link_from( &zome_hdk_anchor.path_entry_hash()?, TAG_ZOMEVERSION.into() )?;
+    // HDK anchor
+    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
+    debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
+    entity.link_from( &hdkv_hash, TAG_ZOMEVERSION.into() )?;
 
     Ok( entity )
 }
@@ -132,19 +115,8 @@ pub struct GetZomeVersionsInput {
     pub for_zome: EntryHash,
 }
 
-pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Collection<Entity<ZomeVersionSummary>>> {
-    let collection = get_entities::<ZomeEntry, ZomeVersionEntry>( &input.for_zome, TAG_ZOMEVERSION.into() )?;
-
-    let versions = collection.items.into_iter()
-	.map(|entity| {
-	    entity.change_model( |version| version.to_summary() )
-	})
-	.collect();
-
-    Ok(Collection {
-	base: collection.base,
-	items: versions,
-    })
+pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Collection<Entity<ZomeVersionEntry>>> {
+    Ok( get_entities::<ZomeEntry, ZomeVersionEntry>( &input.for_zome, TAG_ZOMEVERSION.into() )? )
 }
 
 
@@ -188,19 +160,6 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 
 
 
-fn get_entities_for_links ( links: Vec<Link> ) -> Vec<Entity<ZomeVersionSummary>> {
-    links.into_iter()
-	.filter_map(|link| {
-	    get_entity::<ZomeVersionEntry>( &link.target ).ok()
-	})
-	.map( |entity| {
-	    entity.change_model( |version| version.to_summary() )
-	})
-	.collect()
-}
-
-
-
 #[derive(Debug, Deserialize)]
 pub struct DeleteZomeVersionInput {
     pub id: EntryHash,
@@ -212,58 +171,4 @@ pub fn delete_zome_version(input: DeleteZomeVersionInput) -> AppResult<HeaderHas
     debug!("Deleted ZOME Version header ({})", delete_header );
 
     Ok( delete_header )
-}
-
-
-pub fn get_zome_versions_by_filter( filter: String, keyword: String ) -> AppResult<Collection<Entity<ZomeVersionSummary>>> {
-    let base = filter_path( &filter, &keyword )?.path_entry_hash()?;
-
-    debug!("Getting hApp links for base: {:?}", base );
-    let all_links = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_ZOMEVERSION))
-    )?;
-
-    let versions = get_entities_for_links( all_links );
-
-    Ok(Collection {
-	base,
-	items: versions,
-    })
-}
-
-pub fn get_hdk_versions() -> AppResult<Collection<String>> {
-    let hdk_version_anchor = Path::from("hdk_versions");
-
-    let hdk_versions : Vec<String> = hdk_version_anchor.children_paths()?.into_iter()
-	.filter_map( |path| {
-	    debug!("HDK Version PATH: {:?}", path );
-	    match std::str::from_utf8( path.as_ref().clone().last().unwrap().as_ref() ) {
-		Err(_) => None,
-		Ok(path_str) => Some( path_str.to_string().replace("[dot]", ".") ),
-	    }
-	})
-	.collect();
-
-    Ok(Collection {
-	base: hdk_version_anchor.path_entry_hash()?,
-	items: hdk_versions,
-    })
-}
-
-pub fn get_zome_versions_by_hdk_version( hdk_version: String ) -> AppResult<Collection<Entity<ZomeVersionSummary>>> {
-    let base = devhub_types::hdk_version_anchor( &hdk_version ).path_entry_hash()?;
-
-    debug!("Getting hApp links for base: {:?}", base );
-    let all_links = get_links(
-        base.clone(),
-	Some(LinkTag::new(TAG_ZOMEVERSION))
-    )?;
-
-    let versions = get_entities_for_links( all_links );
-
-    Ok(Collection {
-	base,
-	items: versions,
-    })
 }
