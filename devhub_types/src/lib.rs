@@ -401,7 +401,7 @@ pub fn get_hdk_versions() -> AppResult<Collection<String>> {
 }
 
 
-pub fn update_tag_links<T>(prev_tags: Option<Vec<String>>, new_tags: Option<Vec<String>>, entity: &Entity<T>, tag: Vec<u8>) -> AppResult<()>
+pub fn update_tag_links<T>(prev_tags: Option<Vec<String>>, new_tags: Option<Vec<String>>, entity: &Entity<T>, link_type: u8, tag: Vec<u8>) -> AppResult<()>
 where
     T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
     Entry: TryFrom<T, Error = WasmError>,
@@ -441,7 +441,7 @@ where
     for add_tag in new_tags.difference( &prev_tags ) {
 	let (tag_path, tag_hash) = ensure_path( ANCHOR_TAGS, vec![ &add_tag.to_lowercase() ] )?;
 	debug!("Adding tag link: {}", fmt_path( &tag_path ) );
-	entity.link_from( &tag_hash, tag.to_owned() )?;
+	entity.link_from( &tag_hash, link_type, tag.to_owned() )?;
     }
 
     Ok(())

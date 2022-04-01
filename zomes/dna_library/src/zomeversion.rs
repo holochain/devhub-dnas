@@ -21,6 +21,7 @@ use mere_memory_types::{ MemoryEntry };
 use hdk::prelude::*;
 
 use crate::constants::{
+    LT_NONE,
     TAG_ZOMEVERSION,
 };
 
@@ -77,17 +78,17 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 
     // Parent anchor
     debug!("Linking Zome ({}) to entry: {}", input.for_zome, entity.id );
-    entity.link_from( &input.for_zome, TAG_ZOMEVERSION.into() )?;
+    entity.link_from( &input.for_zome, LT_NONE, TAG_ZOMEVERSION.into() )?;
 
     // Uniqueness anchor
     let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &entity.content.mere_memory_hash ] )?;
     debug!("Linking uniqueness path ({} => {:?}) to entry: {}", fmt_path( &wasm_path ), wasm_path, entity.id );
-    entity.link_from( &wasm_path_hash, TAG_ZOMEVERSION.into() )?;
+    entity.link_from( &wasm_path_hash, LT_NONE, TAG_ZOMEVERSION.into() )?;
 
     // HDK anchor
     let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
-    entity.link_from( &hdkv_hash, TAG_ZOMEVERSION.into() )?;
+    entity.link_from( &hdkv_hash, LT_NONE, TAG_ZOMEVERSION.into() )?;
 
     Ok( entity )
 }

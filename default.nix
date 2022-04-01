@@ -14,8 +14,8 @@ let
     holochainVersionId = "custom";
     holochainVersion = {
       url = "https://github.com/holochain/holochain";
-      rev = "holochain-0.0.127"; # Feb 23, 2022 - 3e49d501ce1b74a700d5abae9b8b26021885f012
-      sha256 = "1sy2cwd83270kzf1g2jkxwdjvqd9g4gqcpqqw4hm4vnjp6qdmyim";
+      rev = "holochain-0.0.132"; # Mar 30, 2022 - b2eb2342d2feb68872e19636e83d199d38b01f66
+      sha256 = "12zgx1icnq4jgra9q6bwqjhlzmm38s5kz6vidkylal11ynnd57ww";
       cargoLock = {
         outputHashes = {
         };

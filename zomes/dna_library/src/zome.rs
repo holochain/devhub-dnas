@@ -18,6 +18,7 @@ use hc_crud::{
 use hdk::prelude::*;
 
 use crate::constants::{
+    LT_NONE,
     TAG_ZOME,
     ANCHOR_ZOMES,
 };
@@ -67,25 +68,25 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     // Developer (Agent) anchor
     let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_ZOMES ] )?;
     debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &agent_base ), entity.id );
-    entity.link_from( &agent_base_hash, TAG_ZOME.into() )?;
+    entity.link_from( &agent_base_hash, LT_NONE, TAG_ZOME.into() )?;
 
     // Name anchors (case sensitive/insensitive)
     debug!("Linking name path ({}) to ENTRY: {}", fmt_path( &name_path ), entity.id );
-    entity.link_from( &name_path_hash, TAG_ZOME.into() )?;
+    entity.link_from( &name_path_hash, LT_NONE, TAG_ZOME.into() )?;
     debug!("Linking name (lowercase) path ({}) to ENTRY: {}", fmt_path( &name_path_lc ), entity.id );
-    entity.link_from( &name_path_lc_hash, TAG_ZOME.into() )?;
+    entity.link_from( &name_path_lc_hash, LT_NONE, TAG_ZOME.into() )?;
 
     // Global anchor
     let (all_zomes_path, all_zomes_hash) = devhub_types::ensure_path( ANCHOR_ZOMES, Vec::<String>::new() )?;
     debug!("Linking all Zome path ({}) to ENTRY: {}", fmt_path( &all_zomes_path ), entity.id );
-    entity.link_from( &all_zomes_hash, TAG_ZOME.into() )?;
+    entity.link_from( &all_zomes_hash, LT_NONE, TAG_ZOME.into() )?;
 
     // Tag anchors
     if input.tags.is_some() {
 	for tag in input.tags.unwrap() {
 	    let (tag_path, tag_hash) = devhub_types::ensure_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ] )?;
 	    debug!("Linking TAG anchor ({}) to entry: {}", fmt_path( &tag_path ), entity.id );
-	    entity.link_from( &tag_hash, TAG_ZOME.into() )?;
+	    entity.link_from( &tag_hash, LT_NONE, TAG_ZOME.into() )?;
 	}
     }
 
@@ -153,7 +154,7 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-	    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LT_NONE, TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
 	}
 
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name.to_lowercase() ] );
@@ -161,11 +162,11 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-	    entity.move_link_from( TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LT_NONE, TAG_ZOME.into(), &previous_path_hash, &new_path_hash )?;
 	}
     }
 
-    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, TAG_ZOME.into() )?;
+    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, LT_NONE, TAG_ZOME.into() )?;
 
     Ok( entity.change_model( |zome| zome.to_info() ) )
 }
