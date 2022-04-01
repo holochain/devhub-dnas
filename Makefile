@@ -62,7 +62,7 @@ zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.
 	$(error Missing mere memory zome @ $@ - Build it from https://github.com/mjbrisebois/hc-zome-mere-memory)
 $(MERE_MEMORY_WASM):
 	make ../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
-	cp $< $@
+	cp ../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm $@
 
 crates:				devhub_types
 devhub_types:			devhub_types/src/*.rs devhub_types/Cargo.toml

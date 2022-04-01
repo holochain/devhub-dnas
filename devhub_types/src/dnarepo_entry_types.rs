@@ -377,20 +377,6 @@ impl ZomeVersionEntry {
 
 
 
-
-
-#[hdk_extern]
-fn validate_create_entry_dna(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
-    if let Ok(_dna) = DnaEntry::try_from( &validate_data.element ) {
-	return Ok(ValidateCallbackResult::Valid);
-    }
-
-    Ok(ValidateCallbackResult::Invalid("DNA entry is not right".to_string()))
-}
-
-
-
-
 #[cfg(test)]
 pub mod tests {
     use super::*;
