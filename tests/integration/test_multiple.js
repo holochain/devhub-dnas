@@ -56,7 +56,7 @@ function basic_tests () {
 
 	{
 	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
-		"dna_hash": alice._app_schema._dnas.webassets._hash,
+		// "dna_hash": alice._app_schema._dnas.webassets._hash,
 		"id": file_addr,
 	    });
 	    log.normal("Updated hApp UI: %s", gui.file_size );
@@ -161,7 +161,6 @@ function basic_tests () {
 	{
 	    let happ_package		= await alice.call( "happs", "happ_library", "get_release_package", {
 		"id": release.$id,
-		"dnarepo_dna_hash": alice._app_schema._dnas.dnarepo._hash,
 	    });
 	    log.normal("hApp release package bytes: (%s) %s", happ_package.constructor.name, happ_package.length );
 
@@ -174,8 +173,6 @@ function basic_tests () {
 	    let webhapp_package		= await alice.call( "happs", "happ_library", "get_webhapp_package", {
 		"name": "Test Web hApp Package",
 		"id": release.$id,
-		"dnarepo_dna_hash": alice._app_schema._dnas.dnarepo._hash,
-		"webassets_dna_hash": alice._app_schema._dnas.webassets._hash,
 	    });
 	    log.normal("Web hApp package bytes: (%s) %s", webhapp_package.constructor.name, webhapp_package.length );
 
@@ -206,6 +203,13 @@ describe("All DNAs", () => {
 	}, [
 	    "alice",
 	]);
+
+	const response			= await clients.alice.call( "happs", "happ_library", "register_peer_dnas", {
+	    "dnarepo": clients.alice._app_schema._dnas.dnarepo._hash,
+	    "happs": clients.alice._app_schema._dnas.happs._hash,
+	    "webassets": clients.alice._app_schema._dnas.webassets._hash,
+	});
+	console.log( response );
 
 	// Must call whoami on each cell to ensure that init has finished.
 	{

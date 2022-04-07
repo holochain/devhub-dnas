@@ -19,13 +19,13 @@ use hdk::prelude::*;
 #[derive(Debug, Deserialize)]
 pub struct GetGUIInput {
     pub id: EntryHash,
-    pub dna_hash: holo_hash::DnaHash,
 }
 
 pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
     debug!("Get GUI from: {}", input.id );
     let pubkey = agent_info()?.agent_initial_pubkey;
-    let cell_id = CellId::new( input.dna_hash, pubkey );
+    let webassets_hash = devhub_types::webassets_hash()?;
+    let cell_id = CellId::new( webassets_hash, pubkey );
 
     let file_info = call_local_dna_zome( &cell_id, "web_assets", "get_file", GetEntityInput {
 	id: input.id,
@@ -76,13 +76,13 @@ pub struct Bundle {
 #[derive(Debug, Deserialize)]
 pub struct GetReleasePackageInput {
     pub id: EntryHash,
-    pub dnarepo_dna_hash: holo_hash::DnaHash,
 }
 
 pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> {
     debug!("Get release package: {}", input.id );
     let pubkey = agent_info()?.agent_initial_pubkey;
-    let cell_id = CellId::new( input.dnarepo_dna_hash, pubkey );
+    let dnarepo_hash = devhub_types::dnarepo_hash()?;
+    let cell_id = CellId::new( dnarepo_hash, pubkey );
 
     let entity = crate::happ_release::get_happ_release(GetEntityInput {
 	id: input.id,
@@ -146,8 +146,6 @@ pub struct WebHappBundle {
 pub struct GetWebHappPackageInput {
     pub name: String,
     pub id: EntryHash,
-    pub dnarepo_dna_hash: holo_hash::DnaHash,
-    pub webassets_dna_hash: holo_hash::DnaHash,
 }
 pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> {
     let happ_release = crate::happ_release::get_happ_release(GetEntityInput {
@@ -157,12 +155,10 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
     debug!("Get release package: {}", input.id );
     let happ_pack_bytes = get_release_package(GetReleasePackageInput {
 	id: input.id.clone(),
-	dnarepo_dna_hash: input.dnarepo_dna_hash.clone(),
     })?;
 
     let web_asset_entity = get_gui(GetGUIInput {
 	id: happ_release.content.gui.ok_or(AppError::UnexpectedStateError(String::from("Missing GUI asset")))?.asset_group_id,
-	dna_hash: input.webassets_dna_hash,
     })?;
 
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
