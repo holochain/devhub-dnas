@@ -50,4 +50,7 @@ let
   nixpkgs = holonix.pkgs;
 in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
+  buildInputs = with nixpkgs; [
+    nodejs-14_x
+  ];
 }
