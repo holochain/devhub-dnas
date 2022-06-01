@@ -79,8 +79,11 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     // Title anchors (case sensitive/insensitive)
     debug!("Linking title path ({}) to entity: {}", fmt_path( &title_path ), entity.id );
     entity.link_from( &title_path_hash, LT_NONE, TAG_HAPP.into() )?;
-    debug!("Linking title (lowercase) path ({}) to entity: {}", fmt_path( &title_path_lc ), entity.id );
-    entity.link_from( &title_path_lc_hash, LT_NONE, TAG_HAPP.into() )?;
+
+    if title_path_lc != title_path {
+	debug!("Linking title (lowercase) path ({}) to entity: {}", fmt_path( &title_path_lc ), entity.id );
+	entity.link_from( &title_path_lc_hash, LT_NONE, TAG_HAPP.into() )?;
+    }
 
     // Global anchor
     let (all_happs_path, all_happs_hash) = devhub_types::ensure_path( ANCHOR_HAPPS, Vec::<String>::new() )?;

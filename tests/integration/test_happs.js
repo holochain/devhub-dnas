@@ -132,6 +132,13 @@ function basic_tests () {
 	}
 
 	{
+	    let happs			= await clients.alice.call( "happs", "happ_library", "get_all_happs");
+	    log.normal("hApps by hash: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 1 );
+	}
+
+	{
 	    let message			= "This hApp is no longer maintained";
 	    let update			= await alice.call( "happs", "happ_library", "deprecate_happ", {
 		"addr": happ_addr,
@@ -150,6 +157,23 @@ function basic_tests () {
 
 	    expect( _happ.deprecation		).to.be.an( "object" );
 	    expect( _happ.deprecation.message	).to.equal( message );
+	}
+
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_filter", {
+		"filter": "title",
+		"keyword": happ.title.toLowerCase(),
+	    });
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
+	}
+
+	{
+	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "boardgame" ] );
+	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+
+	    expect( happs		).to.have.length( 0 );
 	}
 
 	const dna_id			= new HoloHash("uhCEkh3HCoTRCZD2I7H-gcf5VNdqXUdT4Nq6B8WUo-pzMZ338XDlb");
@@ -244,6 +268,20 @@ function basic_tests () {
 	}
 
 	{
+	    let dna_hash_bytes		= Buffer.from( dna_wasm_hash, "hex" );
+	    let hash			= crypto.createHash("sha256");
+	    hash.update( dna_hash_bytes );
+
+	    let versions		= await alice.call( "happs", "happ_library", "get_happ_releases_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": hash.digest("hex"),
+	    });
+	    log.normal("hApp releases by hash: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 0 );
+	}
+
+	{
 	    let failed			= false;
 	    try {
 		await alice.call( "happs", "happ_library", "get_happ_release", {
@@ -289,7 +327,7 @@ function basic_tests () {
 	let happs			= await clients.alice.call( "happs", "happ_library", "get_all_happs");
 	log.normal("hApps by hash: %s -> %s", happs.length, String(happs.$base) );
 
-	expect( happs			).to.have.length( 1 );
+	expect( happs			).to.have.length( 0 );
     });
 }
 

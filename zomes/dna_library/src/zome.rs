@@ -73,8 +73,11 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
     // Name anchors (case sensitive/insensitive)
     debug!("Linking name path ({}) to ENTRY: {}", fmt_path( &name_path ), entity.id );
     entity.link_from( &name_path_hash, LT_NONE, TAG_ZOME.into() )?;
-    debug!("Linking name (lowercase) path ({}) to ENTRY: {}", fmt_path( &name_path_lc ), entity.id );
-    entity.link_from( &name_path_lc_hash, LT_NONE, TAG_ZOME.into() )?;
+
+    if name_path_lc != name_path {
+	debug!("Linking name (lowercase) path ({}) to ENTRY: {}", fmt_path( &name_path_lc ), entity.id );
+	entity.link_from( &name_path_lc_hash, LT_NONE, TAG_ZOME.into() )?;
+    }
 
     // Global anchor
     let (all_zomes_path, all_zomes_hash) = devhub_types::ensure_path( ANCHOR_ZOMES, Vec::<String>::new() )?;

@@ -74,8 +74,11 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
     // Name anchors (case sensitive/insensitive)
     debug!("Linking name path ({}) to ENTRY: {}", fmt_path( &name_path ), entity.id );
     entity.link_from( &name_path_hash, LT_NONE, TAG_DNA.into() )?;
-    debug!("Linking name (lowercase) path ({}) to ENTRY: {}", fmt_path( &name_path_lc ), entity.id );
-    entity.link_from( &name_path_lc_hash, LT_NONE, TAG_DNA.into() )?;
+
+    if name_path_lc != name_path {
+	debug!("Linking name (lowercase) path ({}) to ENTRY: {}", fmt_path( &name_path_lc ), entity.id );
+	entity.link_from( &name_path_lc_hash, LT_NONE, TAG_DNA.into() )?;
+    }
 
     // Global anchor
     let (all_dnas_path, all_dnas_hash) = devhub_types::ensure_path( ANCHOR_DNAS, Vec::<String>::new() )?;

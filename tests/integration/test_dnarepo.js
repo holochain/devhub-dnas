@@ -324,6 +324,23 @@ function basic_tests () {
 	}
 
 	{
+	    let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_all_zomes");
+	    log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes			).to.have.length( 1 );
+	}
+
+	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zome_versions_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": zome_version_1.mere_memory_hash,
+	    });
+	    log.normal("Zomes by name: %s -> %s", zomes.length, String(zomes.$base) );
+
+	    expect( zomes		).to.have.length( 0 );
+	}
+
+	{
 	    // Deprecate ZOME
 	    let deprecation_notice	= "No longer maintained";
 	    zome			= await alice.call( "dnarepo", "dna_library", "deprecate_zome", {
@@ -342,6 +359,16 @@ function basic_tests () {
 	    expect( zome_info.$header			).to.not.deep.equal( second_header_hash );
 
 	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_my_zomes", null);
+	    expect( zomes		).to.have.length( 0 );
+	}
+
+	{
+	    let zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes_by_filter", {
+		"filter": "name",
+		"keyword": zome.name.toLowerCase(),
+	    });
+	    log.normal("Zomes by name: %s -> %s", zomes.length, String(zomes.$base) );
+
 	    expect( zomes		).to.have.length( 0 );
 	}
     });
@@ -604,6 +631,27 @@ function basic_tests () {
 	}
 
 	{
+	    let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_all_dnas");
+	    log.normal("DNAs by hash: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas			).to.have.length( 1 );
+	}
+
+	{
+	    let wasm_hash_bytes		= Buffer.from( zome_version_1.mere_memory_hash, "hex" );
+	    let hash			= crypto.createHash("sha256");
+	    hash.update( wasm_hash_bytes );
+
+	    let versions		= await alice.call( "dnarepo", "dna_library", "get_dna_versions_by_filter", {
+		"filter": "uniqueness_hash",
+		"keyword": hash.digest("hex"),
+	    });
+	    log.normal("DNA versions by hash: %s -> %s", versions.length, String(versions.$base) );
+
+	    expect( versions		).to.have.length( 0 );
+	}
+
+	{
 	    // Deprecate DNA
 	    let deprecation_notice	= "No longer maintained";
 	    dna				= await alice.call( "dnarepo", "dna_library", "deprecate_dna", {
@@ -622,6 +670,23 @@ function basic_tests () {
 	    expect( dna_info.$header			).to.not.deep.equal( second_header_hash );
 
 	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_my_dnas", null);
+	    expect( dnas		).to.have.length( 0 );
+	}
+
+	{
+	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas_by_filter", {
+		"filter": "name",
+		"keyword": dna_input.name.toLowerCase(),
+	    });
+	    log.normal("DNAs by name: %s -> %s", dnas.length, String(dnas.$base) );
+
+	    expect( dnas		).to.have.length( 0 );
+	}
+
+	{
+	    let dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas_by_tags", [ "games", "turns" ] );
+	    log.normal("DNAs by title: %s -> %s", dnas.length, String(dnas.$base) );
+
 	    expect( dnas		).to.have.length( 0 );
 	}
     });
@@ -678,16 +743,17 @@ function basic_tests () {
 	let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_all_dnas");
 	log.normal("DNAs by hash: %s -> %s", dnas.length, String(dnas.$base) );
 
-	expect( dnas			).to.have.length( 1 );
+	expect( dnas			).to.have.length( 0 );
     });
 
     it("should get all Zomes", async function () {
 	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_all_zomes");
 	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
 
-	expect( zomes			).to.have.length( 1 );
+	expect( zomes			).to.have.length( 0 );
     });
 
+    let hdk_version;
     it("should get HDK version list", async function () {
 	let hdkvs			= await clients.alice.call( "dnarepo", "dna_library", "get_hdk_versions");
 	log.normal("HDK versions: %s -> %s", hdkvs.length, String(hdkvs.$base) );
@@ -695,14 +761,11 @@ function basic_tests () {
 	expect( hdkvs			).to.have.length( 1 );
 	expect( hdkvs[0]		).to.equal("v0.0.120");
 
-	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_zome_versions_by_hdk_version", hdkvs[0] );
-	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
-
-	expect( zomes			).to.have.length( 1 );
+	hdk_version			= hdkvs[0];
     });
 
     it("should get Zome by HDK version", async function () {
-	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_all_zomes");
+	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_zome_versions_by_hdk_version", hdk_version );
 	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
 
 	expect( zomes			).to.have.length( 1 );

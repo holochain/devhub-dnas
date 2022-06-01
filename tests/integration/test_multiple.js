@@ -209,7 +209,6 @@ describe("All DNAs", () => {
 	    "happs": clients.alice._app_schema._dnas.happs._hash,
 	    "webassets": clients.alice._app_schema._dnas.webassets._hash,
 	});
-	console.log( response );
 
 	// Must call whoami on each cell to ensure that init has finished.
 	{
