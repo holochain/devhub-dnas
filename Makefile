@@ -58,11 +58,9 @@ zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.
 	    --package $*
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
 
-../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm:
-	$(error Missing mere memory zome @ $@ - Build it from https://github.com/mjbrisebois/hc-zome-mere-memory)
 $(MERE_MEMORY_WASM):
-	make ../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm
-	cp ../zome-mere-memory/target/wasm32-unknown-unknown/release/mere_memory.wasm $@
+	curl -L https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.27.0/mere_memory.wasm --output $@
+
 
 crates:				devhub_types
 devhub_types:			devhub_types/src/*.rs devhub_types/Cargo.toml
@@ -72,10 +70,10 @@ devhub_types:			devhub_types/src/*.rs devhub_types/Cargo.toml
 #
 # Testing
 #
-test-all:			test test-dnas
-test-all-debug:			test test-dnas-debug
+test:				test-unit-all test-dnas
+test-debug:			test-unit-all test-dnas-debug
 
-test:				test-unit test-unit-dna_library test-unit-happ_library test-unit-web_assets
+test-unit-all:			test-unit test-unit-dna_library test-unit-happ_library test-unit-web_assets
 test-unit:
 	cd devhub_types;	RUST_BACKTRACE=1 cargo test
 test-unit-%:
