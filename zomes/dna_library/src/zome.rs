@@ -3,6 +3,7 @@ use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
 	ZomeEntry, ZomeInfo,
+	ZomeVersionEntry,
 	DeveloperProfileLocation, DeprecationNotice
     },
     constants::{
@@ -13,13 +14,14 @@ use devhub_types::{
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
-    Entity,
+    Entity, Collection,
 };
 use hdk::prelude::*;
 
 use crate::constants::{
     LT_NONE,
     TAG_ZOME,
+    TAG_ZOMEVERSION,
     ANCHOR_ZOMES,
 };
 
@@ -201,4 +203,23 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> 
 	})?;
 
     Ok( entity.change_model( |zome| zome.to_info() ) )
+}
+
+pub fn get_zomes_with_an_hdk_version( input: String ) -> AppResult<Collection<Entity<ZomeEntry>>> {
+    let collection = devhub_types::get_hdk_version_entities::<ZomeVersionEntry>( TAG_ZOMEVERSION.into(), input )?;
+
+    let mut zomes : HashMap<EntryHash, Entity<ZomeEntry>> = HashMap::new();
+
+    for zome_version in collection.items.into_iter() {
+	let zome = get_entity::<ZomeEntry>( &zome_version.content.for_zome )?;
+
+	if !zomes.contains_key( &zome.id ) {
+	    zomes.insert( zome.id.to_owned(), zome );
+	}
+    }
+
+    Ok(Collection {
+	base: collection.base,
+	items: zomes.into_values().collect(),
+    })
 }

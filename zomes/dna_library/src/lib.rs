@@ -392,6 +392,13 @@ fn get_all_zomes(_:()) -> ExternResult<EntityCollectionResponse<ZomeEntry>> {
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
+#[hdk_extern]
+fn get_zomes_with_an_hdk_version( input: String ) -> ExternResult<EntityCollectionResponse<ZomeEntry>> {
+    let collection = catch!( zome::get_zomes_with_an_hdk_version( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
 
 // ZOME Version zome functions
 #[hdk_extern]

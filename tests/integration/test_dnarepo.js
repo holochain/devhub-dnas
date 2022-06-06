@@ -26,6 +26,7 @@ const storage				= "dna_library";
 const mm_zome				= "mere_memory";
 
 let clients;
+let zome_1;
 let zome_version_1;
 let zome_version_2;
 let dna_addr;
@@ -118,7 +119,7 @@ function basic_tests () {
 	    "tags": [ "Storage", "General-use" ],
 	};
 
-	let zome			= await alice.call( "dnarepo", "dna_library", "create_zome", zome_input );
+	let zome			= zome_1 = await alice.call( "dnarepo", "dna_library", "create_zome", zome_input );;
 	log.normal("New ZOME (metadata): %s -> %s", String(zome.$id), zome.name );
 
 	let first_header_hash;
@@ -191,6 +192,16 @@ function basic_tests () {
 	}
 
 	{
+	    // Make another zome version for list tests
+	    await alice.call( "dnarepo", "dna_library", "create_zome_version", {
+		"for_zome": zome.$id,
+		"version": 3,
+		"zome_bytes": [ 1, 2, 3 ],
+		"hdk_version": "v0.0.120",
+	    });
+	}
+
+	{
 	    let zome_versions		= await alice.call( "dnarepo", "dna_library", "get_zome_versions", {
 		"for_zome": zome.$id,
 	    });
@@ -201,7 +212,7 @@ function basic_tests () {
 		log.normal("  - ZomeVersion { version: %s, published_at: %s }", v.version, v.published_at );
 	    });
 
-	    expect( zome_versions	).to.have.length( 2 );
+	    expect( zome_versions	).to.have.length( 3 );
 	}
 
 	{
@@ -320,7 +331,7 @@ function basic_tests () {
 	    let zome_versions		= await alice.call( "dnarepo", "dna_library", "get_zome_versions", {
 		"for_zome": zome.$id,
 	    });
-	    expect( zome_versions	).to.have.length( 1 );
+	    expect( zome_versions	).to.have.length( 2 );
 	}
 
 	{
@@ -764,11 +775,19 @@ function basic_tests () {
 	hdk_version			= hdkvs[0];
     });
 
-    it("should get Zome by HDK version", async function () {
+    it("should get Zome Versions by HDK version", async function () {
 	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_zome_versions_by_hdk_version", hdk_version );
 	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
 
+	expect( zomes			).to.have.length( 2 );
+    });
+
+    it("should get Zome by HDK version", async function () {
+	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_zomes_with_an_hdk_version", hdk_version );
+	log.normal("Zomes by hash: %s -> %s", zomes.length, String(zomes.$base) );
+
 	expect( zomes			).to.have.length( 1 );
+	expect( zomes[0].$id		).to.deep.equal( zome_1.$id );
     });
 }
 
