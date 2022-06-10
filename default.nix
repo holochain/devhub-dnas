@@ -14,8 +14,8 @@ let
     holochainVersionId = "custom";
     holochainVersion = {
       url = "https://github.com/holochain/holochain";
-      rev = "holochain-0.0.132"; # Mar 30, 2022 - b2eb2342d2feb68872e19636e83d199d38b01f66
-      sha256 = "12zgx1icnq4jgra9q6bwqjhlzmm38s5kz6vidkylal11ynnd57ww";
+      rev = "holochain-0.0.139"; # May 11, 2022 - 9356749f7fecf2414d2d388f74037514f65571ef
+      sha256 = "0xy7hxyaliwms8p083lqn9qqpgk62f56zsl6zrgw7v0lrrd2lcfd";
       cargoLock = {
         outputHashes = {
         };
@@ -31,8 +31,8 @@ let
 
       lair = {
         url = "https://github.com/holochain/lair";
-        rev = "v0.1.0";
-        sha256 = "0jvk4dd42axwp5pawxayg2jnjx05ic0f6k8f793z8dwwwbvmqsqi";
+        rev = "lair_keystore-v0.1.3"; # May 5, 2022 - 27e3a4e305e2a5d48ba625aa3bfac9516d2583ed
+        sha256 = "0xisp3rqdnjsypxpjcin94qwsgvb99vwisq49jjl6x7qxl2s3afm";
 
         binsFilter = [
           "lair-keystore"
@@ -50,7 +50,4 @@ let
   nixpkgs = holonix.pkgs;
 in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
-  buildInputs = with nixpkgs; [
-    nodejs-14_x
-  ];
 }

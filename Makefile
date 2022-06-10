@@ -59,7 +59,7 @@ zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
 
 $(MERE_MEMORY_WASM):
-	curl -L https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.27.0/mere_memory.wasm --output $@
+	curl -L https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.32.0/mere_memory.wasm --output $@
 
 
 crates:				devhub_types

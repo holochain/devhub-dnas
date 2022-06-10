@@ -79,7 +79,7 @@ pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileInfo>> {
 	.ok_or( UserError::CustomError("Agent Profile has not been created yet") )?;
 
     debug!("Get Profile: {}", link.target );
-    let entity = get_entity::<ProfileEntry>( &link.target )?;
+    let entity = get_entity::<ProfileEntry>( &link.target.into() )?;
 
     Ok( entity.change_model( |profile| profile.to_info() ) )
 }
@@ -160,7 +160,7 @@ pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>>
     debug!("Unfollow Agent: {}", fmt_path( &other_agent_base ) );
     let maybe_link = links
 	.into_iter()
-	.find(|link| link.target == other_agent_base_hash );
+	.find(|link| link.target == other_agent_base_hash.to_owned().into() );
     let mut maybe_header : Option<HeaderHash> = None;
 
     if let Some(link) = maybe_link {

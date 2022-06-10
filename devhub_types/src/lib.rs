@@ -255,7 +255,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity::<T>( &link.target ).ok()
+	    get_entity::<T>( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -296,7 +296,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
+	    get_entity( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -322,7 +322,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
+	    get_entity( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -373,7 +373,7 @@ where
 
     let list = full_matches.into_iter()
 	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
+	    get_entity( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -429,7 +429,7 @@ where
 	debug!("Removing tag link: {}", fmt_path( &tag_path ) );
 	if let Some(link) = links.iter().find(|link| {
 	    debug!("Finding tag link match: {:?} == {:?}", link.target, entity.id );
-	    link.target == entity.id
+	    link.target == entity.id.to_owned().into()
 	}) {
 	    delete_link( link.create_link_hash.clone() )?;
 	}
