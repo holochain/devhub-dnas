@@ -19,6 +19,7 @@ use hdk::prelude::*;
 use hex;
 
 use crate::constants::{
+    LT_NONE,
     TAG_DNAVERSION,
 };
 
@@ -68,17 +69,17 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 
     // Parent anchor
     debug!("Linking DNA ({}) to ENTRY: {}", input.for_dna, entity.id );
-    entity.link_from( &input.for_dna, TAG_DNAVERSION.into() )?;
+    entity.link_from( &input.for_dna, LT_NONE, TAG_DNAVERSION.into() )?;
 
     // Uniqueness anchor
     let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &version.wasm_hash ] )?;
     debug!("Linking uniqueness path ({}) to ENTRY: {}", fmt_path( &wasm_path ), entity.id );
-    entity.link_from( &wasm_path_hash, TAG_DNAVERSION.into() )?;
+    entity.link_from( &wasm_path_hash, LT_NONE, TAG_DNAVERSION.into() )?;
 
     // HDK anchor
     let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
-    entity.link_from( &hdkv_hash, TAG_DNAVERSION.into() )?;
+    entity.link_from( &hdkv_hash, LT_NONE, TAG_DNAVERSION.into() )?;
 
     Ok( entity )
 }

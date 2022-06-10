@@ -12,7 +12,10 @@ use devhub_types::{ call_local_zome };
 use mere_memory_types::{ MemoryEntry };
 use hdk::prelude::*;
 
-use crate::constants::{ TAG_FILE };
+use crate::constants::{
+    LT_NONE,
+    TAG_FILE,
+};
 
 
 
@@ -63,7 +66,7 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
     let base = crate::root_path_hash( None )?;
 
     debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
-    entity.link_from( &base, TAG_FILE.into() )?;
+    entity.link_from( &base, LT_NONE, TAG_FILE.into() )?;
 
     Ok( entity )
 }

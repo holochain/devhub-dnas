@@ -20,6 +20,7 @@ use hdk::prelude::*;
 use hex;
 
 use crate::constants::{
+    LT_NONE,
     TAG_HAPP_RELEASE,
 };
 
@@ -80,17 +81,17 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 
     // Parent anchor
     debug!("Linking happ ({}) to ENTRY: {}", input.for_happ, entity.id );
-    entity.link_from( &input.for_happ, TAG_HAPP_RELEASE.into() )?;
+    entity.link_from( &input.for_happ, LT_NONE, TAG_HAPP_RELEASE.into() )?;
 
     // Uniqueness anchor
     let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &happ_release.dna_hash ] )?;
     debug!("Linking uniqueness path ({}) to ENTRY: {}", fmt_path( &wasm_path ), entity.id );
-    entity.link_from( &wasm_path_hash, TAG_HAPP_RELEASE.into() )?;
+    entity.link_from( &wasm_path_hash, LT_NONE, TAG_HAPP_RELEASE.into() )?;
 
     // HDK anchor
     let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
-    entity.link_from( &hdkv_hash, TAG_HAPP_RELEASE.into() )?;
+    entity.link_from( &hdkv_hash, LT_NONE, TAG_HAPP_RELEASE.into() )?;
 
     Ok( entity )
 }

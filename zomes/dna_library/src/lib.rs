@@ -1,5 +1,5 @@
 use devhub_types::{
-    DevHubResponse, Entity, EntityResponse, CollectionResponse, EntityCollectionResponse, FilterInput,
+    DevHubResponse, Entity, Collection, EntityResponse, CollectionResponse, EntityCollectionResponse, FilterInput,
     constants::{ ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD, VALUE_COLLECTION_MD },
     dnarepo_entry_types::{
 	ProfileEntry, ProfileInfo,
@@ -193,20 +193,37 @@ fn deprecate_dna(input: dna::DeprecateDnaInput) -> ExternResult<EntityResponse<D
 fn get_dnas_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<DnaEntry>> {
     let collection = catch!( devhub_types::get_by_filter( TAG_DNA.into(), input.filter, input.keyword ) );
 
-    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+    Ok(composition( Collection {
+	base: collection.base,
+	items: collection.items.into_iter()
+	    .filter(|entity: &Entity<DnaEntry>| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect(),
+    }, ENTITY_COLLECTION_MD ))
 }
 
 #[hdk_extern]
 fn get_dnas_by_tags( input: Vec<String> ) -> ExternResult<DevHubResponse<Vec<Entity<DnaEntry>>>> {
     let list = catch!( devhub_types::get_by_tags( TAG_DNA.into(), input ) );
 
-    Ok(composition( list, VALUE_MD ))
+    Ok(composition( list.into_iter()
+		    .filter(|entity: &Entity<DnaEntry>| {
+			entity.content.deprecation.is_none()
+		    })
+		    .collect(), VALUE_MD ))
 }
 
 #[hdk_extern]
 fn get_all_dnas(_:()) -> ExternResult<EntityCollectionResponse<DnaEntry>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_DNAS, Vec::<String>::new() );
-    let collection = catch!( devhub_types::get_entities_for_path( TAG_DNA.into(), base_path ) );
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_DNA.into(), base_path, |items : Vec<Entity<DnaEntry>>| {
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect() )
+    }) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
@@ -340,20 +357,44 @@ fn deprecate_zome(input: zome::DeprecateZomeInput) -> ExternResult<EntityRespons
 fn get_zomes_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<ZomeEntry>> {
     let collection = catch!( devhub_types::get_by_filter( TAG_ZOME.into(), input.filter, input.keyword ) );
 
-    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+    Ok(composition( Collection {
+	base: collection.base,
+	items: collection.items.into_iter()
+	    .filter(|entity: &Entity<ZomeEntry>| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect(),
+    }, ENTITY_COLLECTION_MD ))
 }
 
 #[hdk_extern]
 fn get_zomes_by_tags( input: Vec<String> ) -> ExternResult<DevHubResponse<Vec<Entity<ZomeEntry>>>> {
     let list = catch!( devhub_types::get_by_tags( TAG_ZOME.into(), input ) );
 
-    Ok(composition( list, VALUE_MD ))
+    Ok(composition( list.into_iter()
+		    .filter(|entity: &Entity<ZomeEntry>| {
+			entity.content.deprecation.is_none()
+		    })
+		    .collect(), VALUE_MD ))
 }
 
 #[hdk_extern]
 fn get_all_zomes(_:()) -> ExternResult<EntityCollectionResponse<ZomeEntry>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_ZOMES, Vec::<String>::new() );
-    let collection = catch!( devhub_types::get_entities_for_path( TAG_ZOME.into(), base_path ) );
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_ZOME.into(), base_path, |items : Vec<Entity<ZomeEntry>>| {
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect() )
+    }) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_zomes_with_an_hdk_version( input: String ) -> ExternResult<EntityCollectionResponse<ZomeEntry>> {
+    let collection = catch!( zome::get_zomes_with_an_hdk_version( input ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

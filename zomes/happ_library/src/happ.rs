@@ -18,6 +18,7 @@ use hc_crud::{
 use hdk::prelude::*;
 
 use crate::constants::{
+    LT_NONE,
     TAG_HAPP,
     ANCHOR_HAPPS,
 };
@@ -73,25 +74,28 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
     // Designer (Agent) anchor
     let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_HAPPS ] )?;
     debug!("Linking agent ({}) to entity: {}", fmt_path( &agent_base ), entity.id );
-    entity.link_from( &agent_base_hash, TAG_HAPP.into() )?;
+    entity.link_from( &agent_base_hash, LT_NONE, TAG_HAPP.into() )?;
 
     // Title anchors (case sensitive/insensitive)
     debug!("Linking title path ({}) to entity: {}", fmt_path( &title_path ), entity.id );
-    entity.link_from( &title_path_hash, TAG_HAPP.into() )?;
-    debug!("Linking title (lowercase) path ({}) to entity: {}", fmt_path( &title_path_lc ), entity.id );
-    entity.link_from( &title_path_lc_hash, TAG_HAPP.into() )?;
+    entity.link_from( &title_path_hash, LT_NONE, TAG_HAPP.into() )?;
+
+    if title_path_lc != title_path {
+	debug!("Linking title (lowercase) path ({}) to entity: {}", fmt_path( &title_path_lc ), entity.id );
+	entity.link_from( &title_path_lc_hash, LT_NONE, TAG_HAPP.into() )?;
+    }
 
     // Global anchor
     let (all_happs_path, all_happs_hash) = devhub_types::ensure_path( ANCHOR_HAPPS, Vec::<String>::new() )?;
     debug!("Linking all hApps path ({}) to ENTRY: {}", fmt_path( &all_happs_path ), entity.id );
-    entity.link_from( &all_happs_hash, TAG_HAPP.into() )?;
+    entity.link_from( &all_happs_hash, LT_NONE, TAG_HAPP.into() )?;
 
     // Tag anchors
     if input.tags.is_some() {
 	for tag in input.tags.unwrap() {
 	    let (tag_path, tag_hash) = devhub_types::ensure_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ] )?;
 	    debug!("Linking TAG anchor ({}) to entry: {}", fmt_path( &tag_path ), entity.id );
-	    entity.link_from( &tag_hash, TAG_HAPP.into() )?;
+	    entity.link_from( &tag_hash, LT_NONE, TAG_HAPP.into() )?;
 	}
     }
 
@@ -156,7 +160,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving title link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
-	    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LT_NONE, TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
 	}
 
 	let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous.title.to_lowercase() ] );
@@ -164,11 +168,11 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving title (lowercase) link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
-	    entity.move_link_from( TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LT_NONE, TAG_HAPP.into(), &previous_path_hash, &new_path_hash )?;
 	}
     }
 
-    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, TAG_HAPP.into() )?;
+    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, LT_NONE, TAG_HAPP.into() )?;
 
     Ok( entity.change_model( |happ| happ.to_info() ) )
 }

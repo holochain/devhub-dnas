@@ -1,5 +1,5 @@
 use devhub_types::{
-    DevHubResponse, Entity, EntityResponse, EntityCollectionResponse, GetEntityInput, FilterInput,
+    DevHubResponse, Entity, Collection, EntityResponse, EntityCollectionResponse, GetEntityInput, FilterInput,
     constants::{ VALUE_MD, ENTITY_MD, ENTITY_COLLECTION_MD },
     happ_entry_types::{
 	HappEntry, HappInfo,
@@ -115,20 +115,37 @@ fn get_my_happs(_:()) -> ExternResult<EntityCollectionResponse<HappEntry>> {
 fn get_happs_by_filter( input: FilterInput ) -> ExternResult<EntityCollectionResponse<HappEntry>> {
     let collection = catch!( devhub_types::get_by_filter( TAG_HAPP.into(), input.filter, input.keyword ) );
 
-    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+    Ok(composition( Collection {
+	base: collection.base,
+	items: collection.items.into_iter()
+	    .filter(|entity: &Entity<HappEntry>| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect(),
+    }, ENTITY_COLLECTION_MD ))
 }
 
 #[hdk_extern]
 fn get_happs_by_tags( input: Vec<String> ) -> ExternResult<DevHubResponse<Vec<Entity<HappEntry>>>> {
     let list = catch!( devhub_types::get_by_tags( TAG_HAPP.into(), input ) );
 
-    Ok(composition( list, VALUE_MD ))
+    Ok(composition( list.into_iter()
+		    .filter(|entity: &Entity<HappEntry>| {
+			entity.content.deprecation.is_none()
+		    })
+		    .collect(), VALUE_MD ))
 }
 
 #[hdk_extern]
 fn get_all_happs(_:()) -> ExternResult<EntityCollectionResponse<HappEntry>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_HAPPS, Vec::<String>::new() );
-    let collection = catch!( devhub_types::get_entities_for_path( TAG_HAPP.into(), base_path ) );
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_HAPP.into(), base_path, |items : Vec<Entity<HappEntry>>| {
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect() )
+    }) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

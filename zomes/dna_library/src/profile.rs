@@ -10,7 +10,11 @@ use hc_crud::{
 };
 use hdk::prelude::*;
 
-use crate::constants::{ TAG_PROFILE, TAG_FOLLOW };
+use crate::constants::{
+    LT_NONE,
+    TAG_PROFILE,
+    TAG_FOLLOW,
+};
 
 
 
@@ -44,7 +48,7 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
 
     let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ "profiles" ] )?;
     debug!("Linking agent root path ({}) to Profile: {}", fmt_path( &agent_base ), entity.id );
-    entity.link_from( &agent_base_hash, TAG_PROFILE.into() )?;
+    entity.link_from( &agent_base_hash, LT_NONE, TAG_PROFILE.into() )?;
 
     Ok( entity )
 }
@@ -75,7 +79,7 @@ pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileInfo>> {
 	.ok_or( UserError::CustomError("Agent Profile has not been created yet") )?;
 
     debug!("Get Profile: {}", link.target );
-    let entity = get_entity::<ProfileEntry>( &link.target )?;
+    let entity = get_entity::<ProfileEntry>( &link.target.into() )?;
 
     Ok( entity.change_model( |profile| profile.to_info() ) )
 }
@@ -136,6 +140,7 @@ pub fn follow_developer(input: FollowInput) -> AppResult<HeaderHash> {
     let header_hash = create_link(
 	my_agent_base_hash,
 	other_agent_base_hash,
+	LinkType(LT_NONE),
 	LinkTag::new( TAG_FOLLOW )
     )?;
 
@@ -155,7 +160,7 @@ pub fn unfollow_developer(input: UnfollowInput) -> AppResult<Option<HeaderHash>>
     debug!("Unfollow Agent: {}", fmt_path( &other_agent_base ) );
     let maybe_link = links
 	.into_iter()
-	.find(|link| link.target == other_agent_base_hash );
+	.find(|link| link.target == other_agent_base_hash.to_owned().into() );
     let mut maybe_header : Option<HeaderHash> = None;
 
     if let Some(link) = maybe_link {

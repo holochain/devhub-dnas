@@ -255,7 +255,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity::<T>( &link.target ).ok()
+	    get_entity::<T>( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -296,7 +296,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
+	    get_entity( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -322,7 +322,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
+	    get_entity( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -373,7 +373,7 @@ where
 
     let list = full_matches.into_iter()
 	.filter_map(|link| {
-	    get_entity( &link.target ).ok()
+	    get_entity( &link.target.into() ).ok()
 	})
 	.collect();
 
@@ -401,7 +401,7 @@ pub fn get_hdk_versions() -> AppResult<Collection<String>> {
 }
 
 
-pub fn update_tag_links<T>(prev_tags: Option<Vec<String>>, new_tags: Option<Vec<String>>, entity: &Entity<T>, tag: Vec<u8>) -> AppResult<()>
+pub fn update_tag_links<T>(prev_tags: Option<Vec<String>>, new_tags: Option<Vec<String>>, entity: &Entity<T>, link_type: u8, tag: Vec<u8>) -> AppResult<()>
 where
     T: Clone + EntryModel + TryFrom<Element, Error = WasmError> + EntryDefRegistration,
     Entry: TryFrom<T, Error = WasmError>,
@@ -429,7 +429,7 @@ where
 	debug!("Removing tag link: {}", fmt_path( &tag_path ) );
 	if let Some(link) = links.iter().find(|link| {
 	    debug!("Finding tag link match: {:?} == {:?}", link.target, entity.id );
-	    link.target == entity.id
+	    link.target == entity.id.to_owned().into()
 	}) {
 	    delete_link( link.create_link_hash.clone() )?;
 	}
@@ -441,7 +441,65 @@ where
     for add_tag in new_tags.difference( &prev_tags ) {
 	let (tag_path, tag_hash) = ensure_path( ANCHOR_TAGS, vec![ &add_tag.to_lowercase() ] )?;
 	debug!("Adding tag link: {}", fmt_path( &tag_path ) );
-	entity.link_from( &tag_hash, tag.to_owned() )?;
+	entity.link_from( &tag_hash, link_type, tag.to_owned() )?;
+    }
+
+    Ok(())
+}
+
+
+pub static mut DNAREPO_DNAHASH : Option<holo_hash::DnaHash> = None;
+pub static mut HAPPS_DNAHASH : Option<holo_hash::DnaHash> = None;
+pub static mut WEBASSETS_DNAHASH : Option<holo_hash::DnaHash> = None;
+
+pub fn dnarepo_hash() -> AppResult<holo_hash::DnaHash> {
+    unsafe {
+	debug!("Using static DNA hash for 'dnarepo': {:?}", DNAREPO_DNAHASH );
+	match DNAREPO_DNAHASH.to_owned() {
+	    Some(dna_hash) => Ok(dna_hash),
+	    None => Err(AppError::UnexpectedStateError(String::from("'dnarepo' DnaHash has not been registered yet")).into()),
+	}
+    }
+}
+
+pub fn happs_hash() -> AppResult<holo_hash::DnaHash> {
+    unsafe {
+	debug!("Using static DNA hash for 'happs': {:?}", HAPPS_DNAHASH );
+	match HAPPS_DNAHASH.to_owned() {
+	    Some(dna_hash) => Ok(dna_hash),
+	    None => Err(AppError::UnexpectedStateError(String::from("'happs' DnaHash has not been registered yet")).into()),
+	}
+    }
+}
+
+pub fn webassets_hash() -> AppResult<holo_hash::DnaHash> {
+    unsafe {
+	debug!("Using static DNA hash for 'webassets': {:?}", WEBASSETS_DNAHASH );
+	match WEBASSETS_DNAHASH.to_owned() {
+	    Some(dna_hash) => Ok(dna_hash),
+	    None => Err(AppError::UnexpectedStateError(String::from("'webassets' DnaHash has not been registered yet")).into()),
+	}
+    }
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct DnaHashInput {
+    pub dnarepo: Option<holo_hash::DnaHash>,
+    pub happs: Option<holo_hash::DnaHash>,
+    pub webassets: Option<holo_hash::DnaHash>,
+}
+#[hdk_extern]
+fn register_peer_dnas(input: DnaHashInput) -> ExternResult<()> {
+    debug!("Storing peer DNA hashes as static: {:?}", input );
+    unsafe {
+	DNAREPO_DNAHASH = input.dnarepo.to_owned();
+	HAPPS_DNAHASH = input.webassets.to_owned();
+	WEBASSETS_DNAHASH = input.webassets.to_owned();
+
+	debug!("New value for 'dnarepo':   {:?}", DNAREPO_DNAHASH );
+	debug!("New value for 'happs':     {:?}", HAPPS_DNAHASH );
+	debug!("New value for 'webassets': {:?}", WEBASSETS_DNAHASH );
     }
 
     Ok(())

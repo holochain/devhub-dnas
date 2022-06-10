@@ -186,7 +186,7 @@ pub struct DnaVersionInfo {
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
-    pub zomes: HashMap<String, Entity<ZomeVersionEntry>>,
+    pub zomes: HashMap<String, Option<Entity<ZomeVersionEntry>>>,
     pub metadata: HashMap<String, serde_yaml::Value>,
 }
 impl EntryModel for DnaVersionInfo {
@@ -239,10 +239,11 @@ impl DnaVersionEntry {
 	    wasm_hash: self.wasm_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
 	    zomes: self.zomes.iter()
-		.filter_map( |zome_ref| {
-		    get_entity::<ZomeVersionEntry>( &zome_ref.version ).ok().map( |entity| {
-			( zome_ref.name.clone(), entity )
-		    })
+		.map( |zome_ref| {
+		    (
+			zome_ref.name.clone(),
+			get_entity::<ZomeVersionEntry>( &zome_ref.version ).ok()
+		    )
 		})
 		.collect(),
 	    metadata: self.metadata.clone(),
@@ -372,20 +373,6 @@ impl ZomeVersionEntry {
 	    metadata: self.metadata.clone(),
 	}
     }
-}
-
-
-
-
-
-
-#[hdk_extern]
-fn validate_create_entry_dna(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
-    if let Ok(_dna) = DnaEntry::try_from( &validate_data.element ) {
-	return Ok(ValidateCallbackResult::Valid);
-    }
-
-    Ok(ValidateCallbackResult::Invalid("DNA entry is not right".to_string()))
 }
 
 

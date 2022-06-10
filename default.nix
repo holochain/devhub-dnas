@@ -1,42 +1,44 @@
 let
-  holonixPath = builtins.fetchTarball { # Oct 6, 2021
-    url = "https://github.com/holochain/holonix/archive/de9d6d1e820f4e3beeb20c24005c17f565a24453.tar.gz";
-    sha256 = "1z7w0hbncm375ns04021ka6li9qpchx0qn13v5xycd8p3sq0x14n";
+  holonixPath = builtins.fetchTarball { # main as of Mar 15, 2022
+    url = "https://github.com/holochain/holonix/archive/391557dc5b3065b0d357ea9f9a2bc77e7347be8e.tar.gz";
+    sha256 = "10dnbd3s8gm4bl7my7c168vyvi3358s1lb5yjnw3fwnp9z62vy09";
   };
   holonix = import (holonixPath) {
     include = {
       holochainBinaries = true;
       node = false;
+      scaffolding = false;
       happs = false;
     };
 
     holochainVersionId = "custom";
-    holochainVersion = { # v0.0.124
+    holochainVersion = {
       url = "https://github.com/holochain/holochain";
-
-      rev = "4a449ee985053f5b8ee0f0688b949bd26bfcb3fc"; # Jan 26, 2022
-      sha256 = "0mbamx8njs0gs28s5rbfni3p4jdf6jrhaqj1b2aqbzl7ah2nb02c";
+      rev = "holochain-0.0.139"; # May 11, 2022 - 9356749f7fecf2414d2d388f74037514f65571ef
+      sha256 = "0xy7hxyaliwms8p083lqn9qqpgk62f56zsl6zrgw7v0lrrd2lcfd";
       cargoLock = {
         outputHashes = {
-          "cargo-test-macro-0.1.0" = "1yy1y1d523xdzwg1gc77pigbcwsbawmy4b7vw8v21m7q957sk0c4";
         };
       };
 
       binsFilter = [
         "holochain"
         "hc"
-        # "kitsune-p2p-proxy"
+        "kitsune-p2p-tx2-proxy"
       ];
 
-      lair = { # v0.1.0
-        url = "https://github.com/holochain/lair";
+      rustVersion = "1.58.1";
 
-        rev = "0343621e0bfa2a941ecf53363003d1f28b7ef0e6";
-        sha256 = "0jvk4dd42axwp5pawxayg2jnjx05ic0f6k8f793z8dwwwbvmqsqi";
+      lair = {
+        url = "https://github.com/holochain/lair";
+        rev = "lair_keystore-v0.1.3"; # May 5, 2022 - 27e3a4e305e2a5d48ba625aa3bfac9516d2583ed
+        sha256 = "0xisp3rqdnjsypxpjcin94qwsgvb99vwisq49jjl6x7qxl2s3afm";
 
         binsFilter = [
           "lair-keystore"
         ];
+
+        rustVersion = "1.58.1";
 
         cargoLock = {
           outputHashes = {
