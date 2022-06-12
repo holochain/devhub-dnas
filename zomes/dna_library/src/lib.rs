@@ -118,7 +118,7 @@ fn get_following(_:()) -> ExternResult<CollectionResponse<Link>> {
 }
 
 
-// DNA Version zome functions
+// DNA zome functions
 #[hdk_extern]
 fn create_dna(input: dna::DnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
     let entity = catch!( dna::create_dna( input ) );
@@ -228,6 +228,13 @@ fn get_all_dnas(_:()) -> ExternResult<EntityCollectionResponse<DnaEntry>> {
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
 
+#[hdk_extern]
+fn get_dnas_with_an_hdk_version( input: String ) -> ExternResult<EntityCollectionResponse<DnaEntry>> {
+    let collection = catch!( dna::get_dnas_with_an_hdk_version( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
 
 // DNA Version zome functions
 #[hdk_extern]
@@ -282,7 +289,7 @@ fn get_dna_package(input: packaging::GetDnaPackageInput) -> ExternResult<EntityR
 }
 
 
-// ZOME Version zome functions
+// ZOME functions
 #[hdk_extern]
 fn create_zome(input: zome::ZomeInput) -> ExternResult<EntityResponse<ZomeInfo>> {
     let entity = catch!( zome::create_zome( input ) );
