@@ -8,6 +8,7 @@ const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const Identicon				= require('identicon.js');
+const msgpack				= require('@msgpack/msgpack');
 const { EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
@@ -29,6 +30,7 @@ let clients;
 let zome_1;
 let zome_version_1;
 let zome_version_2;
+let dna_1;
 let dna_addr;
 let dna_version_hash;
 
@@ -399,7 +401,7 @@ function basic_tests () {
 	    },
 	};
 
-	let dna				= await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
+	let dna				= dna_1 = await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
 	dna_addr			= dna.$addr;
 	log.normal("New DNA (metadata): %s -> %s", String(dna.$id), dna.name );
 
@@ -788,6 +790,52 @@ function basic_tests () {
 
 	expect( zomes			).to.have.length( 1 );
 	expect( zomes[0].$id		).to.deep.equal( zome_1.$id );
+    });
+
+    it("should get Dna by HDK version", async function () {
+	let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_dnas_with_an_hdk_version", hdk_version );
+	log.normal("Dnas by hash: %s -> %s", dnas.length, String(dnas.$base) );
+
+	expect( dnas			).to.have.length( 1 );
+	expect( dnas[0].$id		).to.deep.equal( dna_1.$id );
+    });
+
+    it("should test exposed base functions", async function () {
+	{
+	    let element			= await clients.alice.call( "dnarepo", "dna_library", "get_element", dna_1.$id );
+	    let entry			= msgpack.decode( element.entry.Present.entry );
+	    expect( entry.name		).to.be.a("string");
+	}
+
+	let element			= await clients.alice.call( "dnarepo", "dna_library", "get_element_latest", dna_1.$id );
+	let dna				= msgpack.decode( element.entry.Present.entry );
+	expect( dna.name		).to.not.equal( dna_1.name );
+
+	{
+	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
+		"base":	dna_1.$id,
+		"tag":	"dna_version",
+	    });
+	    expect( links		).to.have.length( 2 );
+	}
+
+	{
+	    let path_id			= await clients.alice.call( "dnarepo", "dna_library", "path", [ "dnas" ] );
+	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
+		"base":	path_id,
+		"tag":	"dna",
+	    });
+	    expect( links		).to.have.length( 1 );
+	}
+
+	{
+	    let path_id			= await clients.alice.call( "dnarepo", "dna_library", "path", [ "filter_by", "name", dna.name ] );
+	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
+		"base":	path_id,
+		"tag":	"dna",
+	    });
+	    expect( links		).to.have.length( 1 );
+	}
     });
 }
 

@@ -1,5 +1,6 @@
 pub mod constants;
 pub mod errors;
+pub mod base_zome_functions;
 pub mod dnarepo_entry_types;
 pub mod happ_entry_types;
 pub mod web_asset_entry_types;
@@ -15,7 +16,7 @@ use errors::{ ErrorKinds, AppError, UserError };
 use sha2::{ Sha256, Digest };
 pub use hc_crud::{
     get_entity,
-    Collection, Entity, EntryModel,
+    Entity, Collection, EntryModel, EntityType,
 };
 
 use crate::constants::{
@@ -504,6 +505,7 @@ fn register_peer_dnas(input: DnaHashInput) -> ExternResult<()> {
 
     Ok(())
 }
+
 
 
 #[cfg(test)]

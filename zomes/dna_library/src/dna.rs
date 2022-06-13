@@ -3,6 +3,7 @@ use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
 	DnaEntry, DnaInfo,
+	DnaVersionEntry,
 	DeveloperProfileLocation, DeprecationNotice
     },
     constants::{
@@ -13,13 +14,14 @@ use devhub_types::{
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
-    Entity,
+    Entity, Collection,
 };
 use hdk::prelude::*;
 
 use crate::constants::{
     LT_NONE,
     TAG_DNA,
+    TAG_DNAVERSION,
     ANCHOR_DNAS,
 };
 
@@ -206,4 +208,23 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 	})?;
 
     Ok( entity.change_model( |dna| dna.to_info() ) )
+}
+
+pub fn get_dnas_with_an_hdk_version( input: String ) -> AppResult<Collection<Entity<DnaEntry>>> {
+    let collection = devhub_types::get_hdk_version_entities::<DnaVersionEntry>( TAG_DNAVERSION.into(), input )?;
+
+    let mut dnas : HashMap<EntryHash, Entity<DnaEntry>> = HashMap::new();
+
+    for dna_version in collection.items.into_iter() {
+	let dna = get_entity::<DnaEntry>( &dna_version.content.for_dna )?;
+
+	if !dnas.contains_key( &dna.id ) {
+	    dnas.insert( dna.id.to_owned(), dna );
+	}
+    }
+
+    Ok(Collection {
+	base: collection.base,
+	items: dnas.into_values().collect(),
+    })
 }
