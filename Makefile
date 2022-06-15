@@ -44,7 +44,9 @@ $(DNAREPO):			$(DNA_LIBRARY_WASM) $(MERE_MEMORY_WASM)
 $(HAPPDNA):			$(HAPP_LIBRARY_WASM)
 $(ASSETSDNA):			$(WEB_ASSETS_WASM)
 
-bundled/%.dna:
+bundled/happs/dna.yaml:		$(DNAREPO) $(ASSETSDNA)
+	node tests/update_happ_dna_yaml.js
+bundled/%.dna:			bundled/%/dna.yaml
 	@echo "Packaging '$*': $@"
 	@hc dna pack -o $@ bundled/$*
 

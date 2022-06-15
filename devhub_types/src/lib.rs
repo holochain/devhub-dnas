@@ -449,61 +449,38 @@ where
 }
 
 
-pub static mut DNAREPO_DNAHASH : Option<holo_hash::DnaHash> = None;
-pub static mut HAPPS_DNAHASH : Option<holo_hash::DnaHash> = None;
-pub static mut WEBASSETS_DNAHASH : Option<holo_hash::DnaHash> = None;
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+pub struct DnaProperties {
+    pub dnarepo_hash: Option<holo_hash::DnaHash>,
+    pub happs_hash: Option<holo_hash::DnaHash>,
+    pub webassets_hash: Option<holo_hash::DnaHash>,
+}
 
 pub fn dnarepo_hash() -> AppResult<holo_hash::DnaHash> {
-    unsafe {
-	debug!("Using static DNA hash for 'dnarepo': {:?}", DNAREPO_DNAHASH );
-	match DNAREPO_DNAHASH.to_owned() {
-	    Some(dna_hash) => Ok(dna_hash),
-	    None => Err(AppError::UnexpectedStateError(String::from("'dnarepo' DnaHash has not been registered yet")).into()),
-	}
+    let properties = DnaProperties::try_from( dna_info()?.properties )?;
+
+    match properties.dnarepo_hash {
+	Some(hash) => Ok(hash),
+	None => Err(AppError::UnexpectedStateError(String::from("Missing 'dnarepo' DnaHash in the DNA properties")).into()),
     }
 }
 
 pub fn happs_hash() -> AppResult<holo_hash::DnaHash> {
-    unsafe {
-	debug!("Using static DNA hash for 'happs': {:?}", HAPPS_DNAHASH );
-	match HAPPS_DNAHASH.to_owned() {
-	    Some(dna_hash) => Ok(dna_hash),
-	    None => Err(AppError::UnexpectedStateError(String::from("'happs' DnaHash has not been registered yet")).into()),
-	}
+    let properties = DnaProperties::try_from( dna_info()?.properties )?;
+
+    match properties.happs_hash {
+	Some(hash) => Ok(hash),
+	None => Err(AppError::UnexpectedStateError(String::from("Missing 'happs' DnaHash in the DNA properties")).into()),
     }
 }
 
 pub fn webassets_hash() -> AppResult<holo_hash::DnaHash> {
-    unsafe {
-	debug!("Using static DNA hash for 'webassets': {:?}", WEBASSETS_DNAHASH );
-	match WEBASSETS_DNAHASH.to_owned() {
-	    Some(dna_hash) => Ok(dna_hash),
-	    None => Err(AppError::UnexpectedStateError(String::from("'webassets' DnaHash has not been registered yet")).into()),
-	}
+    let properties = DnaProperties::try_from( dna_info()?.properties )?;
+
+    match properties.webassets_hash {
+	Some(hash) => Ok(hash),
+	None => Err(AppError::UnexpectedStateError(String::from("Missing 'webassets' DnaHash in the DNA properties")).into()),
     }
-}
-
-
-#[derive(Debug, Deserialize)]
-pub struct DnaHashInput {
-    pub dnarepo: Option<holo_hash::DnaHash>,
-    pub happs: Option<holo_hash::DnaHash>,
-    pub webassets: Option<holo_hash::DnaHash>,
-}
-#[hdk_extern]
-fn register_peer_dnas(input: DnaHashInput) -> ExternResult<()> {
-    debug!("Storing peer DNA hashes as static: {:?}", input );
-    unsafe {
-	DNAREPO_DNAHASH = input.dnarepo.to_owned();
-	HAPPS_DNAHASH = input.webassets.to_owned();
-	WEBASSETS_DNAHASH = input.webassets.to_owned();
-
-	debug!("New value for 'dnarepo':   {:?}", DNAREPO_DNAHASH );
-	debug!("New value for 'happs':     {:?}", HAPPS_DNAHASH );
-	debug!("New value for 'webassets': {:?}", WEBASSETS_DNAHASH );
-    }
-
-    Ok(())
 }
 
 

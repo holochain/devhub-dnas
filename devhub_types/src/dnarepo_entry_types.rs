@@ -164,8 +164,8 @@ pub struct DnaVersionEntry {
     pub last_updated: u64,
     pub changelog: String,
     pub wasm_hash : String,
-    // pub properties: Option<serde_yaml::Value>, // does this make sense?  Intended as a DNA's default properties?
     pub hdk_version: String,
+    pub properties: Option<HashMap<String, serde_yaml::Value>>,
     pub zomes: Vec<ZomeReference>,
     pub metadata: HashMap<String, serde_yaml::Value>,
 }
@@ -186,6 +186,7 @@ pub struct DnaVersionInfo {
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
+    pub properties: Option<HashMap<String, serde_yaml::Value>>,
     pub zomes: HashMap<String, Option<Entity<ZomeVersionEntry>>>,
     pub metadata: HashMap<String, serde_yaml::Value>,
 }
@@ -238,6 +239,7 @@ impl DnaVersionEntry {
 	    changelog: self.changelog.clone(),
 	    wasm_hash: self.wasm_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
+	    properties: self.properties.clone(),
 	    zomes: self.zomes.iter()
 		.map( |zome_ref| {
 		    (
@@ -254,7 +256,7 @@ impl DnaVersionEntry {
 
 
 //
-// ZOME Entry
+// Zome Entry
 //
 #[hdk_entry(id = "zome", visibility="public")]
 #[derive(Clone)]

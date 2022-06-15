@@ -62,6 +62,12 @@ impl From<AppError> for ErrorKinds {
     }
 }
 
+impl From<SerializedBytesError> for ErrorKinds {
+    fn from(error: SerializedBytesError) -> Self {
+        ErrorKinds::HDKError(error.into())
+    }
+}
+
 impl From<UserError> for ErrorKinds {
     fn from(error: UserError) -> Self {
         ErrorKinds::UserError(error)
