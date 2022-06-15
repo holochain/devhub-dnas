@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
@@ -37,7 +37,7 @@ pub struct DnaInput {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
@@ -62,7 +62,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
 	},
 	deprecation: None,
 	metadata: input.metadata
-	    .unwrap_or( HashMap::new() ),
+	    .unwrap_or( BTreeMap::new() ),
     };
 
     let entity = create_entity( &dna )?
@@ -125,7 +125,7 @@ pub struct DnaUpdateOptions {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 
@@ -213,7 +213,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 pub fn get_dnas_with_an_hdk_version( input: String ) -> AppResult<Collection<Entity<DnaEntry>>> {
     let collection = devhub_types::get_hdk_version_entities::<DnaVersionEntry>( TAG_DNAVERSION.into(), input )?;
 
-    let mut dnas : HashMap<EntryHash, Entity<DnaEntry>> = HashMap::new();
+    let mut dnas : BTreeMap<EntryHash, Entity<DnaEntry>> = BTreeMap::new();
 
     for dna_version in collection.items.into_iter() {
 	let dna = get_entity::<DnaEntry>( &dna_version.content.for_dna )?;

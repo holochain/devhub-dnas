@@ -5,7 +5,7 @@ pub mod dnarepo_entry_types;
 pub mod happ_entry_types;
 pub mod web_asset_entry_types;
 
-use std::collections::{ HashMap, HashSet };
+use std::collections::{ BTreeMap, BTreeSet };
 use std::iter::FromIterator;
 use std::io::Write;
 
@@ -344,7 +344,7 @@ where
     }
 
     let tag_count = tags.len();
-    let mut match_count = HashMap::new();
+    let mut match_count = BTreeMap::new();
 
     debug!("Gathering links for tags: {:?}", tags );
     for tag_name in tags.into_iter() {
@@ -416,8 +416,8 @@ where
     //   - create a list of removed tags
     //   - create a list of added tags
     //
-    let prev_tags : HashSet<String> = HashSet::from_iter( prev_tags.unwrap_or( vec![] ).iter().cloned() );
-    let new_tags : HashSet<String> = HashSet::from_iter( new_tags.unwrap_or( vec![] ).iter().cloned() );
+    let prev_tags : BTreeSet<String> = BTreeSet::from_iter( prev_tags.unwrap_or( vec![] ).iter().cloned() );
+    let new_tags : BTreeSet<String> = BTreeSet::from_iter( new_tags.unwrap_or( vec![] ).iter().cloned() );
 
     for rm_tag in prev_tags.difference( &new_tags ) {
 	let (tag_path, tag_hash) = ensure_path( ANCHOR_TAGS, vec![ &rm_tag.to_lowercase() ] )?;

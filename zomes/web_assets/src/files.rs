@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, GetEntityInput,
     errors::{ UserError },
@@ -27,7 +27,7 @@ pub struct CreateInput {
     pub name: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 
@@ -58,7 +58,7 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
 	mere_memory_hash: memory.hash,
 	name: input.name,
 	metadata: input.metadata
-	    .unwrap_or( HashMap::new() ),
+	    .unwrap_or( BTreeMap::new() ),
     };
 
     let entity = create_entity( &file )?

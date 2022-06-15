@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use hc_crud::{
     get_entity,
     EntryModel, EntityType, Entity
@@ -49,7 +49,7 @@ pub struct HappEntry {
     pub designer: AgentPubKey,
     pub published_at: u64,
     pub last_updated: u64,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
     pub tags: Option<Vec<String>>,
@@ -72,7 +72,7 @@ pub struct HappInfo {
     pub designer: AgentPubKey,
     pub published_at: u64,
     pub last_updated: u64,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
     pub tags: Option<Vec<String>>,
@@ -219,7 +219,7 @@ pub struct HappReleaseEntry {
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
     pub gui: Option<HappGUIConfig>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 
 impl EntryModel for HappReleaseEntry {
@@ -241,7 +241,7 @@ pub struct HappReleaseInfo {
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
     pub gui: Option<HappGUIConfig>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 impl EntryModel for HappReleaseInfo {
     fn get_type(&self) -> EntityType {
