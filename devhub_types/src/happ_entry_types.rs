@@ -123,7 +123,7 @@ pub struct RoleDnaInfo {
     // Optional fields
     pub uid: Option<String>,
     pub version: Option<String>,
-    pub properties: Option<serde_yaml::Value>,
+    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

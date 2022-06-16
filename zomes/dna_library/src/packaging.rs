@@ -59,7 +59,7 @@ pub struct Manifest {
     // Optional fields
     pub name: String,
     pub uid: Option<String>,
-    pub properties: Option<serde_yaml::Value>,
+    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -90,12 +90,12 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 
 	manifest_zomes.push( BundleZomeInfo {
 	    name: zome_ref.name.clone(),
-	    bundled: path,
+	    bundled: path.clone(),
 	    hash: None,
 	});
 
 	resources.insert(
-	    format!("./{}.wasm", zome_ref.name ),
+	    path,
 	    bytes
 	);
     }
@@ -103,10 +103,10 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     let bundle = Bundle {
 	manifest: Manifest {
 	    manifest_version: "1".into(),
-	    zomes: manifest_zomes,
 	    name: dna.content.name,
 	    uid: None,
-	    properties: None,
+	    properties: entry.properties.clone(),
+	    zomes: manifest_zomes,
 	},
 	resources: resources,
     };
