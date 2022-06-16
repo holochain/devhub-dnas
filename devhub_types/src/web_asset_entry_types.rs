@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use hc_crud::{
     EntryModel, EntityType
 };
@@ -22,7 +22,7 @@ pub struct FileEntry {
 
     // optional
     pub name: Option<String>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 
 impl EntryModel for FileEntry {
@@ -43,7 +43,7 @@ pub struct FileSummary {
 
     // optional
     pub name: Option<String>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 impl EntryModel for FileSummary {
     fn get_type(&self) -> EntityType {
@@ -64,7 +64,7 @@ pub struct FileInfo {
     // optional
     pub bytes: Option<Vec<u8>>,
     pub name: Option<String>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 impl EntryModel for FileInfo {
     fn get_type(&self) -> EntityType {

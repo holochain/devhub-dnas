@@ -5,7 +5,7 @@ pub mod dnarepo_entry_types;
 pub mod happ_entry_types;
 pub mod web_asset_entry_types;
 
-use std::collections::{ HashMap, HashSet };
+use std::collections::{ BTreeMap, BTreeSet };
 use std::iter::FromIterator;
 use std::io::Write;
 
@@ -344,7 +344,7 @@ where
     }
 
     let tag_count = tags.len();
-    let mut match_count = HashMap::new();
+    let mut match_count = BTreeMap::new();
 
     debug!("Gathering links for tags: {:?}", tags );
     for tag_name in tags.into_iter() {
@@ -416,8 +416,8 @@ where
     //   - create a list of removed tags
     //   - create a list of added tags
     //
-    let prev_tags : HashSet<String> = HashSet::from_iter( prev_tags.unwrap_or( vec![] ).iter().cloned() );
-    let new_tags : HashSet<String> = HashSet::from_iter( new_tags.unwrap_or( vec![] ).iter().cloned() );
+    let prev_tags : BTreeSet<String> = BTreeSet::from_iter( prev_tags.unwrap_or( vec![] ).iter().cloned() );
+    let new_tags : BTreeSet<String> = BTreeSet::from_iter( new_tags.unwrap_or( vec![] ).iter().cloned() );
 
     for rm_tag in prev_tags.difference( &new_tags ) {
 	let (tag_path, tag_hash) = ensure_path( ANCHOR_TAGS, vec![ &rm_tag.to_lowercase() ] )?;
@@ -449,61 +449,38 @@ where
 }
 
 
-pub static mut DNAREPO_DNAHASH : Option<holo_hash::DnaHash> = None;
-pub static mut HAPPS_DNAHASH : Option<holo_hash::DnaHash> = None;
-pub static mut WEBASSETS_DNAHASH : Option<holo_hash::DnaHash> = None;
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+pub struct DnaProperties {
+    pub dnarepo_hash: Option<holo_hash::DnaHash>,
+    pub happs_hash: Option<holo_hash::DnaHash>,
+    pub webassets_hash: Option<holo_hash::DnaHash>,
+}
 
 pub fn dnarepo_hash() -> AppResult<holo_hash::DnaHash> {
-    unsafe {
-	debug!("Using static DNA hash for 'dnarepo': {:?}", DNAREPO_DNAHASH );
-	match DNAREPO_DNAHASH.to_owned() {
-	    Some(dna_hash) => Ok(dna_hash),
-	    None => Err(AppError::UnexpectedStateError(String::from("'dnarepo' DnaHash has not been registered yet")).into()),
-	}
+    let properties = DnaProperties::try_from( dna_info()?.properties )?;
+
+    match properties.dnarepo_hash {
+	Some(hash) => Ok(hash),
+	None => Err(AppError::UnexpectedStateError(String::from("Missing 'dnarepo' DnaHash in the DNA properties")).into()),
     }
 }
 
 pub fn happs_hash() -> AppResult<holo_hash::DnaHash> {
-    unsafe {
-	debug!("Using static DNA hash for 'happs': {:?}", HAPPS_DNAHASH );
-	match HAPPS_DNAHASH.to_owned() {
-	    Some(dna_hash) => Ok(dna_hash),
-	    None => Err(AppError::UnexpectedStateError(String::from("'happs' DnaHash has not been registered yet")).into()),
-	}
+    let properties = DnaProperties::try_from( dna_info()?.properties )?;
+
+    match properties.happs_hash {
+	Some(hash) => Ok(hash),
+	None => Err(AppError::UnexpectedStateError(String::from("Missing 'happs' DnaHash in the DNA properties")).into()),
     }
 }
 
 pub fn webassets_hash() -> AppResult<holo_hash::DnaHash> {
-    unsafe {
-	debug!("Using static DNA hash for 'webassets': {:?}", WEBASSETS_DNAHASH );
-	match WEBASSETS_DNAHASH.to_owned() {
-	    Some(dna_hash) => Ok(dna_hash),
-	    None => Err(AppError::UnexpectedStateError(String::from("'webassets' DnaHash has not been registered yet")).into()),
-	}
+    let properties = DnaProperties::try_from( dna_info()?.properties )?;
+
+    match properties.webassets_hash {
+	Some(hash) => Ok(hash),
+	None => Err(AppError::UnexpectedStateError(String::from("Missing 'webassets' DnaHash in the DNA properties")).into()),
     }
-}
-
-
-#[derive(Debug, Deserialize)]
-pub struct DnaHashInput {
-    pub dnarepo: Option<holo_hash::DnaHash>,
-    pub happs: Option<holo_hash::DnaHash>,
-    pub webassets: Option<holo_hash::DnaHash>,
-}
-#[hdk_extern]
-fn register_peer_dnas(input: DnaHashInput) -> ExternResult<()> {
-    debug!("Storing peer DNA hashes as static: {:?}", input );
-    unsafe {
-	DNAREPO_DNAHASH = input.dnarepo.to_owned();
-	HAPPS_DNAHASH = input.webassets.to_owned();
-	WEBASSETS_DNAHASH = input.webassets.to_owned();
-
-	debug!("New value for 'dnarepo':   {:?}", DNAREPO_DNAHASH );
-	debug!("New value for 'happs':     {:?}", HAPPS_DNAHASH );
-	debug!("New value for 'webassets': {:?}", WEBASSETS_DNAHASH );
-    }
-
-    Ok(())
 }
 
 

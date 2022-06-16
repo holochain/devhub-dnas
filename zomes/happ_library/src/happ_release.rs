@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
@@ -45,7 +45,7 @@ pub struct CreateInput {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub gui: Option<GUIConfigInput>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseInfo>> {
@@ -73,7 +73,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	    HappGUIConfig::new( gui.asset_group_id, gui.uses_web_sdk )
 	}),
 	metadata: input.metadata
-	    .unwrap_or( HashMap::new() ),
+	    .unwrap_or( BTreeMap::new() ),
     };
 
     let entity = create_entity( &happ_release )?
@@ -112,7 +112,7 @@ pub struct HappReleaseUpdateOptions {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub gui: Option<HappGUIConfig>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type HappReleaseUpdateInput = UpdateEntityInput<HappReleaseUpdateOptions>;
 

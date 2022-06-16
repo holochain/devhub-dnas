@@ -50,3 +50,14 @@ fn path( segments: Vec<String> ) -> ExternResult<DevHubResponse<EntryHash>> {
 
     Ok(composition( path, VALUE_MD ))
 }
+
+
+#[hdk_extern]
+fn dna_info(_: ()) -> ExternResult<DevHubResponse<DnaInfo>> {
+    Ok(composition( hdk::prelude::dna_info()?, VALUE_MD ))
+}
+
+#[hdk_extern]
+fn zome_info(_: ()) -> ExternResult<DevHubResponse<ZomeInfo>> {
+    Ok(composition( hdk::prelude::zome_info()?, VALUE_MD ))
+}

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use hc_crud::{
     get_entity,
     EntryModel, EntityType, Entity
@@ -90,7 +90,7 @@ pub struct DnaEntry {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
     pub tags: Option<Vec<String>>,
@@ -112,7 +112,7 @@ pub struct DnaInfo {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
     pub tags: Option<Vec<String>>,
@@ -164,10 +164,10 @@ pub struct DnaVersionEntry {
     pub last_updated: u64,
     pub changelog: String,
     pub wasm_hash : String,
-    // pub properties: Option<serde_yaml::Value>, // does this make sense?  Intended as a DNA's default properties?
     pub hdk_version: String,
+    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
     pub zomes: Vec<ZomeReference>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 
 impl EntryModel for DnaVersionEntry {
@@ -186,8 +186,9 @@ pub struct DnaVersionInfo {
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
-    pub zomes: HashMap<String, Option<Entity<ZomeVersionEntry>>>,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
+    pub zomes: BTreeMap<String, Option<Entity<ZomeVersionEntry>>>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 impl EntryModel for DnaVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -238,6 +239,7 @@ impl DnaVersionEntry {
 	    changelog: self.changelog.clone(),
 	    wasm_hash: self.wasm_hash.clone(),
 	    hdk_version: self.hdk_version.clone(),
+	    properties: self.properties.clone(),
 	    zomes: self.zomes.iter()
 		.map( |zome_ref| {
 		    (
@@ -254,7 +256,7 @@ impl DnaVersionEntry {
 
 
 //
-// ZOME Entry
+// Zome Entry
 //
 #[hdk_entry(id = "zome", visibility="public")]
 #[derive(Clone)]
@@ -264,7 +266,7 @@ pub struct ZomeEntry {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
     pub tags: Option<Vec<String>>,
@@ -285,7 +287,7 @@ pub struct ZomeInfo {
     pub published_at: u64,
     pub last_updated: u64,
     pub developer: DeveloperProfileLocation,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
     pub tags: Option<Vec<String>>,
@@ -329,7 +331,7 @@ pub struct ZomeVersionEntry {
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
     pub hdk_version: String,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 
 impl EntryModel for ZomeVersionEntry {
@@ -349,7 +351,7 @@ pub struct ZomeVersionInfo {
     pub mere_memory_addr: EntryHash,
     pub mere_memory_hash: String,
     pub hdk_version: String,
-    pub metadata: HashMap<String, serde_yaml::Value>,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 impl EntryModel for ZomeVersionInfo {
     fn get_type(&self) -> EntityType {
@@ -400,7 +402,7 @@ pub mod tests {
 		pubkey: hash.into(),
 	    },
 	    deprecation: None,
-	    metadata: HashMap::new(),
+	    metadata: BTreeMap::new(),
 	}
     }
 

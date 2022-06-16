@@ -11,7 +11,6 @@ const { EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
-const YAML				= require('yaml');
 
 const { backdrop }			= require('./setup.js');
 const delay				= (n) => new Promise(f => setTimeout(f, n));
@@ -204,11 +203,18 @@ describe("All DNAs", () => {
 	    "alice",
 	]);
 
-	const response			= await clients.alice.call( "happs", "happ_library", "register_peer_dnas", {
-	    "dnarepo": clients.alice._app_schema._dnas.dnarepo._hash,
-	    "happs": clients.alice._app_schema._dnas.happs._hash,
-	    "webassets": clients.alice._app_schema._dnas.webassets._hash,
-	});
+	{
+	    let dna_info		= await clients.alice.call( "dnarepo", "dna_library", "dna_info" );
+	    log.info("Alice dnarepo dna_info zomes: %s", dna_info.zome_names );
+	}
+	{
+	    let dna_info		= await clients.alice.call( "happs", "happ_library", "dna_info" );
+	    log.info("Alice happs dna_info zomes: %s", dna_info.zome_names );
+	}
+	{
+	    let dna_info		= await clients.alice.call( "webassets", "web_assets", "dna_info" );
+	    log.info("Alice webassets dna_info zomes: %s", dna_info.zome_names );
+	}
 
 	// Must call whoami on each cell to ensure that init has finished.
 	{

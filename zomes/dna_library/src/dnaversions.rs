@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
@@ -36,7 +36,8 @@ pub struct DnaVersionInput {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
@@ -52,6 +53,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	for_dna: input.for_dna.clone(),
 	version: input.version,
 	hdk_version: input.hdk_version.clone(),
+	properties: input.properties,
 	zomes: input.zomes,
 	wasm_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	changelog: input.changelog
@@ -61,7 +63,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	metadata: input.metadata
-	    .unwrap_or( HashMap::new() ),
+	    .unwrap_or( BTreeMap::new() ),
     };
 
     let entity = create_entity( &version )?
@@ -119,7 +121,7 @@ pub struct DnaVersionUpdateOptions {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type DnaVersionUpdateInput = UpdateEntityInput<DnaVersionUpdateOptions>;
 
@@ -139,6 +141,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		    .unwrap_or( now()? ),
 		wasm_hash: current.wasm_hash,
 		hdk_version: current.hdk_version,
+		properties: current.properties,
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),

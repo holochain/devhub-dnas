@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
@@ -37,7 +37,7 @@ pub struct ZomeInput {
     pub tags: Option<Vec<String>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
@@ -60,7 +60,7 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
 	},
 	deprecation: None,
 	metadata: input.metadata
-	    .unwrap_or( HashMap::new() ),
+	    .unwrap_or( BTreeMap::new() ),
 	tags: input.tags.to_owned(),
     };
 
@@ -123,7 +123,7 @@ pub struct ZomeUpdateOptions {
     pub tags: Option<Vec<String>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub metadata: Option<HashMap<String, serde_yaml::Value>>,
+    pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 
@@ -208,7 +208,7 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> 
 pub fn get_zomes_with_an_hdk_version( input: String ) -> AppResult<Collection<Entity<ZomeEntry>>> {
     let collection = devhub_types::get_hdk_version_entities::<ZomeVersionEntry>( TAG_ZOMEVERSION.into(), input )?;
 
-    let mut zomes : HashMap<EntryHash, Entity<ZomeEntry>> = HashMap::new();
+    let mut zomes : BTreeMap<EntryHash, Entity<ZomeEntry>> = BTreeMap::new();
 
     for zome_version in collection.items.into_iter() {
 	let zome = get_entity::<ZomeEntry>( &zome_version.content.for_zome )?;

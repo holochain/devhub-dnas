@@ -84,14 +84,14 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
     let dnarepo_hash = devhub_types::dnarepo_hash()?;
     let cell_id = CellId::new( dnarepo_hash, pubkey );
 
-    let entity = crate::happ_release::get_happ_release(GetEntityInput {
+    let mut entity = crate::happ_release::get_happ_release(GetEntityInput {
 	id: input.id,
     })?;
 
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
 
     debug!("Fetching DNA package for {} resources", entity.content.dnas.len() );
-    for dna_ref in entity.content.dnas.iter() {
+    for (i, dna_ref) in entity.content.dnas.iter().enumerate() {
 	debug!("Fetching DNA package: {}", dna_ref.version );
 
 	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( &cell_id, "dna_library", "get_dna_package", GetEntityInput {
@@ -101,19 +101,16 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 	let path = format!("./{}.dna", dna_ref.role_id );
 
 	debug!("Adding resource pack '{}' with {} bytes", path, version_entity.content.bytes.len() );
-	resources.insert( path, version_entity.content.bytes );
+	resources.insert( path.clone(), version_entity.content.bytes );
+	entity.content.manifest.roles[i].dna.bundled = path.clone();
     }
     debug!("Finished collecting DNAs for package with {} resources: {:?}", resources.len(), resources.clone().into_iter().map( |(k,v)| (k, v.len()) ).collect::<Vec<(String, usize)>>() );
 
     debug!("Manifest: {:?}", entity.content.manifest );
-    let mut package = Bundle {
+    let package = Bundle {
 	manifest: entity.content.manifest,
 	resources: resources,
     };
-
-    for role in package.manifest.roles.iter_mut() {
-	role.dna.bundled = format!("./{}.dna", role.id );
-    }
 
     let happ_pack_bytes = encode_bundle( package )?;
 
