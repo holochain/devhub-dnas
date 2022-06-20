@@ -4,7 +4,7 @@ use devhub_types::{
     errors::{ UserError },
     dnarepo_entry_types::{
 	ZomeEntry,
-	ZomeVersionEntry, ZomeVersionInfo,
+	ZomeVersionEntry,
     },
     constants::{
 	ANCHOR_UNIQUENESS,
@@ -43,7 +43,7 @@ pub struct ZomeVersionInput {
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
-pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVersionInfo>> {
+pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVersionEntry>> {
     debug!("Creating ZOME version ({}) for ZOME: {}", input.version, input.for_zome );
     let default_now = now()?;
     let mere_memory_addr = match input.mere_memory_addr {
@@ -73,8 +73,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 	    .unwrap_or( BTreeMap::new() ),
     };
 
-    let entity = create_entity( &version )?
-	.change_model( |version| version.to_info() );
+    let entity = create_entity( &version )?;
 
     // Parent anchor
     debug!("Linking Zome ({}) to entry: {}", input.for_zome, entity.id );
@@ -101,11 +100,11 @@ pub struct GetZomeVersionInput {
     pub id: EntryHash,
 }
 
-pub fn get_zome_version(input: GetZomeVersionInput) -> AppResult<Entity<ZomeVersionInfo>> {
+pub fn get_zome_version(input: GetZomeVersionInput) -> AppResult<Entity<ZomeVersionEntry>> {
     debug!("Get ZOME Version: {}", input.id );
     let entity = get_entity::<ZomeVersionEntry>( &input.id )?;
 
-    Ok(	entity.change_model( |version| version.to_info() ) )
+    Ok(	entity )
 }
 
 
@@ -132,7 +131,7 @@ pub struct ZomeVersionUpdateOptions {
 }
 pub type ZomeVersionUpdateInput = UpdateEntityInput<ZomeVersionUpdateOptions>;
 
-pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<ZomeVersionInfo>> {
+pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<ZomeVersionEntry>> {
     debug!("Updating ZOME Version: {}", input.addr );
     let props = input.properties;
 
@@ -156,7 +155,7 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 	    })
 	})?;
 
-    Ok( entity.change_model( |version| version.to_info() ) )
+    Ok( entity )
 }
 
 

@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
-	ZomeEntry, ZomeInfo,
+	ZomeEntry,
 	ZomeVersionEntry,
 	DeveloperProfileLocation, DeprecationNotice
     },
@@ -40,7 +40,7 @@ pub struct ZomeInput {
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
-pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
+pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeEntry>> {
     debug!("Creating ZOME: {}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
@@ -64,8 +64,7 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeInfo>> {
 	tags: input.tags.to_owned(),
     };
 
-    let entity = create_entity( &zome )?
-	.change_model( |zome| zome.to_info() );
+    let entity = create_entity( &zome )?;
 
     // Developer (Agent) anchor
     let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_ZOMES ] )?;
@@ -106,11 +105,11 @@ pub struct GetZomeInput {
     pub id: EntryHash,
 }
 
-pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeInfo>> {
+pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeEntry>> {
     debug!("Get ZOME: {}", input.id );
     let entity = get_entity::<ZomeEntry>( &input.id )?;
 
-    Ok( entity.change_model( |zome| zome.to_info() ) )
+    Ok( entity )
 }
 
 
@@ -127,7 +126,7 @@ pub struct ZomeUpdateOptions {
 }
 pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 
-pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
+pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeEntry>> {
     debug!("Updating ZOME: {}", input.addr );
     let props = input.properties.clone();
     let previous = get_entity::<ZomeEntry>( &input.addr )?.content;
@@ -173,7 +172,7 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeInfo>> {
 
     devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, LT_NONE, TAG_ZOME.into() )?;
 
-    Ok( entity.change_model( |zome| zome.to_info() ) )
+    Ok( entity )
 }
 
 
@@ -185,7 +184,7 @@ pub struct DeprecateZomeInput {
     pub message: String,
 }
 
-pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> {
+pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeEntry>> {
     debug!("Deprecating ZOME: {}", input.addr );
     let entity : Entity<ZomeEntry> = update_entity(
 	&input.addr,
@@ -202,7 +201,7 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeInfo>> 
 	    })
 	})?;
 
-    Ok( entity.change_model( |zome| zome.to_info() ) )
+    Ok( entity )
 }
 
 pub fn get_zomes_with_an_hdk_version( input: String ) -> AppResult<Collection<Entity<ZomeEntry>>> {

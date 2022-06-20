@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
-	DnaEntry, DnaInfo,
+	DnaEntry,
 	DnaVersionEntry,
 	DeveloperProfileLocation, DeprecationNotice
     },
@@ -40,7 +40,7 @@ pub struct DnaInput {
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
-pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
+pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
     debug!("Creating DNA: {}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
@@ -65,8 +65,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaInfo>> {
 	    .unwrap_or( BTreeMap::new() ),
     };
 
-    let entity = create_entity( &dna )?
-	.change_model( |dna| dna.to_info() );
+    let entity = create_entity( &dna )?;
 
     // Developer (Agent) anchor
     let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_DNAS ] )?;
@@ -107,11 +106,11 @@ pub struct GetDnaInput {
     pub id: EntryHash,
 }
 
-pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaInfo>> {
+pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaEntry>> {
     debug!("Get DNA: {}", input.id );
     let entity = get_entity::<DnaEntry>( &input.id )?;
 
-    Ok( entity.change_model( |dna| dna.to_info() ) )
+    Ok( entity )
 }
 
 
@@ -129,7 +128,7 @@ pub struct DnaUpdateOptions {
 }
 pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 
-pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
+pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
     debug!("Updating DNA: {}", input.addr );
     let props = input.properties.clone();
     let previous = get_entity::<DnaEntry>( &input.addr )?.content;
@@ -177,7 +176,7 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaInfo>> {
 
     devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, LT_NONE, TAG_DNA.into() )?;
 
-    Ok( entity.change_model( |dna| dna.to_info() ) )
+    Ok( entity )
 }
 
 
@@ -189,7 +188,7 @@ pub struct DeprecateDnaInput {
     pub message: String,
 }
 
-pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
+pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaEntry>> {
     debug!("Deprecating DNA: {}", input.addr );
     let entity : Entity<DnaEntry> = update_entity(
 	&input.addr,
@@ -207,7 +206,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaInfo>> {
 	    })
 	})?;
 
-    Ok( entity.change_model( |dna| dna.to_info() ) )
+    Ok( entity )
 }
 
 pub fn get_dnas_with_an_hdk_version( input: String ) -> AppResult<Collection<Entity<DnaEntry>>> {

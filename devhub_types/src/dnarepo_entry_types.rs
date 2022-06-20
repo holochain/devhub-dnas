@@ -52,31 +52,6 @@ impl EntryModel for ProfileEntry {
     }
 }
 
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ProfileInfo {
-    pub name: String,
-    pub email: String,
-    pub avatar_image: SerializedBytes,
-    pub website: String,
-}
-impl EntryModel for ProfileInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "profile", "info" )
-    }
-}
-
-impl ProfileEntry {
-    pub fn to_info(&self) -> ProfileInfo {
-	ProfileInfo {
-	    name: self.name.clone(),
-	    email: self.email.clone(),
-	    website: self.website.clone(),
-	    avatar_image: self.avatar_image.clone(),
-	}
-    }
-}
-
 
 
 //
@@ -100,44 +75,7 @@ pub struct DnaEntry {
 
 impl EntryModel for DnaEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "dna", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DnaInfo {
-    pub name: String,
-    pub description: String,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-
-    // optional
-    pub tags: Option<Vec<String>>,
-    pub icon: Option<SerializedBytes>,
-    pub deprecation: Option<DeprecationNotice>,
-}
-impl EntryModel for DnaInfo {
-    fn get_type(&self) -> EntityType {
 	EntityType::new( "dna", "info" )
-    }
-}
-
-impl DnaEntry {
-    pub fn to_info(&self) -> DnaInfo {
-	DnaInfo {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    icon: self.icon.clone(),
-	    tags: self.tags.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    developer: self.developer.clone(),
-	    deprecation: self.deprecation.clone(),
-	    metadata: self.metadata.clone(),
-	}
     }
 }
 
@@ -171,26 +109,6 @@ pub struct DnaVersionEntry {
 }
 
 impl EntryModel for DnaVersionEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DnaVersionInfo {
-    pub for_dna: Option<Entity<DnaEntry>>,
-    pub version: u64,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub changelog: String,
-    pub wasm_hash : String,
-    pub hdk_version: String,
-    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
-    pub zomes: BTreeMap<String, Option<Entity<ZomeVersionEntry>>>,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
-impl EntryModel for DnaVersionInfo {
     fn get_type(&self) -> EntityType {
 	EntityType::new( "dna_version", "info" )
     }
@@ -227,30 +145,6 @@ impl DnaVersionEntry {
 	    bytes: dna_bytes,
 	}
     }
-
-    pub fn to_info(&self) -> DnaVersionInfo {
-	let dna_entity = get_entity::<DnaEntry>( &self.for_dna ).ok();
-
-	DnaVersionInfo {
-	    for_dna: dna_entity,
-	    version: self.version.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    changelog: self.changelog.clone(),
-	    wasm_hash: self.wasm_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    properties: self.properties.clone(),
-	    zomes: self.zomes.iter()
-		.map( |zome_ref| {
-		    (
-			zome_ref.name.clone(),
-			get_entity::<ZomeVersionEntry>( &zome_ref.version ).ok()
-		    )
-		})
-		.collect(),
-	    metadata: self.metadata.clone(),
-	}
-    }
 }
 
 
@@ -275,42 +169,7 @@ pub struct ZomeEntry {
 
 impl EntryModel for ZomeEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "zome", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ZomeInfo {
-    pub name: String,
-    pub description: String,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-
-    // optional
-    pub tags: Option<Vec<String>>,
-    pub deprecation: Option<DeprecationNotice>,
-}
-impl EntryModel for ZomeInfo {
-    fn get_type(&self) -> EntityType {
 	EntityType::new( "zome", "info" )
-    }
-}
-
-impl ZomeEntry {
-    pub fn to_info(&self) -> ZomeInfo {
-	ZomeInfo {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    developer: self.developer.clone(),
-	    deprecation: self.deprecation.clone(),
-	    metadata: self.metadata.clone(),
-	    tags: self.tags.clone(),
-	}
     }
 }
 
@@ -336,46 +195,10 @@ pub struct ZomeVersionEntry {
 
 impl EntryModel for ZomeVersionEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "zome_version", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ZomeVersionInfo {
-    pub for_zome: Option<Entity<ZomeEntry>>,
-    pub version: u64,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub changelog: String,
-    pub mere_memory_addr: EntryHash,
-    pub mere_memory_hash: String,
-    pub hdk_version: String,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
-impl EntryModel for ZomeVersionInfo {
-    fn get_type(&self) -> EntityType {
 	EntityType::new( "zome_version", "info" )
     }
 }
 
-impl ZomeVersionEntry {
-    pub fn to_info(&self) -> ZomeVersionInfo {
-	let zome_entity = get_entity::<ZomeEntry>( &self.for_zome ).ok();
-
-	ZomeVersionInfo {
-	    for_zome: zome_entity,
-	    version: self.version.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    changelog: self.changelog.clone(),
-	    mere_memory_addr: self.mere_memory_addr.clone(),
-	    mere_memory_hash: self.mere_memory_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    metadata: self.metadata.clone(),
-	}
-    }
-}
 
 
 
@@ -410,16 +233,8 @@ pub mod tests {
     ///
     fn dna_to_info_test() {
 	let dna1 = create_dnaentry();
-	let dna2 = create_dnaentry();
+	create_dnaentry();
 
 	assert_eq!(dna1.name, "Game Turns");
-
-	let dna_info = dna1.to_info();
-
-	assert_eq!(dna_info.name, "Game Turns");
-
-	let dna_info = dna2.to_info();
-
-	assert_eq!(dna_info.name, "Game Turns");
     }
 }

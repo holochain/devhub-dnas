@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
-	HappEntry, HappInfo,
+	HappEntry,
 	DeprecationNotice,
     },
     constants::{
@@ -40,7 +40,7 @@ pub struct CreateInput {
 }
 
 
-pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
+pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappEntry>> {
     debug!("Creating HAPP: {}", input.title );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
@@ -68,8 +68,7 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 	    .unwrap_or( BTreeMap::new() ),
     };
 
-    let entity = create_entity( &happ )?
-	.change_model( |happ| happ.to_info() );
+    let entity = create_entity( &happ )?;
 
     // Designer (Agent) anchor
     let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_HAPPS ] )?;
@@ -103,11 +102,11 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappInfo>> {
 }
 
 
-pub fn get_happ(input: GetEntityInput) -> AppResult<Entity<HappInfo>> {
+pub fn get_happ(input: GetEntityInput) -> AppResult<Entity<HappEntry>> {
     debug!("Get hApp: {}", input.id );
     let entity = get_entity::<HappEntry>( &input.id )?;
 
-    Ok(	entity.change_model( |happ| happ.to_info() ) )
+    Ok(	entity )
 }
 
 
@@ -124,7 +123,7 @@ pub struct HappUpdateOptions {
 }
 pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
 
-pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
+pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappEntry>> {
     debug!("Updating hApp: {}", input.addr );
     let props = input.properties.clone();
     let previous = get_entity::<HappEntry>( &input.addr )?.content;
@@ -174,7 +173,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappInfo>> {
 
     devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, LT_NONE, TAG_HAPP.into() )?;
 
-    Ok( entity.change_model( |happ| happ.to_info() ) )
+    Ok( entity )
 }
 
 
@@ -184,7 +183,7 @@ pub struct HappDeprecateInput {
     pub message: String,
 }
 
-pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> {
+pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappEntry>> {
     debug!("Deprecating hApp: {}", input.addr );
     let entity = update_entity(
 	&input.addr,
@@ -197,5 +196,5 @@ pub fn deprecate_happ(input: HappDeprecateInput) -> AppResult<Entity<HappInfo>> 
 	    Ok( current )
 	})?;
 
-    Ok( entity.change_model( |happ| happ.to_info() ) )
+    Ok( entity )
 }

@@ -5,7 +5,7 @@ use devhub_types::{
     errors::{ AppError },
     dnarepo_entry_types::{ DnaVersionPackage },
     happ_entry_types::{ HappManifest, WebHappManifest, ResourceRef },
-    web_asset_entry_types::{ FileInfo },
+    web_asset_entry_types::{ FilePackage },
     call_local_dna_zome,
     encode_bundle,
 };
@@ -21,7 +21,7 @@ pub struct GetGUIInput {
     pub id: EntryHash,
 }
 
-pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
+pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FilePackage>> {
     debug!("Get GUI from: {}", input.id );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let webassets_hash = devhub_types::webassets_hash()?;
@@ -171,7 +171,7 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
     debug!("Adding hApp bundle resource with {} bytes", happ_pack_bytes.len() );
     resources.insert( happ_ref.clone(), happ_pack_bytes );
 
-    debug!("Assembling 'webhapp' package: {:?}", happ_release.content.for_happ.ok_or(AppError::UnexpectedStateError(String::from("Missing parent hApp")))?.content.title );
+    debug!("Assembling 'webhapp' package for hApp: {}", happ_release.content.for_happ );
     let package = WebHappBundle {
 	manifest: WebHappManifest {
 	    manifest_version: String::from("1"),

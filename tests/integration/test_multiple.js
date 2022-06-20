@@ -98,7 +98,7 @@ function basic_tests () {
 	    "hdk_version": "v0.0.120",
 	    "zomes": [{
 		"name": "mere_memory",
-		"zome": new EntryHash( zome_version_1.for_zome.id ),
+		"zome": new EntryHash( zome_version_1.for_zome ),
 		"version": zome_version_1.$id,
 		"resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		"resource_hash": zome_version_1.mere_memory_hash,

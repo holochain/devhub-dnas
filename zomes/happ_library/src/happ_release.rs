@@ -3,7 +3,7 @@ use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
 	HappEntry,
-	HappReleaseEntry, HappReleaseInfo,
+	HappReleaseEntry,
 	HappManifest, DnaReference, HappGUIConfig,
     },
     constants::{
@@ -48,7 +48,7 @@ pub struct CreateInput {
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
-pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseInfo>> {
+pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEntry>> {
     debug!("Creating HAPPRELEASE: {}", input.name );
     let default_now = now()?;
 
@@ -76,8 +76,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 	    .unwrap_or( BTreeMap::new() ),
     };
 
-    let entity = create_entity( &happ_release )?
-	.change_model( |release| release.to_info() );
+    let entity = create_entity( &happ_release )?;
 
     // Parent anchor
     debug!("Linking happ ({}) to ENTRY: {}", input.for_happ, entity.id );
@@ -97,11 +96,11 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseIn
 }
 
 
-pub fn get_happ_release(input: GetEntityInput) -> AppResult<Entity<HappReleaseInfo>> {
+pub fn get_happ_release(input: GetEntityInput) -> AppResult<Entity<HappReleaseEntry>> {
     debug!("Get happ_release: {}", input.id );
     let entity = get_entity::<HappReleaseEntry>( &input.id )?;
 
-    Ok(	entity.change_model( |release| release.to_info() ) )
+    Ok(	entity )
 }
 
 
@@ -116,7 +115,7 @@ pub struct HappReleaseUpdateOptions {
 }
 pub type HappReleaseUpdateInput = UpdateEntityInput<HappReleaseUpdateOptions>;
 
-pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<HappReleaseInfo>> {
+pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<HappReleaseEntry>> {
     debug!("Updating hApp: {}", input.addr );
     let props = input.properties;
 
@@ -144,7 +143,7 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 	    })
 	})?;
 
-    Ok(	entity.change_model( |release| release.to_info() ) )
+    Ok(	entity )
 }
 
 

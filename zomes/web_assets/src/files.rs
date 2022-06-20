@@ -2,7 +2,10 @@ use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, GetEntityInput,
     errors::{ UserError },
-    web_asset_entry_types::{ FileEntry, FileInfo },
+    web_asset_entry_types::{
+	FileEntry,
+	FilePackage,
+    },
 };
 use hc_crud::{
     now, create_entity, get_entity,
@@ -31,7 +34,7 @@ pub struct CreateInput {
 }
 
 
-pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
+pub fn create_file(input: CreateInput) -> AppResult<Entity<FileEntry>> {
     debug!("Creating FILE: {:?}", input.name );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
@@ -61,8 +64,7 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
 	    .unwrap_or( BTreeMap::new() ),
     };
 
-    let entity = create_entity( &file )?
-	.change_model( |file| file.to_info() );
+    let entity = create_entity( &file )?;
     let base = crate::root_path_hash( None )?;
 
     debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
@@ -72,9 +74,9 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileInfo>> {
 }
 
 
-pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FileInfo>> {
+pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FilePackage>> {
     debug!("Get file: {}", input.id );
     let entity = get_entity::<FileEntry>( &input.id )?;
 
-    Ok(	entity.change_model( |file| file.to_info() ) )
+    Ok(	entity.change_model( |file| file.to_package() ) )
 }

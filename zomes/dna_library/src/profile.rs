@@ -1,7 +1,7 @@
 use devhub_types::{
     AppResult,
     errors::{ UserError },
-    dnarepo_entry_types::{ ProfileEntry, ProfileInfo },
+    dnarepo_entry_types::{ ProfileEntry },
     fmt_path,
 };
 use hc_crud::{
@@ -28,7 +28,7 @@ pub struct ProfileInput {
     pub website: Option<String>,
 }
 
-pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
+pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileEntry>> {
     debug!("Creating Profile: {}", input.name );
     let profile = ProfileEntry {
 	name: input.name,
@@ -43,8 +43,7 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileInfo>> {
 	avatar_image: input.avatar_image,
     };
 
-    let entity = create_entity( &profile )?
-	.change_model( |profile| profile.to_info() );
+    let entity = create_entity( &profile )?;
 
     let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ "profiles" ] )?;
     debug!("Linking agent root path ({}) to Profile: {}", fmt_path( &agent_base ), entity.id );
@@ -72,7 +71,7 @@ pub struct GetProfileInput {
     pub agent: Option<AgentPubKey>,
 }
 
-pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileInfo>> {
+pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileEntry>> {
     let links = get_profile_links( input.agent )?;
 
     let link = find_latest_link( links )
@@ -81,7 +80,7 @@ pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileInfo>> {
     debug!("Get Profile: {}", link.target );
     let entity = get_entity::<ProfileEntry>( &link.target.into() )?;
 
-    Ok( entity.change_model( |profile| profile.to_info() ) )
+    Ok( entity )
 }
 
 
@@ -100,7 +99,7 @@ pub struct ProfileUpdateOptions {
     pub avatar_image: Option<SerializedBytes>,
 }
 
-pub fn update_profile(input: UpdateProfileInput) -> AppResult<Entity<ProfileInfo>> {
+pub fn update_profile(input: UpdateProfileInput) -> AppResult<Entity<ProfileEntry>> {
     let props = input.properties;
 
     let entity : Entity<ProfileEntry> = update_entity(
@@ -118,7 +117,7 @@ pub fn update_profile(input: UpdateProfileInput) -> AppResult<Entity<ProfileInfo
 	    })
 	})?;
 
-    Ok( entity.change_model( |profile| profile.to_info() ) )
+    Ok( entity )
 }
 
 

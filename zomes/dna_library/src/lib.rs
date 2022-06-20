@@ -2,11 +2,11 @@ use devhub_types::{
     DevHubResponse, Entity, Collection, EntityResponse, CollectionResponse, EntityCollectionResponse, FilterInput,
     constants::{ ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD, VALUE_COLLECTION_MD },
     dnarepo_entry_types::{
-	ProfileEntry, ProfileInfo,
-	DnaEntry, DnaInfo,
-	DnaVersionEntry, DnaVersionInfo, DnaVersionPackage,
-	ZomeEntry, ZomeInfo,
-	ZomeVersionEntry, ZomeVersionInfo,
+	ProfileEntry,
+	DnaEntry,
+	DnaVersionEntry, DnaVersionPackage,
+	ZomeEntry,
+	ZomeVersionEntry,
     },
     composition,
     catch,
@@ -76,21 +76,21 @@ fn whoami(_: ()) -> ExternResult<DevHubResponse<AgentInfo>> {
 
 // Profile zome functions
 #[hdk_extern]
-fn create_profile(input: profile::ProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
+fn create_profile(input: profile::ProfileInput) -> ExternResult<EntityResponse<ProfileEntry>> {
     let entity = catch!( profile::create_profile( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-pub fn get_profile(input: profile::GetProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
+pub fn get_profile(input: profile::GetProfileInput) -> ExternResult<EntityResponse<ProfileEntry>> {
     let entity = catch!( profile::get_profile( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-pub fn update_profile(input: profile::UpdateProfileInput) -> ExternResult<EntityResponse<ProfileInfo>> {
+pub fn update_profile(input: profile::UpdateProfileInput) -> ExternResult<EntityResponse<ProfileEntry>> {
     let entity = catch!( profile::update_profile( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -120,14 +120,14 @@ fn get_following(_:()) -> ExternResult<CollectionResponse<Link>> {
 
 // DNA zome functions
 #[hdk_extern]
-fn create_dna(input: dna::DnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
+fn create_dna(input: dna::DnaInput) -> ExternResult<EntityResponse<DnaEntry>> {
     let entity = catch!( dna::create_dna( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-fn get_dna(input: dna::GetDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
+fn get_dna(input: dna::GetDnaInput) -> ExternResult<EntityResponse<DnaEntry>> {
     let entity = catch!( dna::get_dna( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -176,14 +176,14 @@ fn get_my_deprecated_dnas(_:()) -> ExternResult<EntityCollectionResponse<DnaEntr
 }
 
 #[hdk_extern]
-fn update_dna(input: dna::DnaUpdateInput) -> ExternResult<EntityResponse<DnaInfo>> {
+fn update_dna(input: dna::DnaUpdateInput) -> ExternResult<EntityResponse<DnaEntry>> {
     let entity = catch!( dna::update_dna( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-fn deprecate_dna(input: dna::DeprecateDnaInput) -> ExternResult<EntityResponse<DnaInfo>> {
+fn deprecate_dna(input: dna::DeprecateDnaInput) -> ExternResult<EntityResponse<DnaEntry>> {
     let entity = catch!( dna::deprecate_dna( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -238,14 +238,14 @@ fn get_dnas_with_an_hdk_version( input: String ) -> ExternResult<EntityCollectio
 
 // DNA Version zome functions
 #[hdk_extern]
-fn create_dna_version(input: dnaversions::DnaVersionInput) -> ExternResult<EntityResponse<DnaVersionInfo>> {
+fn create_dna_version(input: dnaversions::DnaVersionInput) -> ExternResult<EntityResponse<DnaVersionEntry>> {
     let entity = catch!( dnaversions::create_dna_version( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-fn get_dna_version(input: dnaversions::GetDnaVersionInput) -> ExternResult<EntityResponse<DnaVersionInfo>> {
+fn get_dna_version(input: dnaversions::GetDnaVersionInput) -> ExternResult<EntityResponse<DnaVersionEntry>> {
     let entity = catch!( dnaversions::get_dna_version( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -259,7 +259,7 @@ fn get_dna_versions(input: dnaversions::GetDnaVersionsInput) -> ExternResult<Ent
 }
 
 #[hdk_extern]
-fn update_dna_version(input: dnaversions::DnaVersionUpdateInput) -> ExternResult<EntityResponse<DnaVersionInfo>> {
+fn update_dna_version(input: dnaversions::DnaVersionUpdateInput) -> ExternResult<EntityResponse<DnaVersionEntry>> {
     let entity = catch!( dnaversions::update_dna_version( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -291,14 +291,14 @@ fn get_dna_package(input: packaging::GetDnaPackageInput) -> ExternResult<EntityR
 
 // ZOME functions
 #[hdk_extern]
-fn create_zome(input: zome::ZomeInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+fn create_zome(input: zome::ZomeInput) -> ExternResult<EntityResponse<ZomeEntry>> {
     let entity = catch!( zome::create_zome( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-fn get_zome(input: zome::GetZomeInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+fn get_zome(input: zome::GetZomeInput) -> ExternResult<EntityResponse<ZomeEntry>> {
     let entity = catch!( zome::get_zome( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -347,14 +347,14 @@ fn get_my_deprecated_zomes(_:()) -> ExternResult<EntityCollectionResponse<ZomeEn
 }
 
 #[hdk_extern]
-fn update_zome(input: zome::ZomeUpdateInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+fn update_zome(input: zome::ZomeUpdateInput) -> ExternResult<EntityResponse<ZomeEntry>> {
     let entity = catch!( zome::update_zome( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-fn deprecate_zome(input: zome::DeprecateZomeInput) -> ExternResult<EntityResponse<ZomeInfo>> {
+fn deprecate_zome(input: zome::DeprecateZomeInput) -> ExternResult<EntityResponse<ZomeEntry>> {
     let entity = catch!( zome::deprecate_zome( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -409,14 +409,14 @@ fn get_zomes_with_an_hdk_version( input: String ) -> ExternResult<EntityCollecti
 
 // ZOME Version zome functions
 #[hdk_extern]
-fn create_zome_version(input: zomeversion::ZomeVersionInput) -> ExternResult<EntityResponse<ZomeVersionInfo>> {
+fn create_zome_version(input: zomeversion::ZomeVersionInput) -> ExternResult<EntityResponse<ZomeVersionEntry>> {
     let entity = catch!( zomeversion::create_zome_version( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-fn get_zome_version(input: zomeversion::GetZomeVersionInput) -> ExternResult<EntityResponse<ZomeVersionInfo>> {
+fn get_zome_version(input: zomeversion::GetZomeVersionInput) -> ExternResult<EntityResponse<ZomeVersionEntry>> {
     let entity = catch!( zomeversion::get_zome_version( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
@@ -430,7 +430,7 @@ fn get_zome_versions(input: zomeversion::GetZomeVersionsInput) -> ExternResult<E
 }
 
 #[hdk_extern]
-fn update_zome_version(input: zomeversion::ZomeVersionUpdateInput) -> ExternResult<EntityResponse<ZomeVersionInfo>> {
+fn update_zome_version(input: zomeversion::ZomeVersionUpdateInput) -> ExternResult<EntityResponse<ZomeVersionEntry>> {
     let entity = catch!( zomeversion::update_zome_version( input ) );
 
     Ok(composition( entity, ENTITY_MD ))

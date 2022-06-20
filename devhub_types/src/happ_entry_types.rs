@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use hc_crud::{
-    get_entity,
-    EntryModel, EntityType, Entity
+    EntryModel, EntityType,
 };
 use hdk::prelude::*;
 
@@ -59,46 +58,7 @@ pub struct HappEntry {
 
 impl EntryModel for HappEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "happ", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HappInfo {
-    pub title: String,
-    pub subtitle: String,
-    pub description: String,
-    pub designer: AgentPubKey,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-
-    // optional
-    pub tags: Option<Vec<String>>,
-    pub icon: Option<SerializedBytes>,
-    pub deprecation: Option<DeprecationNotice>,
-}
-impl EntryModel for HappInfo {
-    fn get_type(&self) -> EntityType {
 	EntityType::new( "happ", "info" )
-    }
-}
-
-impl HappEntry {
-    pub fn to_info(&self) -> HappInfo {
-	HappInfo {
-	    title: self.title.clone(),
-	    subtitle: self.subtitle.clone(),
-	    description: self.description.clone(),
-	    designer: self.designer.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    tags: self.tags.clone(),
-	    icon: self.icon.clone(),
-	    deprecation: self.deprecation.clone(),
-	    metadata: self.metadata.clone(),
-	}
     }
 }
 
@@ -224,47 +184,6 @@ pub struct HappReleaseEntry {
 
 impl EntryModel for HappReleaseEntry {
     fn get_type(&self) -> EntityType {
-	EntityType::new( "happ_release", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HappReleaseInfo {
-    pub name: String,
-    pub description: String,
-    pub for_happ: Option<Entity<HappEntry>>,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub manifest: HappManifest,
-    pub dna_hash : String,
-    pub hdk_version: String,
-    pub dnas: Vec<DnaReference>,
-    pub gui: Option<HappGUIConfig>,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
-impl EntryModel for HappReleaseInfo {
-    fn get_type(&self) -> EntityType {
 	EntityType::new( "happ_release", "info" )
-    }
-}
-
-impl HappReleaseEntry {
-    pub fn to_info(&self) -> HappReleaseInfo {
-	let happ_entity = get_entity::<HappEntry>( &self.for_happ ).ok();
-
-	HappReleaseInfo {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    for_happ: happ_entity,
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    manifest: self.manifest.clone(),
-	    dna_hash: self.dna_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    dnas: self.dnas.clone(),
-	    gui: self.gui.clone(),
-	    metadata: self.metadata.clone(),
-	}
     }
 }

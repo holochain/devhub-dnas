@@ -1,7 +1,10 @@
 use devhub_types::{
     DevHubResponse, EntityResponse, GetEntityInput,
     constants::{ VALUE_MD, ENTITY_MD },
-    web_asset_entry_types::{ FileEntry, FileInfo },
+    web_asset_entry_types::{
+	FileEntry,
+	FilePackage,
+    },
     composition,
     catch,
 };
@@ -51,14 +54,14 @@ fn whoami(_: ()) -> ExternResult<DevHubResponse<AgentInfo>> {
 
 // Files
 #[hdk_extern]
-fn create_file(input: files::CreateInput) -> ExternResult<EntityResponse<FileInfo>> {
+fn create_file(input: files::CreateInput) -> ExternResult<EntityResponse<FileEntry>> {
     let entity = catch!( files::create_file( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
 
 #[hdk_extern]
-fn get_file(input: GetEntityInput) -> ExternResult<EntityResponse<FileInfo>> {
+fn get_file(input: GetEntityInput) -> ExternResult<EntityResponse<FilePackage>> {
     let entity = catch!( files::get_file( input ) );
 
     Ok(composition( entity, ENTITY_MD ))

@@ -3,7 +3,7 @@ use devhub_types::{
     AppResult, UpdateEntityInput,
     dnarepo_entry_types::{
 	DnaEntry,
-	DnaVersionEntry, DnaVersionInfo, ZomeReference,
+	DnaVersionEntry, ZomeReference,
     },
     constants::{
 	ANCHOR_UNIQUENESS,
@@ -40,7 +40,7 @@ pub struct DnaVersionInput {
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
-pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
+pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersionEntry>> {
     debug!("Creating DNA version ({}) for DNA: {}", input.version, input.for_dna );
     let default_now = now()?;
 
@@ -66,8 +66,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	    .unwrap_or( BTreeMap::new() ),
     };
 
-    let entity = create_entity( &version )?
-	.change_model( |version| version.to_info() );
+    let entity = create_entity( &version )?;
 
     // Parent anchor
     debug!("Linking DNA ({}) to ENTRY: {}", input.for_dna, entity.id );
@@ -94,11 +93,11 @@ pub struct GetDnaVersionInput {
     pub id: EntryHash,
 }
 
-pub fn get_dna_version(input: GetDnaVersionInput) -> AppResult<Entity<DnaVersionInfo>> {
+pub fn get_dna_version(input: GetDnaVersionInput) -> AppResult<Entity<DnaVersionEntry>> {
     debug!("Get DNA Version: {}", input.id );
     let entity = get_entity::<DnaVersionEntry>( &input.id )?;
 
-    Ok(	entity.change_model( |version| version.to_info() ) )
+    Ok(	entity )
 }
 
 
@@ -125,7 +124,7 @@ pub struct DnaVersionUpdateOptions {
 }
 pub type DnaVersionUpdateInput = UpdateEntityInput<DnaVersionUpdateOptions>;
 
-pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaVersionInfo>> {
+pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaVersionEntry>> {
     debug!("Updating DNA Version: {}", input.addr );
     let props = input.properties;
 
@@ -150,7 +149,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 	    })
 	})?;
 
-    Ok( entity.change_model( |version| version.to_info() ) )
+    Ok( entity )
 }
 
 
