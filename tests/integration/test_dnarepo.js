@@ -116,7 +116,8 @@ function basic_tests () {
 	const bobby			= clients.bobby;
 
 	let zome_input			= {
-	    "name": "File Storage",
+	    "name": "file_storage",
+	    "display_name": "File Storage",
 	    "description": "A generic API for fs-like data management",
 	    "tags": [ "Storage", "General-use" ],
 	};
@@ -248,7 +249,7 @@ function basic_tests () {
 	let second_header_hash;
 	{
 	    // Update ZOME
-	    const zome_name		= "Game Turns (new)";
+	    const zome_name		= "whi_game_turns";
 	    const tags			= [ "Storage", "Tool" ];
 	    zome			= await alice.call( "dnarepo", "dna_library", "update_zome", {
 		"id": zome.$id,
@@ -393,7 +394,8 @@ function basic_tests () {
 	const bobby			= clients.bobby;
 
 	let dna_input			= {
-	    "name": "Game Turns",
+	    "name": "game_turns",
+	    "display_name": "Game Turns",
 	    "description": "A tool for turn-based games to track the order of player actions",
 	    "tags": [ "Games", "Turn-based" ],
 	    "metadata": {

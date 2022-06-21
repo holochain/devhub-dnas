@@ -4,7 +4,7 @@ use devhub_types::{
     dnarepo_entry_types::{
 	ZomeEntry,
 	ZomeVersionEntry,
-	DeveloperProfileLocation, DeprecationNotice
+	DeprecationNotice,
     },
     constants::{
 	ANCHOR_TAGS,
@@ -34,6 +34,7 @@ pub struct ZomeInput {
     pub description: String,
 
     // optional
+    pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -50,14 +51,13 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeEntry>> {
 
     let zome = ZomeEntry {
 	name: input.name,
+	display_name: input.display_name,
 	description: input.description,
 	published_at: input.published_at
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
-	developer: DeveloperProfileLocation {
-	    pubkey: pubkey.clone(),
-	},
+	developer: pubkey.clone(),
 	deprecation: None,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
@@ -118,6 +118,7 @@ pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeEntry>> {
 #[derive(Debug, Deserialize, Clone)]
 pub struct ZomeUpdateOptions {
     pub name: Option<String>,
+    pub display_name: Option<String>,
     pub description: Option<String>,
     pub tags: Option<Vec<String>>,
     pub published_at: Option<u64>,
@@ -137,6 +138,8 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeEntry>> {
 	    Ok(ZomeEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
+		display_name: props.display_name
+		    .or( current.display_name ),
 		description: props.description
 		    .unwrap_or( current.description ),
 		published_at: props.published_at
@@ -191,6 +194,7 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeEntry>>
 	|current : ZomeEntry, _| {
 	    Ok(ZomeEntry {
 		name: current.name,
+		display_name: current.display_name,
 		description: current.description,
 		published_at: current.published_at,
 		last_updated: current.last_updated,

@@ -59,7 +59,7 @@ Example response
 
 ### hApps
 
-#### `create_happ( input ) -> EntityResponse<HappInfo>`
+#### `create_happ( input ) -> EntityResponse<HappEntry>`
 Create a new hApp where the Agent of this cell will be used for the `designer.pubkey`.
 
 - `input.title` - (*required*) `String`
@@ -74,16 +74,16 @@ Create a new hApp where the Agent of this cell will be used for the `designer.pu
 - `input.gui.asset_group_id` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.gui.uses_web_sdk` - (*required*) `Boolean`
 
-Returns [`HappInfo`](../Entity_Models.md#happ-info-happinfo) in an
+Returns [`HappEntry`](../Entry_Types.md#happ-happentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `get_happ( input ) -> EntityResponse<HappInfo>`
+#### `get_happ( input ) -> EntityResponse<HappEntry>`
 Get the latest info for the given hApp ID.
 
 - `input.id` - (*required*) `Uint8Array(39)` an EntryHash
 
-Returns [`HappInfo`](../Entity_Models.md#happ-info-happinfo) in an
+Returns [`HappEntry`](../Entry_Types.md#happ-happentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -93,7 +93,7 @@ Get a list of hApps that were created by the given Agent pubkey.
 - `input.agent` - (*optional*) `Uint8Array(39)` an AgentPubKey
   - defaults to the cell Agent
 
-Returns a list of [`HappSummary`](../Entity_Models.md#happ-summary-happsummary) values in an
+Returns a list of [`HappSummary`](../Entry_Types.md#happ-summary-happsummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
@@ -101,7 +101,7 @@ Returns a list of [`HappSummary`](../Entity_Models.md#happ-summary-happsummary) 
 Alias for `get_happs( None )`.
 
 
-#### `update_happ( input ) -> EntityResponse<HappInfo>`
+#### `update_happ( input ) -> EntityResponse<HappEntry>`
 Update the given properties of a hApp based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
@@ -117,24 +117,24 @@ Update the given properties of a hApp based off of the entry at the given addres
 - `input.properties.gui.asset_group_id` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.properties.gui.uses_web_sdk` - (*required*) `Boolean`
 
-Returns [`HappInfo`](../Entity_Models.md#happ-info-happinfo) in an
+Returns [`HappEntry`](../Entry_Types.md#happ-happentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `deprecate_happ( input ) -> EntityResponse<HappInfo>`
+#### `deprecate_happ( input ) -> EntityResponse<HappEntry>`
 Update the deprecation info of a hApp based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.message` - (*required*) `String`
 
-Returns [`HappInfo`](../Entity_Models.md#happ-info-happinfo) in an
+Returns [`HappEntry`](../Entry_Types.md#happ-happentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
 
 ### hApp Releases
 
-#### `create_happ_release( input ) -> EntityResponse<HappReleaseInfo>`
+#### `create_happ_release( input ) -> EntityResponse<HappReleaseEntry>`
 Create a new hApp Release for a specific hApp.
 
 - `input.for_happ` - (*required*) `Uint8Array(39)` an EntryHash
@@ -164,16 +164,16 @@ Create a new hApp Release for a specific hApp.
 - `input.last_updated` - (*optional*) `Number`
   - defaults to the current time
 
-Returns [`HappReleaseInfo`](../Entity_Models.md#happ-release-info-happreleaseinfo) in an
+Returns [`HappReleaseEntry`](../Entry_Types.md#happ-release-happreleaseentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `get_happ_release( input ) -> EntityResponse<HappReleaseInfo>`
+#### `get_happ_release( input ) -> EntityResponse<HappReleaseEntry>`
 Get the latest info for the given hApp Release ID.
 
 - `input.id` - (*required*) `Uint8Array(39)` an EntryHash
 
-Returns [`HappReleaseInfo`](../Entity_Models.md#happ-release-info-happreleaseinfo) in an
+Returns [`HappReleaseEntry`](../Entry_Types.md#happ-release-happreleaseentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -183,11 +183,11 @@ Get a list of hApp Releases that were created for the given hApp ID.
 - `input.for_happ` - (*required*) `Uint8Array(39)` an EntryHash
 
 Returns a list of
-[`HappReleaseSummary`](../Entity_Models.md#happ-release-summary-happreleasesummary) values in an
+[`HappReleaseSummary`](../Entry_Types.md#happ-release-summary-happreleasesummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
-#### `update_happ_release( input ) -> EntityResponse<HappReleaseInfo>`
+#### `update_happ_release( input ) -> EntityResponse<HappReleaseEntry>`
 Update the given properties of a hApp based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
@@ -198,7 +198,7 @@ Update the given properties of a hApp based off of the entry at the given addres
 - `input.properties.last_updated` - (*optional*) `Number`
   - defaults to the current time
 
-Returns [`HappReleaseInfo`](../Entity_Models.md#happ-release-info-happreleaseinfo) in an
+Returns [`HappReleaseEntry`](../Entry_Types.md#happ-release-happreleaseentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 

@@ -4,7 +4,7 @@ use devhub_types::{
     dnarepo_entry_types::{
 	DnaEntry,
 	DnaVersionEntry,
-	DeveloperProfileLocation, DeprecationNotice
+	DeprecationNotice,
     },
     constants::{
 	ANCHOR_TAGS,
@@ -33,6 +33,7 @@ pub struct DnaInput {
     pub description: String,
 
     // optional
+    pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
@@ -50,6 +51,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
 
     let dna = DnaEntry {
 	name: input.name,
+	display_name: input.display_name,
 	description: input.description,
 	icon: input.icon,
 	tags: input.tags.to_owned(),
@@ -57,9 +59,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
-	developer: DeveloperProfileLocation {
-	    pubkey: pubkey.clone(),
-	},
+	developer: pubkey.clone(),
 	deprecation: None,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
@@ -119,6 +119,7 @@ pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaEntry>> {
 #[derive(Debug, Deserialize, Clone)]
 pub struct DnaUpdateOptions {
     pub name: Option<String>,
+    pub display_name: Option<String>,
     pub description: Option<String>,
     pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
@@ -139,6 +140,8 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 	    Ok(DnaEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
+		display_name: props.display_name
+		    .or( current.display_name ),
 		description: props.description
 		    .unwrap_or( current.description ),
 		icon: props.icon
@@ -195,6 +198,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaEntry>> {
 	|current : DnaEntry, _| {
 	    Ok(DnaEntry {
 		name: current.name,
+		display_name: current.display_name,
 		description: current.description,
 		icon: current.icon,
 		tags: current.tags,

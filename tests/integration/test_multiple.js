@@ -66,7 +66,8 @@ function basic_tests () {
 
 
 	let zome_input			= {
-	    "name": "File Storage",
+	    "name": "file_storage",
+	    "display_name": "File Storage",
 	    "description": "A generic API for fs-like data management",
 	};
 	let zome_1			= await alice.call( "dnarepo", "dna_library", "create_zome", zome_input );
@@ -83,7 +84,8 @@ function basic_tests () {
 
 
 	const dna_input			= {
-	    "name": "Game Turns",
+	    "name": "game_turns",
+	    "display_name": "Game Turns",
 	    "description": "A tool for turn-based games to track the order of player actions",
 	};
 	let dna				= await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );

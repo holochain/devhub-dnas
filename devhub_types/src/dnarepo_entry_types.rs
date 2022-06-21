@@ -11,11 +11,6 @@ use hdk::prelude::*;
 // General-use Structs
 //
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DeveloperProfileLocation {
-    pub pubkey: AgentPubKey,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeprecationNotice {
     pub message: String,
 
@@ -64,10 +59,11 @@ pub struct DnaEntry {
     pub description: String,
     pub published_at: u64,
     pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
+    pub developer: AgentPubKey,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
+    pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
@@ -159,10 +155,11 @@ pub struct ZomeEntry {
     pub description: String,
     pub published_at: u64,
     pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
+    pub developer: AgentPubKey,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
+    pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
     pub deprecation: Option<DeprecationNotice>,
 }
@@ -213,7 +210,8 @@ pub mod tests {
 	let hash = EntryHash::from_raw_32( bytes.to_vec() );
 
 	DnaEntry {
-	    name: String::from("Game Turns"),
+	    name: String::from("game_turns"),
+	    display_name: Some(String::from("Game Turns")),
 	    description: String::from("A tool for turn-based games to track the order of player actions"),
 	    icon: Some(SerializedBytes::try_from(()).unwrap()),
 	    tags: Some(vec![ String::from("Games") ]),
@@ -221,9 +219,7 @@ pub mod tests {
 	    last_updated: 1618855430,
 
 	    // optional
-	    developer: DeveloperProfileLocation {
-		pubkey: hash.into(),
-	    },
+	    developer: hash.into(),
 	    deprecation: None,
 	    metadata: BTreeMap::new(),
 	}
@@ -235,6 +231,6 @@ pub mod tests {
 	let dna1 = create_dnaentry();
 	create_dnaentry();
 
-	assert_eq!(dna1.name, "Game Turns");
+	assert_eq!(dna1.name, "game_turns");
     }
 }
