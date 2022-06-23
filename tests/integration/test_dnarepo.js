@@ -23,8 +23,6 @@ const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo.dna" );
-const storage				= "dna_library";
-const mm_zome				= "mere_memory";
 
 let clients;
 let zome_1;
@@ -548,10 +546,9 @@ function basic_tests () {
 	let second_header_hash;
 	{
 	    // Update DNA
-	    const dna_name		= "Game Turns (new)";
+	    const dna_name		= "game_turns_new";
 	    const tags			= [ "Games", "Turns" ];
 	    dna				= await alice.call( "dnarepo", "dna_library", "update_dna", {
-		"id": dna.$id,
 		"addr": dna.$addr,
 		"properties": {
 		    "name": dna_name,
@@ -800,44 +797,6 @@ function basic_tests () {
 
 	expect( dnas			).to.have.length( 1 );
 	expect( dnas[0].$id		).to.deep.equal( dna_1.$id );
-    });
-
-    it("should test exposed base functions", async function () {
-	{
-	    let element			= await clients.alice.call( "dnarepo", "dna_library", "get_element", dna_1.$id );
-	    let entry			= msgpack.decode( element.entry.Present.entry );
-	    expect( entry.name		).to.be.a("string");
-	}
-
-	let element			= await clients.alice.call( "dnarepo", "dna_library", "get_element_latest", dna_1.$id );
-	let dna				= msgpack.decode( element.entry.Present.entry );
-	expect( dna.name		).to.not.equal( dna_1.name );
-
-	{
-	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
-		"base":	dna_1.$id,
-		"tag":	"dna_version",
-	    });
-	    expect( links		).to.have.length( 2 );
-	}
-
-	{
-	    let path_id			= await clients.alice.call( "dnarepo", "dna_library", "path", [ "dnas" ] );
-	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
-		"base":	path_id,
-		"tag":	"dna",
-	    });
-	    expect( links		).to.have.length( 1 );
-	}
-
-	{
-	    let path_id			= await clients.alice.call( "dnarepo", "dna_library", "path", [ "filter_by", "name", dna.name ] );
-	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
-		"base":	path_id,
-		"tag":	"dna",
-	    });
-	    expect( links		).to.have.length( 1 );
-	}
     });
 }
 

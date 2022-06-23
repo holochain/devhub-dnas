@@ -198,6 +198,58 @@ impl EntryModel for ZomeVersionEntry {
 
 
 
+//
+// Review Entry
+//
+#[hdk_entry(id = "review", visibility="public")]
+#[derive(Clone)]
+pub struct ReviewEntry {
+    pub subject_id: EntryHash,
+    pub subject_addr: EntryHash,
+    pub author: AgentPubKey,
+    pub rating: u8,
+    pub message: String,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // optional
+}
+
+impl EntryModel for ReviewEntry {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "review", "info" )
+    }
+}
+
+
+
+//
+// Review Summary Entry
+//
+#[hdk_entry(id = "review_summary", visibility="public")]
+#[derive(Clone)]
+pub struct ReviewSummaryEntry {
+    pub subject_id: EntryHash,
+    pub subject_addr: EntryHash,
+    pub published_at: u64,
+
+    pub average: f32,
+    pub median: u8,
+
+    pub review_count: u64,
+    pub factored_review_count: u64,
+    pub review_refs: Vec<(EntryHash,Option<EntryHash>)>,
+}
+
+impl EntryModel for ReviewSummaryEntry {
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "review_summary", "info" )
+    }
+}
+
+
+
 
 
 #[cfg(test)]
