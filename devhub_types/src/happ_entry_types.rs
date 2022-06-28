@@ -158,7 +158,7 @@ pub struct WebHappManifest {
     pub happ_manifest: ResourceRef,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct DnaReference {
     pub role_id: String,
     pub dna : EntryHash, // Dna ID

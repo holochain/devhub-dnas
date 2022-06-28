@@ -132,11 +132,13 @@ pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
     debug!("Updating DNA: {}", input.addr );
     let props = input.properties.clone();
-    let previous = get_entity::<DnaEntry>( &input.addr )?.content;
+    let mut previous : Option<DnaEntry> = None;
 
     let entity : Entity<DnaEntry> = update_entity(
 	&input.addr,
 	|current : DnaEntry, _| {
+	    previous = Some(current.clone());
+
 	    Ok(DnaEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -158,6 +160,8 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 		    .unwrap_or( current.metadata ),
 	    })
 	})?;
+
+    let previous = previous.unwrap();
 
     if input.properties.name.is_some() {
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );

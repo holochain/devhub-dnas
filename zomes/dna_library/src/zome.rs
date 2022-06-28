@@ -130,11 +130,13 @@ pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeEntry>> {
     debug!("Updating ZOME: {}", input.addr );
     let props = input.properties.clone();
-    let previous = get_entity::<ZomeEntry>( &input.addr )?.content;
+    let mut previous : Option<ZomeEntry> = None;
 
     let entity = update_entity(
 	&input.addr,
 	|current : ZomeEntry, _| {
+	    previous = Some(current.clone());
+
 	    Ok(ZomeEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -154,6 +156,8 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeEntry>> {
 		    .or( current.tags ),
 	    })
 	})?;
+
+    let previous = previous.unwrap();
 
     if input.properties.name.is_some() {
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );

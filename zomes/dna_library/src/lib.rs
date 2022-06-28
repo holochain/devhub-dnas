@@ -13,7 +13,6 @@ use devhub_types::{
 };
 use hdk::prelude::*;
 
-// mod misc;
 mod profile;
 mod dna;
 mod dnaversions;
@@ -22,6 +21,7 @@ mod zomeversion;
 
 mod packaging;
 mod constants;
+mod validation;
 
 
 use constants::{

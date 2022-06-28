@@ -80,7 +80,7 @@ impl EntryModel for DnaEntry {
 //
 // DNA Version Entry
 //
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ZomeReference {
     pub name: String,
     pub zome : EntryHash, // Zome ID
@@ -247,8 +247,6 @@ impl EntryModel for ReviewSummaryEntry {
 	EntityType::new( "review_summary", "info" )
     }
 }
-
-
 
 
 
