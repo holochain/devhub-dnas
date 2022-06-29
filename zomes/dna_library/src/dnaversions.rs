@@ -37,6 +37,7 @@ pub struct DnaVersionInput {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
+    pub source_code_commit_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -62,6 +63,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
+	source_code_commit_url: input.source_code_commit_url,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
     };
@@ -120,6 +122,7 @@ pub struct DnaVersionUpdateOptions {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_commit_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type DnaVersionUpdateInput = UpdateEntityInput<DnaVersionUpdateOptions>;
@@ -144,6 +147,8 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
+		source_code_commit_url: props.source_code_commit_url
+		    .or( current.source_code_commit_url ),
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })

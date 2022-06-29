@@ -25,7 +25,8 @@ use crate::constants::{
 pub struct ReviewInput {
     pub subject_id: EntryHash,
     pub subject_addr: EntryHash,
-    pub rating: u8,
+    pub accuracy_rating: u8,
+    pub efficiency_rating: u8,
     pub message: String,
 
     // optional
@@ -43,7 +44,8 @@ pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
 	subject_id: input.subject_id.to_owned(),
 	subject_addr: input.subject_addr.to_owned(),
 	author: pubkey.clone(),
-	rating: input.rating,
+	accuracy_rating: input.accuracy_rating,
+	efficiency_rating: input.efficiency_rating,
 	message: input.message,
 	published_at: input.published_at
 	    .unwrap_or( default_now ),
@@ -90,7 +92,8 @@ pub fn get_review(input: GetEntityInput) -> AppResult<Entity<ReviewEntry>> {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ReviewUpdateOptions {
-    pub rating: Option<u8>,
+    pub accuracy_rating: Option<u8>,
+    pub efficiency_rating: Option<u8>,
     pub message: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -105,8 +108,10 @@ pub fn update_review(input: ReviewUpdateInput) -> AppResult<Entity<ReviewEntry>>
     let entity = update_entity(
 	&input.addr,
 	|mut current : ReviewEntry, _| {
-	    current.rating = props.rating
-		.unwrap_or( current.rating );
+	    current.accuracy_rating = props.accuracy_rating
+		.unwrap_or( current.accuracy_rating );
+	    current.efficiency_rating = props.efficiency_rating
+		.unwrap_or( current.efficiency_rating );
 	    current.message = props.message
 		.unwrap_or( current.message );
 	    current.published_at = props.published_at

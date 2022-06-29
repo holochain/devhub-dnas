@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use hc_crud::{
-    get_entity,
-    EntryModel, EntityType, Entity
+    EntryModel, EntityType,
 };
 use hdk::prelude::*;
 
@@ -66,6 +65,7 @@ pub struct DnaEntry {
     pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
+    pub source_code_url: Option<String>,
     pub deprecation: Option<DeprecationNotice>,
 }
 
@@ -99,9 +99,12 @@ pub struct DnaVersionEntry {
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
-    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
     pub zomes: Vec<ZomeReference>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // optional
+    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
+    pub source_code_commit_url: Option<String>,
 }
 
 impl EntryModel for DnaVersionEntry {
@@ -113,7 +116,7 @@ impl EntryModel for DnaVersionEntry {
 // Package
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionPackage {
-    pub for_dna: Option<Entity<DnaEntry>>,
+    pub for_dna: EntryHash,
     pub version: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -129,10 +132,8 @@ impl EntryModel for DnaVersionPackage {
 
 impl DnaVersionEntry {
     pub fn to_package(&self, dna_bytes: Vec<u8>) -> DnaVersionPackage {
-	let dna_entity = get_entity::<DnaEntry>( &self.for_dna ).ok();
-
 	DnaVersionPackage {
-	    for_dna: dna_entity,
+	    for_dna: self.for_dna.clone(),
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
@@ -161,6 +162,7 @@ pub struct ZomeEntry {
     // optional
     pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
+    pub source_code_url: Option<String>,
     pub deprecation: Option<DeprecationNotice>,
 }
 
@@ -188,6 +190,9 @@ pub struct ZomeVersionEntry {
     pub mere_memory_hash: String,
     pub hdk_version: String,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // optional
+    pub source_code_commit_url: Option<String>,
 }
 
 impl EntryModel for ZomeVersionEntry {
@@ -207,7 +212,8 @@ pub struct ReviewEntry {
     pub subject_id: EntryHash,
     pub subject_addr: EntryHash,
     pub author: AgentPubKey,
-    pub rating: u8,
+    pub accuracy_rating: u8,
+    pub efficiency_rating: u8,
     pub message: String,
     pub published_at: u64,
     pub last_updated: u64,
@@ -234,8 +240,10 @@ pub struct ReviewSummaryEntry {
     pub subject_addr: EntryHash,
     pub published_at: u64,
 
-    pub average: f32,
-    pub median: u8,
+    pub accuracy_average: f32,
+    pub accuracy_median: u8,
+    pub efficiency_average: f32,
+    pub efficiency_median: u8,
 
     pub review_count: u64,
     pub factored_action_count: u64,
@@ -284,6 +292,7 @@ pub mod tests {
 	    // optional
 	    developer: hash.into(),
 	    deprecation: None,
+	    source_code_url: None,
 	    metadata: BTreeMap::new(),
 	}
     }

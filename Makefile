@@ -15,6 +15,7 @@ REVIEWS_WASM		= zomes/reviews.wasm
 WEB_ASSETS_WASM		= zomes/web_assets.wasm
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 
+
 #
 # Project
 #
@@ -32,7 +33,7 @@ clean:
 	    zomes/target \
 	    $(HAPP_BUNDLE) \
 	    $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) \
-	    $(DNA_LIBRARY_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_WASM) $(REVIEWS_WASM)
+	    $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_WASM)
 
 rebuild:			clean build
 build:				$(HAPP_BUNDLE)
@@ -41,7 +42,7 @@ build:				$(HAPP_BUNDLE)
 $(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
-$(DNAREPO):			$(DNA_LIBRARY_WASM) $(MERE_MEMORY_WASM) $(REVIEWS_WASM)
+$(DNAREPO):			$(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_WASM)
 $(HAPPDNA):			$(HAPP_LIBRARY_WASM)
 $(ASSETSDNA):			$(WEB_ASSETS_WASM)
 

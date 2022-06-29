@@ -20,7 +20,9 @@ mod validation;
 
 use constants::{
     TAG_REVIEW,
+    TAG_SUMMARY,
     ANCHOR_REVIEWS,
+    ANCHOR_SUMMARIES,
 };
 
 entry_defs![
@@ -104,4 +106,12 @@ fn create_summary_for_subject(input: review_summaries::ReviewSummaryInput) -> Ex
     let entity = catch!( review_summaries::create_summary( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_review_summaries_for_subject(input: GetEntityInput) -> ExternResult<EntityCollectionResponse<ReviewSummaryEntry>> {
+    let (base_path, _) = devhub_types::create_path( ANCHOR_SUMMARIES, vec![ input.id ] );
+    let collection = catch!( devhub_types::get_entities_for_path( TAG_SUMMARY.into(), base_path ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

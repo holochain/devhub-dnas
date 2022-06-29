@@ -38,6 +38,7 @@ pub struct DnaInput {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -60,6 +61,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	developer: pubkey.clone(),
+	source_code_url: input.source_code_url,
 	deprecation: None,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
@@ -125,6 +127,7 @@ pub struct DnaUpdateOptions {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
@@ -155,6 +158,8 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
 		developer: current.developer,
+		source_code_url: props.source_code_url
+		    .or( current.source_code_url ),
 		deprecation: current.deprecation,
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
@@ -210,6 +215,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaEntry>> {
 		last_updated: current.last_updated,
 		developer: current.developer,
 		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
+		source_code_url: current.source_code_url,
 		metadata: current.metadata,
 	    })
 	})?;

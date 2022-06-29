@@ -42,10 +42,14 @@ pub fn create_summary(input: ReviewSummaryInput) -> AppResult<Entity<ReviewSumma
 	Some(LinkTag::new( Vec::<u8>::from(TAG_REVIEW) ))
     )?;
 
-    let mut all_ratings = Vec::new();
-    let mut deleted_reviews = Vec::new();
-    let mut rating_sum : f32 = 0.0;
+    let mut all_accuracy_ratings = Vec::new();
+    let mut all_efficiency_ratings = Vec::new();
+
+    let mut accuracy_rating_sum : f32 = 0.0;
+    let mut efficiency_rating_sum : f32 = 0.0;
+
     let mut factored_count : u64 = 0;
+    let mut deleted_reviews = Vec::new();
 
     for link in review_links.iter() {
 	let review_id_b64 = format!("{}", link.target );
@@ -62,6 +66,11 @@ pub fn create_summary(input: ReviewSummaryInput) -> AppResult<Entity<ReviewSumma
 	    response => response?,
 	};
 
+	if review.content.subject_id != input.subject_id || review.content.subject_addr != input.subject_addr {
+	    debug!("Review doesn't belong to this subject: ID {} != {} || Address {} != {}", review.content.subject_id, input.subject_id, review.content.subject_addr, input.subject_addr );
+	    continue;
+	}
+
 	factored_count = factored_count + 1;
 
 	if review.id != review.address {
@@ -76,28 +85,47 @@ pub fn create_summary(input: ReviewSummaryInput) -> AppResult<Entity<ReviewSumma
 
 	review_refs.insert( review_id_b64, (review.id, review.header) );
 
-	all_ratings.push( review.content.rating );
-	rating_sum = rating_sum + (review.content.rating as f32);
+	all_accuracy_ratings.push( review.content.accuracy_rating );
+	all_efficiency_ratings.push( review.content.efficiency_rating );
+
+	accuracy_rating_sum = accuracy_rating_sum + (review.content.accuracy_rating as f32);
+	efficiency_rating_sum = efficiency_rating_sum + (review.content.efficiency_rating as f32);
     }
 
-    let rating_count = all_ratings.len() as f32;
-    all_ratings.sort();
-    let median : u8 = all_ratings[ (all_ratings.len() - 1) / 2 ];
+    let accuracy_rating_count = all_accuracy_ratings.len() as f32;
+    all_accuracy_ratings.sort();
+    let accuracy_median : u8 = all_accuracy_ratings[ (all_accuracy_ratings.len() - 1) / 2 ];
 
     debug!(
 	"Ratings average {} / {} = {} : {:?}",
-	rating_sum,
-	rating_count,
-	rating_sum / rating_count,
-	all_ratings
+	accuracy_rating_sum,
+	accuracy_rating_count,
+	accuracy_rating_sum / accuracy_rating_count,
+	all_accuracy_ratings
     );
+
+    let efficiency_rating_count = all_efficiency_ratings.len() as f32;
+    all_efficiency_ratings.sort();
+    let efficiency_median : u8 = all_efficiency_ratings[ (all_efficiency_ratings.len() - 1) / 2 ];
+
+    debug!(
+	"Ratings average {} / {} = {} : {:?}",
+	efficiency_rating_sum,
+	efficiency_rating_count,
+	efficiency_rating_sum / efficiency_rating_count,
+	all_efficiency_ratings
+    );
+
     let summary = ReviewSummaryEntry {
 	subject_id: input.subject_id.to_owned(),
 	subject_addr: input.subject_addr.to_owned(),
 	published_at: now()?,
 
-	average: rating_sum / rating_count,
-	median: median,
+	accuracy_average: accuracy_rating_sum / accuracy_rating_count,
+	accuracy_median: accuracy_median,
+
+	efficiency_average: efficiency_rating_sum / efficiency_rating_count,
+	efficiency_median: efficiency_median,
 
 	review_count: review_refs.len() as u64,
 	factored_action_count: factored_count,

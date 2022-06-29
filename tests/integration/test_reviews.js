@@ -35,21 +35,22 @@ function basic_tests () {
 	let review_input			= {
 	    "subject_id": zome_version_1.$id,
 	    "subject_addr": zome_version_1.$addr,
-	    "rating": 5,
+	    "accuracy_rating": 3,
+	    "efficiency_rating": 2,
 	    "message": "This code is not good",
 	};
 
 	let review				= review_1 = await clients.alice.call( "dnarepo", "reviews", "create_review", review_input );
-	log.normal("New Review: %s -> %s", String(review.$id), review.rating );
+	log.normal("New Review: %s -> %s", String(review.$id), review.accuracy_rating );
 
 	{
 	    // Check the created entry
 	    let review_info			= await clients.alice.call( "dnarepo", "reviews", "get_review", {
 		"id": review.$id,
 	    });
-	    log.info("Review: %s", review_info.rating );
+	    log.info("Review: %s", review_info.accuracy_rating );
 
-	    expect( review_info.rating		).to.equal( review_input.rating );
+	    expect( review_info.accuracy_rating	).to.equal( review_input.accuracy_rating );
 	    expect( review_info.message		).to.equal( review_input.message );
 	}
 
@@ -59,7 +60,7 @@ function basic_tests () {
 
 	    log.normal("Review list (%s):", reviews.length,  );
 	    reviews.forEach( review => {
-		log.normal("  - Review { rating: %s, published_at: %s }", review.rating, review.published_at );
+		log.normal("  - Review { rating: %s, published_at: %s }", review.accuracy_rating, review.published_at );
 	    });
 
 	    expect( reviews			).to.have.length( 1 );
@@ -69,7 +70,8 @@ function basic_tests () {
 	    await clients.alice.call( "dnarepo", "reviews", "create_review", {
 		"subject_id": zome_version_1.$id,
 		"subject_addr": zome_version_1.$addr,
-		"rating": faker.datatype.number(10),
+		"accuracy_rating": faker.datatype.number(10),
+		"efficiency_rating": faker.datatype.number(4),
 		"message": faker.lorem.sentence(),
 	    });
 	}
@@ -82,15 +84,14 @@ function basic_tests () {
 
 	    let rating_sum = 0;
 	    reviews.forEach( review => {
-		rating_sum		       += review.rating;
-		log.normal("  - Review { rating: %s, published_at: %s }", review.rating, review.published_at );
+		rating_sum		       += review.accuracy_rating;
+		log.normal("  - Review { rating: %s, published_at: %s }", review.accuracy_rating, review.published_at );
 	    });
 
-	    let all_ratings			= [].map.call( reviews, r => r.rating );
+	    let all_ratings			= [].map.call( reviews, r => r.accuracy_rating );
 	    all_ratings.sort( (a,b) => {
 		return a === b ? 0 : (a > b ? 1 : -1 );
 	    });
-	    console.log("Median index (%s):", Math.floor( (all_ratings.length - 1) / 2 ), all_ratings );
 
 	    expect( reviews			).to.have.length( review_count );
 
@@ -104,10 +105,9 @@ function basic_tests () {
 	    "subject_id": zome_version_1.$id,
 	    "subject_addr": zome_version_1.$addr,
 	});
-	console.log( json.debug( review_summary ) );
 
-	expect( review_summary.average			).to.be.closeTo( expected_average, 0.0001 );
-	expect( review_summary.median			).to.equal( expected_median );
+	expect( review_summary.accuracy_average		).to.be.closeTo( expected_average, 0.0001 );
+	expect( review_summary.accuracy_median		).to.equal( expected_median );
 	expect( review_summary.review_count		).to.equal( review_count );
 	expect( review_summary.factored_action_count	).to.equal( review_count );
     });
@@ -115,21 +115,23 @@ function basic_tests () {
     it("should update review", async function () {
 	{
 	    // Update Review
-	    const review_rating			= 6;
+	    const accuracy_review_rating	= 8;
+	    const efficiency_review_rating	= 9;
 	    const review			= review_1 = await clients.alice.call( "dnarepo", "reviews", "update_review", {
 		"addr": review_1.$addr,
 		"properties": {
-		    "rating": review_rating,
+		    "accuracy_rating": accuracy_review_rating,
+		    "efficiency_rating": efficiency_review_rating,
 		}
 	    });
-	    log.normal("Updated Review: %s -> %s", String(review.$addr), review.rating );
+	    log.normal("Updated Review: %s -> %s", String(review.$addr), review.accuracy_rating );
 
 	    let review_info			= await clients.alice.call( "dnarepo", "reviews", "get_review", {
 		"id": review.$id,
 	    });
-	    log.info("Review post update: %s", review_info.rating );
 
-	    expect( review_info.rating		).to.equal( review_rating );
+	    expect( review_info.accuracy_rating		).to.equal( accuracy_review_rating );
+	    expect( review_info.efficiency_rating	).to.equal( efficiency_review_rating );
 	}
     });
 
@@ -138,7 +140,6 @@ function basic_tests () {
 	    "subject_id": zome_version_1.$id,
 	    "subject_addr": zome_version_1.$addr,
 	});
-	console.log( json.debug( review_summary ) );
 
 	expect( review_summary.review_count		).to.equal( review_count );
 	expect( review_summary.factored_action_count	).to.equal( review_count + 1 );
@@ -157,11 +158,18 @@ function basic_tests () {
 	    "subject_id": zome_version_1.$id,
 	    "subject_addr": zome_version_1.$addr,
 	});
-	console.log( json.debug( review_summary ) );
 
 	expect( review_summary.review_count		).to.equal( review_count - 1 );
 	expect( review_summary.factored_action_count	).to.equal( review_count - 1 );
 	expect( review_summary.deleted_reviews		).to.have.length( 1 );
+    });
+
+    it("should get review summaries", async function () {
+	let review_summaries			= await clients.alice.call( "dnarepo", "reviews", "get_review_summaries_for_subject", {
+	    "id": zome_version_1.$addr,
+	});
+
+	expect( review_summaries		).to.have.length( 3 );
     });
 }
 

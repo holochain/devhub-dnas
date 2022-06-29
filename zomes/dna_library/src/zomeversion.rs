@@ -40,6 +40,7 @@ pub struct ZomeVersionInput {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_commit_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -69,6 +70,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	hdk_version: input.hdk_version.clone(),
+	source_code_commit_url: input.source_code_commit_url,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
     };
@@ -127,6 +129,7 @@ pub struct ZomeVersionUpdateOptions {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_commit_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type ZomeVersionUpdateInput = UpdateEntityInput<ZomeVersionUpdateOptions>;
@@ -150,6 +153,8 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
 		hdk_version: current.hdk_version,
+		source_code_commit_url: props.source_code_commit_url
+		    .or( current.source_code_commit_url ),
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })
