@@ -173,10 +173,6 @@ fn validate_happ_release_update(header: &header::Update, happ_release: HappRelea
 	}
     }
 
-    // if happ_release.properties != prev_entry.properties {
-    // 	return Ok(ValidateCallbackResult::Invalid("Cannot change HappReleaseEntry properties".to_string()));
-    // }
-
     Ok(ValidateCallbackResult::Valid)
 }
 

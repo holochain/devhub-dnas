@@ -15,25 +15,21 @@ const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
 const why				= require('why-is-node-running');
 
-// setTimeout(() => {
-//     console.log( why() );
-// }, 6000 );
-
 const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo.dna" );
 
 let clients;
-let zome_1;
 let zome_version_1;
-let dna_1;
 let dna_version_1;
 let expected_average;
 let expected_median;
+const review_count			= 20;
+let review_1;
 
 function basic_tests () {
-    it("should CRUD Reviews", async function () {
+    it("should create reviews", async function () {
 	this.timeout( 30_000 );
 
 	let review_input			= {
@@ -69,26 +65,6 @@ function basic_tests () {
 	    expect( reviews			).to.have.length( 1 );
 	}
 
-	{
-	    // Update Review
-	    const review_rating			= 6;
-	    review				= await clients.alice.call( "dnarepo", "reviews", "update_review", {
-		"addr": review.$addr,
-		"properties": {
-		    "rating": review_rating,
-		}
-	    });
-	    log.normal("Updated Review: %s -> %s", String(review.$addr), review.rating );
-
-	    let review_info			= await clients.alice.call( "dnarepo", "reviews", "get_review", {
-		"id": review.$id,
-	    });
-	    log.info("Review post update: %s", review_info.rating );
-
-	    expect( review_info.rating		).to.equal( review_rating );
-	}
-
-	const review_count			= 20;
 	for (let i=0; i < review_count-1; i++ ) {
 	    await clients.alice.call( "dnarepo", "reviews", "create_review", {
 		"subject_id": zome_version_1.$id,
@@ -123,39 +99,75 @@ function basic_tests () {
 	}
     });
 
-    it("should create review summary report", async function () {
+    it("should create review summary report before review update", async function () {
 	let review_summary			= await clients.alice.call( "dnarepo", "reviews", "create_summary_for_subject", {
 	    "subject_id": zome_version_1.$id,
 	    "subject_addr": zome_version_1.$addr,
 	});
-	// console.log( json.debug( review_summary ) );
+	console.log( json.debug( review_summary ) );
 
-	expect( review_summary.average		).to.be.closeTo( expected_average, 0.0001 );
-	expect( review_summary.median		).to.equal( expected_median );
+	expect( review_summary.average			).to.be.closeTo( expected_average, 0.0001 );
+	expect( review_summary.median			).to.equal( expected_median );
+	expect( review_summary.review_count		).to.equal( review_count );
+	expect( review_summary.factored_action_count	).to.equal( review_count );
+    });
+
+    it("should update review", async function () {
+	{
+	    // Update Review
+	    const review_rating			= 6;
+	    const review			= review_1 = await clients.alice.call( "dnarepo", "reviews", "update_review", {
+		"addr": review_1.$addr,
+		"properties": {
+		    "rating": review_rating,
+		}
+	    });
+	    log.normal("Updated Review: %s -> %s", String(review.$addr), review.rating );
+
+	    let review_info			= await clients.alice.call( "dnarepo", "reviews", "get_review", {
+		"id": review.$id,
+	    });
+	    log.info("Review post update: %s", review_info.rating );
+
+	    expect( review_info.rating		).to.equal( review_rating );
+	}
+    });
+
+    it("should create review summary report after review update", async function () {
+	let review_summary			= await clients.alice.call( "dnarepo", "reviews", "create_summary_for_subject", {
+	    "subject_id": zome_version_1.$id,
+	    "subject_addr": zome_version_1.$addr,
+	});
+	console.log( json.debug( review_summary ) );
+
+	expect( review_summary.review_count		).to.equal( review_count );
+	expect( review_summary.factored_action_count	).to.equal( review_count + 1 );
+    });
+
+    it("should delete review", async function () {
+	{
+	    await clients.alice.call( "dnarepo", "reviews", "delete_review", {
+		"id": review_1.$id,
+	    });
+	}
+    });
+
+    it("should create review summary report after review delete", async function () {
+	let review_summary			= await clients.alice.call( "dnarepo", "reviews", "create_summary_for_subject", {
+	    "subject_id": zome_version_1.$id,
+	    "subject_addr": zome_version_1.$addr,
+	});
+	console.log( json.debug( review_summary ) );
+
+	expect( review_summary.review_count		).to.equal( review_count - 1 );
+	expect( review_summary.factored_action_count	).to.equal( review_count - 1 );
+	expect( review_summary.deleted_reviews		).to.have.length( 1 );
     });
 }
 
 function errors_tests () {
-    it("should fail to update DNA because the address is a different entry type", async function () {
+    it("should fail to...", async function () {
 	this.skip();
-
-	let failed			= false;
-	try {
-	    let dna			= await clients.alice.call( "dnarepo", "dna_library", "update_dna_version", {
-		"addr": dna_addr,
-		"properties": {
-		    "name": "Bla bla",
-		}
-	    });
-	} catch (err) {
-	    expect( err.kind		).to.equal( "UtilsError" );
-	    expect( err.name		).to.equal( "DeserializationError" );
-	    expect( err.message		).to.have.string( 'App("dna_version")' );
-
-	    failed			= true;
-	}
-
-	expect( failed			).to.be.true;
     });
 }
 
@@ -185,7 +197,7 @@ describe("DNArepo", () => {
 	    "description": "A generic API for fs-like data management",
 	};
 
-	let zome			= zome_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome", zome_input );;
+	let zome			= await clients.alice.call( "dnarepo", "dna_library", "create_zome", zome_input );;
 	let zome_version		= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version", {
 	    "for_zome": zome.$id,
 	    "version": 1,
@@ -198,7 +210,7 @@ describe("DNArepo", () => {
 	    "description": "A tool for turn-based games to track the order of player actions",
 	};
 
-	let dna				= dna_1 = await clients.alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
+	let dna				= await clients.alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
 	let dna_version			= dna_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_dna_version", {
 	    "for_dna": dna.$id,
 	    "version": 1,

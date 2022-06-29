@@ -8,7 +8,7 @@
   "license": "ISC",
   "dependencies": {
     "@faker-js/faker": "^7.3.0",
-    "@whi/crux-payload-parser": "^0.1.1",
+    "@whi/crux-payload-parser": "^0.1.4",
     "@whi/holo-hash": "^0.1.2",
     "@whi/holochain-backdrop": "^0.24.3",
     "@whi/holochain-client": "^0.27.0",

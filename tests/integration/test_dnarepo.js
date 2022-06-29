@@ -20,10 +20,6 @@ const { ConductorError,
 	CustomError,
 	...hc_client }			= require('@whi/holochain-client');
 
-// setTimeout(() => {
-//     console.log( why() );
-// }, 6000 );
-
 const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');
 

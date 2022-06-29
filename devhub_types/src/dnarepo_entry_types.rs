@@ -238,13 +238,26 @@ pub struct ReviewSummaryEntry {
     pub median: u8,
 
     pub review_count: u64,
-    pub factored_review_count: u64,
-    pub review_refs: Vec<(EntryHash,Option<EntryHash>)>,
+    pub factored_action_count: u64,
+    pub review_refs: BTreeMap<String,(EntryHash,HeaderHash)>,
+    pub deleted_reviews: Vec<EntryHash>,
 }
 
 impl EntryModel for ReviewSummaryEntry {
     fn get_type(&self) -> EntityType {
 	EntityType::new( "review_summary", "info" )
+    }
+}
+
+
+pub fn trace_header_origin_entry(header_hash: &HeaderHash, depth: Option<u64>) -> ExternResult<(EntryHash,u64)> {
+    let sh_header = must_get_header( header_hash.to_owned().into() )?;
+    let depth : u64 = depth.unwrap_or(0);
+
+    match sh_header.header() {
+	Header::Create(create) => Ok( (create.entry_hash.to_owned(), depth) ),
+	Header::Update(update) => trace_header_origin_entry( &update.original_header_address, Some(depth+1) ),
+	header => Err(WasmError::Guest(format!("Unexpected header type @ depth {}: {:?}", depth, header ))),
     }
 }
 

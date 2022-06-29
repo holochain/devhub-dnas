@@ -3,7 +3,6 @@ use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     dnarepo_entry_types::{
 	ReviewEntry,
-	ReviewSummaryEntry,
     },
     fmt_path,
 };
@@ -16,9 +15,7 @@ use hdk::prelude::*;
 use crate::constants::{
     LT_NONE,
     TAG_REVIEW,
-    TAG_SUMMARY,
     ANCHOR_REVIEWS,
-    ANCHOR_SUMMARIES,
 };
 
 
@@ -134,101 +131,4 @@ pub fn delete_review(input: GetEntityInput) -> AppResult<HeaderHash> {
     debug!("Deleted Review Version header ({})", delete_header );
 
     Ok( delete_header )
-}
-
-
-
-#[derive(Debug, Deserialize)]
-pub struct ReviewSummaryInput {
-    pub subject_id: EntryHash,
-    pub subject_addr: EntryHash,
-}
-
-pub fn create_summary(input: ReviewSummaryInput) -> AppResult<Entity<ReviewSummaryEntry>> {
-    debug!("Creating Review Summary for: {} (subject {})", input.subject_addr, input.subject_id );
-
-    // let (_, base_hash) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ input.subject_addr ] );
-    // let review_summaries = get_links(
-    //     base_hash.clone(),
-    //     Some(LinkTag::new( Vec::<u8>::from(TAG_SUMMARY) ))
-    // )?;
-
-    let mut review_refs : Vec<(EntryHash,Option<EntryHash>)> = Vec::new();
-
-    let (_, base_hash) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ &input.subject_addr ] );
-    let review_links = get_links(
-        base_hash.clone(),
-	Some(LinkTag::new( Vec::<u8>::from(TAG_REVIEW) ))
-    )?;
-
-    let mut all_ratings = Vec::new();
-    let mut rating_sum : f32 = 0.0;
-    let rating_count = review_links.len() as f32;
-
-    for link in review_links.iter() {
-
-	let review = get_entity::<ReviewEntry>( &link.target.to_owned().into() )?;
-
-	if review.id == review.address {
-	    review_refs.push( (review.id, None) );
-	} else {
-	    review_refs.push( (review.id, Some(review.address)) );
-	}
-	// let review : ReviewEntry = get( link.target.to_owned(), GetOptions::latest() )?
-	//     .ok_or(UtilsError::EntryNotFoundError(link.target.to_owned().into()))?
-	//     .try_into()?;
-
-	all_ratings.push( review.content.rating );
-
-	rating_sum = rating_sum + (review.content.rating as f32);
-    }
-
-    all_ratings.sort();
-    let median : u8 = all_ratings[ (review_links.len() - 1) / 2 ];
-
-    debug!(
-	"Ratings average {} / {} = {} : {:?}",
-	rating_sum,
-	rating_count,
-	rating_sum / rating_count,
-	all_ratings
-    );
-    let summary = ReviewSummaryEntry {
-	subject_id: input.subject_id.to_owned(),
-	subject_addr: input.subject_addr.to_owned(),
-	published_at: now()?,
-
-	average: rating_sum / rating_count,
-	median: median,
-
-	review_count: rating_count as u64,
-	factored_review_count: rating_count as u64,
-	review_refs: review_refs,
-    };
-
-    let entity = create_entity( &summary )?;
-
-    // Revision's summarys
-    let (base, base_hash) = devhub_types::create_path( ANCHOR_SUMMARIES, vec![ input.subject_addr.to_owned() ] );
-    debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-    entity.link_from( &base_hash, LT_NONE, TAG_SUMMARY.into() )?;
-
-    if input.subject_id != input.subject_addr {
-	// Subject's summarys
-	let (base, base_hash) = devhub_types::create_path( ANCHOR_SUMMARIES, vec![ input.subject_id ] );
-	debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-	entity.link_from( &base_hash, LT_NONE, TAG_SUMMARY.into() )?;
-    }
-
-    // // Best summary
-    // let (base, base_hash) = devhub_types::create_path( ANCHOR_SUMMARIES, vec![ input.subject_addr.to_owned(), "latest" ] );
-    // debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-    // entity.link_from( &base_hash, LT_NONE, TAG_SUMMARY.into() )?;
-
-    // let review_links = get_links(
-    //     base_hash.clone(),
-    // 	Some(LinkTag::new( Vec::<u8>::from(TAG_REVIEW) ))
-    // )?;
-
-    Ok( entity )
 }

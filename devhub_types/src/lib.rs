@@ -12,7 +12,6 @@ use std::io::Write;
 use hdk::prelude::*;
 use hdk::hash_path::path::Component;
 use essence::{ EssenceResponse };
-use errors::{ ErrorKinds, AppError, UserError };
 use sha2::{ Sha256, Digest };
 pub use hc_crud::{
     get_entity,
@@ -25,6 +24,7 @@ use crate::constants::{
     ANCHOR_HDK_VERSIONS,
 };
 
+pub use errors::{ ErrorKinds, AppError, UserError };
 pub type AppResult<T> = Result<T, ErrorKinds>;
 
 #[derive(Debug, Serialize, Deserialize)]

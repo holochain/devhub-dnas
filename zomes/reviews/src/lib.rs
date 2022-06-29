@@ -12,8 +12,10 @@ use hdk::prelude::*;
 
 // mod misc;
 mod reviews;
+mod review_summaries;
 
 mod constants;
+mod validation;
 
 
 use constants::{
@@ -98,8 +100,8 @@ fn delete_review(input: GetEntityInput) -> ExternResult<DevHubResponse<HeaderHas
 
 // Review Summary zome functions
 #[hdk_extern]
-fn create_summary_for_subject(input: reviews::ReviewSummaryInput) -> ExternResult<EntityResponse<ReviewSummaryEntry>> {
-    let entity = catch!( reviews::create_summary( input ) );
+fn create_summary_for_subject(input: review_summaries::ReviewSummaryInput) -> ExternResult<EntityResponse<ReviewSummaryEntry>> {
+    let entity = catch!( review_summaries::create_summary( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
