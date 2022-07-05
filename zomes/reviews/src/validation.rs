@@ -79,7 +79,7 @@ fn validate_element(entry_def_index: EntryDefIndex, element: &Element) -> Extern
 		validate_review_update( update, element.try_into()? )
 	    }
 	    else if entry_def_index == review_summary_edi {
-		Ok(ValidateCallbackResult::Invalid("Review summaries cannot be updated".to_string()))
+		validate_review_summary_update( update, element.try_into()? )
 	    }
 	    else {
 		debug!("Ignoring update Op for: {:?}", entry_def_index );
@@ -115,6 +115,12 @@ fn validate_review_create(header: &header::Create, review: ReviewEntry) -> Exter
     if review.author != header.author {
 	Ok(ValidateCallbackResult::Invalid(format!("ReviewEntry author does not match Header author: {} != {}", review.author, header.author )))
     }
+    else if review.accuracy_rating > 10 {
+	Ok(ValidateCallbackResult::Invalid(format!("ReviewEntry accuracy rating ({}) out of range: valid range 0-10", review.accuracy_rating )))
+    }
+    else if review.efficiency_rating > 10 {
+	Ok(ValidateCallbackResult::Invalid(format!("ReviewEntry efficiency rating ({}) out of range: valid range 0-10", review.efficiency_rating )))
+    }
     else {
 	Ok(ValidateCallbackResult::Valid)
     }
@@ -149,17 +155,21 @@ fn validate_review_delete(header: &header::Delete) -> ExternResult<ValidateCallb
 //
 // Review Summary
 //
-fn validate_review_summary_create(_: &header::Create, review_summary: ReviewSummaryEntry) -> ExternResult<ValidateCallbackResult> {
+fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> ExternResult<ValidateCallbackResult> {
     let mut all_accuracy_ratings = Vec::new();
     let mut all_efficiency_ratings = Vec::new();
 
     let mut accuracy_rating_sum : f32 = 0.0;
     let mut efficiency_rating_sum : f32 = 0.0;
 
-    let mut factored_count = review_summary.review_refs.len() as u64;
+    let mut factored_count = (review_summary.review_refs.len() + review_summary.deleted_reviews.len()) as u64;
+    let mut all_factored_reviews : Vec<&(EntryHash,HeaderHash)> = Vec::new();
+
+    all_factored_reviews.extend( review_summary.review_refs.values() );
+    all_factored_reviews.extend( review_summary.deleted_reviews.values() );
 
     // Verfiy review references
-    for (review_id, review_header_hash) in review_summary.review_refs.values() {
+    for (review_id, review_header_hash) in all_factored_reviews {
 	let review_element = must_get_valid_element( review_header_hash.to_owned().into() )?;
 
 	if let Header::Update(update) = review_element.header() {
@@ -169,6 +179,7 @@ fn validate_review_summary_create(_: &header::Create, review_summary: ReviewSumm
 		return Ok(ValidateCallbackResult::Invalid(format!("Traced origin ID for header ({}) does not match review ID: {} != {}", review_header_hash, origin_id, review_id )))
 	    }
 
+	    debug!("Counting depth {} for {}", depth, origin_id );
 	    factored_count = factored_count + depth;
 	}
 
@@ -182,8 +193,16 @@ fn validate_review_summary_create(_: &header::Create, review_summary: ReviewSumm
 	    ElementEntry::Present(entry) => {
 		let review : ReviewEntry = entry.try_into()?;
 
-		if review.subject_id != review_summary.subject_id || review.subject_addr != review_summary.subject_addr {
+		if !review.subject_ids.contains( &review_summary.subject_id ) {
 		    return Ok(ValidateCallbackResult::Invalid(format!("Contains review that does not belong to subject: {}", review_id )))
+		}
+
+		if review.deleted {
+		    debug!("Checking for deleted reviews: {:?}", review_summary.review_refs.keys() );
+		    if review_summary.review_refs.contains_key(&format!("{}", review_id )) {
+			return Ok(ValidateCallbackResult::Invalid(format!("Deleted review {} cannot be used in review refs", review_id )))
+		    }
+		    continue;
 		}
 
 		all_accuracy_ratings.push( review.accuracy_rating );
@@ -196,11 +215,6 @@ fn validate_review_summary_create(_: &header::Create, review_summary: ReviewSumm
 		return Ok(ValidateCallbackResult::Invalid(format!("Expected header {} to have an app entry, not {:?}", review_header_hash, entry )))
 	    },
 	}
-    }
-
-    // Verfiy deleted review
-    for review_id in review_summary.deleted_reviews {
-	must_get_entry( review_id )?;
     }
 
     // Check review count
@@ -238,6 +252,24 @@ fn validate_review_summary_create(_: &header::Create, review_summary: ReviewSumm
 
     if review_summary.efficiency_median != efficiency_median {
 	return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's efficiency median ({}) is not accurate, expected {}: {:?}", review_summary.efficiency_median, efficiency_median, all_efficiency_ratings )))
+    }
+
+    Ok(ValidateCallbackResult::Valid)
+}
+
+fn validate_review_summary_create(_: &header::Create, review_summary: ReviewSummaryEntry) -> ExternResult<ValidateCallbackResult> {
+    Ok( validate_review_summary_content( &review_summary )? )
+}
+
+fn validate_review_summary_update(header: &header::Update, review_summary: ReviewSummaryEntry) -> ExternResult<ValidateCallbackResult> {
+    let current_summary : ReviewSummaryEntry = must_get_entry( header.original_entry_address.to_owned().into() )?.try_into()?;
+
+    if let ValidateCallbackResult::Invalid(message) = validate_review_summary_content( &review_summary )? {
+	return Ok(ValidateCallbackResult::Invalid(message))
+    }
+
+    if !( review_summary.factored_action_count > current_summary.factored_action_count ) {
+	return Ok(ValidateCallbackResult::Invalid(format!("The updated summary is not better than the current summary: new factored action count ({}) must be greater than {}", review_summary.factored_action_count, current_summary.factored_action_count )))
     }
 
     Ok(ValidateCallbackResult::Valid)

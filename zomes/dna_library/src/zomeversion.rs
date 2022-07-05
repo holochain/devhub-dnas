@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
-    errors::{ UserError },
+    errors::{ UserError, AppError },
     dnarepo_entry_types::{
 	ZomeEntry,
 	ZomeVersionEntry,
+	ReviewSummaryEntry,
     },
     constants::{
 	ANCHOR_UNIQUENESS,
@@ -70,6 +71,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	hdk_version: input.hdk_version.clone(),
+	review_summary: None,
 	source_code_commit_url: input.source_code_commit_url,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
@@ -153,6 +155,7 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
 		hdk_version: current.hdk_version,
+		review_summary: current.review_summary,
 		source_code_commit_url: props.source_code_commit_url
 		    .or( current.source_code_commit_url ),
 		metadata: props.metadata
@@ -162,6 +165,45 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 
     Ok( entity )
 }
+
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct EntityAddressInput {
+    pub subject_id: EntryHash,
+    pub addr: EntryHash,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ReviewSummaryInput {
+    pub subject_id: EntryHash,
+}
+
+pub fn create_zome_version_review_summary(input: EntityAddressInput) -> AppResult<Entity<ZomeVersionEntry>> {
+    debug!("Updating ZOME Version: {}", input.subject_id );
+    let current_summary : ZomeVersionEntry = get( input.addr.to_owned(), GetOptions::content() )?
+	.ok_or( AppError::UnexpectedStateError(format!("Given address could not be found: {}", input.addr )) )?
+	.try_into()?;
+
+    if let Some(review_summary_id) = current_summary.review_summary {
+	Err(UserError::InvalidActionError(format!("You cannot change the review summary because it is already set to: {}", review_summary_id )))?
+    }
+
+    let review_summary : Entity<ReviewSummaryEntry> = call_local_zome( "reviews", "create_review_summary_for_subject", ReviewSummaryInput {
+	subject_id: input.subject_id,
+    })?;
+
+    let entity = update_entity(
+	&input.addr,
+	|mut current : ZomeVersionEntry, _| {
+	    current.review_summary = Some(review_summary.id);
+	    Ok( current )
+	})?;
+
+    Ok( entity )
+}
+
 
 
 

@@ -7,7 +7,7 @@ use devhub_types::{
     fmt_path,
 };
 use hc_crud::{
-    now, create_entity, get_entity, update_entity, delete_entity,
+    now, create_entity, get_entity, update_entity,
     Entity, // UtilsError,
 };
 use hdk::prelude::*;
@@ -23,8 +23,7 @@ use crate::constants::{
 
 #[derive(Debug, Deserialize)]
 pub struct ReviewInput {
-    pub subject_id: EntryHash,
-    pub subject_addr: EntryHash,
+    pub subject_ids: Vec<EntryHash>,
     pub accuracy_rating: u8,
     pub efficiency_rating: u8,
     pub message: String,
@@ -36,13 +35,12 @@ pub struct ReviewInput {
 }
 
 pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
-    debug!("Creating Review for: {} (subject {})", input.subject_addr, input.subject_id );
+    debug!("Creating Review for: subject IDs {:?} ", input.subject_ids );
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
 
     let review = ReviewEntry {
-	subject_id: input.subject_id.to_owned(),
-	subject_addr: input.subject_addr.to_owned(),
+	subject_ids: input.subject_ids.to_owned(),
 	author: pubkey.clone(),
 	accuracy_rating: input.accuracy_rating,
 	efficiency_rating: input.efficiency_rating,
@@ -53,6 +51,7 @@ pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
 	    .unwrap_or( default_now ),
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
+	deleted: false,
     };
 
     let entity = create_entity( &review )?;
@@ -62,14 +61,8 @@ pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
     debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
     entity.link_from( &base_hash, LT_NONE, TAG_REVIEW.into() )?;
 
-    // Revision's reviews
-    let (base, base_hash) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ input.subject_addr.to_owned() ] );
-    debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-    entity.link_from( &base_hash, LT_NONE, TAG_REVIEW.into() )?;
-
-    if input.subject_id != input.subject_addr {
-	// Subject's reviews
-	let (base, base_hash) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ input.subject_id ] );
+    for subject_id in input.subject_ids {
+	let (base, base_hash) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ subject_id.to_owned() ] );
 	debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
 	entity.link_from( &base_hash, LT_NONE, TAG_REVIEW.into() )?;
     }
@@ -130,10 +123,15 @@ pub fn update_review(input: ReviewUpdateInput) -> AppResult<Entity<ReviewEntry>>
 
 
 
-pub fn delete_review(input: GetEntityInput) -> AppResult<HeaderHash> {
-    debug!("Delete Review Version: {}", input.id );
-    let delete_header = delete_entity::<ReviewEntry>( &input.id )?;
-    debug!("Deleted Review Version header ({})", delete_header );
+pub fn delete_review(addr: EntryHash) -> AppResult<Entity<ReviewEntry>> {
+    debug!("Delete Review Version: {}", addr );
+    let entity = update_entity(
+	&addr,
+	|mut current : ReviewEntry, _| {
+	    current.deleted = true;
 
-    Ok( delete_header )
+	    Ok( current )
+	})?;
+
+    Ok( entity )
 }

@@ -153,6 +153,10 @@ fn validate_zome_update(header: &header::Update, zome: ZomeEntry) -> ExternResul
 	return Ok(ValidateCallbackResult::Invalid(format!("Cannot change zome developer: {} => {}", prev_entry.developer, zome.developer )));
     }
 
+    if prev_entry.developer != header.author {
+	return Ok(ValidateCallbackResult::Invalid(format!("Previous entry author does not match Header author: {} != {}", prev_entry.developer, header.author )));
+    }
+
     Ok(ValidateCallbackResult::Valid)
 }
 
@@ -183,6 +187,10 @@ fn validate_zome_version_update(header: &header::Update, zome_version: ZomeVersi
 
     if zome_version.version != prev_entry.version {
 	return Ok(ValidateCallbackResult::Invalid(format!("Cannot change ZomeVersionEntry version #: {} => {}", prev_entry.version, zome_version.version )));
+    }
+
+    if prev_entry.review_summary.is_some() && prev_entry.review_summary != zome_version.review_summary {
+	return Ok(ValidateCallbackResult::Invalid(format!("Cannot change ZomeVersionEntry review summary ID once it is set: {:?} => {:?}", prev_entry.review_summary, zome_version.review_summary )));
     }
 
     if zome_version.mere_memory_addr != prev_entry.mere_memory_addr || zome_version.mere_memory_hash != prev_entry.mere_memory_hash {

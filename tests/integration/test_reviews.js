@@ -21,20 +21,24 @@ const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo.dna" );
 
 let clients;
+let zome_1;
 let zome_version_1;
 let dna_version_1;
 let expected_average;
 let expected_median;
 const review_count			= 20;
 let review_1;
+let review_summary_1;
 
 function basic_tests () {
     it("should create reviews", async function () {
 	this.timeout( 30_000 );
 
 	let review_input			= {
-	    "subject_id": zome_version_1.$id,
-	    "subject_addr": zome_version_1.$addr,
+	    "subject_ids": [
+		zome_1.$id,
+		zome_version_1.$id,
+	    ],
 	    "accuracy_rating": 3,
 	    "efficiency_rating": 2,
 	    "message": "This code is not good",
@@ -68,8 +72,10 @@ function basic_tests () {
 
 	for (let i=0; i < review_count-1; i++ ) {
 	    await clients.alice.call( "dnarepo", "reviews", "create_review", {
-		"subject_id": zome_version_1.$id,
-		"subject_addr": zome_version_1.$addr,
+		"subject_ids": [
+		    zome_1.$id,
+		    zome_version_1.$id,
+		],
 		"accuracy_rating": faker.datatype.number(10),
 		"efficiency_rating": faker.datatype.number(4),
 		"message": faker.lorem.sentence(),
@@ -101,10 +107,15 @@ function basic_tests () {
     });
 
     it("should create review summary report before review update", async function () {
-	let review_summary			= await clients.alice.call( "dnarepo", "reviews", "create_summary_for_subject", {
+	let zome_version			= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version_review_summary", {
 	    "subject_id": zome_version_1.$id,
-	    "subject_addr": zome_version_1.$addr,
+	    "addr": zome_version_1.$addr,
 	});
+
+	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "get_review_summary", {
+	    "id": zome_version.review_summary,
+	});
+	// console.log( json.debug(review_summary) );
 
 	expect( review_summary.accuracy_average		).to.be.closeTo( expected_average, 0.0001 );
 	expect( review_summary.accuracy_median		).to.equal( expected_median );
@@ -136,10 +147,10 @@ function basic_tests () {
     });
 
     it("should create review summary report after review update", async function () {
-	let review_summary			= await clients.alice.call( "dnarepo", "reviews", "create_summary_for_subject", {
-	    "subject_id": zome_version_1.$id,
-	    "subject_addr": zome_version_1.$addr,
+	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "update_review_summary", {
+	    "id": review_summary_1.$id,
 	});
+	// console.log( json.debug(review_summary) );
 
 	expect( review_summary.review_count		).to.equal( review_count );
 	expect( review_summary.factored_action_count	).to.equal( review_count + 1 );
@@ -148,28 +159,40 @@ function basic_tests () {
     it("should delete review", async function () {
 	{
 	    await clients.alice.call( "dnarepo", "reviews", "delete_review", {
-		"id": review_1.$id,
+		"addr": review_1.$addr,
 	    });
+	}
+
+	{
+	    let reviews				= await clients.alice.call( "dnarepo", "reviews", "get_reviews_for_subject", {
+		"id": zome_version_1.$id,
+	    });
+	    log.info("My Reviews: %s", reviews.length );
+
+	    expect( reviews			).to.have.length( 19 );
 	}
     });
 
     it("should create review summary report after review delete", async function () {
-	let review_summary			= await clients.alice.call( "dnarepo", "reviews", "create_summary_for_subject", {
-	    "subject_id": zome_version_1.$id,
-	    "subject_addr": zome_version_1.$addr,
+	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "update_review_summary", {
+	    "id": review_summary_1.$id,
 	});
+	// console.log( json.debug(review_summary) );
+
+	let deleted_reviews_list		= Object.keys( review_summary.deleted_reviews );
 
 	expect( review_summary.review_count		).to.equal( review_count - 1 );
-	expect( review_summary.factored_action_count	).to.equal( review_count - 1 );
-	expect( review_summary.deleted_reviews		).to.have.length( 1 );
+	expect( review_summary.factored_action_count	).to.equal( review_count - 1 + 3 );
+	expect( deleted_reviews_list			).to.have.length( 1 );
+	expect( review_summary.$id			).to.not.deep.equal( zome_version_1.review_summary );
     });
 
     it("should get review summaries", async function () {
 	let review_summaries			= await clients.alice.call( "dnarepo", "reviews", "get_review_summaries_for_subject", {
-	    "id": zome_version_1.$addr,
+	    "id": zome_version_1.$id,
 	});
 
-	expect( review_summaries		).to.have.length( 3 );
+	expect( review_summaries		).to.have.length( 1 );
     });
 }
 
@@ -179,7 +202,7 @@ function errors_tests () {
     });
 }
 
-describe("DNArepo", () => {
+describe("Reviews", () => {
 
     const holochain			= new Holochain({
 	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
@@ -205,7 +228,7 @@ describe("DNArepo", () => {
 	    "description": "A generic API for fs-like data management",
 	};
 
-	let zome			= await clients.alice.call( "dnarepo", "dna_library", "create_zome", zome_input );;
+	let zome			= zome_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome", zome_input );;
 	let zome_version		= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version", {
 	    "for_zome": zome.$id,
 	    "version": 1,

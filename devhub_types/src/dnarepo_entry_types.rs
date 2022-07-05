@@ -192,6 +192,7 @@ pub struct ZomeVersionEntry {
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
+    pub review_summary: Option<EntryHash>,
     pub source_code_commit_url: Option<String>,
 }
 
@@ -209,8 +210,7 @@ impl EntryModel for ZomeVersionEntry {
 #[hdk_entry(id = "review", visibility="public")]
 #[derive(Clone)]
 pub struct ReviewEntry {
-    pub subject_id: EntryHash,
-    pub subject_addr: EntryHash,
+    pub subject_ids: Vec<EntryHash>,
     pub author: AgentPubKey,
     pub accuracy_rating: u8,
     pub efficiency_rating: u8,
@@ -218,6 +218,7 @@ pub struct ReviewEntry {
     pub published_at: u64,
     pub last_updated: u64,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
+    pub deleted: bool,
 
     // optional
 }
@@ -237,7 +238,6 @@ impl EntryModel for ReviewEntry {
 #[derive(Clone)]
 pub struct ReviewSummaryEntry {
     pub subject_id: EntryHash,
-    pub subject_addr: EntryHash,
     pub published_at: u64,
 
     pub accuracy_average: f32,
@@ -246,9 +246,10 @@ pub struct ReviewSummaryEntry {
     pub efficiency_median: u8,
 
     pub review_count: u64,
+
     pub factored_action_count: u64,
     pub review_refs: BTreeMap<String,(EntryHash,HeaderHash)>,
-    pub deleted_reviews: Vec<EntryHash>,
+    pub deleted_reviews: BTreeMap<String,(EntryHash,HeaderHash)>,
 }
 
 impl EntryModel for ReviewSummaryEntry {

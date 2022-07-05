@@ -437,6 +437,13 @@ fn update_zome_version(input: zomeversion::ZomeVersionUpdateInput) -> ExternResu
 }
 
 #[hdk_extern]
+fn create_zome_version_review_summary(input: zomeversion::EntityAddressInput) -> ExternResult<EntityResponse<ZomeVersionEntry>> {
+    let entity = catch!( zomeversion::create_zome_version_review_summary( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
 fn delete_zome_version(input: zomeversion::DeleteZomeVersionInput) -> ExternResult<DevHubResponse<HeaderHash>> {
     let value = catch!( zomeversion::delete_zome_version( input ) );
 

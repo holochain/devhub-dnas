@@ -71,7 +71,11 @@ fn get_review(input: GetEntityInput) -> ExternResult<EntityResponse<ReviewEntry>
 fn get_reviews_for_subject(input: GetEntityInput) -> ExternResult<EntityCollectionResponse<ReviewEntry>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ input.id ] );
     let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_REVIEW.into(), base_path, |items : Vec<Entity<ReviewEntry>>| {
-	Ok( items.into_iter().collect() )
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		!entity.content.deleted
+	    })
+	    .collect() )
     }) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
@@ -80,7 +84,13 @@ fn get_reviews_for_subject(input: GetEntityInput) -> ExternResult<EntityCollecti
 #[hdk_extern]
 fn get_my_reviews(_:()) -> ExternResult<EntityCollectionResponse<ReviewEntry>> {
     let (base_path, _) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ ANCHOR_REVIEWS ] );
-    let collection = catch!( devhub_types::get_entities_for_path( TAG_REVIEW.into(), base_path ) );
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_REVIEW.into(), base_path, |items : Vec<Entity<ReviewEntry>>| {
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		!entity.content.deleted
+	    })
+	    .collect() )
+    }) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
@@ -92,18 +102,30 @@ fn update_review(input: reviews::ReviewUpdateInput) -> ExternResult<EntityRespon
     Ok(composition( entity, ENTITY_MD ))
 }
 
-#[hdk_extern]
-fn delete_review(input: GetEntityInput) -> ExternResult<DevHubResponse<HeaderHash>> {
-    let hash = catch!( reviews::delete_review( input ) );
+#[derive(Debug, Deserialize)]
+pub struct AddrInput {
+    pub addr: EntryHash,
+}
 
-    Ok(composition( hash, VALUE_MD ))
+#[hdk_extern]
+fn delete_review(input: AddrInput) -> ExternResult<EntityResponse<ReviewEntry>> {
+    let entity = catch!( reviews::delete_review( input.addr ) );
+
+    Ok(composition( entity, ENTITY_MD ))
 }
 
 
 // Review Summary zome functions
 #[hdk_extern]
-fn create_summary_for_subject(input: review_summaries::ReviewSummaryInput) -> ExternResult<EntityResponse<ReviewSummaryEntry>> {
-    let entity = catch!( review_summaries::create_summary( input ) );
+fn create_review_summary_for_subject(input: review_summaries::ReviewSummaryInput) -> ExternResult<EntityResponse<ReviewSummaryEntry>> {
+    let entity = catch!( review_summaries::create_review_summary( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_review_summary(input: GetEntityInput) -> ExternResult<EntityResponse<ReviewSummaryEntry>> {
+    let entity = catch!( review_summaries::get_review_summary( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
@@ -114,4 +136,11 @@ fn get_review_summaries_for_subject(input: GetEntityInput) -> ExternResult<Entit
     let collection = catch!( devhub_types::get_entities_for_path( TAG_SUMMARY.into(), base_path ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn update_review_summary(input: GetEntityInput) -> ExternResult<EntityResponse<ReviewSummaryEntry>> {
+    let entity = catch!( review_summaries::update_review_summary( input.id ) );
+
+    Ok(composition( entity, ENTITY_MD ))
 }
