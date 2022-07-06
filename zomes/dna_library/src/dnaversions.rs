@@ -28,7 +28,8 @@ use crate::constants::{
 #[derive(Debug, Deserialize)]
 pub struct DnaVersionInput {
     pub for_dna: EntryHash,
-    pub version: u64,
+    pub version: String,
+    pub ordering: u64,
     pub hdk_version: String,
     pub zomes: Vec<ZomeReference>,
 
@@ -53,6 +54,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     let version = DnaVersionEntry {
 	for_dna: input.for_dna.clone(),
 	version: input.version,
+	ordering: input.ordering,
 	hdk_version: input.hdk_version.clone(),
 	properties: input.properties,
 	zomes: input.zomes,
@@ -119,6 +121,7 @@ pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Collection<Enti
 
 #[derive(Debug, Deserialize)]
 pub struct DnaVersionUpdateOptions {
+    pub ordering: Option<u64>,
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -137,6 +140,8 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 	    Ok(DnaVersionEntry {
 		for_dna: current.for_dna,
 		version: current.version,
+		ordering: props.ordering
+		    .unwrap_or( current.ordering ),
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated

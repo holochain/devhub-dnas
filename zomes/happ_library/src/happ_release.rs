@@ -37,6 +37,7 @@ pub struct CreateInput {
     pub name: String,
     pub description: String,
     pub for_happ: EntryHash,
+    pub ordering: u64,
     pub manifest: HappManifest,
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
@@ -61,6 +62,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEn
 	name: input.name,
 	description: input.description,
 	for_happ: input.for_happ.clone(),
+	ordering: input.ordering,
 	published_at: input.published_at
 	    .unwrap_or( default_now ),
 	last_updated: input.last_updated
@@ -108,6 +110,7 @@ pub fn get_happ_release(input: GetEntityInput) -> AppResult<Entity<HappReleaseEn
 pub struct HappReleaseUpdateOptions {
     pub name: Option<String>,
     pub description: Option<String>,
+    pub ordering: Option<u64>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub gui: Option<HappGUIConfig>,
@@ -128,6 +131,8 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		description: props.description
 		    .unwrap_or( current.description ),
 		for_happ: current.for_happ,
+		ordering: props.ordering
+		    .unwrap_or( current.ordering ),
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated

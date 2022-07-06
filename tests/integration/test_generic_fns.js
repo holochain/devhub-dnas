@@ -50,7 +50,8 @@ function basic_tests () {
 	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 1,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"zome_bytes": zome_bytes,
 		"hdk_version": "v0.0.120",
 	    });
@@ -63,7 +64,8 @@ function basic_tests () {
 	    // Make another zome version for list tests
 	    await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 3,
+		"version": "v0.2.0",
+		"ordering": 2,
 		"zome_bytes": [ 1, 2, 3 ],
 		"hdk_version": "v0.0.120",
 	    });
@@ -105,7 +107,8 @@ function basic_tests () {
 	{
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna.$id,
-		"version": 1,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
@@ -161,7 +164,7 @@ function basic_tests () {
 function errors_tests () {
 }
 
-describe("DNArepo", () => {
+describe("Generic", () => {
 
     const holochain			= new Holochain({
 	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",

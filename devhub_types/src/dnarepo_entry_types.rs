@@ -93,7 +93,8 @@ pub struct ZomeReference {
 #[derive(Clone)]
 pub struct DnaVersionEntry {
     pub for_dna: EntryHash,
-    pub version: u64,
+    pub version: String,
+    pub ordering: u64,
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
@@ -117,7 +118,7 @@ impl EntryModel for DnaVersionEntry {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionPackage {
     pub for_dna: EntryHash,
-    pub version: u64,
+    pub version: String,
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
@@ -181,7 +182,8 @@ impl EntryModel for ZomeEntry {
 #[derive(Clone)]
 pub struct ZomeVersionEntry {
     pub for_zome: EntryHash,
-    pub version: u64,
+    pub version: String,
+    pub ordering: u64,
     // pub properties: Option<serde_yaml::Value>,
     pub published_at: u64,
     pub last_updated: u64,

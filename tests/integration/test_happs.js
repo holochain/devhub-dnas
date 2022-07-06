@@ -193,6 +193,7 @@ function basic_tests () {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
+	    "ordering": 1,
 	    "manifest": {
 		"manifest_version": "1",
 		"roles": [
@@ -392,6 +393,7 @@ function errors_tests () {
 		"name": "v0.1.0",
 		"description": "The first release",
 		"for_happ": happ_1.$id,
+		"ordering": 1,
 		"manifest": {
 		    "manifest_version": "1",
 		    "roles": [],

@@ -172,6 +172,7 @@ pub struct HappReleaseEntry {
     pub name: String,
     pub description: String,
     pub for_happ: EntryHash,
+    pub ordering: u64,
     pub published_at: u64,
     pub last_updated: u64,
     pub manifest: HappManifest,

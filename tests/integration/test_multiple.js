@@ -76,7 +76,8 @@ function basic_tests () {
 	log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	let zome_version_1		= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 	    "for_zome": zome_1.$id,
-	    "version": 1,
+	    "version": "v0.1.0",
+	    "ordering": 1,
 	    "zome_bytes": zome_bytes,
 	    "hdk_version": "v0.0.120",
 	});
@@ -96,7 +97,8 @@ function basic_tests () {
 
 	let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 	    "for_dna": dna.$id,
-	    "version": 1,
+	    "version": "v0.1.0",
+	    "ordering": 1,
 	    "hdk_version": "v0.0.120",
 	    "zomes": [{
 		"name": "mere_memory",
@@ -126,6 +128,7 @@ function basic_tests () {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
+	    "ordering": 1,
 	    "gui": {
 		"asset_group_id": file_addr,
 		"uses_web_sdk": false,

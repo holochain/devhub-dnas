@@ -172,7 +172,8 @@ function basic_tests () {
 	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 1,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"zome_bytes": zome_bytes,
 		"hdk_version": "v0.0.120",
 	    });
@@ -185,7 +186,8 @@ function basic_tests () {
 	    log.debug("Big ZOME file bytes (%s): typeof %s", bigzome_bytes.length, typeof bigzome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 2,
+		"version": "v0.2.0",
+		"ordering": 2,
 		"zome_bytes": bigzome_bytes,
 		"hdk_version": "v0.0.120",
 	    });
@@ -198,7 +200,8 @@ function basic_tests () {
 	    // Make another zome version for list tests
 	    await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 3,
+		"version": "v0.3.0",
+		"ordering": 3,
 		"zome_bytes": [ 1, 2, 3 ],
 		"hdk_version": "v0.0.120",
 	    });
@@ -443,7 +446,8 @@ function basic_tests () {
 	{
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna.$id,
-		"version": 1,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
@@ -475,7 +479,8 @@ function basic_tests () {
 	{
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna.$id,
-		"version": 2,
+		"version": "v0.2.0",
+		"ordering": 2,
 		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
@@ -863,7 +868,8 @@ function errors_tests () {
 	await expect_reject( async () => {
 	    await clients.alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
-		"version": 1,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"file_size": 0,
 		"hdk_version": "v0.0.120",
 	    });
@@ -885,7 +891,8 @@ function errors_tests () {
 	await expect_reject( async () => {
 	    await clients.alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna_1.$id,
-		"version": 0,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"hdk_version": "v0.0.120",
 		"zomes": [],
 	    });

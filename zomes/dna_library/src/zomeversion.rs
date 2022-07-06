@@ -32,7 +32,8 @@ use crate::constants::{
 #[derive(Debug, Deserialize)]
 pub struct ZomeVersionInput {
     pub for_zome: EntryHash,
-    pub version: u64,
+    pub version: String,
+    pub ordering: u64,
     pub hdk_version: String,
 
     // optional
@@ -62,6 +63,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
     let version = ZomeVersionEntry {
 	for_zome: input.for_zome.clone(),
 	version: input.version,
+	ordering: input.ordering,
 	mere_memory_addr: mere_memory_addr,
 	mere_memory_hash: memory.hash,
 	changelog: input.changelog
@@ -128,6 +130,7 @@ pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Collection<En
 
 #[derive(Debug, Deserialize)]
 pub struct ZomeVersionUpdateOptions {
+    pub ordering: Option<u64>,
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -146,6 +149,8 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 	    Ok(ZomeVersionEntry {
 		for_zome: current.for_zome,
 		version: current.version,
+		ordering: props.ordering
+		    .unwrap_or( current.ordering ),
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated

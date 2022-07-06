@@ -233,7 +233,8 @@ describe("Reviews", () => {
 	let zome			= zome_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome", zome_input );;
 	let zome_version		= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version", {
 	    "for_zome": zome.$id,
-	    "version": 1,
+	    "version": "v0.1.0",
+	    "ordering": 1,
 	    "zome_bytes": [],
 	    "hdk_version": "v0.0.136",
 	});
@@ -246,7 +247,8 @@ describe("Reviews", () => {
 	let dna				= await clients.alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
 	let dna_version			= dna_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_dna_version", {
 	    "for_dna": dna.$id,
-	    "version": 1,
+	    "version": "v0.1.0",
+	    "ordering": 1,
 	    "hdk_version": "v0.0.120",
 	    "zomes": [{
 		"name":			"file_storage",
