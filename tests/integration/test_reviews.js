@@ -40,12 +40,19 @@ function basic_tests () {
 		zome_version_1.$id,
 	    ],
 	    "accuracy_rating": 3,
-	    "efficiency_rating": 2,
 	    "message": "This code is not good",
 	};
 
 	let review				= review_1 = await clients.alice.call( "dnarepo", "reviews", "create_review", review_input );
 	log.normal("New Review: %s -> %s", String(review.$id), review.accuracy_rating );
+
+	let zome_version			= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version_review_summary", {
+	    "subject_id": zome_version_1.$id,
+	    "addr": zome_version_1.$addr,
+	});
+	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "get_review_summary", {
+	    "id": zome_version.review_summary,
+	});
 
 	{
 	    // Check the created entry
@@ -107,13 +114,8 @@ function basic_tests () {
     });
 
     it("should create review summary report before review update", async function () {
-	let zome_version			= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version_review_summary", {
-	    "subject_id": zome_version_1.$id,
-	    "addr": zome_version_1.$addr,
-	});
-
-	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "get_review_summary", {
-	    "id": zome_version.review_summary,
+	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "update_review_summary", {
+	    "id": review_summary_1.$id,
 	});
 	// console.log( json.debug(review_summary) );
 

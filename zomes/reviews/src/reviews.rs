@@ -24,8 +24,8 @@ use crate::constants::{
 #[derive(Debug, Deserialize)]
 pub struct ReviewInput {
     pub subject_ids: Vec<EntryHash>,
-    pub accuracy_rating: u8,
-    pub efficiency_rating: u8,
+    pub accuracy_rating: Option<u8>,
+    pub efficiency_rating: Option<u8>,
     pub message: String,
 
     // optional
@@ -102,9 +102,9 @@ pub fn update_review(input: ReviewUpdateInput) -> AppResult<Entity<ReviewEntry>>
 	&input.addr,
 	|mut current : ReviewEntry, _| {
 	    current.accuracy_rating = props.accuracy_rating
-		.unwrap_or( current.accuracy_rating );
+		.or( current.accuracy_rating );
 	    current.efficiency_rating = props.efficiency_rating
-		.unwrap_or( current.efficiency_rating );
+		.or( current.efficiency_rating );
 	    current.message = props.message
 		.unwrap_or( current.message );
 	    current.published_at = props.published_at

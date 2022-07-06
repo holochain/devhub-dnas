@@ -212,8 +212,8 @@ impl EntryModel for ZomeVersionEntry {
 pub struct ReviewEntry {
     pub subject_ids: Vec<EntryHash>,
     pub author: AgentPubKey,
-    pub accuracy_rating: u8,
-    pub efficiency_rating: u8,
+    pub accuracy_rating: Option<u8>,
+    pub efficiency_rating: Option<u8>,
     pub message: String,
     pub published_at: u64,
     pub last_updated: u64,

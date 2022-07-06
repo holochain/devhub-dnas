@@ -81,34 +81,54 @@ fn assemble_summary_entry(subject_id: &EntryHash) -> AppResult<ReviewSummaryEntr
 
 	review_refs.insert( review_id_b64, (review.id, review.header) );
 
-	all_accuracy_ratings.push( review.content.accuracy_rating );
-	all_efficiency_ratings.push( review.content.efficiency_rating );
+	if let Some(rating) = review.content.accuracy_rating {
+	    accuracy_rating_sum = accuracy_rating_sum + (rating as f32);
+	    all_accuracy_ratings.push( rating );
+	}
 
-	accuracy_rating_sum = accuracy_rating_sum + (review.content.accuracy_rating as f32);
-	efficiency_rating_sum = efficiency_rating_sum + (review.content.efficiency_rating as f32);
+	if let Some(rating) = review.content.efficiency_rating {
+	    efficiency_rating_sum = efficiency_rating_sum + (rating as f32);
+	    all_efficiency_ratings.push( rating );
+	}
     }
 
-    let accuracy_rating_count = all_accuracy_ratings.len() as f32;
-    all_accuracy_ratings.sort();
-    let accuracy_median : u8 = all_accuracy_ratings[ (all_accuracy_ratings.len() - 1) / 2 ];
+    let accuracy_rating_count = all_accuracy_ratings.len();
+    let (accuracy_average, accuracy_median) = match accuracy_rating_count {
+	0 => (0.0, 0),
+	count => {
+	    all_accuracy_ratings.sort();
+	    (
+		accuracy_rating_sum / count as f32,
+		all_accuracy_ratings[ (count - 1) / 2 ]
+	    )
+	},
+    };
 
     debug!(
 	"Ratings average {} / {} = {} : {:?}",
 	accuracy_rating_sum,
 	accuracy_rating_count,
-	accuracy_rating_sum / accuracy_rating_count,
+	accuracy_average,
 	all_accuracy_ratings
     );
 
-    let efficiency_rating_count = all_efficiency_ratings.len() as f32;
-    all_efficiency_ratings.sort();
-    let efficiency_median : u8 = all_efficiency_ratings[ (all_efficiency_ratings.len() - 1) / 2 ];
+    let efficiency_rating_count = all_efficiency_ratings.len();
+    let (efficiency_average, efficiency_median) = match efficiency_rating_count {
+	0 => (0.0, 0),
+	count => {
+	    all_efficiency_ratings.sort();
+	    (
+		efficiency_rating_sum / count as f32,
+		all_efficiency_ratings[ (count - 1) / 2 ]
+	    )
+	},
+    };
 
     debug!(
 	"Ratings average {} / {} = {} : {:?}",
 	efficiency_rating_sum,
 	efficiency_rating_count,
-	efficiency_rating_sum / efficiency_rating_count,
+	efficiency_average,
 	all_efficiency_ratings
     );
 
@@ -116,10 +136,10 @@ fn assemble_summary_entry(subject_id: &EntryHash) -> AppResult<ReviewSummaryEntr
 	subject_id: subject_id.to_owned(),
 	published_at: now()?,
 
-	accuracy_average: accuracy_rating_sum / accuracy_rating_count,
+	accuracy_average: accuracy_average,
 	accuracy_median: accuracy_median,
 
-	efficiency_average: efficiency_rating_sum / efficiency_rating_count,
+	efficiency_average: efficiency_average,
 	efficiency_median: efficiency_median,
 
 	review_count: review_refs.len() as u64,
