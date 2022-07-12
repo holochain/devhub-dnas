@@ -176,17 +176,17 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 
 #[derive(Debug, Deserialize)]
 pub struct EntityAddressInput {
-    pub subject_id: EntryHash,
+    pub subject_header: HeaderHash,
     pub addr: EntryHash,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ReviewSummaryInput {
-    pub subject_id: EntryHash,
+    pub subject_header: HeaderHash,
 }
 
 pub fn create_zome_version_review_summary(input: EntityAddressInput) -> AppResult<Entity<ZomeVersionEntry>> {
-    debug!("Updating ZOME Version: {}", input.subject_id );
+    debug!("Updating ZOME Version: {}", input.subject_header );
     let current_summary : ZomeVersionEntry = get( input.addr.to_owned(), GetOptions::content() )?
 	.ok_or( AppError::UnexpectedStateError(format!("Given address could not be found: {}", input.addr )) )?
 	.try_into()?;
@@ -196,7 +196,7 @@ pub fn create_zome_version_review_summary(input: EntityAddressInput) -> AppResul
     }
 
     let review_summary : Entity<ReviewSummaryEntry> = call_local_zome( "reviews", "create_review_summary_for_subject", ReviewSummaryInput {
-	subject_id: input.subject_id,
+	subject_header: input.subject_header,
     })?;
 
     let entity = update_entity(

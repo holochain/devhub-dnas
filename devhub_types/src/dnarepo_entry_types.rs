@@ -212,10 +212,9 @@ impl EntryModel for ZomeVersionEntry {
 #[hdk_entry(id = "review", visibility="public")]
 #[derive(Clone)]
 pub struct ReviewEntry {
-    pub subject_ids: Vec<EntryHash>,
+    pub subject_ids: Vec<(EntryHash, HeaderHash)>,
     pub author: AgentPubKey,
-    pub accuracy_rating: Option<u8>,
-    pub efficiency_rating: Option<u8>,
+    pub ratings: BTreeMap<String,u8>,
     pub message: String,
     pub published_at: u64,
     pub last_updated: u64,
@@ -223,6 +222,7 @@ pub struct ReviewEntry {
     pub deleted: bool,
 
     // optional
+    pub related_entries: Option<BTreeMap<String, EntryHash>>,
 }
 
 impl EntryModel for ReviewEntry {
@@ -240,18 +240,25 @@ impl EntryModel for ReviewEntry {
 #[derive(Clone)]
 pub struct ReviewSummaryEntry {
     pub subject_id: EntryHash,
+    pub subject_history: Vec<HeaderHash>,
+
     pub published_at: u64,
-
-    pub accuracy_average: f32,
-    pub accuracy_median: u8,
-    pub efficiency_average: f32,
-    pub efficiency_median: u8,
-
-    pub review_count: u64,
+    // pub last_updated: u64,
 
     pub factored_action_count: u64,
-    pub review_refs: BTreeMap<String,(EntryHash,HeaderHash)>,
-    pub deleted_reviews: BTreeMap<String,(EntryHash,HeaderHash)>,
+    //
+    // For each Review, we need to have:
+    //
+    //   ID - original entry hash
+    //   latest header - the header of the review entry that we are using for stats
+    //   author - agent ID
+    //   action count - the history length
+    //   ratings - all rating values from review
+    //
+    //   review_total_activity - the activity count for all review revisions
+    //
+    pub review_refs: BTreeMap<String,(EntryHash, HeaderHash, AgentPubKey, u64, BTreeMap<String,u8>)>,
+    pub deleted_reviews: BTreeMap<String,(EntryHash, HeaderHash)>,
 }
 
 impl EntryModel for ReviewSummaryEntry {
@@ -270,6 +277,29 @@ pub fn trace_header_origin_entry(header_hash: &HeaderHash, depth: Option<u64>) -
 	Header::Update(update) => trace_header_origin_entry( &update.original_header_address, Some(depth+1) ),
 	header => Err(WasmError::Guest(format!("Unexpected header type @ depth {}: {:?}", depth, header ))),
     }
+}
+
+pub fn trace_action_history_with_chain(header_hash: &HeaderHash, history: Option<Vec<(HeaderHash,EntryHash)>>) -> ExternResult<Vec<(HeaderHash,EntryHash)>> {
+    let sh_header = must_get_header( header_hash.to_owned().into() )?;
+    let mut history = history.unwrap_or( Vec::new() );
+
+    match sh_header.header() {
+	Header::Create(create) => {
+	    history.push( (header_hash.to_owned(), create.entry_hash.to_owned()) );
+
+	    Ok( history )
+	},
+	Header::Update(update) => {
+	    history.push( (header_hash.to_owned(), update.entry_hash.to_owned()) );
+
+	    trace_action_history_with_chain( &update.original_header_address, Some(history) )
+	},
+	header => Err(WasmError::Guest(format!("Unexpected header type @ trace depth {}: {:?}", history.len(), header ))),
+    }
+}
+
+pub fn trace_action_history(header_hash: &HeaderHash) -> ExternResult<Vec<(HeaderHash,EntryHash)>> {
+    trace_action_history_with_chain(header_hash, None)
 }
 
 

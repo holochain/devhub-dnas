@@ -115,14 +115,10 @@ fn validate_review_create(header: &header::Create, review: ReviewEntry) -> Exter
     if review.author != header.author {
 	return Ok(ValidateCallbackResult::Invalid(format!("ReviewEntry author does not match Header author: {} != {}", review.author, header.author )))
     }
-    else if let Some(rating) = review.accuracy_rating {
+
+    for (key, rating) in review.ratings {
 	if rating > 10 {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewEntry accuracy rating ({}) out of range: valid range 0-10", rating )))
-	}
-    }
-    else if let Some(rating) = review.efficiency_rating {
-	if rating > 10 {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewEntry efficiency rating ({}) out of range: valid range 0-10", rating )))
+	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewEntry {} rating ({}) out of range: valid range 0-10", key, rating )))
 	}
     }
 
@@ -159,17 +155,11 @@ fn validate_review_delete(header: &header::Delete) -> ExternResult<ValidateCallb
 // Review Summary
 //
 fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> ExternResult<ValidateCallbackResult> {
-    let mut all_accuracy_ratings = Vec::new();
-    let mut all_efficiency_ratings = Vec::new();
-
-    let mut accuracy_rating_sum : f32 = 0.0;
-    let mut efficiency_rating_sum : f32 = 0.0;
-
     let mut factored_count = (review_summary.review_refs.len() + review_summary.deleted_reviews.len()) as u64;
-    let mut all_factored_reviews : Vec<&(EntryHash,HeaderHash)> = Vec::new();
+    let mut all_factored_reviews : Vec<(EntryHash,HeaderHash)> = Vec::new();
 
-    all_factored_reviews.extend( review_summary.review_refs.values() );
-    all_factored_reviews.extend( review_summary.deleted_reviews.values() );
+    all_factored_reviews.extend( review_summary.review_refs.values().map( |values| (values.0.to_owned(), values.1.to_owned()) ).collect::<Vec<(EntryHash,HeaderHash)>>() );
+    all_factored_reviews.extend( review_summary.deleted_reviews.values().cloned().collect::<Vec<(EntryHash,HeaderHash)>>() );
 
     // Verfiy review references
     for (review_id, review_header_hash) in all_factored_reviews {
@@ -178,7 +168,7 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	if let Header::Update(update) = review_element.header() {
 	    let (origin_id, depth) = trace_header_origin_entry( &update.original_header_address, Some(1) )?;
 
-	    if origin_id != *review_id {
+	    if origin_id != review_id {
 		return Ok(ValidateCallbackResult::Invalid(format!("Traced origin ID for header ({}) does not match review ID: {} != {}", review_header_hash, origin_id, review_id )))
 	    }
 
@@ -187,7 +177,7 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	}
 
 	if let Header::Create(create) = review_element.header() {
-	    if create.entry_hash != *review_id {
+	    if create.entry_hash != review_id {
 		return Ok(ValidateCallbackResult::Invalid(format!("Header is not related to review ID: {} != {}", create.entry_hash, review_id )))
 	    }
 	}
@@ -196,7 +186,7 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	    ElementEntry::Present(entry) => {
 		let review : ReviewEntry = entry.try_into()?;
 
-		if !review.subject_ids.contains( &review_summary.subject_id ) {
+		if review.subject_ids.iter().find( |pair| pair.0 == review_summary.subject_id ).is_none() {
 		    return Ok(ValidateCallbackResult::Invalid(format!("Contains review that does not belong to subject: {}", review_id )))
 		}
 
@@ -207,16 +197,6 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 		    }
 		    continue;
 		}
-
-		if let Some(rating) = review.accuracy_rating {
-		    accuracy_rating_sum = accuracy_rating_sum + (rating as f32);
-		    all_accuracy_ratings.push( rating );
-		}
-
-		if let Some(rating) = review.efficiency_rating {
-		    efficiency_rating_sum = efficiency_rating_sum + (rating as f32);
-		    all_efficiency_ratings.push( rating );
-		}
 	    },
 	    entry => {
 		return Ok(ValidateCallbackResult::Invalid(format!("Expected header {} to have an app entry, not {:?}", review_header_hash, entry )))
@@ -224,63 +204,9 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	}
     }
 
-    // Check review count
-    if review_summary.review_count != review_summary.review_refs.len() as u64 {
-	return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's review count does not equal reference count: {} != {}", review_summary.review_count, review_summary.review_refs.len() )))
-    }
     // Check factored review count
     if review_summary.factored_action_count != factored_count {
 	return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's factored review count does not equal the number of indirect review references: {} != {}", review_summary.factored_action_count, factored_count )))
-    }
-
-    // Check accuracy average / median
-    if all_accuracy_ratings.len() > 0 {
-	let accuracy_rating_count = all_accuracy_ratings.len() as f32;
-
-	if review_summary.accuracy_average != (accuracy_rating_sum / accuracy_rating_count) {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's accuracy average ({}) is not accurate, expected {}: {:?}", review_summary.accuracy_average, (accuracy_rating_sum / accuracy_rating_count), all_accuracy_ratings )))
-	}
-
-	all_accuracy_ratings.sort();
-	let accuracy_median : u8 = all_accuracy_ratings[ (all_accuracy_ratings.len() - 1) / 2 ];
-
-	if review_summary.accuracy_median != accuracy_median {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's accuracy median ({}) is not accurate, expected {}: {:?}", review_summary.accuracy_median, accuracy_median, all_accuracy_ratings )))
-	}
-    }
-    else {
-	if review_summary.accuracy_average != 0.0 {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's accuracy average ({}) should be 0.0 because there are no ratings: {:?}", review_summary.accuracy_average, all_accuracy_ratings )))
-	}
-
-	if review_summary.accuracy_median != 0 {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's accuracy median ({}) should be 0 because there are no ratings: {:?}", review_summary.accuracy_average, all_accuracy_ratings )))
-	}
-    }
-
-    // Check efficiency average / median
-    if all_efficiency_ratings.len() > 0 {
-	let efficiency_rating_count = all_efficiency_ratings.len() as f32;
-
-	if review_summary.efficiency_average != (efficiency_rating_sum / efficiency_rating_count) {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's efficiency average ({}) is not accurate, expected {}: {:?}", review_summary.efficiency_average, (efficiency_rating_sum / efficiency_rating_count), all_efficiency_ratings )))
-	}
-
-	all_efficiency_ratings.sort();
-	let efficiency_median : u8 = all_efficiency_ratings[ (all_efficiency_ratings.len() - 1) / 2 ];
-
-	if review_summary.efficiency_median != efficiency_median {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's efficiency median ({}) is not accurate, expected {}: {:?}", review_summary.efficiency_median, efficiency_median, all_efficiency_ratings )))
-	}
-    }
-    else {
-	if review_summary.efficiency_average != 0.0 {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's efficiency average ({}) should be 0.0 because there are no ratings: {:?}", review_summary.efficiency_average, all_efficiency_ratings )))
-	}
-
-	if review_summary.efficiency_median != 0 {
-	    return Ok(ValidateCallbackResult::Invalid(format!("ReviewSummaryEntry's efficiency median ({}) should be 0 because there are no ratings: {:?}", review_summary.efficiency_average, all_efficiency_ratings )))
-	}
     }
 
     Ok(ValidateCallbackResult::Valid)
