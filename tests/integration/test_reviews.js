@@ -20,15 +20,20 @@ const { backdrop }			= require('./setup.js');
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo.dna" );
 
+const agents				= [
+    "alice", "bobby", "carol", "david", "emily",
+    "felix", "giana", "heath", "irene", "jacob",
+];
+const review_count			= agents.length;
 let clients;
 let zome_1;
 let zome_version_1;
 let dna_version_1;
 let expected_average;
 let expected_median;
-const review_count			= 20;
 let review_1;
 let review_summary_1;
+let reaction_count = 0;
 
 function basic_tests () {
     it("should create reviews", async function () {
@@ -48,6 +53,24 @@ function basic_tests () {
 
 	let review				= review_1 = await clients.alice.call( "dnarepo", "reviews", "create_review", review_input );
 	log.normal("New Review: %s -> %s", String(review.$id), review.ratings.accuracy );
+
+	for ( let name of agents ) {
+	    if ( name === "alice" || Math.random() > .5 )
+		continue;
+
+	    await clients[name].call( "dnarepo", "reviews", "create_reaction", {
+		"subject_ids": [
+		    [ review.$id, review.$header ],
+		],
+		"reaction_type": Math.random() > .2
+		    ? 1 : 2,
+	    });
+	    reaction_count++;
+	}
+	await clients.alice.call( "dnarepo", "reviews", "create_review_reaction_summary", {
+	    "subject_header": review.$header,
+	    "addr": review.$addr,
+	});
 
 	let zome_version			= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version_review_summary", {
 	    "subject_header": zome_version_1.$header,
@@ -81,8 +104,8 @@ function basic_tests () {
 	    expect( reviews			).to.have.length( 1 );
 	}
 
-	for (let i=0; i < review_count-1; i++ ) {
-	    await clients.alice.call( "dnarepo", "reviews", "create_review", {
+	for ( let name of agents.slice(1) ) {
+	    const review = await clients[name].call( "dnarepo", "reviews", "create_review", {
 		"subject_ids": [
 		    [ zome_1.$id,		zome_1.$header ],
 		    [ zome_version_1.$id,	zome_version_1.$header ],
@@ -93,6 +116,20 @@ function basic_tests () {
 		},
 		"message": faker.lorem.sentence(),
 	    });
+
+	    for ( let rname of agents ) {
+		if ( name === rname || Math.random() > .5 )
+		    continue;
+
+		await clients[rname].call( "dnarepo", "reviews", "create_reaction", {
+		    "subject_ids": [
+			[ review.$id, review.$header ],
+		    ],
+		    "reaction_type": Math.random() > .2
+			? 1 : 2,
+		});
+		reaction_count++;
+	    }
 	}
 
 	{
@@ -100,6 +137,16 @@ function basic_tests () {
 		"id": zome_version_1.$id,
 	    });
 	    log.info("%s Reviews for subject: %s", reviews.length, String(zome_version_1.$id) );
+
+	    for ( let review of reviews ) {
+		if ( review.reaction_summary !== null )
+		    continue;
+
+		await clients.alice.call( "dnarepo", "reviews", "create_review_reaction_summary", {
+		    "subject_header": review.$header,
+		    "addr": review.$addr,
+		});
+	    }
 	}
     });
 
@@ -109,10 +156,14 @@ function basic_tests () {
 	});
 	console.log( json.debug(review_summary) );
 
-	expect( review_summary.factored_action_count	).to.equal( review_count );
+	expect( review_summary.factored_action_count	).to.equal( review_count*2 + reaction_count );
     });
 
     it("should update review", async function () {
+	review_1				= await clients.alice.call( "dnarepo", "reviews", "get_review", {
+	    "id": review_1.$id,
+	});
+
 	{
 	    // Update Review
 	    const accuracy_review_rating	= 8;
@@ -143,7 +194,7 @@ function basic_tests () {
 	});
 	console.log( json.debug(review_summary) );
 
-	expect( review_summary.factored_action_count	).to.equal( review_count + 1 );
+	expect( review_summary.factored_action_count	).to.equal( review_count*2 + 1 + reaction_count );
     });
 
     it("should delete review", async function () {
@@ -159,7 +210,7 @@ function basic_tests () {
 	    });
 	    log.info("My Reviews: %s", reviews.length );
 
-	    expect( reviews			).to.have.length( 19 );
+	    expect( reviews			).to.have.length( review_count - 1 );
 	}
     });
 
@@ -171,7 +222,7 @@ function basic_tests () {
 
 	let deleted_reviews_list		= Object.keys( review_summary.deleted_reviews );
 
-	expect( review_summary.factored_action_count	).to.equal( review_count - 1 + 3 );
+	expect( review_summary.factored_action_count	).to.equal( review_count*2 - 1 + 3 + reaction_count );
 	expect( deleted_reviews_list			).to.have.length( 1 );
 	expect( review_summary.$id			).to.not.deep.equal( zome_version_1.review_summary );
     });
@@ -202,9 +253,7 @@ describe("Reviews", () => {
 
 	clients				= await backdrop( holochain, {
 	    "dnarepo": DNAREPO_PATH,
-	}, [
-	    "alice",
-	]);
+	}, agents );
 
 	// Must call whoami on each cell to ensure that init has finished.
 	{

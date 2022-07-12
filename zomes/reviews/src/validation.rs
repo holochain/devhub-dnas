@@ -128,6 +128,15 @@ fn validate_review_create(header: &header::Create, review: ReviewEntry) -> Exter
 fn validate_review_update(header: &header::Update, review: ReviewEntry) -> ExternResult<ValidateCallbackResult> {
     let prev_entry : ReviewEntry = must_get_entry( header.original_entry_address.to_owned() )?.try_into()?;
 
+    if review.reaction_summary.is_some() {
+	let mut prev_review_copy = prev_entry.clone();
+	prev_review_copy.reaction_summary = review.reaction_summary.clone();
+
+	if prev_review_copy == review {
+	    return Ok(ValidateCallbackResult::Valid);
+	}
+    }
+
     if prev_entry.author != header.author {
 	return Ok(ValidateCallbackResult::Invalid(format!("Previous entry author does not match Header author: {} != {}", prev_entry.author, header.author )));
     }
@@ -159,7 +168,8 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
     let mut all_factored_reviews : Vec<(EntryHash,HeaderHash)> = Vec::new();
 
     all_factored_reviews.extend( review_summary.review_refs.values().map( |values| (values.0.to_owned(), values.1.to_owned()) ).collect::<Vec<(EntryHash,HeaderHash)>>() );
-    all_factored_reviews.extend( review_summary.deleted_reviews.values().cloned().collect::<Vec<(EntryHash,HeaderHash)>>() );
+    // all_factored_reviews.extend( review_summary.deleted_reviews.values().cloned().collect::<Vec<(EntryHash,HeaderHash)>>() );
+    all_factored_reviews.extend( review_summary.deleted_reviews.values().map( |values| (values.0.to_owned(), values.1.to_owned()) ).collect::<Vec<(EntryHash,HeaderHash)>>() );
 
     // Verfiy review references
     for (review_id, review_header_hash) in all_factored_reviews {
@@ -173,7 +183,7 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	    }
 
 	    debug!("Counting depth {} for {}", depth, origin_id );
-	    factored_count = factored_count + depth;
+	    factored_count += depth;
 	}
 
 	if let Header::Create(create) = review_element.header() {
@@ -201,6 +211,20 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	    entry => {
 		return Ok(ValidateCallbackResult::Invalid(format!("Expected header {} to have an app entry, not {:?}", review_header_hash, entry )))
 	    },
+	}
+    }
+
+    // Add reaction counters
+    for (_, _, _, _, _, maybe_reaction_summary) in review_summary.review_refs.values() {
+	if let Some((_, reaction_count,_)) = maybe_reaction_summary {
+	    factored_count += reaction_count;
+	}
+    }
+
+    // Add reaction counters from deleted
+    for (_, _, _, maybe_reaction_summary) in review_summary.deleted_reviews.values() {
+	if let Some((_, reaction_count, _)) = maybe_reaction_summary {
+	    factored_count += reaction_count;
 	}
     }
 

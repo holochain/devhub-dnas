@@ -1,9 +1,12 @@
 use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
+    errors::{ UserError, AppError },
     dnarepo_entry_types::{
 	ReviewEntry,
+	ReactionSummaryEntry,
     },
+    call_local_zome,
     fmt_path,
 };
 use hc_crud::{
@@ -51,6 +54,7 @@ pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
 	related_entries: input.related_entries,
+	reaction_summary: None,
 	deleted: false,
     };
 
@@ -97,6 +101,7 @@ pub type ReviewUpdateInput = UpdateEntityInput<ReviewUpdateOptions>;
 pub fn update_review(input: ReviewUpdateInput) -> AppResult<Entity<ReviewEntry>> {
     debug!("Updating Review: {}", input.addr );
     let props = input.properties.clone();
+    let default_now = now()?;
 
     let entity = update_entity(
 	&input.addr,
@@ -108,7 +113,7 @@ pub fn update_review(input: ReviewUpdateInput) -> AppResult<Entity<ReviewEntry>>
 	    current.published_at = props.published_at
 		.unwrap_or( current.published_at );
 	    current.last_updated = props.last_updated
-		.unwrap_or( current.last_updated );
+		    .unwrap_or( default_now );
 	    current.metadata = props.metadata
 		.unwrap_or( current.metadata );
 	    current.related_entries = props.related_entries
@@ -130,6 +135,44 @@ pub fn delete_review(addr: EntryHash) -> AppResult<Entity<ReviewEntry>> {
 	|mut current : ReviewEntry, _| {
 	    current.deleted = true;
 
+	    Ok( current )
+	})?;
+
+    Ok( entity )
+}
+
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct EntityAddressInput {
+    pub subject_header: HeaderHash,
+    pub addr: EntryHash,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ReactionSummaryInput {
+    pub subject_header: HeaderHash,
+}
+
+pub fn create_review_reaction_summary(input: EntityAddressInput) -> AppResult<Entity<ReviewEntry>> {
+    debug!("Updating Review: {}", input.subject_header );
+    let current_summary : ReviewEntry = get( input.addr.to_owned(), GetOptions::content() )?
+	.ok_or( AppError::UnexpectedStateError(format!("Given address could not be found: {}", input.addr )) )?
+	.try_into()?;
+
+    if let Some(reaction_summary_id) = current_summary.reaction_summary {
+	Err(UserError::InvalidActionError(format!("You cannot change the reaction summary because it is already set to: {}", reaction_summary_id )))?
+    }
+
+    let reaction_summary : Entity<ReactionSummaryEntry> = call_local_zome( "reviews", "create_reaction_summary_for_subject", ReactionSummaryInput {
+	subject_header: input.subject_header,
+    })?;
+
+    let entity = update_entity(
+	&input.addr,
+	|mut current : ReviewEntry, _| {
+	    current.reaction_summary = Some(reaction_summary.id);
 	    Ok( current )
 	})?;
 

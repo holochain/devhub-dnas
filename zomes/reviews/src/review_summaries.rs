@@ -4,6 +4,7 @@ use devhub_types::{
     dnarepo_entry_types::{
 	ReviewEntry,
 	ReviewSummaryEntry,
+	ReactionSummaryEntry,
 	trace_header_origin_entry,
 	trace_action_history,
     },
@@ -27,10 +28,11 @@ use crate::constants::{
 
 
 fn assemble_summary_entry(subject_header: &HeaderHash) -> AppResult<ReviewSummaryEntry> {
-    debug!("Creating Review Summary for: {})", subject_header );
+    debug!("Assembling Review Summary based on subject starting point: {}", subject_header );
     let subject_history = trace_action_history( subject_header )?;
     let subject_pointer = subject_history.last().unwrap();
     let subject_id = subject_pointer.1.to_owned();
+    debug!("Subject's root entry ID: {}", subject_id );
 
     let mut review_refs = BTreeMap::new();
     let mut deleted_reviews = BTreeMap::new();
@@ -72,28 +74,54 @@ fn assemble_summary_entry(subject_header: &HeaderHash) -> AppResult<ReviewSummar
 
 	    debug!("Adding depth {} for {}", depth, review_id_b64 );
 	    factored_count = factored_count + depth;
-	    action_count = action_count + depth;
+	    action_count += depth;
+	}
+
+	let mut reaction_ref = None;
+
+	if let Some(reaction_summary_id) = review.content.reaction_summary {
+	    let reaction_summary = get_entity::<ReactionSummaryEntry>( &reaction_summary_id )?;
+
+	    let mut all_reaction_count = 0;
+	    let mut reaction_counter = BTreeMap::new();
+	    for (_, _, _, _, reaction_type) in reaction_summary.content.reaction_refs.into_values() {
+		*reaction_counter.entry( reaction_type ).or_insert(0) += 1;
+		all_reaction_count += 1;
+	    }
+
+	    reaction_ref = Some( (reaction_summary.header, all_reaction_count, reaction_counter) );
+	    factored_count += all_reaction_count;
 	}
 
 	if review.content.deleted {
 	    debug!("Link target {} is a deleted review", link.target );
-	    deleted_reviews.insert( review_id_b64, (review.id, review.header) );
+	    deleted_reviews.insert(
+		review_id_b64,
+		(review.id, review.header, review.content.author, reaction_ref)
+	    );
 	    continue;
 	}
-
-	review_refs.insert( review_id_b64, (review.id, review.header, review.content.author, action_count, review.content.ratings) );
+	else {
+	    review_refs.insert(
+		review_id_b64,
+		(review.id, review.header, review.content.author, action_count, review.content.ratings, reaction_ref)
+	    );
+	}
     }
 
     if review_refs.len() == 0 {
 	Err(UserError::UnmetRequirementsError(format!("Review summary must have at least 1 review: {}", review_refs.len() )))?
     }
 
+    let default_now = now()?;
+
     Ok( ReviewSummaryEntry {
 	subject_id: subject_id.to_owned(),
 	subject_history: subject_history.into_iter()
 	    .map( |(header,_)| header )
 	    .collect(),
-	published_at: now()?,
+	published_at: default_now,
+	last_updated: default_now,
 
 	factored_action_count: factored_count,
 
