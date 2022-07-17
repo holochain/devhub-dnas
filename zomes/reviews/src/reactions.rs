@@ -109,6 +109,7 @@ pub fn update_reaction(input: ReactionUpdateInput) -> AppResult<Entity<ReactionE
 		.unwrap_or( current.metadata );
 	    current.related_entries = props.related_entries
 		.or( current.related_entries );
+	    current.deleted = false;
 
 	    Ok( current )
 	})?;

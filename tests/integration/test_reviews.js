@@ -105,7 +105,7 @@ function basic_tests () {
 	}
 
 	for ( let name of agents.slice(1) ) {
-	    const review = await clients[name].call( "dnarepo", "reviews", "create_review", {
+	    const review			= await clients[name].call( "dnarepo", "reviews", "create_review", {
 		"subject_ids": [
 		    [ zome_1.$id,		zome_1.$header ],
 		    [ zome_version_1.$id,	zome_version_1.$header ],
