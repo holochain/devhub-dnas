@@ -179,7 +179,7 @@ impl EntryModel for ZomeEntry {
 // Zome Version Entry
 //
 #[hdk_entry(id = "zome_version", visibility="public")]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct ZomeVersionEntry {
     pub for_zome: EntryHash,
     pub version: String,

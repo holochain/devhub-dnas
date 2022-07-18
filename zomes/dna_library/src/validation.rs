@@ -177,13 +177,21 @@ fn validate_zome_version_create(header: &header::Create, zome_version: ZomeVersi
 }
 
 fn validate_zome_version_update(header: &header::Update, zome_version: ZomeVersionEntry) -> ExternResult<ValidateCallbackResult> {
-    let zome : ZomeEntry = must_get_entry( zome_version.for_zome.into() )?.try_into()?;
+    let zome : ZomeEntry = must_get_entry( zome_version.for_zome.to_owned().into() )?.try_into()?;
+    let prev_entry : ZomeVersionEntry = must_get_entry( header.original_entry_address.to_owned() )?.try_into()?;
+
+    if prev_entry.review_summary.is_some() {
+	let mut prev_zome_copy = prev_entry.clone();
+	prev_zome_copy.review_summary = zome_version.review_summary.clone();
+
+	if prev_zome_copy == zome_version {
+	    return Ok(ValidateCallbackResult::Valid);
+	}
+    }
 
     if zome.developer != header.author {
 	return Ok(ValidateCallbackResult::Invalid(format!("ZomeEntry author does not match Header author: {} != {}", zome.developer, header.author )));
     }
-
-    let prev_entry : ZomeVersionEntry = must_get_entry( header.original_entry_address.to_owned() )?.try_into()?;
 
     if zome_version.version != prev_entry.version {
 	return Ok(ValidateCallbackResult::Invalid(format!("Cannot change ZomeVersionEntry version #: {} => {}", prev_entry.version, zome_version.version )));
