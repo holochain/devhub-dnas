@@ -3,4 +3,5 @@ members = [
   "dna_library",
   "happ_library",
   "web_assets",
+  "reviews",
 ]

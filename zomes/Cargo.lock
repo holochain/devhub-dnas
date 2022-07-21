@@ -814,6 +814,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "reviews"
+version = "0.1.0"
+dependencies = [
+ "devhub_types",
+ "hc_crud_ceps",
+ "hdk",
+ "rand",
+ "serde",
+ "serde_yaml",
+ "thiserror",
+]
+
+[[package]]
 name = "rmp"
 version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"

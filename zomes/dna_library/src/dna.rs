@@ -38,6 +38,7 @@ pub struct DnaInput {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -60,6 +61,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	developer: pubkey.clone(),
+	source_code_url: input.source_code_url,
 	deprecation: None,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
@@ -125,6 +127,7 @@ pub struct DnaUpdateOptions {
     pub icon: Option<SerializedBytes>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
@@ -132,11 +135,13 @@ pub type DnaUpdateInput = UpdateEntityInput<DnaUpdateOptions>;
 pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
     debug!("Updating DNA: {}", input.addr );
     let props = input.properties.clone();
-    let previous = get_entity::<DnaEntry>( &input.addr )?.content;
+    let mut previous : Option<DnaEntry> = None;
 
     let entity : Entity<DnaEntry> = update_entity(
 	&input.addr,
 	|current : DnaEntry, _| {
+	    previous = Some(current.clone());
+
 	    Ok(DnaEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -153,11 +158,15 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 		last_updated: props.last_updated
 		    .unwrap_or( now()? ),
 		developer: current.developer,
+		source_code_url: props.source_code_url
+		    .or( current.source_code_url ),
 		deprecation: current.deprecation,
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })
 	})?;
+
+    let previous = previous.unwrap();
 
     if input.properties.name.is_some() {
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );
@@ -206,6 +215,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaEntry>> {
 		last_updated: current.last_updated,
 		developer: current.developer,
 		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
+		source_code_url: current.source_code_url,
 		metadata: current.metadata,
 	    })
 	})?;

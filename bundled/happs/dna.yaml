@@ -2,8 +2,8 @@ manifest_version: "1"
 name: happs
 uuid: 00000000-0000-0000-0000-000000000000
 properties:
-  dnarepo_hash: uhC0k3bxWK6SYk2za4rW0rbj4EVGtEE3rO0orVT3EdKxlOrvGwdWl
-  webassets_hash: uhC0kr_L5FpiOdFa7isbwrzbMyZ9OHHXB8dRjewWnTwX7iceMYS3y
+  dnarepo_hash: uhC0kCiEtt_JB1zbrIhuFKf-vcPAmr_aWuTcyMmpoZBJHZxCSL0pE
+  webassets_hash: uhC0k13myupUq6UqfP0End-1rdIV3nIcKZJi_UE-UpcHiSNW3TDkW
 zomes:
   - name: happ_library
     bundled: ../../zomes/happ_library.wasm

@@ -14,17 +14,17 @@ const { EntryHash,
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
 const why				= require('why-is-node-running');
+const { ConductorError,
+	EntryNotFoundError,
+	DeserializationError,
+	CustomError,
+	...hc_client }			= require('@whi/holochain-client');
 
-// setTimeout(() => {
-//     console.log( why() );
-// }, 6000 );
-
+const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo.dna" );
-const storage				= "dna_library";
-const mm_zome				= "mere_memory";
 
 let clients;
 let zome_1;
@@ -172,7 +172,8 @@ function basic_tests () {
 	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 1,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"zome_bytes": zome_bytes,
 		"hdk_version": "v0.0.120",
 	    });
@@ -185,7 +186,8 @@ function basic_tests () {
 	    log.debug("Big ZOME file bytes (%s): typeof %s", bigzome_bytes.length, typeof bigzome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 2,
+		"version": "v0.2.0",
+		"ordering": 2,
 		"zome_bytes": bigzome_bytes,
 		"hdk_version": "v0.0.120",
 	    });
@@ -198,7 +200,8 @@ function basic_tests () {
 	    // Make another zome version for list tests
 	    await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
-		"version": 3,
+		"version": "v0.3.0",
+		"ordering": 3,
 		"zome_bytes": [ 1, 2, 3 ],
 		"hdk_version": "v0.0.120",
 	    });
@@ -252,7 +255,6 @@ function basic_tests () {
 	    const zome_name		= "whi_game_turns";
 	    const tags			= [ "Storage", "Tool" ];
 	    zome			= await alice.call( "dnarepo", "dna_library", "update_zome", {
-		"id": zome.$id,
 		"addr": zome.$addr,
 		"properties": {
 		    "name": zome_name,
@@ -357,7 +359,7 @@ function basic_tests () {
 	{
 	    // Deprecate ZOME
 	    let deprecation_notice	= "No longer maintained";
-	    zome			= await alice.call( "dnarepo", "dna_library", "deprecate_zome", {
+	    zome			= zome_1 = await alice.call( "dnarepo", "dna_library", "deprecate_zome", {
 		"addr": zome.$addr,
 		"message": deprecation_notice,
 	    });
@@ -444,7 +446,8 @@ function basic_tests () {
 	{
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna.$id,
-		"version": 1,
+		"version": "v0.1.0",
+		"ordering": 1,
 		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
@@ -476,7 +479,8 @@ function basic_tests () {
 	{
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna.$id,
-		"version": 2,
+		"version": "v0.2.0",
+		"ordering": 2,
 		"hdk_version": "v0.0.120",
 		"zomes": [{
 		    "name": "mere_memory",
@@ -548,10 +552,9 @@ function basic_tests () {
 	let second_header_hash;
 	{
 	    // Update DNA
-	    const dna_name		= "Game Turns (new)";
+	    const dna_name		= "game_turns_new";
 	    const tags			= [ "Games", "Turns" ];
 	    dna				= await alice.call( "dnarepo", "dna_library", "update_dna", {
-		"id": dna.$id,
 		"addr": dna.$addr,
 		"properties": {
 		    "name": dna_name,
@@ -801,127 +804,99 @@ function basic_tests () {
 	expect( dnas			).to.have.length( 1 );
 	expect( dnas[0].$id		).to.deep.equal( dna_1.$id );
     });
-
-    it("should test exposed base functions", async function () {
-	{
-	    let element			= await clients.alice.call( "dnarepo", "dna_library", "get_element", dna_1.$id );
-	    let entry			= msgpack.decode( element.entry.Present.entry );
-	    expect( entry.name		).to.be.a("string");
-	}
-
-	let element			= await clients.alice.call( "dnarepo", "dna_library", "get_element_latest", dna_1.$id );
-	let dna				= msgpack.decode( element.entry.Present.entry );
-	expect( dna.name		).to.not.equal( dna_1.name );
-
-	{
-	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
-		"base":	dna_1.$id,
-		"tag":	"dna_version",
-	    });
-	    expect( links		).to.have.length( 2 );
-	}
-
-	{
-	    let path_id			= await clients.alice.call( "dnarepo", "dna_library", "path", [ "dnas" ] );
-	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
-		"base":	path_id,
-		"tag":	"dna",
-	    });
-	    expect( links		).to.have.length( 1 );
-	}
-
-	{
-	    let path_id			= await clients.alice.call( "dnarepo", "dna_library", "path", [ "filter_by", "name", dna.name ] );
-	    let links			= await clients.alice.call( "dnarepo", "dna_library", "get_links", {
-		"base":	path_id,
-		"tag":	"dna",
-	    });
-	    expect( links		).to.have.length( 1 );
-	}
-    });
 }
 
 function errors_tests () {
+    it("should fail to update another Agent's zome", async function () {
+	await expect_reject( async () => {
+	    await clients.bobby.call( "dnarepo", "dna_library", "update_zome", {
+		"addr": zome_1.$addr,
+		"properties": {
+		    "name": "bla bla bla",
+		}
+	    });
+	}, ConductorError, "InvalidCommit error: Previous entry author does not match Header author" );
+    });
+
+    it("should fail to update deprecated zome", async function () {
+	await expect_reject( async () => {
+	    await clients.alice.call( "dnarepo", "dna_library", "update_zome", {
+		"addr": zome_1.$addr,
+		"properties": {
+		    "name": "bla bla bla",
+		}
+	    });
+	}, ConductorError, "InvalidCommit error: Cannot update deprecated Zome" );
+    });
+
+    it("should fail to update another Agent's zome version", async function () {
+	await expect_reject( async () => {
+	    await clients.bobby.call( "dnarepo", "dna_library", "update_zome_version", {
+		"addr": zome_version_2.$addr,
+		"properties": {
+		    "changelog": "",
+		}
+	    });
+	}, ConductorError, "InvalidCommit error: ZomeEntry author does not match Header author" );
+    });
+
+    it("should fail to delete another Agent's zome version", async function () {
+	await expect_reject( async () => {
+	    await clients.bobby.call( "dnarepo", "dna_library", "delete_zome_version", {
+		"id": zome_version_2.$id,
+	    });
+	}, ConductorError, "InvalidCommit error: Delete author does not match Create author" );
+    });
+
     it("should fail to get profile because it is not made yet", async function () {
-	const bobby			= clients.bobby;
-
-	{
-	    let failed			= false;
-	    try {
-		let b_profile		= await bobby.call( "dnarepo", "dna_library", "get_profile", {} );
-		log.normal("Bobby profile: %s", b_profile.name );
-	    } catch (err) {
-		failed			= true;
-
-		expect( String(err)	).to.have.string("CustomError: Agent Profile has not been created yet");
-	    }
-	    expect( failed		).to.be.true;
-	}
+	await expect_reject( async () => {
+	    await clients.bobby.call( "dnarepo", "dna_library", "get_profile", {
+		"id": zome_version_2.$id,
+	    });
+	}, Error, "Agent Profile has not been created yet" );
     });
 
     it("should fail to get deleted DNA version", async function () {
-	const alice			= clients.alice;
-
-	{
-	    let failed			= false;
-	    try {
-		await alice.call( "dnarepo", "dna_library", "get_dna_version", {
-		    "id": dna_version_hash,
-		});
-	    } catch (err) {
-		expect( err.kind	).to.equal( "UserError" );
-		expect( err.name	).to.equal( "EntryNotFoundError" );
-		expect( err.message	).to.have.string( "Entry not found for address: " );
-
-		failed			= true;
-	    }
-
-	    expect( failed		).to.be.true;
-	}
+	await expect_reject( async () => {
+	    await clients.alice.call( "dnarepo", "dna_library", "get_dna_version", {
+		"id": dna_version_hash,
+	    });
+	}, EntryNotFoundError, "Entry not found for address" );
     });
 
     it("should fail to create ZOME version because missing ZOME package info", async function () {
-	const alice			= clients.alice;
-
-	{
-	    let failed			= false;
-	    try {
-		await alice.call( "dnarepo", "dna_library", "create_zome_version", {
-		    "for_zome": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
-		    "version": 1,
-		    "file_size": 0,
-		    "hdk_version": "v0.0.120",
-		});
-	    } catch (err) {
-		expect( err.kind	).to.equal( "UserError" );
-		expect( err.name	).to.equal( "CustomError" );
-		expect( err.message	).to.have.string( "must supply an address or bytes" );
-
-		failed			= true;
-	    }
-
-	    expect( failed		).to.be.true;
-	}
+	await expect_reject( async () => {
+	    await clients.alice.call( "dnarepo", "dna_library", "create_zome_version", {
+		"for_zome": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
+		"version": "v0.1.0",
+		"ordering": 1,
+		"file_size": 0,
+		"hdk_version": "v0.0.120",
+	    });
+	}, Error, "must supply an address or bytes" );
     });
 
     it("should fail to update DNA because the address is a different entry type", async function () {
-	let failed			= false;
-	try {
-	    let dna			= await clients.alice.call( "dnarepo", "dna_library", "update_dna_version", {
+	await expect_reject( async () => {
+	    await clients.alice.call( "dnarepo", "dna_library", "update_dna_version", {
 		"addr": dna_addr,
 		"properties": {
 		    "name": "Bla bla",
 		}
 	    });
-	} catch (err) {
-	    expect( err.kind		).to.equal( "UtilsError" );
-	    expect( err.name		).to.equal( "DeserializationError" );
-	    expect( err.message		).to.have.string( 'App("dna_version")' );
+	}, Error, `Failed to deserialize entry to type (App("dna_version")): ` );
+    });
 
-	    failed			= true;
-	}
-
-	expect( failed			).to.be.true;
+    it("should fail to create DNA version with empty Zomes", async function () {
+	await expect_reject( async () => {
+	    await clients.alice.call( "dnarepo", "dna_library", "create_dna_version", {
+		"for_dna": dna_1.$id,
+		"version": "v0.1.0",
+		"ordering": 1,
+		"hdk_version": "v0.0.120",
+		"zomes": [],
+	    });
+	}, Error, "DnaVersionEntry Zomes list cannot be empty" );
     });
 }
 

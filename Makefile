@@ -11,8 +11,10 @@ ASSETSDNA		= bundled/web_assets.dna
 TARGET			= release
 DNA_LIBRARY_WASM	= zomes/dna_library.wasm
 HAPP_LIBRARY_WASM	= zomes/happ_library.wasm
+REVIEWS_WASM		= zomes/reviews.wasm
 WEB_ASSETS_WASM		= zomes/web_assets.wasm
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
+
 
 #
 # Project
@@ -31,7 +33,7 @@ clean:
 	    zomes/target \
 	    $(HAPP_BUNDLE) \
 	    $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) \
-	    $(DNA_LIBRARY_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_WASM)
+	    $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_WASM)
 
 rebuild:			clean build
 build:				$(HAPP_BUNDLE)
@@ -40,7 +42,7 @@ build:				$(HAPP_BUNDLE)
 $(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
-$(DNAREPO):			$(DNA_LIBRARY_WASM) $(MERE_MEMORY_WASM)
+$(DNAREPO):			$(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_WASM)
 $(HAPPDNA):			$(HAPP_LIBRARY_WASM)
 $(ASSETSDNA):			$(WEB_ASSETS_WASM)
 
@@ -89,13 +91,23 @@ tests/test.gz:
 # DNAs
 test-setup:			tests/node_modules
 
-test-dnas:			test-setup test-dnarepo		test-happs		test-webassets		test-multi
-test-dnas-debug:		test-setup test-dnarepo-debug	test-happs-debug	test-webassets-debug	test-multi-debug
+test-dnas:			test-setup test-general		test-dnarepo		test-happs		test-webassets		test-multi		test-reviews
+test-dnas-debug:		test-setup test-general-debug	test-dnarepo-debug	test-happs-debug	test-webassets-debug	test-multi-debug	test-reviews-debug
+
+test-general:			test-setup $(DNAREPO)
+	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_generic_fns.js
+test-general-debug:		test-setup $(DNAREPO)
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_generic_fns.js
 
 test-dnarepo:			test-setup $(DNAREPO)
 	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_dnarepo.js
 test-dnarepo-debug:		test-setup $(DNAREPO)
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_dnarepo.js
+
+test-reviews:			test-setup $(DNAREPO)
+	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_reviews.js
+test-reviews-debug:		test-setup $(DNAREPO)
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_reviews.js
 
 test-happs:			test-setup $(HAPPDNA)
 	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_happs.js

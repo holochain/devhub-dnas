@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 use hc_crud::UtilsError;
 use essence::EssenceError;
 use hdk::prelude::*;
@@ -31,6 +32,12 @@ pub enum UserError {
 
     #[error("You already created a hApp with the name: {0}")]
     DuplicateHappNameError(String),
+
+    #[error("{0}")]
+    UnmetRequirementsError(String),
+
+    #[error("{0}")]
+    InvalidActionError(String),
 
     #[error("{0}")]
     CustomError(&'static str),
@@ -96,6 +103,13 @@ impl From<WasmError> for ErrorKinds {
         ErrorKinds::HDKError(error)
     }
 }
+
+impl From<Infallible> for ErrorKinds {
+    fn from(error: Infallible) -> Self {
+        ErrorKinds::AppError(AppError::UnexpectedStateError(format!("{:?}", error )))
+    }
+}
+
 
 impl From<ErrorKinds> for WasmError {
     fn from(error: ErrorKinds) -> Self {

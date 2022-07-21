@@ -38,6 +38,7 @@ pub struct ZomeInput {
     pub tags: Option<Vec<String>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -59,6 +60,7 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeEntry>> {
 	    .unwrap_or( default_now ),
 	developer: pubkey.clone(),
 	deprecation: None,
+	source_code_url: input.source_code_url,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
 	tags: input.tags.to_owned(),
@@ -123,6 +125,7 @@ pub struct ZomeUpdateOptions {
     pub tags: Option<Vec<String>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
@@ -130,11 +133,13 @@ pub type ZomeUpdateInput = UpdateEntityInput<ZomeUpdateOptions>;
 pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeEntry>> {
     debug!("Updating ZOME: {}", input.addr );
     let props = input.properties.clone();
-    let previous = get_entity::<ZomeEntry>( &input.addr )?.content;
+    let mut previous : Option<ZomeEntry> = None;
 
     let entity = update_entity(
 	&input.addr,
 	|current : ZomeEntry, _| {
+	    previous = Some(current.clone());
+
 	    Ok(ZomeEntry {
 		name: props.name
 		    .unwrap_or( current.name ),
@@ -148,12 +153,16 @@ pub fn update_zome(input: ZomeUpdateInput) -> AppResult<Entity<ZomeEntry>> {
 		    .unwrap_or( now()? ),
 		developer: current.developer,
 		deprecation: current.deprecation,
+		source_code_url: props.source_code_url
+		    .or( current.source_code_url ),
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 		tags: props.tags
 		    .or( current.tags ),
 	    })
 	})?;
+
+    let previous = previous.unwrap();
 
     if input.properties.name.is_some() {
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );
@@ -200,6 +209,7 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeEntry>>
 		last_updated: current.last_updated,
 		developer: current.developer,
 		deprecation: Some(DeprecationNotice::new( input.message.to_owned() )),
+		source_code_url: current.source_code_url,
 		metadata: current.metadata,
 		tags: current.tags,
 	    })

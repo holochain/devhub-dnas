@@ -126,11 +126,13 @@ pub type HappUpdateInput = UpdateEntityInput<HappUpdateOptions>;
 pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappEntry>> {
     debug!("Updating hApp: {}", input.addr );
     let props = input.properties.clone();
-    let previous = get_entity::<HappEntry>( &input.addr )?.content;
+    let mut previous : Option<HappEntry> = None;
 
     let entity = update_entity(
 	&input.addr,
 	|current : HappEntry, _| {
+	    previous = Some(current.clone());
+
 	    Ok(HappEntry {
 		title: props.title
 		    .unwrap_or( current.title ),
@@ -152,6 +154,8 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappEntry>> {
 		    .unwrap_or( current.metadata ),
 	    })
 	})?;
+
+    let previous = previous.unwrap();
 
     if input.properties.title.is_some() {
 	let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous.title ] );

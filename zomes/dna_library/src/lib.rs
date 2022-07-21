@@ -13,7 +13,6 @@ use devhub_types::{
 };
 use hdk::prelude::*;
 
-// mod misc;
 mod profile;
 mod dna;
 mod dnaversions;
@@ -22,6 +21,7 @@ mod zomeversion;
 
 mod packaging;
 mod constants;
+mod validation;
 
 
 use constants::{
@@ -432,6 +432,13 @@ fn get_zome_versions(input: zomeversion::GetZomeVersionsInput) -> ExternResult<E
 #[hdk_extern]
 fn update_zome_version(input: zomeversion::ZomeVersionUpdateInput) -> ExternResult<EntityResponse<ZomeVersionEntry>> {
     let entity = catch!( zomeversion::update_zome_version( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn create_zome_version_review_summary(input: zomeversion::EntityAddressInput) -> ExternResult<EntityResponse<ZomeVersionEntry>> {
+    let entity = catch!( zomeversion::create_zome_version_review_summary( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }

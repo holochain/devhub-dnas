@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, UpdateEntityInput,
-    errors::{ UserError },
+    errors::{ UserError, AppError },
     dnarepo_entry_types::{
 	ZomeEntry,
 	ZomeVersionEntry,
+	ReviewSummaryEntry,
     },
     constants::{
 	ANCHOR_UNIQUENESS,
@@ -31,7 +32,8 @@ use crate::constants::{
 #[derive(Debug, Deserialize)]
 pub struct ZomeVersionInput {
     pub for_zome: EntryHash,
-    pub version: u64,
+    pub version: String,
+    pub ordering: u64,
     pub hdk_version: String,
 
     // optional
@@ -40,6 +42,7 @@ pub struct ZomeVersionInput {
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_commit_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -60,6 +63,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
     let version = ZomeVersionEntry {
 	for_zome: input.for_zome.clone(),
 	version: input.version,
+	ordering: input.ordering,
 	mere_memory_addr: mere_memory_addr,
 	mere_memory_hash: memory.hash,
 	changelog: input.changelog
@@ -69,6 +73,8 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 	last_updated: input.last_updated
 	    .unwrap_or( default_now ),
 	hdk_version: input.hdk_version.clone(),
+	review_summary: None,
+	source_code_commit_url: input.source_code_commit_url,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
     };
@@ -124,9 +130,11 @@ pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Collection<En
 
 #[derive(Debug, Deserialize)]
 pub struct ZomeVersionUpdateOptions {
+    pub ordering: Option<u64>,
     pub changelog: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
+    pub source_code_commit_url: Option<String>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type ZomeVersionUpdateInput = UpdateEntityInput<ZomeVersionUpdateOptions>;
@@ -141,6 +149,8 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 	    Ok(ZomeVersionEntry {
 		for_zome: current.for_zome,
 		version: current.version,
+		ordering: props.ordering
+		    .unwrap_or( current.ordering ),
 		published_at: props.published_at
 		    .unwrap_or( current.published_at ),
 		last_updated: props.last_updated
@@ -150,6 +160,9 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
 		hdk_version: current.hdk_version,
+		review_summary: current.review_summary,
+		source_code_commit_url: props.source_code_commit_url
+		    .or( current.source_code_commit_url ),
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })
@@ -157,6 +170,45 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 
     Ok( entity )
 }
+
+
+
+
+#[derive(Debug, Deserialize)]
+pub struct EntityAddressInput {
+    pub subject_header: HeaderHash,
+    pub addr: EntryHash,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ReviewSummaryInput {
+    pub subject_header: HeaderHash,
+}
+
+pub fn create_zome_version_review_summary(input: EntityAddressInput) -> AppResult<Entity<ZomeVersionEntry>> {
+    debug!("Updating ZOME Version: {}", input.subject_header );
+    let current_summary : ZomeVersionEntry = get( input.addr.to_owned(), GetOptions::content() )?
+	.ok_or( AppError::UnexpectedStateError(format!("Given address could not be found: {}", input.addr )) )?
+	.try_into()?;
+
+    if let Some(review_summary_id) = current_summary.review_summary {
+	Err(UserError::InvalidActionError(format!("You cannot change the review summary because it is already set to: {}", review_summary_id )))?
+    }
+
+    let review_summary : Entity<ReviewSummaryEntry> = call_local_zome( "reviews", "create_review_summary_for_subject", ReviewSummaryInput {
+	subject_header: input.subject_header,
+    })?;
+
+    let entity = update_entity(
+	&input.addr,
+	|mut current : ZomeVersionEntry, _| {
+	    current.review_summary = Some(review_summary.id);
+	    Ok( current )
+	})?;
+
+    Ok( entity )
+}
+
 
 
 

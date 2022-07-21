@@ -7,3 +7,5 @@ zomes:
     bundled: ../../zomes/dna_library.wasm
   - name: mere_memory
     bundled: ../../zomes/mere_memory.wasm
+  - name: reviews
+    bundled: ../../zomes/reviews.wasm
