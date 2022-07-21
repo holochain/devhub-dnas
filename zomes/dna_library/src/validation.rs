@@ -180,7 +180,7 @@ fn validate_zome_version_update(header: &header::Update, zome_version: ZomeVersi
     let zome : ZomeEntry = must_get_entry( zome_version.for_zome.to_owned().into() )?.try_into()?;
     let prev_entry : ZomeVersionEntry = must_get_entry( header.original_entry_address.to_owned() )?.try_into()?;
 
-    if prev_entry.review_summary.is_some() {
+    if zome_version.review_summary.is_some() {
 	let mut prev_zome_copy = prev_entry.clone();
 	prev_zome_copy.review_summary = zome_version.review_summary.clone();
 
