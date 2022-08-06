@@ -31,13 +31,13 @@ function basic_tests () {
     it("should get whoami info", async function () {
 	const alice			= clients.alice;
 
-	let a_agent_info		= await alice.call( "webassets", "web_assets", "whoami", null);
+	let a_agent_info		= await alice.call( "web_assets", "web_assets", "whoami", null);
 	log.info("Agent ID 'alice': %s", String(new HoloHash(a_agent_info.agent_initial_pubkey)) );
     });
 
 
     it("should assemble hApp bundle", async function () {
-	this.timeout( 30_000 );
+	this.timeout( 120_000 );
 
 	const alice			= clients.alice;
 
@@ -46,7 +46,7 @@ function basic_tests () {
 
 	let file_addr;
 	{
-	    let file			= await alice.call( "webassets", "web_assets", "create_file", {
+	    let file			= await alice.call( "web_assets", "web_assets", "create_file", {
 		"file_bytes": file_bytes,
 	    });
 	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
@@ -55,7 +55,7 @@ function basic_tests () {
 
 	{
 	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
-		// "dna_hash": alice._app_schema._dnas.webassets._hash,
+		// "dna_hash": alice._app_schema._dnas.web_assets._hash,
 		"id": file_addr,
 	    });
 	    log.normal("Updated hApp UI: %s", gui.file_size );
@@ -173,6 +173,8 @@ function basic_tests () {
 	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.happ"), Buffer.from(happ_package) );
 	}
 
+	// await delay(61_000);
+
 	{
 	    let webhapp_package		= await alice.call( "happs", "happ_library", "get_webhapp_package", {
 		"name": "Test Web hApp Package",
@@ -198,28 +200,28 @@ describe("All DNAs", () => {
     });
 
     before(async function () {
-	this.timeout( 30_000 );
+	this.timeout( 60_000 );
 
 	clients				= await backdrop( holochain, {
 	    "dnarepo": DNAREPO_PATH,
 	    "happs": HAPPS_PATH,
-	    "webassets": WEBASSETS_PATH,
+	    "web_assets": WEBASSETS_PATH,
 	}, [
 	    "alice",
 	]);
 
-	{
-	    let dna_info		= await clients.alice.call( "dnarepo", "dna_library", "dna_info" );
-	    log.info("Alice dnarepo dna_info zomes: %s", dna_info.zome_names );
-	}
-	{
-	    let dna_info		= await clients.alice.call( "happs", "happ_library", "dna_info" );
-	    log.info("Alice happs dna_info zomes: %s", dna_info.zome_names );
-	}
-	{
-	    let dna_info		= await clients.alice.call( "webassets", "web_assets", "dna_info" );
-	    log.info("Alice webassets dna_info zomes: %s", dna_info.zome_names );
-	}
+	// {
+	//     let dna_info		= await clients.alice.call( "dnarepo", "dna_library", "dna_info" );
+	//     log.info("Alice dnarepo dna_info zomes: %s", dna_info.zome_names );
+	// }
+	// {
+	//     let dna_info		= await clients.alice.call( "happs", "happ_library", "dna_info" );
+	//     log.info("Alice happs dna_info zomes: %s", dna_info.zome_names );
+	// }
+	// {
+	//     let dna_info		= await clients.alice.call( "web_assets", "web_assets", "dna_info" );
+	//     log.info("Alice web_assets dna_info zomes: %s", dna_info.zome_names );
+	// }
 
 	// Must call whoami on each cell to ensure that init has finished.
 	{
@@ -231,7 +233,7 @@ describe("All DNAs", () => {
 	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
 	}
 	{
-	    let whoami			= await clients.alice.call( "webassets", "web_assets", "whoami" );
+	    let whoami			= await clients.alice.call( "web_assets", "web_assets", "whoami" );
 	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
 	}
     });

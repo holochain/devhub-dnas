@@ -1,4 +1,7 @@
 use std::collections::BTreeMap;
+use dnarepo_core::{
+    LinkTypes,
+};
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     errors::{ UserError, AppError },
@@ -16,8 +19,8 @@ use hc_crud::{
 use hdk::prelude::*;
 
 use crate::constants::{
-    LT_NONE,
-    TAG_REVIEW,
+    // LT_NONE,
+    // TAG_REVIEW,
     ANCHOR_REVIEWS,
 };
 
@@ -26,7 +29,7 @@ use crate::constants::{
 
 #[derive(Debug, Deserialize)]
 pub struct ReviewInput {
-    pub subject_ids: Vec<(EntryHash, HeaderHash)>,
+    pub subject_ids: Vec<(EntryHash, ActionHash)>,
     pub ratings: BTreeMap<String,u8>,
     pub message: String,
 
@@ -63,12 +66,12 @@ pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
     // Author (Agent) anchor
     let (base, base_hash) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ ANCHOR_REVIEWS ] );
     debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-    entity.link_from( &base_hash, LT_NONE, TAG_REVIEW.into() )?;
+    entity.link_from( &base_hash, LinkTypes::Review, None )?;
 
     for (subject_id, _) in input.subject_ids {
 	let (base, base_hash) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ subject_id.to_owned() ] );
 	debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-	entity.link_from( &base_hash, LT_NONE, TAG_REVIEW.into() )?;
+	entity.link_from( &base_hash, LinkTypes::Review, None )?;
     }
 
     Ok( entity )
@@ -79,7 +82,7 @@ pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
 
 pub fn get_review(input: GetEntityInput) -> AppResult<Entity<ReviewEntry>> {
     debug!("Get Review: {}", input.id );
-    let entity = get_entity::<ReviewEntry>( &input.id )?;
+    let entity = get_entity( &input.id )?;
 
     Ok( entity )
 }
@@ -128,7 +131,7 @@ pub fn update_review(input: ReviewUpdateInput) -> AppResult<Entity<ReviewEntry>>
 
 
 
-pub fn delete_review(addr: EntryHash) -> AppResult<Entity<ReviewEntry>> {
+pub fn delete_review(addr: ActionHash) -> AppResult<Entity<ReviewEntry>> {
     debug!("Delete Review Version: {}", addr );
     let entity = update_entity(
 	&addr,
@@ -146,17 +149,17 @@ pub fn delete_review(addr: EntryHash) -> AppResult<Entity<ReviewEntry>> {
 
 #[derive(Debug, Deserialize)]
 pub struct EntityAddressInput {
-    pub subject_header: HeaderHash,
-    pub addr: EntryHash,
+    pub subject_action: ActionHash,
+    pub addr: ActionHash,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ReactionSummaryInput {
-    pub subject_header: HeaderHash,
+    pub subject_action: ActionHash,
 }
 
 pub fn create_review_reaction_summary(input: EntityAddressInput) -> AppResult<Entity<ReviewEntry>> {
-    debug!("Updating Review: {}", input.subject_header );
+    debug!("Updating Review: {}", input.subject_action );
     let current_summary : ReviewEntry = get( input.addr.to_owned(), GetOptions::content() )?
 	.ok_or( AppError::UnexpectedStateError(format!("Given address could not be found: {}", input.addr )) )?
 	.try_into()?;
@@ -166,7 +169,7 @@ pub fn create_review_reaction_summary(input: EntityAddressInput) -> AppResult<En
     }
 
     let reaction_summary : Entity<ReactionSummaryEntry> = call_local_zome( "reviews", "create_reaction_summary_for_subject", ReactionSummaryInput {
-	subject_header: input.subject_header,
+	subject_action: input.subject_action,
     })?;
 
     let entity = update_entity(

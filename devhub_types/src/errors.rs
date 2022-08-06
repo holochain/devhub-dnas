@@ -71,7 +71,7 @@ impl From<AppError> for ErrorKinds {
 
 impl From<SerializedBytesError> for ErrorKinds {
     fn from(error: SerializedBytesError) -> Self {
-        ErrorKinds::HDKError(error.into())
+        ErrorKinds::HDKError(wasm_error!(WasmErrorInner::from(error)))
     }
 }
 
@@ -83,7 +83,7 @@ impl From<UserError> for ErrorKinds {
 
 impl From<UtilsError> for ErrorKinds {
     fn from(error: UtilsError) -> Self {
-	if let UtilsError::EntryNotFoundError(_) = error {
+	if let UtilsError::EntryNotFoundError(..) = error {
 	    UserError::EntryNotFoundError(error).into()
 	}
 	else {
@@ -113,6 +113,6 @@ impl From<Infallible> for ErrorKinds {
 
 impl From<ErrorKinds> for WasmError {
     fn from(error: ErrorKinds) -> Self {
-        WasmError::Guest( format!("{:?}", error ) )
+        wasm_error!(WasmErrorInner::Guest( format!("{:?}", error ) ))
     }
 }

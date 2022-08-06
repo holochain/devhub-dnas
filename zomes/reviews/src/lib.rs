@@ -1,5 +1,8 @@
+use dnarepo_core::{
+    LinkTypes,
+};
 use devhub_types::{
-    DevHubResponse, Entity, EntityResponse, EntityCollectionResponse, GetEntityInput,
+    DevHubResponse, Entity, EntityResponse, GetEntityInput,
     constants::{ ENTITY_MD, ENTITY_COLLECTION_MD, VALUE_MD },
     dnarepo_entry_types::{
 	ReviewEntry,
@@ -12,37 +15,25 @@ use devhub_types::{
 };
 use hdk::prelude::*;
 
-// mod misc;
 mod reviews;
 mod reactions;
 mod review_summaries;
 mod reaction_summaries;
 
 mod constants;
-mod validation;
 
 
 use constants::{
-    TAG_REVIEW,
-    TAG_REACTION,
-    TAG_SUMMARY,
     ANCHOR_REVIEWS,
     ANCHOR_REACTIONS,
     ANCHOR_SUMMARIES,
 };
 
-entry_defs![
-    PathEntry::entry_def(),
-    ReviewEntry::entry_def(),
-    ReactionEntry::entry_def(),
-    ReviewSummaryEntry::entry_def(),
-    ReactionSummaryEntry::entry_def()
-];
 
 
 #[derive(Debug, Deserialize)]
 pub struct AddrInput {
-    pub addr: EntryHash,
+    pub addr: ActionHash,
 }
 
 pub fn agent_path_base(pubkey: Option<AgentPubKey>) -> String {
@@ -81,9 +72,9 @@ fn get_review(input: GetEntityInput) -> ExternResult<EntityResponse<ReviewEntry>
 }
 
 #[hdk_extern]
-fn get_reviews_for_subject(input: GetEntityInput) -> ExternResult<EntityCollectionResponse<ReviewEntry>> {
+fn get_reviews_for_subject(input: GetEntityInput) -> ExternResult<DevHubResponse<Vec<Entity<ReviewEntry>>>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_REVIEWS, vec![ input.id ] );
-    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_REVIEW.into(), base_path, |items : Vec<Entity<ReviewEntry>>| {
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( base_path, LinkTypes::Review, None, |items : Vec<Entity<ReviewEntry>>| {
 	Ok( items.into_iter()
 	    .filter(|entity| {
 		!entity.content.deleted
@@ -95,9 +86,9 @@ fn get_reviews_for_subject(input: GetEntityInput) -> ExternResult<EntityCollecti
 }
 
 #[hdk_extern]
-fn get_my_reviews(_:()) -> ExternResult<EntityCollectionResponse<ReviewEntry>> {
+fn get_my_reviews(_:()) -> ExternResult<DevHubResponse<Vec<Entity<ReviewEntry>>>> {
     let (base_path, _) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ ANCHOR_REVIEWS ] );
-    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_REVIEW.into(), base_path, |items : Vec<Entity<ReviewEntry>>| {
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( base_path, LinkTypes::Review, None, |items : Vec<Entity<ReviewEntry>>| {
 	Ok( items.into_iter()
 	    .filter(|entity| {
 		!entity.content.deleted
@@ -146,9 +137,9 @@ fn get_reaction(input: GetEntityInput) -> ExternResult<EntityResponse<ReactionEn
 }
 
 #[hdk_extern]
-fn get_reactions_for_subject(input: GetEntityInput) -> ExternResult<EntityCollectionResponse<ReactionEntry>> {
+fn get_reactions_for_subject(input: GetEntityInput) -> ExternResult<DevHubResponse<Vec<Entity<ReactionEntry>>>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_REACTIONS, vec![ input.id ] );
-    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_REACTION.into(), base_path, |items : Vec<Entity<ReactionEntry>>| {
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( base_path, LinkTypes::Reaction, None, |items : Vec<Entity<ReactionEntry>>| {
 	Ok( items.into_iter()
 	    .filter(|entity| {
 		!entity.content.deleted
@@ -160,9 +151,9 @@ fn get_reactions_for_subject(input: GetEntityInput) -> ExternResult<EntityCollec
 }
 
 #[hdk_extern]
-fn get_my_reactions(_:()) -> ExternResult<EntityCollectionResponse<ReactionEntry>> {
+fn get_my_reactions(_:()) -> ExternResult<DevHubResponse<Vec<Entity<ReactionEntry>>>> {
     let (base_path, _) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ ANCHOR_REACTIONS ] );
-    let collection = catch!( devhub_types::get_entities_for_path_filtered( TAG_REACTION.into(), base_path, |items : Vec<Entity<ReactionEntry>>| {
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( base_path, LinkTypes::Reaction, None, |items : Vec<Entity<ReactionEntry>>| {
 	Ok( items.into_iter()
 	    .filter(|entity| {
 		!entity.content.deleted
@@ -204,9 +195,9 @@ fn get_review_summary(input: GetEntityInput) -> ExternResult<EntityResponse<Revi
 }
 
 #[hdk_extern]
-fn get_review_summaries_for_subject(input: GetEntityInput) -> ExternResult<EntityCollectionResponse<ReviewSummaryEntry>> {
+fn get_review_summaries_for_subject(input: GetEntityInput) -> ExternResult<DevHubResponse<Vec<Entity<ReviewSummaryEntry>>>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_SUMMARIES, vec![ input.id ] );
-    let collection = catch!( devhub_types::get_entities_for_path( TAG_SUMMARY.into(), base_path ) );
+    let collection = catch!( devhub_types::get_entities_for_path( base_path, LinkTypes::ReviewSummary, None ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }
@@ -235,9 +226,9 @@ fn get_reaction_summary(input: GetEntityInput) -> ExternResult<EntityResponse<Re
 }
 
 #[hdk_extern]
-fn get_reaction_summaries_for_subject(input: GetEntityInput) -> ExternResult<EntityCollectionResponse<ReactionSummaryEntry>> {
+fn get_reaction_summaries_for_subject(input: GetEntityInput) -> ExternResult<DevHubResponse<Vec<Entity<ReactionSummaryEntry>>>> {
     let (base_path, _) = devhub_types::create_path( ANCHOR_SUMMARIES, vec![ input.id ] );
-    let collection = catch!( devhub_types::get_entities_for_path( TAG_SUMMARY.into(), base_path ) );
+    let collection = catch!( devhub_types::get_entities_for_path( base_path, LinkTypes::ReactionSummary, None ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
 }

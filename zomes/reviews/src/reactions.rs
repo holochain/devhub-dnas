@@ -1,4 +1,7 @@
 use std::collections::BTreeMap;
+use dnarepo_core::{
+    LinkTypes,
+};
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     dnarepo_entry_types::{
@@ -13,8 +16,8 @@ use hc_crud::{
 use hdk::prelude::*;
 
 use crate::constants::{
-    LT_NONE,
-    TAG_REACTION,
+    // LT_NONE,
+    // TAG_REACTION,
     ANCHOR_REACTIONS,
 };
 
@@ -23,7 +26,7 @@ use crate::constants::{
 
 #[derive(Debug, Deserialize)]
 pub struct ReactionInput {
-    pub subject_ids: Vec<(EntryHash, HeaderHash)>,
+    pub subject_ids: Vec<(EntryHash, ActionHash)>,
     pub reaction_type: u64,
 
     // optional
@@ -57,12 +60,12 @@ pub fn create_reaction(input: ReactionInput) -> AppResult<Entity<ReactionEntry>>
     // Author (Agent) anchor
     let (base, base_hash) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ ANCHOR_REACTIONS ] );
     debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-    entity.link_from( &base_hash, LT_NONE, TAG_REACTION.into() )?;
+    entity.link_from( &base_hash, LinkTypes::Reaction, None )?;
 
     for (subject_id, _) in input.subject_ids {
 	let (base, base_hash) = devhub_types::create_path( ANCHOR_REACTIONS, vec![ subject_id.to_owned() ] );
 	debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &base ), entity.id );
-	entity.link_from( &base_hash, LT_NONE, TAG_REACTION.into() )?;
+	entity.link_from( &base_hash, LinkTypes::Reaction, None )?;
     }
 
     Ok( entity )
@@ -73,7 +76,7 @@ pub fn create_reaction(input: ReactionInput) -> AppResult<Entity<ReactionEntry>>
 
 pub fn get_reaction(input: GetEntityInput) -> AppResult<Entity<ReactionEntry>> {
     debug!("Get Reaction: {}", input.id );
-    let entity = get_entity::<ReactionEntry>( &input.id )?;
+    let entity = get_entity( &input.id )?;
 
     Ok( entity )
 }
@@ -120,7 +123,7 @@ pub fn update_reaction(input: ReactionUpdateInput) -> AppResult<Entity<ReactionE
 
 
 
-pub fn delete_reaction(addr: EntryHash) -> AppResult<Entity<ReactionEntry>> {
+pub fn delete_reaction(addr: ActionHash) -> AppResult<Entity<ReactionEntry>> {
     debug!("Delete Reaction Version: {}", addr );
     let entity = update_entity(
 	&addr,

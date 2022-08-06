@@ -9,11 +9,21 @@ HAPPDNA			= bundled/happs.dna
 ASSETSDNA		= bundled/web_assets.dna
 
 TARGET			= release
+
+# Integrity WASMs
+DNAREPO_CORE		= zomes/dnarepo_core.wasm
+HAPPS_CORE		= zomes/happs_core.wasm
+WEB_ASSETS_CORE		= zomes/web_assets_core.wasm
+
+# Coordination WASMs
 DNA_LIBRARY_WASM	= zomes/dna_library.wasm
 HAPP_LIBRARY_WASM	= zomes/happ_library.wasm
 REVIEWS_WASM		= zomes/reviews.wasm
 WEB_ASSETS_WASM		= zomes/web_assets.wasm
+
+# External WASM dependencies
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
+MERE_MEMORY_CORE_WASM	= zomes/mere_memory_core.wasm
 
 
 #
@@ -42,33 +52,33 @@ build:				$(HAPP_BUNDLE)
 $(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
-$(DNAREPO):			$(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_WASM)
-$(HAPPDNA):			$(HAPP_LIBRARY_WASM)
-$(ASSETSDNA):			$(WEB_ASSETS_WASM)
+$(DNAREPO):			$(DNAREPO_CORE) $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_CORE_WASM)
+$(HAPPDNA):			$(HAPPS_CORE) $(HAPP_LIBRARY_WASM)
+$(ASSETSDNA):			$(WEB_ASSETS_CORE) $(WEB_ASSETS_WASM)
 
-bundled/happs/dna.yaml:		$(DNAREPO) $(ASSETSDNA)
-	node tests/update_happ_dna_yaml.js
+# bundled/happs/dna.yaml:		$(DNAREPO) #$(ASSETSDNA)
+# 	node tests/update_happ_dna_yaml.js
 bundled/%.dna:			bundled/%/dna.yaml
 	@echo "Packaging '$*': $@"
 	@hc dna pack -o $@ bundled/$*
 
 zomes/%.wasm:			zomes/target/wasm32-unknown-unknown/release/%.wasm
 	cp $< $@
-zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.rs devhub_types/Cargo.toml zomes/%/src/*.rs zomes/%/Cargo.toml
+zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.rs devhub_types/Cargo.toml zomes/%/src/*.rs zomes/%/Cargo.toml zomes/%/Cargo.lock
 	@echo "Building  '$*' WASM: $@"; \
 	cd zomes; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
+zomes/%/Cargo.lock:
+	touch $@
 
 $(MERE_MEMORY_WASM):
-	curl -L https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.32.0/mere_memory.wasm --output $@
+	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.42.1/mere_memory.wasm' --output $@
+$(MERE_MEMORY_CORE_WASM):
+	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.42.1/mere_memory_core.wasm' --output $@
 
-
-crates:				devhub_types
-devhub_types:			devhub_types/src/*.rs devhub_types/Cargo.toml
-	cd $@; cargo build && touch $@
 
 
 #

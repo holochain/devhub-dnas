@@ -1,4 +1,7 @@
 use std::collections::BTreeMap;
+use web_assets_core::{
+    LinkTypes,
+};
 use devhub_types::{
     AppResult, GetEntityInput,
     errors::{ UserError },
@@ -6,19 +9,14 @@ use devhub_types::{
 	FileEntry,
 	FilePackage,
     },
+    call_local_zome,
 };
 use hc_crud::{
     now, create_entity, get_entity,
-    Entity,
+    Entity, EntityType,
 };
-use devhub_types::{ call_local_zome };
 use mere_memory_types::{ MemoryEntry };
 use hdk::prelude::*;
-
-use crate::constants::{
-    LT_NONE,
-    TAG_FILE,
-};
 
 
 
@@ -68,7 +66,7 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileEntry>> {
     let base = crate::root_path_hash( None )?;
 
     debug!("Linking pubkey ({}) to ENTRY: {}", base, entity.id );
-    entity.link_from( &base, LT_NONE, TAG_FILE.into() )?;
+    entity.link_from( &base, LinkTypes::File, None )?;
 
     Ok( entity )
 }
@@ -76,7 +74,15 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileEntry>> {
 
 pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FilePackage>> {
     debug!("Get file: {}", input.id );
-    let entity = get_entity::<FileEntry>( &input.id )?;
+    let entity : Entity<FileEntry> = get_entity( &input.id )?;
 
-    Ok(	entity.change_model( |file| file.to_package() ) )
+    let package = entity.content.to_package();
+
+    Ok(Entity {
+	id: entity.id,
+	action: entity.action,
+	address: entity.address,
+	ctype: EntityType::new( "file", "package" ),
+	content: package,
+    })
 }

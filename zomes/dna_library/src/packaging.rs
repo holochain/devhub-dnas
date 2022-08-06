@@ -11,7 +11,7 @@ use devhub_types::{
 };
 use hc_crud::{
     get_entity,
-    Entity,
+    Entity, EntityType,
 };
 use hdk::prelude::*;
 
@@ -77,9 +77,9 @@ pub struct GetDnaPackageInput {
 
 pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersionPackage>> {
     debug!("Get DNA Version: {}", input.id );
-    let entity = get_entity::<DnaVersionEntry>( &input.id )?;
+    let entity : Entity<DnaVersionEntry> = get_entity( &input.id )?;
     let entry = &entity.content;
-    let dna = get_entity::<DnaEntry>( &entry.for_dna )?;
+    let dna : Entity<DnaEntry> = get_entity( &entry.for_dna )?;
 
     let mut manifest_zomes : Vec<BundleZomeInfo> = vec![];
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
@@ -112,6 +112,13 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     };
 
     let dna_pack_bytes = encode_bundle( bundle )?;
+    let package = entity.content.to_package( dna_pack_bytes );
 
-    Ok( entity.change_model( |package| package.to_package( dna_pack_bytes ) ) )
+    Ok(Entity {
+	id: entity.id,
+	action: entity.action,
+	address: entity.address,
+	ctype: EntityType::new( "dna_version", "package" ),
+	content: package,
+    })
 }

@@ -1,7 +1,4 @@
 use std::collections::BTreeMap;
-use hc_crud::{
-    EntryModel, EntityType,
-};
 use hdk::prelude::*;
 
 
@@ -31,7 +28,7 @@ impl DeprecationNotice {
 //
 // Profile Entry
 //
-#[hdk_entry(id = "profile", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ProfileEntry {
     pub name: String,
@@ -40,18 +37,12 @@ pub struct ProfileEntry {
     pub website: String,
 }
 
-impl EntryModel for ProfileEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "profile", "entry" )
-    }
-}
-
 
 
 //
 // DNA Entry
 //
-#[hdk_entry(id = "dna", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct DnaEntry {
     pub name: String,
@@ -69,12 +60,6 @@ pub struct DnaEntry {
     pub deprecation: Option<DeprecationNotice>,
 }
 
-impl EntryModel for DnaEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna", "info" )
-    }
-}
-
 
 
 //
@@ -89,7 +74,7 @@ pub struct ZomeReference {
     pub resource_hash : String, // Hash of resource contents
 }
 
-#[hdk_entry(id = "dna_version", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct DnaVersionEntry {
     pub for_dna: EntryHash,
@@ -108,12 +93,6 @@ pub struct DnaVersionEntry {
     pub source_code_commit_url: Option<String>,
 }
 
-impl EntryModel for DnaVersionEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "info" )
-    }
-}
-
 // Package
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionPackage {
@@ -124,11 +103,6 @@ pub struct DnaVersionPackage {
     pub changelog: String,
     pub hdk_version: String,
     pub bytes: Vec<u8>,
-}
-impl EntryModel for DnaVersionPackage {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "package" )
-    }
 }
 
 impl DnaVersionEntry {
@@ -150,7 +124,7 @@ impl DnaVersionEntry {
 //
 // Zome Entry
 //
-#[hdk_entry(id = "zome", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ZomeEntry {
     pub name: String,
@@ -167,18 +141,12 @@ pub struct ZomeEntry {
     pub deprecation: Option<DeprecationNotice>,
 }
 
-impl EntryModel for ZomeEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome", "info" )
-    }
-}
-
 
 
 //
 // Zome Version Entry
 //
-#[hdk_entry(id = "zome_version", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone, PartialEq)]
 pub struct ZomeVersionEntry {
     pub for_zome: EntryHash,
@@ -198,21 +166,15 @@ pub struct ZomeVersionEntry {
     pub source_code_commit_url: Option<String>,
 }
 
-impl EntryModel for ZomeVersionEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome_version", "info" )
-    }
-}
-
 
 
 //
 // Review Entry
 //
-#[hdk_entry(id = "review", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone, PartialEq)]
 pub struct ReviewEntry {
-    pub subject_ids: Vec<(EntryHash, HeaderHash)>,
+    pub subject_ids: Vec<(EntryHash, ActionHash)>,
     pub author: AgentPubKey,
     pub ratings: BTreeMap<String,u8>,
     pub message: String,
@@ -226,21 +188,15 @@ pub struct ReviewEntry {
     pub related_entries: Option<BTreeMap<String, EntryHash>>,
 }
 
-impl EntryModel for ReviewEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "review", "info" )
-    }
-}
-
 
 
 //
 // Reaction Entry
 //
-#[hdk_entry(id = "reaction", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ReactionEntry {
-    pub subject_ids: Vec<(EntryHash, HeaderHash)>,
+    pub subject_ids: Vec<(EntryHash, ActionHash)>,
     pub author: AgentPubKey,
     pub reaction_type: u64,
 
@@ -254,36 +210,24 @@ pub struct ReactionEntry {
     pub related_entries: Option<BTreeMap<String, EntryHash>>,
 }
 
-impl EntryModel for ReactionEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "reaction", "info" )
-    }
-}
-
 
 
 //
 // Reaction Summary Entry
 //
-#[hdk_entry(id = "reaction_summary", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ReactionSummaryEntry {
     pub subject_id: EntryHash,
-    pub subject_history: Vec<HeaderHash>,
+    pub subject_history: Vec<ActionHash>,
 
     pub published_at: u64,
     pub last_updated: u64,
 
     pub factored_action_count: u64,
 
-    pub reaction_refs: BTreeMap<String,(EntryHash, HeaderHash, AgentPubKey, u64, u64)>,
-    pub deleted_reactions: BTreeMap<String,(EntryHash, HeaderHash)>,
-}
-
-impl EntryModel for ReactionSummaryEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "reaction_summary", "info" )
-    }
+    pub reaction_refs: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, u64, u64)>,
+    pub deleted_reactions: BTreeMap<String,(EntryHash, ActionHash)>,
 }
 
 
@@ -291,11 +235,11 @@ impl EntryModel for ReactionSummaryEntry {
 //
 // Review Summary Entry
 //
-#[hdk_entry(id = "review_summary", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ReviewSummaryEntry {
     pub subject_id: EntryHash,
-    pub subject_history: Vec<HeaderHash>,
+    pub subject_history: Vec<ActionHash>,
 
     pub published_at: u64,
     pub last_updated: u64,
@@ -305,60 +249,19 @@ pub struct ReviewSummaryEntry {
     // For each Review, we need to have:
     //
     //   ID - original entry hash
-    //   latest header - the header of the review entry that we are using for stats
+    //   latest action - the action of the review entry that we are using for stats
     //   author - agent ID
     //   action count - the history length
     //   ratings - all rating values from review
     //
-    //   reaction_summary - ID + latest header
+    //   reaction_summary - ID + latest action
     //   likes (helpful) - num of likes for this review
     //   dislikes (unhelpful) - num of likes for this review
     //
     //   review_total_activity - the activity count for all review revisions
     //
-    pub review_refs: BTreeMap<String,(EntryHash, HeaderHash, AgentPubKey, u64, BTreeMap<String,u8>, Option<(HeaderHash, u64, BTreeMap<u64,u64>)>)>,
-    pub deleted_reviews: BTreeMap<String,(EntryHash, HeaderHash, AgentPubKey, Option<(HeaderHash, u64, BTreeMap<u64,u64>)>)>,
-}
-
-impl EntryModel for ReviewSummaryEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "review_summary", "info" )
-    }
-}
-
-
-pub fn trace_header_origin_entry(header_hash: &HeaderHash, depth: Option<u64>) -> ExternResult<(EntryHash,u64)> {
-    let sh_header = must_get_header( header_hash.to_owned().into() )?;
-    let depth : u64 = depth.unwrap_or(0);
-
-    match sh_header.header() {
-	Header::Create(create) => Ok( (create.entry_hash.to_owned(), depth) ),
-	Header::Update(update) => trace_header_origin_entry( &update.original_header_address, Some(depth+1) ),
-	header => Err(WasmError::Guest(format!("Unexpected header type @ depth {}: {:?}", depth, header ))),
-    }
-}
-
-pub fn trace_action_history_with_chain(header_hash: &HeaderHash, history: Option<Vec<(HeaderHash,EntryHash)>>) -> ExternResult<Vec<(HeaderHash,EntryHash)>> {
-    let sh_header = must_get_header( header_hash.to_owned().into() )?;
-    let mut history = history.unwrap_or( Vec::new() );
-
-    match sh_header.header() {
-	Header::Create(create) => {
-	    history.push( (header_hash.to_owned(), create.entry_hash.to_owned()) );
-
-	    Ok( history )
-	},
-	Header::Update(update) => {
-	    history.push( (header_hash.to_owned(), update.entry_hash.to_owned()) );
-
-	    trace_action_history_with_chain( &update.original_header_address, Some(history) )
-	},
-	header => Err(WasmError::Guest(format!("Unexpected header type @ trace depth {}: {:?}", history.len(), header ))),
-    }
-}
-
-pub fn trace_action_history(header_hash: &HeaderHash) -> ExternResult<Vec<(HeaderHash,EntryHash)>> {
-    trace_action_history_with_chain(header_hash, None)
+    pub review_refs: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, u64, BTreeMap<String,u8>, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
+    pub deleted_reviews: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
 }
 
 

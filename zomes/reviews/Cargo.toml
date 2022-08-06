@@ -10,9 +10,12 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
-hc_crud_ceps = "0.33.1"
+dnarepo_core = {path = "../dnarepo_core"}
+hc_crud_ceps = "0.50.1"
 # hc_crud_ceps = {path = "../../../rust-hc-crud-ceps"}
-hdk = "0.0.136"
+mere_memory_types = "0.42.1"
+# mere_memory_types = { path = "../../../zome-mere-memory/mere_memory_type" }
+hdk = "0.0.142"
 serde = "1"
 serde_yaml = "0.8.17"
 thiserror = "1"

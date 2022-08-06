@@ -14,8 +14,8 @@ let
     holochainVersionId = "custom";
     holochainVersion = {
       url = "https://github.com/holochain/holochain";
-      rev = "holochain-0.0.143"; # Jun 8, 2022 - 7f204047c56a2c165b1442cd480828a03caadde2
-      sha256 = "1qcsj76i8ig1lavm1nyr50w2grnqnmxar01hmky1zsdz3a2blzsx";
+      rev = "holochain-0.0.150"; # Jul 13, 2022 - 88813d781247c9db4d254063a604c22813013af5
+      sha256 = "1m3w0ik1bzsrz0qcm7vh0y4297w9fm2lcligzin2svch67a0mq7v";
       cargoLock = {
         outputHashes = {
         };
@@ -27,18 +27,18 @@ let
         "kitsune-p2p-tx2-proxy"
       ];
 
-      rustVersion = "1.58.1";
+      rustVersion = "1.59.0";
 
       lair = {
         url = "https://github.com/holochain/lair";
-        rev = "lair_keystore-v0.1.3"; # May 5, 2022 - 27e3a4e305e2a5d48ba625aa3bfac9516d2583ed
-        sha256 = "0xisp3rqdnjsypxpjcin94qwsgvb99vwisq49jjl6x7qxl2s3afm";
+        rev = "lair_keystore-v0.2.0"; # Jun 20, 2022 - 20b18781d217f172187f16a0ef86b78eb1fcd3bd
+        sha256 = "1j3a8sgcg0dki65cqda2dn5wn85m8ljlvnzyglaayhvljk4xkfcz";
 
         binsFilter = [
           "lair-keystore"
         ];
 
-        rustVersion = "1.58.1";
+        rustVersion = "1.59.0";
 
         cargoLock = {
           outputHashes = {
@@ -50,4 +50,9 @@ let
   nixpkgs = holonix.pkgs;
 in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
+
+  buildInputs = with nixpkgs; [
+    nodejs-16_x
+    less
+  ];
 }

@@ -1,8 +1,10 @@
 use std::collections::BTreeMap;
+use happs_core::{
+    EntryTypes, LinkTypes,
+};
 use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
-	HappEntry,
 	HappReleaseEntry,
 	HappManifest, DnaReference, HappGUIConfig,
     },
@@ -14,15 +16,10 @@ use devhub_types::{
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity, delete_entity, get_entities,
-    Entity, Collection,
+    Entity,
 };
 use hdk::prelude::*;
 use hex;
-
-use crate::constants::{
-    LT_NONE,
-    TAG_HAPP_RELEASE,
-};
 
 
 
@@ -82,17 +79,17 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEn
 
     // Parent anchor
     debug!("Linking happ ({}) to ENTRY: {}", input.for_happ, entity.id );
-    entity.link_from( &input.for_happ, LT_NONE, TAG_HAPP_RELEASE.into() )?;
+    entity.link_from( &input.for_happ, LinkTypes::HappRelease, None )?;
 
     // Uniqueness anchor
-    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &happ_release.dna_hash ] )?;
+    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &happ_release.dna_hash ], LinkTypes::Anchor )?;
     debug!("Linking uniqueness path ({}) to ENTRY: {}", fmt_path( &wasm_path ), entity.id );
-    entity.link_from( &wasm_path_hash, LT_NONE, TAG_HAPP_RELEASE.into() )?;
+    entity.link_from( &wasm_path_hash, LinkTypes::HappRelease, None )?;
 
     // HDK anchor
-    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
+    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ], LinkTypes::Anchor )?;
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
-    entity.link_from( &hdkv_hash, LT_NONE, TAG_HAPP_RELEASE.into() )?;
+    entity.link_from( &hdkv_hash, LinkTypes::HappRelease, None )?;
 
     Ok( entity )
 }
@@ -100,7 +97,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEn
 
 pub fn get_happ_release(input: GetEntityInput) -> AppResult<Entity<HappReleaseEntry>> {
     debug!("Get happ_release: {}", input.id );
-    let entity = get_entity::<HappReleaseEntry>( &input.id )?;
+    let entity : Entity<HappReleaseEntry> = get_entity( &input.id )?;
 
     Ok(	entity )
 }
@@ -158,12 +155,12 @@ pub struct DeleteInput {
     pub id: EntryHash,
 }
 
-pub fn delete_happ_release(input: DeleteInput) -> AppResult<HeaderHash> {
+pub fn delete_happ_release(input: DeleteInput) -> AppResult<ActionHash> {
     debug!("Delete HAPP RELEASE Version: {}", input.id );
-    let delete_header = delete_entity::<HappReleaseEntry>( &input.id )?;
-    debug!("Deleted hApp release via header ({})", delete_header );
+    let delete_action = delete_entity::<HappReleaseEntry,EntryTypes>( &input.id )?;
+    debug!("Deleted hApp release via action ({})", delete_action );
 
-    Ok( delete_header )
+    Ok( delete_action )
 }
 
 
@@ -173,6 +170,6 @@ pub struct GetHappReleasesInput {
     pub for_happ: EntryHash,
 }
 
-pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Collection<Entity<HappReleaseEntry>>> {
-    Ok( get_entities::<HappEntry, HappReleaseEntry>( &input.for_happ, TAG_HAPP_RELEASE.into() )? )
+pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Vec<Entity<HappReleaseEntry>>> {
+    Ok( get_entities( &input.for_happ, LinkTypes::HappRelease, None )? )
 }

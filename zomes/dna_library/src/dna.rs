@@ -1,27 +1,30 @@
 use std::collections::BTreeMap;
+use dnarepo_core::{
+    LinkTypes,
+};
 use devhub_types::{
     AppResult, UpdateEntityInput,
+    constants::{
+	ANCHOR_TAGS,
+	ANCHOR_NAMES,
+    },
     dnarepo_entry_types::{
 	DnaEntry,
 	DnaVersionEntry,
 	DeprecationNotice,
     },
-    constants::{
-	ANCHOR_TAGS,
-	ANCHOR_NAMES,
-    },
     fmt_path,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
-    Entity, Collection,
+    Entity,
 };
 use hdk::prelude::*;
 
 use crate::constants::{
-    LT_NONE,
-    TAG_DNA,
-    TAG_DNAVERSION,
+    // LT_NONE,
+    // TAG_DNA,
+    // TAG_DNAVERSION,
     ANCHOR_DNAS,
 };
 
@@ -47,8 +50,8 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
 
-    let (name_path, name_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &input.name ] )?;
-    let (name_path_lc, name_path_lc_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &input.name.to_lowercase() ] )?;
+    let (name_path, name_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &input.name ], LinkTypes::Anchor )?;
+    let (name_path_lc, name_path_lc_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &input.name.to_lowercase() ], LinkTypes::Anchor )?;
 
     let dna = DnaEntry {
 	name: input.name,
@@ -70,30 +73,30 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
     let entity = create_entity( &dna )?;
 
     // Developer (Agent) anchor
-    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_DNAS ] )?;
+    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_DNAS ], LinkTypes::Agent )?;
     debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &agent_base ), entity.id );
-    entity.link_from( &agent_base_hash, LT_NONE, TAG_DNA.into() )?;
+    entity.link_from( &agent_base_hash, LinkTypes::Dna, None )?;
 
     // Name anchors (case sensitive/insensitive)
     debug!("Linking name path ({}) to ENTRY: {}", fmt_path( &name_path ), entity.id );
-    entity.link_from( &name_path_hash, LT_NONE, TAG_DNA.into() )?;
+    entity.link_from( &name_path_hash, LinkTypes::Dna, None )?;
 
     if name_path_lc != name_path {
 	debug!("Linking name (lowercase) path ({}) to ENTRY: {}", fmt_path( &name_path_lc ), entity.id );
-	entity.link_from( &name_path_lc_hash, LT_NONE, TAG_DNA.into() )?;
+	entity.link_from( &name_path_lc_hash, LinkTypes::Dna, None )?;
     }
 
     // Global anchor
-    let (all_dnas_path, all_dnas_hash) = devhub_types::ensure_path( ANCHOR_DNAS, Vec::<String>::new() )?;
+    let (all_dnas_path, all_dnas_hash) = devhub_types::ensure_path( ANCHOR_DNAS, Vec::<String>::new(), LinkTypes::Anchor )?;
     debug!("Linking all DNAs path ({}) to ENTRY: {}", fmt_path( &all_dnas_path ), entity.id );
-    entity.link_from( &all_dnas_hash, LT_NONE, TAG_DNA.into() )?;
+    entity.link_from( &all_dnas_hash, LinkTypes::Dna, None )?;
 
     // Tag anchors
     if input.tags.is_some() {
 	for tag in input.tags.unwrap() {
-	    let (tag_path, tag_hash) = devhub_types::ensure_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ] )?;
+	    let (tag_path, tag_hash) = devhub_types::ensure_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ], LinkTypes::Anchor )?;
 	    debug!("Linking TAG anchor ({}) to entry: {}", fmt_path( &tag_path ), entity.id );
-	    entity.link_from( &tag_hash, LT_NONE, TAG_DNA.into() )?;
+	    entity.link_from( &tag_hash, LinkTypes::Dna, None )?;
 	}
     }
 
@@ -110,7 +113,7 @@ pub struct GetDnaInput {
 
 pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaEntry>> {
     debug!("Get DNA: {}", input.id );
-    let entity = get_entity::<DnaEntry>( &input.id )?;
+    let entity = get_entity( &input.id )?;
 
     Ok( entity )
 }
@@ -170,23 +173,23 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 
     if input.properties.name.is_some() {
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );
-	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name ] )?;
+	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name ], LinkTypes::Anchor )?;
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-	    entity.move_link_from( LT_NONE, TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LinkTypes::Dna, None, &previous_path_hash, &new_path_hash ).ok();
 	}
 
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name.to_lowercase() ] );
-	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ] )?;
+	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ], LinkTypes::Anchor )?;
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-	    entity.move_link_from( LT_NONE, TAG_DNA.into(), &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LinkTypes::Dna, None, &previous_path_hash, &new_path_hash ).ok();
 	}
     }
 
-    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, LT_NONE, TAG_DNA.into() )?;
+    devhub_types::update_tag_links( previous.tags, input.properties.tags, &entity, LinkTypes::Dna, LinkTypes::Tag )?;
 
     Ok( entity )
 }
@@ -196,7 +199,7 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 
 #[derive(Debug, Deserialize)]
 pub struct DeprecateDnaInput {
-    pub addr: EntryHash,
+    pub addr: ActionHash,
     pub message: String,
 }
 
@@ -223,21 +226,18 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaEntry>> {
     Ok( entity )
 }
 
-pub fn get_dnas_with_an_hdk_version( input: String ) -> AppResult<Collection<Entity<DnaEntry>>> {
-    let collection = devhub_types::get_hdk_version_entities::<DnaVersionEntry>( TAG_DNAVERSION.into(), input )?;
+pub fn get_dnas_with_an_hdk_version( input: String ) -> AppResult<Vec<Entity<DnaEntry>>> {
+    let collection : Vec<Entity<DnaVersionEntry>> = devhub_types::get_hdk_version_entities( LinkTypes::DnaVersion, input ).unwrap();
 
     let mut dnas : BTreeMap<EntryHash, Entity<DnaEntry>> = BTreeMap::new();
 
-    for dna_version in collection.items.into_iter() {
-	let dna = get_entity::<DnaEntry>( &dna_version.content.for_dna )?;
+    for dna_version in collection.into_iter() {
+	let dna = get_entity( &dna_version.content.for_dna )?;
 
 	if !dnas.contains_key( &dna.id ) {
 	    dnas.insert( dna.id.to_owned(), dna );
 	}
     }
 
-    Ok(Collection {
-	base: collection.base,
-	items: dnas.into_values().collect(),
-    })
+    Ok(dnas.into_values().collect())
 }

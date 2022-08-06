@@ -1,3 +1,6 @@
+use web_assets_core::{
+    LinkTypes,
+};
 use devhub_types::{
     DevHubResponse, EntityResponse, GetEntityInput,
     constants::{ VALUE_MD, ENTITY_MD },
@@ -11,14 +14,8 @@ use devhub_types::{
 use hdk::prelude::*;
 
 mod files;
-mod constants;
 
 
-
-entry_defs![
-    PathEntry::entry_def(),
-    FileEntry::entry_def()
-];
 
 
 pub fn root_path(pubkey: Option<AgentPubKey>) -> ExternResult<Path> {
@@ -37,10 +34,9 @@ pub fn root_path_hash(pubkey: Option<AgentPubKey>) -> ExternResult<EntryHash> {
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
     let agent = agent_info()?.agent_initial_pubkey;
-    let path = root_path( Some(agent.to_owned()) )?;
 
-    debug!("Ensure the agent ({:?}) root path is there: {:?}", agent, path.path_entry_hash()? );
-    path.ensure()?;
+    debug!("Ensure the agent ({:?}) root path is there", agent );
+    devhub_types::ensure_path( &format!("{}", agent ), Vec::<String>::new(), LinkTypes::Agent )?;
 
     Ok(InitCallbackResult::Pass)
 }

@@ -1,27 +1,30 @@
 use std::collections::BTreeMap;
+use dnarepo_core::{
+    EntryTypes, LinkTypes,
+};
 use devhub_types::{
     AppResult, UpdateEntityInput,
-    dnarepo_entry_types::{
-	DnaEntry,
-	DnaVersionEntry, ZomeReference,
-    },
     constants::{
 	ANCHOR_UNIQUENESS,
 	ANCHOR_HDK_VERSIONS,
+    },
+    dnarepo_entry_types::{
+	// DnaEntry,
+	DnaVersionEntry, ZomeReference,
     },
     fmt_path,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity, delete_entity, get_entities,
-    Entity, Collection,
+    Entity,
 };
 use hdk::prelude::*;
 use hex;
 
-use crate::constants::{
-    LT_NONE,
-    TAG_DNAVERSION,
-};
+// use crate::constants::{
+//     LT_NONE,
+//     TAG_DNAVERSION,
+// };
 
 
 
@@ -74,17 +77,17 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 
     // Parent anchor
     debug!("Linking DNA ({}) to ENTRY: {}", input.for_dna, entity.id );
-    entity.link_from( &input.for_dna, LT_NONE, TAG_DNAVERSION.into() )?;
+    entity.link_from( &input.for_dna, LinkTypes::DnaVersion, None )?;
 
     // Uniqueness anchor
-    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &version.wasm_hash ] )?;
-    debug!("Linking uniqueness path ({}) to ENTRY: {}", fmt_path( &wasm_path ), entity.id );
-    entity.link_from( &wasm_path_hash, LT_NONE, TAG_DNAVERSION.into() )?;
+    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &version.wasm_hash ], LinkTypes::Anchor )?;
+    debug!("Linking '{:?}' uniqueness path ({}) to ENTRY: {}", LinkTypes::DnaVersion, fmt_path( &wasm_path ), entity.id );
+    entity.link_from( &wasm_path_hash, LinkTypes::DnaVersion, None )?;
 
     // HDK anchor
-    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
+    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ], LinkTypes::Anchor )?;
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
-    entity.link_from( &hdkv_hash, LT_NONE, TAG_DNAVERSION.into() )?;
+    entity.link_from( &hdkv_hash, LinkTypes::DnaVersion, None )?;
 
     Ok( entity )
 }
@@ -99,7 +102,7 @@ pub struct GetDnaVersionInput {
 
 pub fn get_dna_version(input: GetDnaVersionInput) -> AppResult<Entity<DnaVersionEntry>> {
     debug!("Get DNA Version: {}", input.id );
-    let entity = get_entity::<DnaVersionEntry>( &input.id )?;
+    let entity = get_entity( &input.id )?;
 
     Ok(	entity )
 }
@@ -112,8 +115,8 @@ pub struct GetDnaVersionsInput {
     pub for_dna: EntryHash,
 }
 
-pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Collection<Entity<DnaVersionEntry>>> {
-    Ok( get_entities::<DnaEntry, DnaVersionEntry>( &input.for_dna, TAG_DNAVERSION.into() )? )
+pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Vec<Entity<DnaVersionEntry>>> {
+    Ok( get_entities( &input.for_dna, LinkTypes::DnaVersion, None )? )
 }
 
 
@@ -170,10 +173,10 @@ pub struct DeleteDnaVersionInput {
     pub id: EntryHash,
 }
 
-pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<HeaderHash> {
+pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<ActionHash> {
     debug!("Delete DNA Version: {}", input.id );
-    let delete_header = delete_entity::<DnaVersionEntry>( &input.id )?;
-    debug!("Deleted DNA Version via header ({})", delete_header );
+    let delete_action = delete_entity::<DnaVersionEntry,EntryTypes>( &input.id )?;
+    debug!("Deleted DNA Version via action ({})", delete_action );
 
-    Ok( delete_header )
+    Ok( delete_action )
 }
