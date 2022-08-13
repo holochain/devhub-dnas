@@ -22,9 +22,6 @@ use hc_crud::{
 use hdk::prelude::*;
 
 use crate::constants::{
-    // LT_NONE,
-    // TAG_DNA,
-    // TAG_DNAVERSION,
     ANCHOR_DNAS,
 };
 
@@ -50,8 +47,8 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
     let pubkey = agent_info()?.agent_initial_pubkey;
     let default_now = now()?;
 
-    let (name_path, name_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &input.name ], LinkTypes::Anchor )?;
-    let (name_path_lc, name_path_lc_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &input.name.to_lowercase() ], LinkTypes::Anchor )?;
+    let (name_path, name_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &input.name ] );
+    let (name_path_lc, name_path_lc_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &input.name.to_lowercase() ] );
 
     let dna = DnaEntry {
 	name: input.name,
@@ -73,7 +70,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
     let entity = create_entity( &dna )?;
 
     // Developer (Agent) anchor
-    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_DNAS ], LinkTypes::Agent )?;
+    let (agent_base, agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ ANCHOR_DNAS ]);
     debug!("Linking agent ({}) to ENTRY: {}", fmt_path( &agent_base ), entity.id );
     entity.link_from( &agent_base_hash, LinkTypes::Dna, None )?;
 
@@ -87,14 +84,14 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
     }
 
     // Global anchor
-    let (all_dnas_path, all_dnas_hash) = devhub_types::ensure_path( ANCHOR_DNAS, Vec::<String>::new(), LinkTypes::Anchor )?;
+    let (all_dnas_path, all_dnas_hash) = devhub_types::create_path( ANCHOR_DNAS, Vec::<String>::new() );
     debug!("Linking all DNAs path ({}) to ENTRY: {}", fmt_path( &all_dnas_path ), entity.id );
     entity.link_from( &all_dnas_hash, LinkTypes::Dna, None )?;
 
     // Tag anchors
     if input.tags.is_some() {
 	for tag in input.tags.unwrap() {
-	    let (tag_path, tag_hash) = devhub_types::ensure_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ], LinkTypes::Anchor )?;
+	    let (tag_path, tag_hash) = devhub_types::create_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ] );
 	    debug!("Linking TAG anchor ({}) to entry: {}", fmt_path( &tag_path ), entity.id );
 	    entity.link_from( &tag_hash, LinkTypes::Dna, None )?;
 	}
@@ -173,7 +170,7 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 
     if input.properties.name.is_some() {
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name ] );
-	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name ], LinkTypes::Anchor )?;
+	let (new_name_path, new_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &entity.content.name ] );
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
@@ -181,7 +178,7 @@ pub fn update_dna(input: DnaUpdateInput) -> AppResult<Entity<DnaEntry>> {
 	}
 
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name.to_lowercase() ] );
-	let (new_name_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ], LinkTypes::Anchor )?;
+	let (new_name_path, new_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &entity.content.name.to_lowercase() ] );
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );

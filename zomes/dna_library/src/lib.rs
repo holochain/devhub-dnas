@@ -29,27 +29,13 @@ mod zomeversion;
 
 mod packaging;
 mod constants;
-// mod validation;
 
 
 use constants::{
-    // TAG_ZOME,
-    // TAG_ZOMEVERSION,
-    // TAG_DNA,
-    // TAG_DNAVERSION,
     ANCHOR_DNAS,
     ANCHOR_ZOMES,
 };
 
-
-// entry_defs![
-//     PathEntry::entry_def(),
-//     ProfileEntry::entry_def(),
-//     DnaEntry::entry_def(),
-//     DnaVersionEntry::entry_def(),
-//     ZomeEntry::entry_def(),
-//     ZomeVersionEntry::entry_def()
-// ];
 
 
 #[derive(Debug, Deserialize)]
@@ -68,10 +54,6 @@ pub fn agent_path_base(pubkey: Option<AgentPubKey>) -> String {
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let agent_path = agent_path_base( None );
-    debug!("Ensure the agent '{}' root path exists", agent_path );
-    devhub_types::ensure_path( &agent_path, Vec::<String>::new(), LinkTypes::Agent )?;
-
     Ok(InitCallbackResult::Pass)
 }
 

@@ -48,7 +48,7 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileEntry>> {
 
     let entity = create_entity( &profile )?;
 
-    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ "profiles" ], LinkTypes::Agent )?;
+    let (agent_base, agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ "profiles" ]);
     debug!("Linking agent root path ({}) to Profile: {}", fmt_path( &agent_base ), entity.id );
     entity.link_from( &agent_base_hash, LinkTypes::Profile, None )?;
 
@@ -58,7 +58,7 @@ pub fn create_profile(input: ProfileInput) -> AppResult<Entity<ProfileEntry>> {
 
 
 pub fn get_profile_links(maybe_pubkey: Option<AgentPubKey> ) -> ExternResult<Vec<Link>> {
-    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( maybe_pubkey ), vec![ "profiles" ], LinkTypes::Agent )?;
+    let (agent_base, agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( maybe_pubkey ), vec![ "profiles" ]);
 
     debug!("Getting Profile links for path '{}'", fmt_path( &agent_base ) );
     let all_links: Vec<Link> = get_links(

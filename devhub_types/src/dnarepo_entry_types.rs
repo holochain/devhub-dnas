@@ -85,6 +85,7 @@ pub struct DnaVersionEntry {
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
+    pub integrity_zomes: Vec<ZomeReference>,
     pub zomes: Vec<ZomeReference>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
@@ -128,6 +129,7 @@ impl DnaVersionEntry {
 #[derive(Clone)]
 pub struct ZomeEntry {
     pub name: String,
+    pub zome_type: u8,
     pub description: String,
     pub published_at: u64,
     pub last_updated: u64,

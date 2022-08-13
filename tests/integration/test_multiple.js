@@ -67,6 +67,7 @@ function basic_tests () {
 
 	let zome_input			= {
 	    "name": "file_storage",
+	    "zome_type": 0,
 	    "display_name": "File Storage",
 	    "description": "A generic API for fs-like data management",
 	};
@@ -100,13 +101,14 @@ function basic_tests () {
 	    "version": "v0.1.0",
 	    "ordering": 1,
 	    "hdk_version": "v0.0.120",
-	    "zomes": [{
+	    "integrity_zomes": [{
 		"name": "mere_memory",
 		"zome": new EntryHash( zome_version_1.for_zome ),
 		"version": zome_version_1.$id,
 		"resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		"resource_hash": zome_version_1.mere_memory_hash,
 	    }],
+	    "zomes": [],
 	});
 	log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 
@@ -172,8 +174,6 @@ function basic_tests () {
 
 	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.happ"), Buffer.from(happ_package) );
 	}
-
-	// await delay(61_000);
 
 	{
 	    let webhapp_package		= await alice.call( "happs", "happ_library", "get_webhapp_package", {

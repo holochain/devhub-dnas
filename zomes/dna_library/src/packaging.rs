@@ -54,12 +54,24 @@ pub struct BundleZomeInfo {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Manifest {
     pub manifest_version: String,
-    pub zomes: Vec<BundleZomeInfo>,
+    pub name: String,
+    pub integrity: IntegrityZomes,
+    pub coordinator: CoordinatorZomes,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IntegrityZomes {
+    origin_time: String,
+    zomes: Vec<BundleZomeInfo>,
 
     // Optional fields
-    pub name: String,
     pub uid: Option<String>,
     pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CoordinatorZomes {
+    zomes: Vec<BundleZomeInfo>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -81,14 +93,31 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     let entry = &entity.content;
     let dna : Entity<DnaEntry> = get_entity( &entry.for_dna )?;
 
-    let mut manifest_zomes : Vec<BundleZomeInfo> = vec![];
+    let mut integrity_zomes : Vec<BundleZomeInfo> = vec![];
+    let mut coordinator_zomes : Vec<BundleZomeInfo> = vec![];
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
+
+    for zome_ref in entry.integrity_zomes.iter() {
+	let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", zome_ref.resource.clone() )?;
+	let path = format!("./{}.wasm", zome_ref.name );
+
+	integrity_zomes.push( BundleZomeInfo {
+	    name: zome_ref.name.clone(),
+	    bundled: path.clone(),
+	    hash: None,
+	});
+
+	resources.insert(
+	    path,
+	    bytes
+	);
+    }
 
     for zome_ref in entry.zomes.iter() {
 	let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", zome_ref.resource.clone() )?;
 	let path = format!("./{}.wasm", zome_ref.name );
 
-	manifest_zomes.push( BundleZomeInfo {
+	coordinator_zomes.push( BundleZomeInfo {
 	    name: zome_ref.name.clone(),
 	    bundled: path.clone(),
 	    hash: None,
@@ -104,9 +133,15 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 	manifest: Manifest {
 	    manifest_version: "1".into(),
 	    name: dna.content.name,
-	    uid: None,
-	    properties: entry.properties.clone(),
-	    zomes: manifest_zomes,
+	    integrity: IntegrityZomes {
+		origin_time: String::from("2022-02-11T23:05:19.470323Z"),
+		uid: None,
+		properties: entry.properties.clone(),
+		zomes: integrity_zomes,
+	    },
+	    coordinator: CoordinatorZomes {
+		zomes: coordinator_zomes,
+	    },
 	},
 	resources: resources,
     };

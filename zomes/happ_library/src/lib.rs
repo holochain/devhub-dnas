@@ -45,10 +45,6 @@ pub fn agent_path_base(pubkey: Option<AgentPubKey>) -> String {
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let agent_path = agent_path_base( None );
-    debug!("Ensure the agent '{}' root path exists", agent_path );
-    devhub_types::ensure_path( &agent_path, Vec::<String>::new(), LinkTypes::Agent )?;
-
     Ok(InitCallbackResult::Pass)
 }
 

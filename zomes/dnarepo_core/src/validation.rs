@@ -271,7 +271,7 @@ fn validate_dna_version_create(action: &action::Create, dna_version: DnaVersionE
     if dna.developer != action.author {
 	Ok(ValidateCallbackResult::Invalid(format!("DnaEntry author does not match Action author: {} != {}", dna.developer, action.author )))
     }
-    else if dna_version.zomes.len() == 0 {
+    else if dna_version.integrity_zomes.len() == 0 {
 	return Ok(ValidateCallbackResult::Invalid("DnaVersionEntry Zomes list cannot be empty".to_string()));
     }
     else {
@@ -292,10 +292,16 @@ fn validate_dna_version_update(action: &action::Update, dna_version: DnaVersionE
 	return Ok(ValidateCallbackResult::Invalid(format!("Cannot change DnaVersionEntry version #: {} => {}", prev_entry.version, dna_version.version )));
     }
 
-    if dna_version.zomes.len() != prev_entry.zomes.len() {
+    if dna_version.zomes.len() != prev_entry.zomes.len() || dna_version.integrity_zomes.len() != prev_entry.integrity_zomes.len() {
 	return Ok(ValidateCallbackResult::Invalid("Cannot change DnaVersionEntry zome list".to_string()));
     }
     else {
+	for (i, zome_ref) in dna_version.integrity_zomes.iter().enumerate() {
+	    if *zome_ref != prev_entry.integrity_zomes[i] {
+		return Ok(ValidateCallbackResult::Invalid(format!("Cannot change DnaVersionEntry integrity zome list item {}: {:?} => {:?}", i, zome_ref, prev_entry )));
+	    }
+	}
+
 	for (i, zome_ref) in dna_version.zomes.iter().enumerate() {
 	    if *zome_ref != prev_entry.zomes[i] {
 		return Ok(ValidateCallbackResult::Invalid(format!("Cannot change DnaVersionEntry zome list item {}: {:?} => {:?}", i, zome_ref, prev_entry )));

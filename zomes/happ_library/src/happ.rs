@@ -50,8 +50,8 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappEntry>> {
     // 	return Err( UserError::DuplicateHappName(input.title).into() );
     // }
 
-    let (title_path, title_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &input.title ], LinkTypes::Anchor )?;
-    let (title_path_lc, title_path_lc_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &input.title.to_lowercase() ], LinkTypes::Anchor )?;
+    let (title_path, title_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &input.title ] );
+    let (title_path_lc, title_path_lc_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &input.title.to_lowercase() ] );
 
     let happ = HappEntry {
 	title: input.title,
@@ -72,7 +72,7 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappEntry>> {
     let entity = create_entity( &happ )?;
 
     // Designer (Agent) anchor
-    let (agent_base, agent_base_hash) = devhub_types::ensure_path( &crate::agent_path_base( None ), vec![ ANCHOR_HAPPS ], LinkTypes::Agent )?;
+    let (agent_base, agent_base_hash) = devhub_types::create_path( &crate::agent_path_base( None ), vec![ ANCHOR_HAPPS ]);
     debug!("Linking agent ({}) to entity: {}", fmt_path( &agent_base ), entity.id );
     entity.link_from( &agent_base_hash, LinkTypes::Happ, None )?;
 
@@ -86,14 +86,14 @@ pub fn create_happ(input: CreateInput) -> AppResult<Entity<HappEntry>> {
     }
 
     // Global anchor
-    let (all_happs_path, all_happs_hash) = devhub_types::ensure_path( ANCHOR_HAPPS, Vec::<String>::new(), LinkTypes::Anchor )?;
+    let (all_happs_path, all_happs_hash) = devhub_types::create_path( ANCHOR_HAPPS, Vec::<String>::new() );
     debug!("Linking all hApps path ({}) to ENTRY: {}", fmt_path( &all_happs_path ), entity.id );
     entity.link_from( &all_happs_hash, LinkTypes::Happ, None )?;
 
     // Tag anchors
     if input.tags.is_some() {
 	for tag in input.tags.unwrap() {
-	    let (tag_path, tag_hash) = devhub_types::ensure_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ], LinkTypes::Anchor )?;
+	    let (tag_path, tag_hash) = devhub_types::create_path( ANCHOR_TAGS, vec![ &tag.to_lowercase() ] );
 	    debug!("Linking TAG anchor ({}) to entry: {}", fmt_path( &tag_path ), entity.id );
 	    entity.link_from( &tag_hash, LinkTypes::Happ, None )?;
 	}
@@ -160,7 +160,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappEntry>> {
 
     if input.properties.title.is_some() {
 	let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous.title ] );
-	let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title ], LinkTypes::Anchor )?;
+	let (new_title_path, new_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &entity.content.title ] );
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving title link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
@@ -168,7 +168,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappEntry>> {
 	}
 
 	let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous.title.to_lowercase() ] );
-	let (new_title_path, new_path_hash) = devhub_types::ensure_path( ANCHOR_TITLES, vec![ &entity.content.title.to_lowercase() ], LinkTypes::Anchor )?;
+	let (new_title_path, new_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &entity.content.title.to_lowercase() ] );
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving title (lowercase) link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );

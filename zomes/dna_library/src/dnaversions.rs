@@ -9,7 +9,6 @@ use devhub_types::{
 	ANCHOR_HDK_VERSIONS,
     },
     dnarepo_entry_types::{
-	// DnaEntry,
 	DnaVersionEntry, ZomeReference,
     },
     fmt_path,
@@ -21,10 +20,6 @@ use hc_crud::{
 use hdk::prelude::*;
 use hex;
 
-// use crate::constants::{
-//     LT_NONE,
-//     TAG_DNAVERSION,
-// };
 
 
 
@@ -34,6 +29,7 @@ pub struct DnaVersionInput {
     pub version: String,
     pub ordering: u64,
     pub hdk_version: String,
+    pub integrity_zomes: Vec<ZomeReference>,
     pub zomes: Vec<ZomeReference>,
 
     // optional
@@ -49,7 +45,11 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     debug!("Creating DNA version ({}) for DNA: {}", input.version, input.for_dna );
     let default_now = now()?;
 
-    let hashes = input.zomes.iter()
+    if input.integrity_zomes.len() == 0 {
+	Err(devhub_types::errors::UserError::CustomError("Must have at least 1 integrity zome"))?;
+    }
+
+    let hashes = input.integrity_zomes.iter()
 	.map( |zome| hex::decode( zome.resource_hash.to_owned() ) )
 	.collect::<Result<Vec<Vec<u8>>, hex::FromHexError>>()
 	.or(Err(devhub_types::errors::UserError::CustomError("Bad hex value")))?;
@@ -60,6 +60,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 	ordering: input.ordering,
 	hdk_version: input.hdk_version.clone(),
 	properties: input.properties,
+	integrity_zomes: input.integrity_zomes,
 	zomes: input.zomes,
 	wasm_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	changelog: input.changelog
@@ -80,12 +81,12 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
     entity.link_from( &input.for_dna, LinkTypes::DnaVersion, None )?;
 
     // Uniqueness anchor
-    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &version.wasm_hash ], LinkTypes::Anchor )?;
+    let (wasm_path, wasm_path_hash) = devhub_types::create_path( ANCHOR_UNIQUENESS, vec![ &version.wasm_hash ] );
     debug!("Linking '{:?}' uniqueness path ({}) to ENTRY: {}", LinkTypes::DnaVersion, fmt_path( &wasm_path ), entity.id );
     entity.link_from( &wasm_path_hash, LinkTypes::DnaVersion, None )?;
 
     // HDK anchor
-    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ], LinkTypes::Anchor )?;
+    let (hdkv_path, hdkv_hash) = devhub_types::create_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] );
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
     entity.link_from( &hdkv_hash, LinkTypes::DnaVersion, None )?;
 
@@ -152,6 +153,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 		wasm_hash: current.wasm_hash,
 		hdk_version: current.hdk_version,
 		properties: current.properties,
+		integrity_zomes: current.integrity_zomes,
 		zomes: current.zomes,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
