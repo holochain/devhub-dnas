@@ -11,11 +11,11 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
 dnarepo_core = {path = "../dnarepo_core"}
-hc_crud_ceps = "0.50.1"
+hc_crud_ceps = "0.53.0"
 # hc_crud_ceps = {path = "../../../rust-hc-crud-ceps"}
-mere_memory_types = "0.42.1"
-# mere_memory_types = { path = "../../../zome-mere-memory/mere_memory_type" }
-hdk = "0.0.142"
+mere_memory_types = "0.45.0"
+# mere_memory_types = { path = "../../../zome-mere-memory/mere_memory_types" }
+hdk = "0.0.145"
 hex = "0"
 serde = "1"
 serde_yaml = "0.8.17"

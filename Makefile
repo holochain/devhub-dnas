@@ -75,9 +75,9 @@ zomes/%/Cargo.lock:
 	touch $@
 
 $(MERE_MEMORY_WASM):
-	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.42.1/mere_memory.wasm' --output $@
+	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.45.0/mere_memory.wasm' --output $@
 $(MERE_MEMORY_CORE_WASM):
-	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.42.1/mere_memory_core.wasm' --output $@
+	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.45.0/mere_memory_core.wasm' --output $@
 
 
 

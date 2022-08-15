@@ -111,7 +111,7 @@ function basic_tests () {
     });
 
     it("should CRUD Zome and ZomeVersion", async function () {
-	this.timeout( 30_000 );
+	this.timeout( 60_000 );
 
 	const alice			= clients.alice;
 	const bobby			= clients.bobby;
@@ -407,7 +407,7 @@ function basic_tests () {
     });
 
     it("should CRUD Dna and DnaVersion", async function () {
-	this.timeout( 30_000 );
+	this.timeout( 60_000 );
 
 	const alice			= clients.alice;
 	const bobby			= clients.bobby;
@@ -811,6 +811,8 @@ function basic_tests () {
     });
 
     it("should get Zome Versions by HDK version", async function () {
+	if ( hdk_version === undefined )
+	    this.skip();
 	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_zome_versions_by_hdk_version", hdk_version );
 	log.normal("Zomes by hash: %s", zomes.length );
 
@@ -818,6 +820,8 @@ function basic_tests () {
     });
 
     it("should get Zome by HDK version", async function () {
+	if ( hdk_version === undefined )
+	    this.skip();
 	let zomes			= await clients.alice.call( "dnarepo", "dna_library", "get_zomes_with_an_hdk_version", hdk_version );
 	log.normal("Zomes by hash: %s", zomes.length );
 
@@ -825,6 +829,8 @@ function basic_tests () {
     });
 
     it("should get Dna by HDK version", async function () {
+	if ( hdk_version === undefined )
+	    this.skip();
 	let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_dnas_with_an_hdk_version", hdk_version );
 	log.normal("Dnas by hash: %s", dnas.length );
 
@@ -834,6 +840,9 @@ function basic_tests () {
 
 function errors_tests () {
     it("should fail to update another Agent's zome", async function () {
+	if ( zome_1 === undefined )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.bobby.call( "dnarepo", "dna_library", "update_zome", {
 		"addr": zome_1.$action,
@@ -845,6 +854,9 @@ function errors_tests () {
     });
 
     it("should fail to update deprecated zome", async function () {
+	if ( zome_1 === undefined || !zome_1.deprecated )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.alice.call( "dnarepo", "dna_library", "update_zome", {
 		"addr": zome_1.$action,
@@ -856,6 +868,9 @@ function errors_tests () {
     });
 
     it("should fail to update another Agent's zome version", async function () {
+	if ( zome_version_2 === undefined )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.bobby.call( "dnarepo", "dna_library", "update_zome_version", {
 		"addr": zome_version_2.$action,
@@ -867,6 +882,9 @@ function errors_tests () {
     });
 
     it("should fail to delete another Agent's zome version", async function () {
+	if ( zome_version_2 === undefined )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.bobby.call( "dnarepo", "dna_library", "delete_zome_version", {
 		"id": zome_version_2.$id,
@@ -875,6 +893,9 @@ function errors_tests () {
     });
 
     it("should fail to get profile because it is not made yet", async function () {
+	if ( zome_version_2 === undefined )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.bobby.call( "dnarepo", "dna_library", "get_profile", {
 		"id": zome_version_2.$id,
@@ -883,6 +904,9 @@ function errors_tests () {
     });
 
     it("should fail to get deleted DNA version", async function () {
+	if ( dna_version_hash === undefined )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.alice.call( "dnarepo", "dna_library", "get_dna_version", {
 		"id": dna_version_hash,
@@ -903,6 +927,9 @@ function errors_tests () {
     });
 
     it("should fail to update DNA because the address is a different entry type", async function () {
+	if ( dna_addr === undefined )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.alice.call( "dnarepo", "dna_library", "update_dna_version", {
 		"addr": dna_addr,
@@ -914,15 +941,19 @@ function errors_tests () {
     });
 
     it("should fail to create DNA version with empty Zomes", async function () {
+	if ( dna_1 === undefined )
+	    this.skip();
+
 	await expect_reject( async () => {
 	    await clients.alice.call( "dnarepo", "dna_library", "create_dna_version", {
 		"for_dna": dna_1.$id,
 		"version": "v0.1.0",
 		"ordering": 1,
 		"hdk_version": "v0.0.120",
+		"integrity_zomes": [],
 		"zomes": [],
 	    });
-	}, Error, "DnaVersionEntry Zomes list cannot be empty" );
+	}, Error, "Must have at least 1 integrity zome" );
     });
 }
 
@@ -933,7 +964,7 @@ describe("DNArepo", () => {
     });
 
     before(async function () {
-	this.timeout( 30_000 );
+	this.timeout( 60_000 );
 
 	clients				= await backdrop( holochain, {
 	    "dnarepo": DNAREPO_PATH,

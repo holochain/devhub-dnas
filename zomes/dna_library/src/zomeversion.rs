@@ -88,7 +88,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
     entity.link_from( &wasm_path_hash, LinkTypes::ZomeVersion, None )?;
 
     // HDK anchor
-    let (hdkv_path, hdkv_hash) = devhub_types::create_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] );
+    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ], LinkTypes::Anchor )?;
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
     entity.link_from( &hdkv_hash, LinkTypes::ZomeVersion, None )?;
 

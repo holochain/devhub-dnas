@@ -14,8 +14,8 @@ let
     holochainVersionId = "custom";
     holochainVersion = {
       url = "https://github.com/holochain/holochain";
-      rev = "holochain-0.0.150"; # Jul 13, 2022 - 88813d781247c9db4d254063a604c22813013af5
-      sha256 = "1m3w0ik1bzsrz0qcm7vh0y4297w9fm2lcligzin2svch67a0mq7v";
+      rev = "holochain-0.0.153"; # Aug 10, 2022 - 005c15c06404f41baa77e4533a32cef93a69ed3b
+      sha256 = "19d2g8p1n9iskc10yamivn326mrlcs0q1qyvfvlm577g6cb5zdyi";
       cargoLock = {
         outputHashes = {
         };
@@ -50,9 +50,4 @@ let
   nixpkgs = holonix.pkgs;
 in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
-
-  buildInputs = with nixpkgs; [
-    nodejs-16_x
-    less
-  ];
 }
