@@ -286,13 +286,14 @@ describe("Reviews", () => {
 	    "version": "v0.1.0",
 	    "ordering": 1,
 	    "hdk_version": "v0.0.120",
-	    "zomes": [{
+	    "integrity_zomes": [{
 		"name":			"file_storage",
 		"zome":			new EntryHash( zome_version_1.for_zome ),
 		"version":		zome_version_1.$id,
 		"resource":		new EntryHash( zome_version_1.mere_memory_addr ),
 		"resource_hash":	zome_version_1.mere_memory_hash,
 	    }],
+	    "zomes": [],
 	});
     });
 

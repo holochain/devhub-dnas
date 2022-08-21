@@ -25,6 +25,7 @@ const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNAREPO_PATH			= path.join( __dirname, "../../bundled/dnarepo.dna" );
+const HDK_VERSION			= "v0.0.146";
 
 let clients;
 let zome_1;
@@ -170,13 +171,14 @@ function basic_tests () {
 	}
 
 	{
+	    console.log("HDK Version:", HDK_VERSION );
 	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
 		"version": "v0.1.0",
 		"ordering": 1,
 		"zome_bytes": zome_bytes,
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 	    });
 	    log.normal("New ZOME version: %s -> %s", String(version.$address), version.version );
 
@@ -195,7 +197,7 @@ function basic_tests () {
 		"version": "v0.1.0",
 		"ordering": 1,
 		"zome_bytes": zome_bytes.slice(5_000),
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 	    });
 	}
 
@@ -206,7 +208,7 @@ function basic_tests () {
 		"version": "v0.2.0",
 		"ordering": 2,
 		"zome_bytes": bigzome_bytes,
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 	    });
 	    log.normal("New ZOME version: %s -> %s", String(version.$address), version.version );
 
@@ -220,7 +222,7 @@ function basic_tests () {
 		"version": "v0.3.0",
 		"ordering": 3,
 		"zome_bytes": [ 1, 2, 3 ],
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 	    });
 	}
 
@@ -465,7 +467,7 @@ function basic_tests () {
 		"for_dna": dna.$id,
 		"version": "v0.1.0",
 		"ordering": 1,
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 		"integrity_zomes": [{
 		    "name": "mere_memory_core",
 		    "zome": new EntryHash( zome_version_1_core.for_zome ),
@@ -479,6 +481,9 @@ function basic_tests () {
 		    "version": zome_version_1.$id,
 		    "resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		    "resource_hash": zome_version_1.mere_memory_hash,
+		    "dependencies": [
+			"mere_memory_core",
+		    ],
 		}],
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
@@ -507,7 +512,7 @@ function basic_tests () {
 		"for_dna": dna.$id,
 		"version": "v0.2.0",
 		"ordering": 2,
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 		"integrity_zomes": [{
 		    "name": "mere_memory_core",
 		    "zome": new EntryHash( zome_version_1_core.for_zome ),
@@ -789,7 +794,7 @@ function basic_tests () {
 	let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_all_dnas");
 	log.normal("DNAs by hash: %s", dnas.length );
 
-	expect( dnas			).to.have.length( 1 );
+	expect( dnas			).to.have.length( 0 );
     });
 
     it("should get all Zomes", async function () {
@@ -803,9 +808,10 @@ function basic_tests () {
     it("should get HDK version list", async function () {
 	let hdkvs			= await clients.alice.call( "dnarepo", "dna_library", "get_hdk_versions");
 	log.normal("HDK versions: %s", hdkvs.length );
+	console.log( hdkvs );
 
 	expect( hdkvs			).to.have.length( 1 );
-	expect( hdkvs[0]		).to.equal("v0.0.120");
+	expect( hdkvs[0]		).to.equal( HDK_VERSION );
 
 	hdk_version			= hdkvs[0];
     });
@@ -834,7 +840,7 @@ function basic_tests () {
 	let dnas			= await clients.alice.call( "dnarepo", "dna_library", "get_dnas_with_an_hdk_version", hdk_version );
 	log.normal("Dnas by hash: %s", dnas.length );
 
-	expect( dnas			).to.have.length( 2 );
+	expect( dnas			).to.have.length( 1 );
     });
 }
 
@@ -854,7 +860,7 @@ function errors_tests () {
     });
 
     it("should fail to update deprecated zome", async function () {
-	if ( zome_1 === undefined || !zome_1.deprecated )
+	if ( zome_1 === undefined || !zome_1.deprecation )
 	    this.skip();
 
 	await expect_reject( async () => {
@@ -921,7 +927,7 @@ function errors_tests () {
 		"version": "v0.1.0",
 		"ordering": 1,
 		"file_size": 0,
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 	    });
 	}, Error, "must supply an address or bytes" );
     });
@@ -949,7 +955,7 @@ function errors_tests () {
 		"for_dna": dna_1.$id,
 		"version": "v0.1.0",
 		"ordering": 1,
-		"hdk_version": "v0.0.120",
+		"hdk_version": HDK_VERSION,
 		"integrity_zomes": [],
 		"zomes": [],
 	    });

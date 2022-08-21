@@ -66,12 +66,22 @@ pub struct DnaEntry {
 // DNA Version Entry
 //
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct IntegrityZomeReference {
+    pub name: String,
+    pub zome : EntryHash, // Zome ID
+    pub version : EntryHash, // Version ID
+    pub resource : EntryHash, // Mere Memory address for a short-circuit download
+    pub resource_hash : String, // Hash of resource contents
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ZomeReference {
     pub name: String,
     pub zome : EntryHash, // Zome ID
     pub version : EntryHash, // Version ID
     pub resource : EntryHash, // Mere Memory address for a short-circuit download
     pub resource_hash : String, // Hash of resource contents
+    pub dependencies: Vec<String>,
 }
 
 #[hdk_entry_helper]
@@ -85,7 +95,7 @@ pub struct DnaVersionEntry {
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
-    pub integrity_zomes: Vec<ZomeReference>,
+    pub integrity_zomes: Vec<IntegrityZomeReference>,
     pub zomes: Vec<ZomeReference>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 

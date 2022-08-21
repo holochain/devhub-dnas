@@ -43,9 +43,24 @@ use hdk::prelude::*;
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DependencyRef {
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BundleIntegrityZomeInfo {
+    pub name: String,
+    pub bundled: String,
+
+    // Optional fields
+    pub hash: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BundleZomeInfo {
     pub name: String,
     pub bundled: String,
+    pub dependencies: Vec<DependencyRef>,
 
     // Optional fields
     pub hash: Option<String>,
@@ -62,7 +77,7 @@ pub struct Manifest {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct IntegrityZomes {
     origin_time: String,
-    zomes: Vec<BundleZomeInfo>,
+    zomes: Vec<BundleIntegrityZomeInfo>,
 
     // Optional fields
     pub uid: Option<String>,
@@ -93,7 +108,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     let entry = &entity.content;
     let dna : Entity<DnaEntry> = get_entity( &entry.for_dna )?;
 
-    let mut integrity_zomes : Vec<BundleZomeInfo> = vec![];
+    let mut integrity_zomes : Vec<BundleIntegrityZomeInfo> = vec![];
     let mut coordinator_zomes : Vec<BundleZomeInfo> = vec![];
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
 
@@ -101,7 +116,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 	let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", zome_ref.resource.clone() )?;
 	let path = format!("./{}.wasm", zome_ref.name );
 
-	integrity_zomes.push( BundleZomeInfo {
+	integrity_zomes.push( BundleIntegrityZomeInfo {
 	    name: zome_ref.name.clone(),
 	    bundled: path.clone(),
 	    hash: None,
@@ -121,6 +136,9 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 	    name: zome_ref.name.clone(),
 	    bundled: path.clone(),
 	    hash: None,
+	    dependencies: zome_ref.dependencies.iter().map( |name| DependencyRef {
+		name: name.to_owned(),
+	    }).collect(),
 	});
 
 	resources.insert(

@@ -109,13 +109,14 @@ function basic_tests () {
 		"version": "v0.1.0",
 		"ordering": 1,
 		"hdk_version": "v0.0.120",
-		"zomes": [{
+		"integrity_zomes": [{
 		    "name": "mere_memory",
 		    "zome": new EntryHash( zome_version_1.for_zome ),
 		    "version": zome_version_1.$id,
 		    "resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		    "resource_hash": zome_version_1.mere_memory_hash,
 		}],
+		"zomes": [],
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 	}

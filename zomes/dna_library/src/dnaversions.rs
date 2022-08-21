@@ -9,7 +9,7 @@ use devhub_types::{
 	ANCHOR_HDK_VERSIONS,
     },
     dnarepo_entry_types::{
-	DnaVersionEntry, ZomeReference,
+	DnaVersionEntry, IntegrityZomeReference, ZomeReference,
     },
     fmt_path,
 };
@@ -29,7 +29,7 @@ pub struct DnaVersionInput {
     pub version: String,
     pub ordering: u64,
     pub hdk_version: String,
-    pub integrity_zomes: Vec<ZomeReference>,
+    pub integrity_zomes: Vec<IntegrityZomeReference>,
     pub zomes: Vec<ZomeReference>,
 
     // optional
