@@ -1,30 +1,27 @@
 use std::collections::BTreeMap;
+use dnarepo_core::{
+    EntryTypes, LinkTypes,
+};
 use devhub_types::{
     AppResult, UpdateEntityInput,
     errors::{ UserError, AppError },
-    dnarepo_entry_types::{
-	ZomeEntry,
-	ZomeVersionEntry,
-	ReviewSummaryEntry,
-    },
     constants::{
 	ANCHOR_UNIQUENESS,
 	ANCHOR_HDK_VERSIONS,
+    },
+    dnarepo_entry_types::{
+	ZomeVersionEntry,
+	ReviewSummaryEntry,
     },
     call_local_zome,
     fmt_path,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity, delete_entity, get_entities,
-    Entity, Collection,
+    Entity,
 };
 use mere_memory_types::{ MemoryEntry };
 use hdk::prelude::*;
-
-use crate::constants::{
-    LT_NONE,
-    TAG_ZOMEVERSION,
-};
 
 
 
@@ -83,17 +80,17 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 
     // Parent anchor
     debug!("Linking Zome ({}) to entry: {}", input.for_zome, entity.id );
-    entity.link_from( &input.for_zome, LT_NONE, TAG_ZOMEVERSION.into() )?;
+    entity.link_from( &input.for_zome, LinkTypes::ZomeVersion, None )?;
 
     // Uniqueness anchor
-    let (wasm_path, wasm_path_hash) = devhub_types::ensure_path( ANCHOR_UNIQUENESS, vec![ &entity.content.mere_memory_hash ] )?;
+    let (wasm_path, wasm_path_hash) = devhub_types::create_path( ANCHOR_UNIQUENESS, vec![ &entity.content.mere_memory_hash ] );
     debug!("Linking uniqueness path ({} => {:?}) to entry: {}", fmt_path( &wasm_path ), wasm_path, entity.id );
-    entity.link_from( &wasm_path_hash, LT_NONE, TAG_ZOMEVERSION.into() )?;
+    entity.link_from( &wasm_path_hash, LinkTypes::ZomeVersion, None )?;
 
     // HDK anchor
-    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ] )?;
+    let (hdkv_path, hdkv_hash) = devhub_types::ensure_path( ANCHOR_HDK_VERSIONS, vec![ &input.hdk_version ], LinkTypes::Anchor )?;
     debug!("Linking HDK version global anchor ({}) to entry: {}", fmt_path( &hdkv_path ), entity.id );
-    entity.link_from( &hdkv_hash, LT_NONE, TAG_ZOMEVERSION.into() )?;
+    entity.link_from( &hdkv_hash, LinkTypes::ZomeVersion, None )?;
 
     Ok( entity )
 }
@@ -108,7 +105,7 @@ pub struct GetZomeVersionInput {
 
 pub fn get_zome_version(input: GetZomeVersionInput) -> AppResult<Entity<ZomeVersionEntry>> {
     debug!("Get ZOME Version: {}", input.id );
-    let entity = get_entity::<ZomeVersionEntry>( &input.id )?;
+    let entity = get_entity( &input.id )?;
 
     Ok(	entity )
 }
@@ -121,8 +118,8 @@ pub struct GetZomeVersionsInput {
     pub for_zome: EntryHash,
 }
 
-pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Collection<Entity<ZomeVersionEntry>>> {
-    Ok( get_entities::<ZomeEntry, ZomeVersionEntry>( &input.for_zome, TAG_ZOMEVERSION.into() )? )
+pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Vec<Entity<ZomeVersionEntry>>> {
+    Ok( get_entities( &input.for_zome, LinkTypes::ZomeVersion, None )? )
 }
 
 
@@ -176,17 +173,17 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 
 #[derive(Debug, Deserialize)]
 pub struct EntityAddressInput {
-    pub subject_header: HeaderHash,
-    pub addr: EntryHash,
+    pub subject_action: ActionHash,
+    pub addr: ActionHash,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ReviewSummaryInput {
-    pub subject_header: HeaderHash,
+    pub subject_action: ActionHash,
 }
 
 pub fn create_zome_version_review_summary(input: EntityAddressInput) -> AppResult<Entity<ZomeVersionEntry>> {
-    debug!("Updating ZOME Version: {}", input.subject_header );
+    debug!("Updating ZOME Version: {}", input.subject_action );
     let current_summary : ZomeVersionEntry = get( input.addr.to_owned(), GetOptions::content() )?
 	.ok_or( AppError::UnexpectedStateError(format!("Given address could not be found: {}", input.addr )) )?
 	.try_into()?;
@@ -196,7 +193,7 @@ pub fn create_zome_version_review_summary(input: EntityAddressInput) -> AppResul
     }
 
     let review_summary : Entity<ReviewSummaryEntry> = call_local_zome( "reviews", "create_review_summary_for_subject", ReviewSummaryInput {
-	subject_header: input.subject_header,
+	subject_action: input.subject_action,
     })?;
 
     let entity = update_entity(
@@ -217,10 +214,10 @@ pub struct DeleteZomeVersionInput {
     pub id: EntryHash,
 }
 
-pub fn delete_zome_version(input: DeleteZomeVersionInput) -> AppResult<HeaderHash> {
+pub fn delete_zome_version(input: DeleteZomeVersionInput) -> AppResult<ActionHash> {
     debug!("Delete ZOME Version: {}", input.id );
-    let delete_header = delete_entity::<ZomeVersionEntry>( &input.id )?;
-    debug!("Deleted ZOME Version header ({})", delete_header );
+    let delete_action = delete_entity::<ZomeVersionEntry,EntryTypes>( &input.id )?;
+    debug!("Deleted ZOME Version action ({})", delete_action );
 
-    Ok( delete_header )
+    Ok( delete_action )
 }

@@ -1,19 +1,18 @@
 [package]
-name = "happ_library"
+name = "web_assets_core"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "happ_library"
+name = "web_assets_core"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
-happs_core = {path = "../happs_core"}
 hc_crud_ceps = "0.55.0"
 # hc_crud_ceps = {path = "../../../rust-hc-crud-ceps"}
-hdk = "0.0.147"
+hdi = "0.0.19"
 hex = "0"
 serde = "1"
 serde_yaml = "0.8.17"

@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
-use hc_crud::{
-    EntryModel, EntityType,
-};
 use hdk::prelude::*;
 
 
+
+//
+// General-use Structs
+//
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeprecationNotice {
     pub message: String,
@@ -39,7 +40,7 @@ impl HappGUIConfig {
 //
 // Happ Entry
 //
-#[hdk_entry(id = "happ_details", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct HappEntry {
     pub title: String,
@@ -54,12 +55,6 @@ pub struct HappEntry {
     pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
     pub deprecation: Option<DeprecationNotice>,
-}
-
-impl EntryModel for HappEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ", "info" )
-    }
 }
 
 
@@ -166,7 +161,7 @@ pub struct DnaReference {
     pub wasm_hash : String,
 }
 
-#[hdk_entry(id = "happ_release_details", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct HappReleaseEntry {
     pub name: String,
@@ -181,10 +176,4 @@ pub struct HappReleaseEntry {
     pub dnas: Vec<DnaReference>,
     pub gui: Option<HappGUIConfig>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
-
-impl EntryModel for HappReleaseEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ_release", "info" )
-    }
 }

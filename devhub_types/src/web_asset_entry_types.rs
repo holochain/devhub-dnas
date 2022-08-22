@@ -1,16 +1,12 @@
 use std::collections::BTreeMap;
-use hc_crud::{
-    EntryModel, EntityType
-};
 use hdk::prelude::*;
-
 use crate::{ call_local_zome };
 
 
 //
 // File Entry
 //
-#[hdk_entry(id = "file_details", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct FileEntry {
     pub author: AgentPubKey,
@@ -25,11 +21,7 @@ pub struct FileEntry {
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
 
-impl EntryModel for FileEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "file", "info" )
-    }
-}
+
 
 // Full
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,11 +38,8 @@ pub struct FilePackage {
     pub name: Option<String>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 }
-impl EntryModel for FilePackage {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "file", "package" )
-    }
-}
+
+
 
 impl FileEntry {
     pub fn to_package(&self) -> FilePackage {

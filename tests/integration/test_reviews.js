@@ -41,8 +41,8 @@ function basic_tests () {
 
 	let review_input			= {
 	    "subject_ids": [
-		[ zome_1.$id,		zome_1.$header ],
-		[ zome_version_1.$id,	zome_version_1.$header ],
+		[ zome_1.$id,		zome_1.$action ],
+		[ zome_version_1.$id,	zome_version_1.$action ],
 	    ],
 	    "ratings": {
 		"accuracy": 3,
@@ -60,7 +60,7 @@ function basic_tests () {
 
 	    await clients[name].call( "dnarepo", "reviews", "create_reaction", {
 		"subject_ids": [
-		    [ review.$id, review.$header ],
+		    [ review.$id, review.$action ],
 		],
 		"reaction_type": Math.random() > .2
 		    ? 1 : 2,
@@ -68,13 +68,13 @@ function basic_tests () {
 	    reaction_count++;
 	}
 	await clients.alice.call( "dnarepo", "reviews", "create_review_reaction_summary", {
-	    "subject_header": review.$header,
-	    "addr": review.$addr,
+	    "subject_action": review.$action,
+	    "addr": review.$action,
 	});
 
 	let zome_version			= zome_version_1 = await clients.alice.call( "dnarepo", "dna_library", "create_zome_version_review_summary", {
-	    "subject_header": zome_version_1.$header,
-	    "addr": zome_version_1.$addr,
+	    "subject_action": zome_version_1.$action,
+	    "addr": zome_version_1.$action,
 	});
 	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "get_review_summary", {
 	    "id": zome_version.review_summary,
@@ -107,8 +107,8 @@ function basic_tests () {
 	for ( let name of agents.slice(1) ) {
 	    const review			= await clients[name].call( "dnarepo", "reviews", "create_review", {
 		"subject_ids": [
-		    [ zome_1.$id,		zome_1.$header ],
-		    [ zome_version_1.$id,	zome_version_1.$header ],
+		    [ zome_1.$id,		zome_1.$action ],
+		    [ zome_version_1.$id,	zome_version_1.$action ],
 		],
 		"ratings": {
 		    "accuracy":		faker.datatype.number(10),
@@ -123,7 +123,7 @@ function basic_tests () {
 
 		await clients[rname].call( "dnarepo", "reviews", "create_reaction", {
 		    "subject_ids": [
-			[ review.$id, review.$header ],
+			[ review.$id, review.$action ],
 		    ],
 		    "reaction_type": Math.random() > .2
 			? 1 : 2,
@@ -143,8 +143,8 @@ function basic_tests () {
 		    continue;
 
 		await clients.alice.call( "dnarepo", "reviews", "create_review_reaction_summary", {
-		    "subject_header": review.$header,
-		    "addr": review.$addr,
+		    "subject_action": review.$action,
+		    "addr": review.$action,
 		});
 	    }
 	}
@@ -169,7 +169,7 @@ function basic_tests () {
 	    const accuracy_review_rating	= 8;
 	    const efficiency_review_rating	= 9;
 	    const review			= review_1 = await clients.alice.call( "dnarepo", "reviews", "update_review", {
-		"addr": review_1.$addr,
+		"addr": review_1.$action,
 		"properties": {
 		    "ratings": {
 			"accuracy":	accuracy_review_rating,
@@ -200,7 +200,7 @@ function basic_tests () {
     it("should delete review", async function () {
 	{
 	    await clients.alice.call( "dnarepo", "reviews", "delete_review", {
-		"addr": review_1.$addr,
+		"addr": review_1.$action,
 	    });
 	}
 
@@ -286,13 +286,14 @@ describe("Reviews", () => {
 	    "version": "v0.1.0",
 	    "ordering": 1,
 	    "hdk_version": "v0.0.120",
-	    "zomes": [{
+	    "integrity_zomes": [{
 		"name":			"file_storage",
 		"zome":			new EntryHash( zome_version_1.for_zome ),
 		"version":		zome_version_1.$id,
 		"resource":		new EntryHash( zome_version_1.mere_memory_addr ),
 		"resource_hash":	zome_version_1.mere_memory_hash,
 	    }],
+	    "zomes": [],
 	});
     });
 
