@@ -14,7 +14,7 @@ roles:
       deferred: false
     dna:
       bundled: ./happs.dna
-  - id: webassets
+  - id: web_assets
     provisioning:
       strategy: create
       deferred: false

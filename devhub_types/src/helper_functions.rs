@@ -64,7 +64,7 @@ where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     LT: LinkTypeFilterExt + std::fmt::Debug + Clone,
     Entry: TryFrom<T, Error = WasmError>,
-    ScopedEntryDefIndex: TryFrom<ET, Error = WasmError>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
     debug!("Getting all {:?} [{}] entities: {}", link_type, fmt_tag( &tag ), fmt_path( &path ) );
 
@@ -91,7 +91,7 @@ where
     F: FnOnce(Vec<Entity<T>>) -> AppResult<Vec<Entity<T>>>,
     LT: LinkTypeFilterExt + std::fmt::Debug + Clone,
     Entry: TryFrom<T, Error = WasmError>,
-    ScopedEntryDefIndex: TryFrom<ET, Error = WasmError>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
     let collection = get_entities_for_path( path, link_type, tag )?;
 
@@ -104,7 +104,7 @@ where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     LT: LinkTypeFilterExt + std::fmt::Debug + Clone,
     Entry: TryFrom<T, Error = WasmError>,
-    ScopedEntryDefIndex: TryFrom<ET, Error = WasmError>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
     let (base_path, base_hash) = create_path( ANCHOR_HDK_VERSIONS, vec![ &hdk_version ] );
 
@@ -130,7 +130,7 @@ where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET> + std::fmt::Debug,
     LT: LinkTypeFilterExt + std::fmt::Debug + Clone,
     Entry: TryFrom<T, Error = WasmError>,
-    ScopedEntryDefIndex: TryFrom<ET, Error = WasmError>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
     let (base_path, base_hash) = create_path( ANCHOR_FILTERS, vec![ &filter, &keyword ] );
 
@@ -159,7 +159,7 @@ where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     LT: LinkTypeFilterExt + std::fmt::Debug + Clone,
     Entry: TryFrom<T, Error = WasmError>,
-    ScopedEntryDefIndex: TryFrom<ET, Error = WasmError>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
     if tags.len() == 0 {
 	return Err( UserError::CustomError("Tag list cannot be empty").into() );
@@ -231,7 +231,7 @@ where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     LT: LinkTypeFilterExt + std::fmt::Debug + Clone,
     Entry: TryFrom<T, Error = WasmError>,
-    ScopedEntryDefIndex: TryFrom<ET, Error = WasmError>,
+    ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
     ScopedLinkType: TryFrom<LT, Error = E>,
     WasmError: From<E>,
 {

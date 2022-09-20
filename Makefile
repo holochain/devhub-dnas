@@ -75,9 +75,9 @@ zomes/%/Cargo.lock:
 	touch $@
 
 $(MERE_MEMORY_WASM):
-	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.47.0/mere_memory.wasm' --output $@
+	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.51.0/mere_memory.wasm' --output $@
 $(MERE_MEMORY_CORE_WASM):
-	curl -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.47.0/mere_memory_core.wasm' --output $@
+	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.51.0/mere_memory_core.wasm' --output $@
 
 
 
@@ -148,3 +148,26 @@ clean-files-all:	clean-remove-chaff
 	git clean -ndx
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
+
+PRE_HDK_VERSION = "0.0.147"
+NEW_HDK_VERSION = "0.0.151"
+
+PRE_HDI_VERSION = "0.1.1"
+NEW_HDI_VERSION = "0.1.1"
+
+PRE_CRUD_VERSION = "0.59.0"
+NEW_CRUD_VERSION = "0.59.0"
+
+PRE_MM_VERSION = "0.47.0"
+NEW_MM_VERSION = "0.51.0"
+
+GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
+
+update-hdk-version:
+	git grep -l $(PRE_HDK_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_HDK_VERSION)/$(NEW_HDK_VERSION)/g'
+update-hdi-version:
+	git grep -l $(PRE_HDI_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_HDI_VERSION)/$(NEW_HDI_VERSION)/g'
+update-crud-version:
+	git grep -l $(PRE_CRUD_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_CRUD_VERSION)/$(NEW_CRUD_VERSION)/g'
+update-mere-memory-version:
+	git grep -l $(PRE_MM_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_MM_VERSION)/$(NEW_MM_VERSION)/g'

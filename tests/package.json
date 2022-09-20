@@ -10,8 +10,6 @@
     "@faker-js/faker": "^7.3.0",
     "@whi/crux-payload-parser": "^0.2.1",
     "@whi/holo-hash": "^0.3.0",
-    "@whi/holochain-backdrop": "^0.31.0",
-    "@whi/holochain-client": "^0.50.0",
     "@whi/json": "^0.1.5",
     "@whi/stdlog": "^0.3.4",
     "chai": "^4.3.4",
@@ -23,6 +21,8 @@
     "yaml": "^1.10.2"
   },
   "devDependencies": {
-    "@msgpack/msgpack": "^2.7.0"
+    "@msgpack/msgpack": "^2.7.0",
+    "@whi/holochain-backdrop": "^0.53.0",
+    "@whi/holochain-client": "^0.61.0"
   }
 }
