@@ -7,6 +7,7 @@ use devhub_types::{
     happ_entry_types::{
 	HappEntry,
 	HappReleaseEntry,
+	WebHappReleaseEntry,
     },
     web_asset_entry_types::{
 	FilePackage,
@@ -18,6 +19,7 @@ use hdk::prelude::*;
 
 mod happ;
 mod happ_release;
+mod webhapp_release;
 
 mod packaging;
 mod constants;
@@ -186,6 +188,36 @@ fn get_happ_releases_by_filter( input: FilterInput ) -> ExternResult<DevHubRespo
     let collection = catch!( devhub_types::get_by_filter( LinkTypes::HappRelease, input.filter, input.keyword ) );
 
     Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+
+// WebHapp Releases
+#[hdk_extern]
+fn create_webhapp_release(input: webhapp_release::CreateInput) -> ExternResult<EntityResponse<WebHappReleaseEntry>> {
+    let entity = catch!( webhapp_release::create_webhapp_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_webhapp_release(input: GetEntityInput) -> ExternResult<EntityResponse<WebHappReleaseEntry>> {
+    let entity = catch!( webhapp_release::get_webhapp_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn update_webhapp_release(input: webhapp_release::WebHappReleaseUpdateInput) -> ExternResult<EntityResponse<WebHappReleaseEntry>> {
+    let entity = catch!( webhapp_release::update_webhapp_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn delete_webhapp_release(input: webhapp_release::DeleteInput) -> ExternResult<DevHubResponse<ActionHash>> {
+    let value = catch!( webhapp_release::delete_webhapp_release( input ) );
+
+    Ok(composition( value, VALUE_MD ))
 }
 
 

@@ -41,30 +41,6 @@ function basic_tests () {
 
 	const alice			= clients.alice;
 
-	const file_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.zip") );
-	log.debug("Zip file bytes (%s): typeof %s", file_bytes.length, typeof file_bytes );
-
-	let file_addr;
-	{
-	    let file			= await alice.call( "web_assets", "web_assets", "create_file", {
-		"file_bytes": file_bytes,
-	    });
-	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
-	    file_addr			= file.$address;
-	}
-
-	{
-	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
-		// "dna_hash": alice._app_schema._dnas.web_assets._hash,
-		"id": file_addr,
-	    });
-	    log.normal("Updated hApp UI: %s", gui.file_size );
-
-	    expect( gui.file_size	).to.be.a("number");
-	    expect( gui.file_size	).to.be.gt( 0 );
-	}
-
-
 	let zome_input			= {
 	    "name": "file_storage",
 	    "zome_type": 0,
@@ -131,10 +107,6 @@ function basic_tests () {
 	    "description": "The first release",
 	    "for_happ": happ.$id,
 	    "ordering": 1,
-	    "gui": {
-		"asset_group_id": file_addr,
-		"uses_web_sdk": false,
-	    },
 	    "manifest": {
 		"manifest_version": "1",
 		"roles": [
@@ -163,7 +135,6 @@ function basic_tests () {
 
 	expect( release.description	).to.equal( release_input.description );
 
-
 	{
 	    let happ_package		= await alice.call( "happs", "happ_library", "get_release_package", {
 		"id": release.$id,
@@ -175,10 +146,46 @@ function basic_tests () {
 	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.happ"), Buffer.from(happ_package) );
 	}
 
+
+	const file_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.zip") );
+	log.debug("Zip file bytes (%s): typeof %s", file_bytes.length, typeof file_bytes );
+
+	let file_addr;
+	{
+	    let file			= await alice.call( "web_assets", "web_assets", "create_file", {
+		"file_bytes": file_bytes,
+	    });
+	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
+	    file_addr			= file.$address;
+	}
+
+	{
+	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
+		"id": file_addr,
+	    });
+	    log.normal("Updated hApp UI: %s", gui.file_size );
+
+	    expect( gui.file_size	).to.be.a("number");
+	    expect( gui.file_size	).to.be.gt( 0 );
+	}
+
+
+	let webhapp_release_input	= {
+	    "name": "Gecko",
+	    "description": "Web UI for Chess",
+	    "for_happ_release": release.$id,
+	    "web_asset_id": file_addr,
+	};
+
+	let webhapp_release		= happ_release_1 = await alice.call( "happs", "happ_library", "create_webhapp_release", webhapp_release_input );
+	log.normal("New Webhapp release: %s -> %s", String(webhapp_release.$addr), webhapp_release.name );
+
+	expect( webhapp_release.description	).to.equal( webhapp_release_input.description );
+
 	{
 	    let webhapp_package		= await alice.call( "happs", "happ_library", "get_webhapp_package", {
 		"name": "Test Web hApp Package",
-		"id": release.$id,
+		"id": webhapp_release.$id,
 	    });
 	    log.normal("Web hApp package bytes: (%s) %s", webhapp_package.constructor.name, webhapp_package.length );
 

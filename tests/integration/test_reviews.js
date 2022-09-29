@@ -79,7 +79,7 @@ function basic_tests () {
 	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "get_review_summary", {
 	    "id": zome_version.review_summary,
 	});
-	console.log( json.debug(review_summary) );
+	// console.log( json.debug(review_summary) );
 
 	{
 	    // Check the created entry
@@ -154,7 +154,7 @@ function basic_tests () {
 	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "update_review_summary", {
 	    "id": review_summary_1.$id,
 	});
-	console.log( json.debug(review_summary) );
+	// console.log( json.debug(review_summary) );
 
 	expect( review_summary.factored_action_count	).to.equal( review_count*2 + reaction_count );
     });
@@ -192,7 +192,7 @@ function basic_tests () {
 	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "update_review_summary", {
 	    "id": review_summary_1.$id,
 	});
-	console.log( json.debug(review_summary) );
+	// console.log( json.debug(review_summary) );
 
 	expect( review_summary.factored_action_count	).to.equal( review_count*2 + 1 + reaction_count );
     });
@@ -218,7 +218,7 @@ function basic_tests () {
 	let review_summary			= review_summary_1 = await clients.alice.call( "dnarepo", "reviews", "update_review_summary", {
 	    "id": review_summary_1.$id,
 	});
-	console.log( json.debug(review_summary) );
+	// console.log( json.debug(review_summary) );
 
 	let deleted_reviews_list		= Object.keys( review_summary.deleted_reviews );
 

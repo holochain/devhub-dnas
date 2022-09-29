@@ -3,6 +3,7 @@ use devhub_types::{
     happ_entry_types::{
 	HappEntry,
 	HappReleaseEntry,
+	WebHappReleaseEntry,
     },
 };
 use crate::{
@@ -82,6 +83,7 @@ fn validate_record(entry_type: EntryTypes, record: &Record) -> ExternResult<Vali
 	    match entry_type {
 		EntryTypes::Happ(entry) => validate_happ_create( create, entry ),
 		EntryTypes::HappRelease(entry) => validate_happ_release_create( create, entry ),
+		EntryTypes::WebHappRelease(entry) => validate_webhapp_release_create( create, entry ),
 	    }
 	}
 	Action::Update(update) => {
@@ -89,12 +91,14 @@ fn validate_record(entry_type: EntryTypes, record: &Record) -> ExternResult<Vali
 	    match entry_type {
 		EntryTypes::Happ(entry) => validate_happ_update( update, entry ),
 		EntryTypes::HappRelease(entry) => validate_happ_release_update( update, entry ),
+		EntryTypes::WebHappRelease(entry) => validate_webhapp_release_update( update, entry ),
 	    }
 	},
 	Action::Delete(delete) => {
 	    debug!("Running delete validation for: {:?}", entry_type );
 	    match entry_type {
 		EntryTypes::HappRelease(_) => validate_happ_release_delete( delete ),
+		EntryTypes::WebHappRelease(_) => validate_webhapp_release_delete( delete ),
 		_ => {
 		    debug!("Ignoring delete Op for: {:?}", entry_type );
 		    Ok(ValidateCallbackResult::Valid)
@@ -139,7 +143,6 @@ fn validate_happ_update(action: &action::Update, happ: HappEntry) -> ExternResul
 
     Ok(ValidateCallbackResult::Valid)
 }
-
 
 
 //
@@ -190,5 +193,21 @@ fn validate_happ_release_delete(action: &action::Delete) -> ExternResult<Validat
 	return Ok(ValidateCallbackResult::Invalid(format!("Delete author does not match Create author: {} != {}", original_action.author(), action.author )));
     }
 
+    Ok(ValidateCallbackResult::Valid)
+}
+
+
+//
+// WebHapp Release
+//
+fn validate_webhapp_release_create(_action: &action::Create, _webhapp_release: WebHappReleaseEntry) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Valid)
+}
+
+fn validate_webhapp_release_update(_action: &action::Update, _webhapp_release: WebHappReleaseEntry) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Valid)
+}
+
+fn validate_webhapp_release_delete(_action: &action::Delete) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }

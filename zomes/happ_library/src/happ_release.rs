@@ -6,7 +6,7 @@ use devhub_types::{
     AppResult, UpdateEntityInput, GetEntityInput,
     happ_entry_types::{
 	HappReleaseEntry,
-	HappManifest, DnaReference, HappGUIConfig,
+	HappManifest, DnaReference,
     },
     constants::{
 	ANCHOR_UNIQUENESS,
@@ -23,12 +23,6 @@ use hex;
 
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct GUIConfigInput {
-    pub asset_group_id: EntryHash,
-    pub uses_web_sdk: bool,
-}
-
 #[derive(Debug, Deserialize)]
 pub struct CreateInput {
     pub name: String,
@@ -42,7 +36,6 @@ pub struct CreateInput {
     // optional
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub gui: Option<GUIConfigInput>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -68,9 +61,6 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEn
 	dna_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	hdk_version: input.hdk_version.clone(),
 	dnas: input.dnas,
-	gui: input.gui.map(|gui| {
-	    HappGUIConfig::new( gui.asset_group_id, gui.uses_web_sdk )
-	}),
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
     };
@@ -110,7 +100,6 @@ pub struct HappReleaseUpdateOptions {
     pub ordering: Option<u64>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
-    pub gui: Option<HappGUIConfig>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 pub type HappReleaseUpdateInput = UpdateEntityInput<HappReleaseUpdateOptions>;
@@ -138,8 +127,6 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		dna_hash: current.dna_hash,
 		hdk_version: current.hdk_version,
 		dnas: current.dnas,
-		gui: props.gui
-		    .or( current.gui ),
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })

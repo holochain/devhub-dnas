@@ -137,16 +137,20 @@ pub struct GetWebHappPackageInput {
     pub id: EntryHash,
 }
 pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> {
-    let happ_release = crate::happ_release::get_happ_release(GetEntityInput {
+    let webhapp_release = crate::webhapp_release::get_webhapp_release(GetEntityInput {
 	id: input.id.clone(),
+    })?;
+
+    let happ_release = crate::happ_release::get_happ_release(GetEntityInput {
+	id: webhapp_release.content.for_happ_release.clone(),
     })?;
 
     let happ_pack_bytes = get_release_package(GetReleasePackageInput {
-	id: input.id.clone(),
+	id: webhapp_release.content.for_happ_release.clone(),
     })?;
 
     let web_asset_entity = get_gui(GetGUIInput {
-	id: happ_release.content.gui.ok_or(AppError::UnexpectedStateError(String::from("Missing GUI asset")))?.asset_group_id,
+	id: webhapp_release.content.web_asset_id,
     })?;
 
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
