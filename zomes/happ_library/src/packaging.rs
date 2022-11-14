@@ -17,11 +17,11 @@ use hdk::prelude::*;
 
 
 #[derive(Debug, Deserialize)]
-pub struct GetGUIInput {
+pub struct GetWebAssetInput {
     pub id: EntryHash,
 }
 
-pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FilePackage>> {
+pub fn get_webasset(input: GetWebAssetInput) -> AppResult<Entity<FilePackage>> {
     debug!("Get GUI from: {}", input.id );
     let file_info = call_local_dna_zome( "web_assets", "web_assets", "get_file", GetEntityInput {
 	id: input.id,
@@ -134,23 +134,24 @@ pub struct WebHappBundle {
 #[derive(Debug, Deserialize)]
 pub struct GetWebHappPackageInput {
     pub name: String,
-    pub id: EntryHash,
+    pub happ_release_id: EntryHash,
+    pub gui_release_id: EntryHash,
 }
 pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> {
-    let webhapp_release = crate::webhapp_release::get_webhapp_release(GetEntityInput {
-	id: input.id.clone(),
+    let gui_release = crate::gui_release::get_gui_release(GetEntityInput {
+	id: input.gui_release_id.clone(),
     })?;
 
     let happ_release = crate::happ_release::get_happ_release(GetEntityInput {
-	id: webhapp_release.content.for_happ_release.clone(),
+	id: input.happ_release_id.clone(),
     })?;
 
     let happ_pack_bytes = get_release_package(GetReleasePackageInput {
-	id: webhapp_release.content.for_happ_release.clone(),
+	id: input.happ_release_id.clone(),
     })?;
 
-    let web_asset_entity = get_gui(GetGUIInput {
-	id: webhapp_release.content.web_asset_id,
+    let web_asset_entity = get_webasset(GetWebAssetInput {
+	id: gui_release.content.web_asset_id,
     })?;
 
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();

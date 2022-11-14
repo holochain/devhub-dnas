@@ -173,23 +173,44 @@ pub struct HappReleaseEntry {
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // Optional fields
-    // pub gui: Option<HappGUIConfig>,
-    // pub official_webhapp: Option<EntryHash>,
+    pub official_gui: Option<EntryHash>,
 }
 
 
 
 //
-// WebHapp Release Entry
+// GUI Entry
 //
 #[hdk_entry_helper]
 #[derive(Clone)]
-pub struct WebHappReleaseEntry {
+pub struct GUIEntry {
     pub name: String,
     pub description: String,
-    pub for_happ_release: EntryHash,
-    pub web_asset_id: EntryHash,
+    pub designer: AgentPubKey,
+    pub published_at: u64,
+    pub last_updated: u64,
     pub holo_hosting_settings: HoloGUIConfig,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // optional
+    pub tags: Option<Vec<String>>,
+    pub screenshots: Option<Vec<EntryHash>>,
+    pub deprecation: Option<DeprecationNotice>,
+}
+
+
+
+//
+// GUI Release Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone)]
+pub struct GUIReleaseEntry {
+    pub version: String,
+    pub changelog: String,
+    pub for_gui: EntryHash,
+    pub for_happ_releases: Vec<EntryHash>,
+    pub web_asset_id: EntryHash,
     pub published_at: u64,
     pub last_updated: u64,
     pub metadata: BTreeMap<String, serde_yaml::Value>,

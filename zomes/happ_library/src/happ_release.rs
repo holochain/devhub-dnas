@@ -34,6 +34,7 @@ pub struct CreateInput {
     pub dnas: Vec<DnaReference>,
 
     // optional
+    pub official_gui: Option<EntryHash>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
@@ -61,6 +62,7 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEn
 	dna_hash: hex::encode( devhub_types::hash_of_hashes( &hashes ) ),
 	hdk_version: input.hdk_version.clone(),
 	dnas: input.dnas,
+	official_gui: input.official_gui,
 	metadata: input.metadata
 	    .unwrap_or( BTreeMap::new() ),
     };
@@ -98,6 +100,7 @@ pub struct HappReleaseUpdateOptions {
     pub name: Option<String>,
     pub description: Option<String>,
     pub ordering: Option<u64>,
+    pub official_gui: Option<EntryHash>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
@@ -127,6 +130,8 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 		dna_hash: current.dna_hash,
 		hdk_version: current.hdk_version,
 		dnas: current.dnas,
+		official_gui: props.official_gui
+		    .or( current.official_gui ),
 		metadata: props.metadata
 		    .unwrap_or( current.metadata ),
 	    })

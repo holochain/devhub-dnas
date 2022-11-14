@@ -6,7 +6,9 @@ use devhub_types::{
     happ_entry_types::{
 	HappEntry,
 	HappReleaseEntry,
-	WebHappReleaseEntry,
+
+	GUIEntry,
+	GUIReleaseEntry,
     },
 };
 pub use devhub_types::{
@@ -24,8 +26,11 @@ pub enum EntryTypes {
     Happ(HappEntry),
     #[entry_def]
     HappRelease(HappReleaseEntry),
+
     #[entry_def]
-    WebHappRelease(WebHappReleaseEntry),
+    GUI(GUIEntry),
+    #[entry_def]
+    GUIRelease(GUIReleaseEntry),
 }
 
 
@@ -35,7 +40,9 @@ pub enum LinkTypes {
 
     Happ,
     HappRelease,
-    WebHappRelease,
+
+    GUI,
+    GUIRelease,
 
     Tag,
     Anchor,
@@ -52,7 +59,7 @@ impl<'de> Deserialize<'de> for LinkTypes {
 
 	    "Happ" => Ok(LinkTypes::Happ),
 	    "HappRelease" => Ok(LinkTypes::HappRelease),
-	    "WebHappRelease" => Ok(LinkTypes::WebHappRelease),
+	    "GUIRelease" => Ok(LinkTypes::GUIRelease),
 
 	    "Tag" => Ok(LinkTypes::Tag),
 	    "Anchor" => Ok(LinkTypes::Anchor),
@@ -84,12 +91,22 @@ impl EntryModel<EntryTypes> for HappReleaseEntry {
     }
 }
 
-impl EntryModel<EntryTypes> for WebHappReleaseEntry {
-    fn name() -> &'static str { "WebHappRelease" }
+impl EntryModel<EntryTypes> for GUIEntry {
+    fn name() -> &'static str { "GUI" }
     fn get_type(&self) -> EntityType {
-	EntityType::new( "webhapp_release", "entry" )
+	EntityType::new( "gui", "entry" )
     }
     fn to_input(&self) -> EntryTypes {
-	EntryTypes::WebHappRelease(self.clone())
+	EntryTypes::GUI(self.clone())
+    }
+}
+
+impl EntryModel<EntryTypes> for GUIReleaseEntry {
+    fn name() -> &'static str { "GUIRelease" }
+    fn get_type(&self) -> EntityType {
+	EntityType::new( "gui_release", "entry" )
+    }
+    fn to_input(&self) -> EntryTypes {
+	EntryTypes::GUIRelease(self.clone())
     }
 }

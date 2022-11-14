@@ -13,12 +13,6 @@ use hc_crud::{
 };
 use hdk::prelude::*;
 
-// use crate::constants::{
-//     LT_NONE,
-//     TAG_PROFILE,
-//     TAG_FOLLOW,
-// };
-
 
 
 #[derive(Debug, Deserialize)]

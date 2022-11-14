@@ -3,7 +3,9 @@ use devhub_types::{
     happ_entry_types::{
 	HappEntry,
 	HappReleaseEntry,
-	WebHappReleaseEntry,
+
+	GUIEntry,
+	GUIReleaseEntry,
     },
 };
 use crate::{
@@ -83,7 +85,8 @@ fn validate_record(entry_type: EntryTypes, record: &Record) -> ExternResult<Vali
 	    match entry_type {
 		EntryTypes::Happ(entry) => validate_happ_create( create, entry ),
 		EntryTypes::HappRelease(entry) => validate_happ_release_create( create, entry ),
-		EntryTypes::WebHappRelease(entry) => validate_webhapp_release_create( create, entry ),
+		EntryTypes::GUI(entry) => validate_gui_create( create, entry ),
+		EntryTypes::GUIRelease(entry) => validate_gui_release_create( create, entry ),
 	    }
 	}
 	Action::Update(update) => {
@@ -91,14 +94,15 @@ fn validate_record(entry_type: EntryTypes, record: &Record) -> ExternResult<Vali
 	    match entry_type {
 		EntryTypes::Happ(entry) => validate_happ_update( update, entry ),
 		EntryTypes::HappRelease(entry) => validate_happ_release_update( update, entry ),
-		EntryTypes::WebHappRelease(entry) => validate_webhapp_release_update( update, entry ),
+		EntryTypes::GUI(entry) => validate_gui_update( update, entry ),
+		EntryTypes::GUIRelease(entry) => validate_gui_release_update( update, entry ),
 	    }
 	},
 	Action::Delete(delete) => {
 	    debug!("Running delete validation for: {:?}", entry_type );
 	    match entry_type {
 		EntryTypes::HappRelease(_) => validate_happ_release_delete( delete ),
-		EntryTypes::WebHappRelease(_) => validate_webhapp_release_delete( delete ),
+		EntryTypes::GUIRelease(_) => validate_gui_release_delete( delete ),
 		_ => {
 		    debug!("Ignoring delete Op for: {:?}", entry_type );
 		    Ok(ValidateCallbackResult::Valid)
@@ -198,16 +202,28 @@ fn validate_happ_release_delete(action: &action::Delete) -> ExternResult<Validat
 
 
 //
-// WebHapp Release
+// GUI
 //
-fn validate_webhapp_release_create(_action: &action::Create, _webhapp_release: WebHappReleaseEntry) -> ExternResult<ValidateCallbackResult> {
+fn validate_gui_create(_action: &action::Create, _gui: GUIEntry) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
 
-fn validate_webhapp_release_update(_action: &action::Update, _webhapp_release: WebHappReleaseEntry) -> ExternResult<ValidateCallbackResult> {
+fn validate_gui_update(_action: &action::Update, _gui: GUIEntry) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }
 
-fn validate_webhapp_release_delete(_action: &action::Delete) -> ExternResult<ValidateCallbackResult> {
+
+//
+// GUI Release
+//
+fn validate_gui_release_create(_action: &action::Create, _gui_release: GUIReleaseEntry) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Valid)
+}
+
+fn validate_gui_release_update(_action: &action::Update, _gui_release: GUIReleaseEntry) -> ExternResult<ValidateCallbackResult> {
+    Ok(ValidateCallbackResult::Valid)
+}
+
+fn validate_gui_release_delete(_action: &action::Delete) -> ExternResult<ValidateCallbackResult> {
     Ok(ValidateCallbackResult::Valid)
 }

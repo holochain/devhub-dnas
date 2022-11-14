@@ -124,6 +124,11 @@ test-happs:			test-setup $(HAPPDNA)
 test-happs-debug:		test-setup $(HAPPDNA)
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_happs.js
 
+test-guis:			test-setup $(HAPPDNA) $(ASSETSDNA)
+	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_guis.js
+test-guis-debug:		test-setup $(HAPPDNA) $(ASSETSDNA)
+	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_guis.js
+
 test-webassets:			test-setup $(ASSETSDNA) tests/test.gz
 	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_webassets.js
 test-webassets-debug:		test-setup $(ASSETSDNA) tests/test.gz
