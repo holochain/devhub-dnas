@@ -171,7 +171,6 @@ function basic_tests () {
 	}
 
 	{
-	    console.log("HDK Version:", HDK_VERSION );
 	    log.debug("ZOME file bytes (%s): typeof %s", zome_bytes.length, typeof zome_bytes );
 	    let version			= await alice.call( "dnarepo", "dna_library", "create_zome_version", {
 		"for_zome": zome.$id,
@@ -808,7 +807,6 @@ function basic_tests () {
     it("should get HDK version list", async function () {
 	let hdkvs			= await clients.alice.call( "dnarepo", "dna_library", "get_hdk_versions");
 	log.normal("HDK versions: %s", hdkvs.length );
-	console.log( hdkvs );
 
 	expect( hdkvs			).to.have.length( 1 );
 	expect( hdkvs[0]		).to.equal( HDK_VERSION );

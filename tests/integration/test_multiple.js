@@ -41,30 +41,6 @@ function basic_tests () {
 
 	const alice			= clients.alice;
 
-	const file_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.zip") );
-	log.debug("Zip file bytes (%s): typeof %s", file_bytes.length, typeof file_bytes );
-
-	let file_addr;
-	{
-	    let file			= await alice.call( "web_assets", "web_assets", "create_file", {
-		"file_bytes": file_bytes,
-	    });
-	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
-	    file_addr			= file.$address;
-	}
-
-	{
-	    let gui			= await alice.call( "happs", "happ_library", "get_gui", {
-		// "dna_hash": alice._app_schema._dnas.web_assets._hash,
-		"id": file_addr,
-	    });
-	    log.normal("Updated hApp UI: %s", gui.file_size );
-
-	    expect( gui.file_size	).to.be.a("number");
-	    expect( gui.file_size	).to.be.gt( 0 );
-	}
-
-
 	let zome_input			= {
 	    "name": "file_storage",
 	    "zome_type": 0,
@@ -92,9 +68,6 @@ function basic_tests () {
 	};
 	let dna				= await alice.call( "dnarepo", "dna_library", "create_dna", dna_input );
 	log.normal("New DNA (metadata): %s -> %s", String(dna.$id), dna.name );
-
-	const dna_bytes			= fs.readFileSync( path.resolve(__dirname, "../test.dna") );
-	log.debug("DNA file bytes (%s): typeof %s", dna_bytes.length, typeof dna_bytes );
 
 	let version			= await alice.call( "dnarepo", "dna_library", "create_dna_version", {
 	    "for_dna": dna.$id,
@@ -125,16 +98,11 @@ function basic_tests () {
 	expect( happ.description	).to.equal( happ_input.description );
 
 
-	const manifest_yaml		= fs.readFileSync( path.resolve(__dirname, "../test_happ.yaml"), "utf8" );
 	let release_input		= {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
 	    "ordering": 1,
-	    "gui": {
-		"asset_group_id": file_addr,
-		"uses_web_sdk": false,
-	    },
 	    "manifest": {
 		"manifest_version": "1",
 		"roles": [
@@ -163,7 +131,6 @@ function basic_tests () {
 
 	expect( release.description	).to.equal( release_input.description );
 
-
 	{
 	    let happ_package		= await alice.call( "happs", "happ_library", "get_release_package", {
 		"id": release.$id,
@@ -175,17 +142,75 @@ function basic_tests () {
 	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.happ"), Buffer.from(happ_package) );
 	}
 
+
+	const file_bytes		= fs.readFileSync( path.resolve(__dirname, "../test.zip") );
+	log.debug("Zip file bytes (%s): typeof %s", file_bytes.length, typeof file_bytes );
+
+	let webasset_addr;
 	{
-	    let webhapp_package		= await alice.call( "happs", "happ_library", "get_webhapp_package", {
-		"name": "Test Web hApp Package",
-		"id": release.$id,
+	    let file			= await alice.call( "web_assets", "web_assets", "create_file", {
+		"file_bytes": file_bytes,
 	    });
-	    log.normal("Web hApp package bytes: (%s) %s", webhapp_package.constructor.name, webhapp_package.length );
-
-	    expect( webhapp_package.constructor.name	).to.equal("Array");
-
-	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.webhapp"), Buffer.from(webhapp_package) );
+	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
+	    webasset_addr		= file.$address;
 	}
+
+	{
+	    let webasset		= await alice.call( "happs", "happ_library", "get_webasset", {
+		"id": webasset_addr,
+	    });
+	    log.normal("Updated hApp UI: %s", webasset.file_size );
+
+	    expect( webasset.file_size	).to.be.a("number");
+	    expect( webasset.file_size	).to.be.gt( 0 );
+	}
+
+
+	let gui_input			= {
+	    "name": "Gecko",
+	    "description": "Web UI for Chess",
+	};
+
+	let gui				= gui_1 = await alice.call( "happs", "happ_library", "create_gui", gui_input );
+	log.normal("New Gui release: %s -> %s", String(gui.$addr), gui.name );
+
+	expect( gui.description	).to.equal( gui_input.description );
+
+	let gui_release_input		= {
+	    "version": "Gecko",
+	    "changelog": "Web UI for Chess",
+	    "for_gui": gui.$id,
+	    "for_happ_releases": [ release.$id ],
+	    "web_asset_id": webasset_addr,
+	};
+
+	let gui_release		= gui_release_1 = await alice.call( "happs", "happ_library", "create_gui_release", gui_release_input );
+	log.normal("New Gui release: %s -> %s", String(gui_release.$addr), gui_release.name );
+
+	expect( gui_release.description	).to.equal( gui_release_input.description );
+
+	{
+	    let gui_package		= await alice.call( "happs", "happ_library", "get_webhapp_package", {
+		"name": "Test Web hApp Package",
+		"happ_release_id": release.$id,
+		"gui_release_id": gui_release.$id,
+	    });
+	    log.normal("Web hApp package bytes: (%s) %s", gui_package.constructor.name, gui_package.length );
+
+	    expect( gui_package.constructor.name	).to.equal("Array");
+
+	    fs.writeFileSync( path.resolve(__dirname, "../multitesting.webhapp"), Buffer.from(gui_package) );
+	}
+
+	release				= await alice.call( "happs", "happ_library", "update_happ_release", {
+	    "addr": release.$action,
+	    "properties": {
+		"official_gui": gui_release.$id,
+	    },
+	});
+	log.normal("Updated hApp release: %s -> %s", String(release.$addr), release.name );
+
+	expect( release.official_gui	).to.deep.equal( gui_release.$id.bytes() );
     });
 }
 

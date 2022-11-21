@@ -7,6 +7,9 @@ use devhub_types::{
     happ_entry_types::{
 	HappEntry,
 	HappReleaseEntry,
+
+	GUIEntry,
+	GUIReleaseEntry,
     },
     web_asset_entry_types::{
 	FilePackage,
@@ -18,6 +21,8 @@ use hdk::prelude::*;
 
 mod happ;
 mod happ_release;
+mod gui;
+mod gui_release;
 
 mod packaging;
 mod constants;
@@ -25,6 +30,7 @@ mod constants;
 
 use constants::{
     ANCHOR_HAPPS,
+    ANCHOR_GUIS,
 };
 
 
@@ -189,10 +195,123 @@ fn get_happ_releases_by_filter( input: FilterInput ) -> ExternResult<DevHubRespo
 }
 
 
+// GUI
+#[hdk_extern]
+fn create_gui(input: gui::CreateInput) -> ExternResult<EntityResponse<GUIEntry>> {
+    let entity = catch!( gui::create_gui( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_gui(input: GetEntityInput) -> ExternResult<EntityResponse<GUIEntry>> {
+    let entity = catch!( gui::get_gui( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_guis(input: GetAgentItemsInput) -> ExternResult<DevHubResponse<Vec<Entity<GUIEntry>>>> {
+    let (base_path, _) = devhub_types::create_path( &agent_path_base( input.agent ), vec![ ANCHOR_GUIS ] );
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( base_path, LinkTypes::GUI, None, |items : Vec<Entity<GUIEntry>>| {
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect() )
+    }) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+#[hdk_extern]
+fn get_my_guis(_:()) -> ExternResult<DevHubResponse<Vec<Entity<GUIEntry>>>> {
+    get_guis( GetAgentItemsInput {
+	agent: None
+    })
+}
+
+#[hdk_extern]
+fn update_gui(input: gui::GUIUpdateInput) -> ExternResult<EntityResponse<GUIEntry>> {
+    let entity = catch!( gui::update_gui( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn deprecate_gui(input: gui::GUIDeprecateInput) -> ExternResult<EntityResponse<GUIEntry>> {
+    let value = catch!( gui::deprecate_gui( input ) );
+
+    Ok(composition( value, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_guis_by_tags( input: Vec<String> ) -> ExternResult<DevHubResponse<Vec<Entity<GUIEntry>>>> {
+    let list = catch!( devhub_types::get_by_tags( LinkTypes::GUI, input ) );
+
+    Ok(composition( list.into_iter()
+		    .filter(|entity: &Entity<GUIEntry>| {
+			entity.content.deprecation.is_none()
+		    })
+		    .collect(), VALUE_MD ))
+}
+
+#[hdk_extern]
+fn get_all_guis(_:()) -> ExternResult<DevHubResponse<Vec<Entity<GUIEntry>>>> {
+    let (base_path, _) = devhub_types::create_path( ANCHOR_GUIS, Vec::<String>::new() );
+    let collection = catch!( devhub_types::get_entities_for_path_filtered( base_path, LinkTypes::GUI, None, |items : Vec<Entity<GUIEntry>>| {
+	Ok( items.into_iter()
+	    .filter(|entity| {
+		entity.content.deprecation.is_none()
+	    })
+	    .collect() )
+    }) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+
+// GUI Releases
+#[hdk_extern]
+fn create_gui_release(input: gui_release::CreateInput) -> ExternResult<EntityResponse<GUIReleaseEntry>> {
+    let entity = catch!( gui_release::create_gui_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_gui_release(input: GetEntityInput) -> ExternResult<EntityResponse<GUIReleaseEntry>> {
+    let entity = catch!( gui_release::get_gui_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn update_gui_release(input: gui_release::GUIReleaseUpdateInput) -> ExternResult<EntityResponse<GUIReleaseEntry>> {
+    let entity = catch!( gui_release::update_gui_release( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn delete_gui_release(input: gui_release::DeleteInput) -> ExternResult<DevHubResponse<ActionHash>> {
+    let value = catch!( gui_release::delete_gui_release( input ) );
+
+    Ok(composition( value, VALUE_MD ))
+}
+
+#[hdk_extern]
+fn get_gui_releases(input: gui_release::GetGUIReleasesInput) -> ExternResult<DevHubResponse<Vec<Entity<GUIReleaseEntry>>>> {
+    let collection = catch!( gui_release::get_gui_releases( input ) );
+
+    Ok(composition( collection, ENTITY_COLLECTION_MD ))
+}
+
+
 // Packaging
 #[hdk_extern]
-fn get_gui(input: packaging::GetGUIInput) -> ExternResult<EntityResponse<FilePackage>> {
-    let entity = catch!( packaging::get_gui( input ) );
+fn get_webasset(input: packaging::GetWebAssetInput) -> ExternResult<EntityResponse<FilePackage>> {
+    let entity = catch!( packaging::get_webasset( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
