@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 use hc_crud::UtilsError;
 use essence::EssenceError;
 use hdk::prelude::*;
@@ -33,6 +34,12 @@ pub enum UserError {
     DuplicateHappNameError(String),
 
     #[error("{0}")]
+    UnmetRequirementsError(String),
+
+    #[error("{0}")]
+    InvalidActionError(String),
+
+    #[error("{0}")]
     CustomError(&'static str),
 }
 
@@ -64,7 +71,7 @@ impl From<AppError> for ErrorKinds {
 
 impl From<SerializedBytesError> for ErrorKinds {
     fn from(error: SerializedBytesError) -> Self {
-        ErrorKinds::HDKError(error.into())
+        ErrorKinds::HDKError(wasm_error!(WasmErrorInner::from(error)))
     }
 }
 
@@ -76,7 +83,7 @@ impl From<UserError> for ErrorKinds {
 
 impl From<UtilsError> for ErrorKinds {
     fn from(error: UtilsError) -> Self {
-	if let UtilsError::EntryNotFoundError(_) = error {
+	if let UtilsError::EntryNotFoundError(..) = error {
 	    UserError::EntryNotFoundError(error).into()
 	}
 	else {
@@ -97,8 +104,15 @@ impl From<WasmError> for ErrorKinds {
     }
 }
 
+impl From<Infallible> for ErrorKinds {
+    fn from(error: Infallible) -> Self {
+        ErrorKinds::AppError(AppError::UnexpectedStateError(format!("{:?}", error )))
+    }
+}
+
+
 impl From<ErrorKinds> for WasmError {
     fn from(error: ErrorKinds) -> Self {
-        WasmError::Guest( format!("{:?}", error ) )
+        wasm_error!(WasmErrorInner::Guest( format!("{:?}", error ) ))
     }
 }

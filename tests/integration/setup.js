@@ -5,7 +5,9 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 
 global.WebSocket			= require('ws');
 const { AgentClient }			= require('@whi/holochain-client');
-const { CruxConfig }			= require('@whi/crux-payload-parser');
+const { CruxConfig, ...crux }		= require('@whi/crux-payload-parser');
+
+// crux.log.setLevel("trace");
 
 const all_clients			= [];
 function exit_cleanup () {

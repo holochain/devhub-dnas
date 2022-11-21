@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
-use hc_crud::{
-    get_entity,
-    EntryModel, EntityType, Entity
-};
 use hdk::prelude::*;
 
 
+
+//
+// General-use Structs
+//
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeprecationNotice {
     pub message: String,
@@ -18,86 +18,10 @@ pub struct DeprecationNotice {
 pub struct HoloGUIConfig {
     pub uses_web_sdk: bool,
 }
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct HappGUIConfig {
-    pub asset_group_id: EntryHash,
-    pub holo_hosting_settings: HoloGUIConfig,
-}
-
-impl HappGUIConfig {
-    pub fn new(asset_group_id: EntryHash, uses_web_sdk: bool) -> Self {
-	HappGUIConfig {
-	    asset_group_id: asset_group_id,
-	    holo_hosting_settings: HoloGUIConfig {
-		uses_web_sdk: uses_web_sdk,
-	    }
-	}
-    }
-}
-
-
-//
-// Happ Entry
-//
-#[hdk_entry(id = "happ_details", visibility="public")]
-#[derive(Clone)]
-pub struct HappEntry {
-    pub title: String,
-    pub subtitle: String,
-    pub description: String,
-    pub designer: AgentPubKey,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-
-    // optional
-    pub tags: Option<Vec<String>>,
-    pub icon: Option<SerializedBytes>,
-    pub deprecation: Option<DeprecationNotice>,
-}
-
-impl EntryModel for HappEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HappInfo {
-    pub title: String,
-    pub subtitle: String,
-    pub description: String,
-    pub designer: AgentPubKey,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-
-    // optional
-    pub tags: Option<Vec<String>>,
-    pub icon: Option<SerializedBytes>,
-    pub deprecation: Option<DeprecationNotice>,
-}
-impl EntryModel for HappInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ", "info" )
-    }
-}
-
-impl HappEntry {
-    pub fn to_info(&self) -> HappInfo {
-	HappInfo {
-	    title: self.title.clone(),
-	    subtitle: self.subtitle.clone(),
-	    description: self.description.clone(),
-	    designer: self.designer.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    tags: self.tags.clone(),
-	    icon: self.icon.clone(),
-	    deprecation: self.deprecation.clone(),
-	    metadata: self.metadata.clone(),
+impl HoloGUIConfig {
+    pub fn default() -> Self {
+	HoloGUIConfig {
+	    uses_web_sdk: false,
 	}
     }
 }
@@ -105,35 +29,8 @@ impl HappEntry {
 
 
 //
-// Happ Release Entry
+// Manifests
 //
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RoleProvisioning {
-    pub strategy: String,
-    pub deferred: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RoleDnaInfo {
-    #[serde(alias = "path", alias = "url")]
-    pub bundled: String,
-    #[serde(default)]
-    pub clone_limit: u32,
-
-    // Optional fields
-    pub uid: Option<String>,
-    pub version: Option<String>,
-    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RoleInfo {
-    pub id: String,
-    pub dna: RoleDnaInfo,
-
-    // Optional fields
-    pub provisioning: Option<RoleProvisioning>,
-}
 
 // {
 //     "manifest_version": "1",
@@ -159,6 +56,34 @@ pub struct RoleInfo {
 //     ]
 // }
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RoleDnaInfo {
+    #[serde(alias = "path", alias = "url")]
+    pub bundled: String,
+    #[serde(default)]
+    pub clone_limit: u32,
+
+    // Optional fields
+    pub uid: Option<String>,
+    pub version: Option<String>,
+    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RoleProvisioning {
+    pub strategy: String,
+    pub deferred: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RoleInfo {
+    pub id: String,
+    pub dna: RoleDnaInfo,
+
+    // Optional fields
+    pub provisioning: Option<RoleProvisioning>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HappManifest {
     pub manifest_version: String,
     pub roles: Vec<RoleInfo>,
@@ -167,8 +92,6 @@ pub struct HappManifest {
     pub name: Option<String>,
     pub description: Option<String>,
 }
-
-
 
 // {
 //     "manifest": {
@@ -198,7 +121,35 @@ pub struct WebHappManifest {
     pub happ_manifest: ResourceRef,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+
+
+
+//
+// Happ Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone)]
+pub struct HappEntry {
+    pub title: String,
+    pub subtitle: String,
+    pub description: String,
+    pub designer: AgentPubKey,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // optional
+    pub tags: Option<Vec<String>>,
+    pub icon: Option<SerializedBytes>,
+    pub deprecation: Option<DeprecationNotice>,
+}
+
+
+
+//
+// Happ Release Entry
+//
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct DnaReference {
     pub role_id: String,
     pub dna : EntryHash, // Dna ID
@@ -206,65 +157,65 @@ pub struct DnaReference {
     pub wasm_hash : String,
 }
 
-#[hdk_entry(id = "happ_release_details", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct HappReleaseEntry {
     pub name: String,
     pub description: String,
     pub for_happ: EntryHash,
+    pub ordering: u64,
     pub published_at: u64,
     pub last_updated: u64,
     pub manifest: HappManifest,
     pub dna_hash : String,
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
-    pub gui: Option<HappGUIConfig>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // Optional fields
+    pub official_gui: Option<EntryHash>,
 }
 
-impl EntryModel for HappReleaseEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ_release", "summary" )
-    }
-}
 
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HappReleaseInfo {
+
+//
+// GUI Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone)]
+pub struct GUIEntry {
     pub name: String,
     pub description: String,
-    pub for_happ: Option<Entity<HappEntry>>,
+    pub designer: AgentPubKey,
     pub published_at: u64,
     pub last_updated: u64,
-    pub manifest: HappManifest,
-    pub dna_hash : String,
-    pub hdk_version: String,
-    pub dnas: Vec<DnaReference>,
-    pub gui: Option<HappGUIConfig>,
+    pub holo_hosting_settings: HoloGUIConfig,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
-impl EntryModel for HappReleaseInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ_release", "info" )
-    }
+
+    // optional
+    pub tags: Option<Vec<String>>,
+    pub screenshots: Option<Vec<EntryHash>>,
+    pub deprecation: Option<DeprecationNotice>,
 }
 
-impl HappReleaseEntry {
-    pub fn to_info(&self) -> HappReleaseInfo {
-	let happ_entity = get_entity::<HappEntry>( &self.for_happ ).ok();
 
-	HappReleaseInfo {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    for_happ: happ_entity,
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    manifest: self.manifest.clone(),
-	    dna_hash: self.dna_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    dnas: self.dnas.clone(),
-	    gui: self.gui.clone(),
-	    metadata: self.metadata.clone(),
-	}
-    }
+
+//
+// GUI Release Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone)]
+pub struct GUIReleaseEntry {
+    pub version: String,
+    pub changelog: String,
+    pub for_gui: EntryHash,
+    pub for_happ_releases: Vec<EntryHash>,
+    pub web_asset_id: EntryHash,
+    pub published_at: u64,
+    pub last_updated: u64,
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // Optional fields
+    pub screenshots: Option<Vec<EntryHash>>,
+    // pub dna_support: Option<Vec<EntryHash>>, // list of DnaEntry IDs of intended support, does not mean they are guaranteed to work for all those DNA's versions
 }

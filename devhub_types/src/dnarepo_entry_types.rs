@@ -1,8 +1,4 @@
 use std::collections::BTreeMap;
-use hc_crud::{
-    get_entity,
-    EntryModel, EntityType, Entity
-};
 use hdk::prelude::*;
 
 
@@ -10,11 +6,6 @@ use hdk::prelude::*;
 //
 // General-use Structs
 //
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DeveloperProfileLocation {
-    pub pubkey: AgentPubKey,
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeprecationNotice {
     pub message: String,
@@ -37,7 +28,7 @@ impl DeprecationNotice {
 //
 // Profile Entry
 //
-#[hdk_entry(id = "profile", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ProfileEntry {
     pub name: String,
@@ -46,99 +37,27 @@ pub struct ProfileEntry {
     pub website: String,
 }
 
-impl EntryModel for ProfileEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "profile", "entry" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ProfileInfo {
-    pub name: String,
-    pub email: String,
-    pub avatar_image: SerializedBytes,
-    pub website: String,
-}
-impl EntryModel for ProfileInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "profile", "info" )
-    }
-}
-
-impl ProfileEntry {
-    pub fn to_info(&self) -> ProfileInfo {
-	ProfileInfo {
-	    name: self.name.clone(),
-	    email: self.email.clone(),
-	    website: self.website.clone(),
-	    avatar_image: self.avatar_image.clone(),
-	}
-    }
-}
-
 
 
 //
 // DNA Entry
 //
-#[hdk_entry(id = "dna", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct DnaEntry {
     pub name: String,
     pub description: String,
     pub published_at: u64,
     pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
+    pub developer: AgentPubKey,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
+    pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
     pub icon: Option<SerializedBytes>,
+    pub source_code_url: Option<String>,
     pub deprecation: Option<DeprecationNotice>,
-}
-
-impl EntryModel for DnaEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DnaInfo {
-    pub name: String,
-    pub description: String,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-
-    // optional
-    pub tags: Option<Vec<String>>,
-    pub icon: Option<SerializedBytes>,
-    pub deprecation: Option<DeprecationNotice>,
-}
-impl EntryModel for DnaInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna", "info" )
-    }
-}
-
-impl DnaEntry {
-    pub fn to_info(&self) -> DnaInfo {
-	DnaInfo {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    icon: self.icon.clone(),
-	    tags: self.tags.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    developer: self.developer.clone(),
-	    deprecation: self.deprecation.clone(),
-	    metadata: self.metadata.clone(),
-	}
-    }
 }
 
 
@@ -146,8 +65,8 @@ impl DnaEntry {
 //
 // DNA Version Entry
 //
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ZomeReference {
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct IntegrityZomeReference {
     pub name: String,
     pub zome : EntryHash, // Zome ID
     pub version : EntryHash, // Version ID
@@ -155,100 +74,58 @@ pub struct ZomeReference {
     pub resource_hash : String, // Hash of resource contents
 }
 
-#[hdk_entry(id = "dna_version", visibility="public")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct ZomeReference {
+    pub name: String,
+    pub zome : EntryHash, // Zome ID
+    pub version : EntryHash, // Version ID
+    pub resource : EntryHash, // Mere Memory address for a short-circuit download
+    pub resource_hash : String, // Hash of resource contents
+    pub dependencies: Vec<String>,
+}
+
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct DnaVersionEntry {
     pub for_dna: EntryHash,
-    pub version: u64,
+    pub version: String,
+    pub ordering: u64,
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
     pub wasm_hash : String,
     pub hdk_version: String,
-    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
+    pub integrity_zomes: Vec<IntegrityZomeReference>,
     pub zomes: Vec<ZomeReference>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
 
-impl EntryModel for DnaVersionEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DnaVersionInfo {
-    pub for_dna: Option<Entity<DnaEntry>>,
-    pub version: u64,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub changelog: String,
-    pub wasm_hash : String,
-    pub hdk_version: String,
+    // optional
     pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
-    pub zomes: BTreeMap<String, Option<Entity<ZomeVersionEntry>>>,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
-impl EntryModel for DnaVersionInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "info" )
-    }
+    pub source_code_commit_url: Option<String>,
 }
 
 // Package
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionPackage {
-    pub for_dna: Option<Entity<DnaEntry>>,
-    pub version: u64,
+    pub for_dna: EntryHash,
+    pub version: String,
     pub published_at: u64,
     pub last_updated: u64,
     pub changelog: String,
     pub hdk_version: String,
     pub bytes: Vec<u8>,
 }
-impl EntryModel for DnaVersionPackage {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "package" )
-    }
-}
 
 impl DnaVersionEntry {
     pub fn to_package(&self, dna_bytes: Vec<u8>) -> DnaVersionPackage {
-	let dna_entity = get_entity::<DnaEntry>( &self.for_dna ).ok();
-
 	DnaVersionPackage {
-	    for_dna: dna_entity,
+	    for_dna: self.for_dna.clone(),
 	    version: self.version.clone(),
 	    published_at: self.published_at.clone(),
 	    last_updated: self.last_updated.clone(),
 	    changelog: self.changelog.clone(),
 	    hdk_version: self.hdk_version.clone(),
 	    bytes: dna_bytes,
-	}
-    }
-
-    pub fn to_info(&self) -> DnaVersionInfo {
-	let dna_entity = get_entity::<DnaEntry>( &self.for_dna ).ok();
-
-	DnaVersionInfo {
-	    for_dna: dna_entity,
-	    version: self.version.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    changelog: self.changelog.clone(),
-	    wasm_hash: self.wasm_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    properties: self.properties.clone(),
-	    zomes: self.zomes.iter()
-		.map( |zome_ref| {
-		    (
-			zome_ref.name.clone(),
-			get_entity::<ZomeVersionEntry>( &zome_ref.version ).ok()
-		    )
-		})
-		.collect(),
-	    metadata: self.metadata.clone(),
 	}
     }
 }
@@ -258,60 +135,22 @@ impl DnaVersionEntry {
 //
 // Zome Entry
 //
-#[hdk_entry(id = "zome", visibility="public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ZomeEntry {
     pub name: String,
+    pub zome_type: u8,
     pub description: String,
     pub published_at: u64,
     pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
+    pub developer: AgentPubKey,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
+    pub display_name: Option<String>,
     pub tags: Option<Vec<String>>,
+    pub source_code_url: Option<String>,
     pub deprecation: Option<DeprecationNotice>,
-}
-
-impl EntryModel for ZomeEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome", "summary" )
-    }
-}
-
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ZomeInfo {
-    pub name: String,
-    pub description: String,
-    pub published_at: u64,
-    pub last_updated: u64,
-    pub developer: DeveloperProfileLocation,
-    pub metadata: BTreeMap<String, serde_yaml::Value>,
-
-    // optional
-    pub tags: Option<Vec<String>>,
-    pub deprecation: Option<DeprecationNotice>,
-}
-impl EntryModel for ZomeInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome", "info" )
-    }
-}
-
-impl ZomeEntry {
-    pub fn to_info(&self) -> ZomeInfo {
-	ZomeInfo {
-	    name: self.name.clone(),
-	    description: self.description.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    developer: self.developer.clone(),
-	    deprecation: self.deprecation.clone(),
-	    metadata: self.metadata.clone(),
-	    tags: self.tags.clone(),
-	}
-    }
 }
 
 
@@ -319,11 +158,12 @@ impl ZomeEntry {
 //
 // Zome Version Entry
 //
-#[hdk_entry(id = "zome_version", visibility="public")]
-#[derive(Clone)]
+#[hdk_entry_helper]
+#[derive(Clone, PartialEq)]
 pub struct ZomeVersionEntry {
     pub for_zome: EntryHash,
-    pub version: u64,
+    pub version: String,
+    pub ordering: u64,
     // pub properties: Option<serde_yaml::Value>,
     pub published_at: u64,
     pub last_updated: u64,
@@ -332,51 +172,109 @@ pub struct ZomeVersionEntry {
     pub mere_memory_hash: String,
     pub hdk_version: String,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
+
+    // optional
+    pub review_summary: Option<EntryHash>,
+    pub source_code_commit_url: Option<String>,
 }
 
-impl EntryModel for ZomeVersionEntry {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome_version", "summary" )
-    }
-}
 
-// Full
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ZomeVersionInfo {
-    pub for_zome: Option<Entity<ZomeEntry>>,
-    pub version: u64,
+
+//
+// Review Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone, PartialEq)]
+pub struct ReviewEntry {
+    pub subject_ids: Vec<(EntryHash, ActionHash)>,
+    pub author: AgentPubKey,
+    pub ratings: BTreeMap<String,u8>,
+    pub message: String,
     pub published_at: u64,
     pub last_updated: u64,
-    pub changelog: String,
-    pub mere_memory_addr: EntryHash,
-    pub mere_memory_hash: String,
-    pub hdk_version: String,
+    pub reaction_summary: Option<EntryHash>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
-}
-impl EntryModel for ZomeVersionInfo {
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome_version", "info" )
-    }
-}
+    pub deleted: bool,
 
-impl ZomeVersionEntry {
-    pub fn to_info(&self) -> ZomeVersionInfo {
-	let zome_entity = get_entity::<ZomeEntry>( &self.for_zome ).ok();
-
-	ZomeVersionInfo {
-	    for_zome: zome_entity,
-	    version: self.version.clone(),
-	    published_at: self.published_at.clone(),
-	    last_updated: self.last_updated.clone(),
-	    changelog: self.changelog.clone(),
-	    mere_memory_addr: self.mere_memory_addr.clone(),
-	    mere_memory_hash: self.mere_memory_hash.clone(),
-	    hdk_version: self.hdk_version.clone(),
-	    metadata: self.metadata.clone(),
-	}
-    }
+    // optional
+    pub related_entries: Option<BTreeMap<String, EntryHash>>,
 }
 
+
+
+//
+// Reaction Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone)]
+pub struct ReactionEntry {
+    pub subject_ids: Vec<(EntryHash, ActionHash)>,
+    pub author: AgentPubKey,
+    pub reaction_type: u64,
+
+    pub published_at: u64,
+    pub last_updated: u64,
+
+    pub metadata: BTreeMap<String, serde_yaml::Value>,
+    pub deleted: bool,
+
+    // optional
+    pub related_entries: Option<BTreeMap<String, EntryHash>>,
+}
+
+
+
+//
+// Reaction Summary Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone)]
+pub struct ReactionSummaryEntry {
+    pub subject_id: EntryHash,
+    pub subject_history: Vec<ActionHash>,
+
+    pub published_at: u64,
+    pub last_updated: u64,
+
+    pub factored_action_count: u64,
+
+    pub reaction_refs: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, u64, u64)>,
+    pub deleted_reactions: BTreeMap<String,(EntryHash, ActionHash)>,
+}
+
+
+
+//
+// Review Summary Entry
+//
+#[hdk_entry_helper]
+#[derive(Clone)]
+pub struct ReviewSummaryEntry {
+    pub subject_id: EntryHash,
+    pub subject_history: Vec<ActionHash>,
+
+    pub published_at: u64,
+    pub last_updated: u64,
+
+    pub factored_action_count: u64,
+    //
+    // For each Review, we need to have:
+    //
+    //   ID - original entry hash
+    //   latest action - the action of the review entry that we are using for stats
+    //   author - agent ID
+    //   action count - the history length
+    //   ratings - all rating values from review
+    //
+    //   reaction_summary - ID + latest action
+    //   likes (helpful) - num of likes for this review
+    //   dislikes (unhelpful) - num of likes for this review
+    //
+    //   review_total_activity - the activity count for all review revisions
+    //
+    pub review_refs: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, u64, BTreeMap<String,u8>, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
+    pub deleted_reviews: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
+}
 
 
 
@@ -390,7 +288,8 @@ pub mod tests {
 	let hash = EntryHash::from_raw_32( bytes.to_vec() );
 
 	DnaEntry {
-	    name: String::from("Game Turns"),
+	    name: String::from("game_turns"),
+	    display_name: Some(String::from("Game Turns")),
 	    description: String::from("A tool for turn-based games to track the order of player actions"),
 	    icon: Some(SerializedBytes::try_from(()).unwrap()),
 	    tags: Some(vec![ String::from("Games") ]),
@@ -398,10 +297,9 @@ pub mod tests {
 	    last_updated: 1618855430,
 
 	    // optional
-	    developer: DeveloperProfileLocation {
-		pubkey: hash.into(),
-	    },
+	    developer: hash.into(),
 	    deprecation: None,
+	    source_code_url: None,
 	    metadata: BTreeMap::new(),
 	}
     }
@@ -410,16 +308,8 @@ pub mod tests {
     ///
     fn dna_to_info_test() {
 	let dna1 = create_dnaentry();
-	let dna2 = create_dnaentry();
+	create_dnaentry();
 
-	assert_eq!(dna1.name, "Game Turns");
-
-	let dna_info = dna1.to_info();
-
-	assert_eq!(dna_info.name, "Game Turns");
-
-	let dna_info = dna2.to_info();
-
-	assert_eq!(dna_info.name, "Game Turns");
+	assert_eq!(dna1.name, "game_turns");
     }
 }

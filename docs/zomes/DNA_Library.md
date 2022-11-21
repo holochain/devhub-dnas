@@ -82,7 +82,7 @@ Example response
 ```
 
 
-#### `create_profile( input ) -> EntityResponse<ProfileInfo>`
+#### `create_profile( input ) -> EntityResponse<ProfileEntry>`
 Create a Profile for the Agent of this cell.
 
 - `input.name` - (*required*) `String`
@@ -90,21 +90,21 @@ Create a Profile for the Agent of this cell.
 - `input.email` - (*optional*) `String`
 - `input.website` - (*optional*) `String`
 
-Returns [`ProfileInfo`](../Entity_Models.md#profile-info-profileinfo) in an
+Returns [`ProfileEntry`](../Entry_Types.md#profile-profileentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `get_profile( input ) -> EntityResponse<ProfileInfo>`
+#### `get_profile( input ) -> EntityResponse<ProfileEntry>`
 Get the latest Profile for a given Agent pubkey.
 
 - `input.agent` - (*optional*) `Uint8Array(39)` an AgentPubKey
   - defaults to the cell Agent
 
-Returns [`ProfileInfo`](../Entity_Models.md#profile-info-profileinfo) in an
+Returns [`ProfileEntry`](../Entry_Types.md#profile-profileentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `update_profile( input ) -> EntityResponse<ProfileInfo>`
+#### `update_profile( input ) -> EntityResponse<ProfileEntry>`
 Update the given properties of a Profile based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
@@ -114,7 +114,7 @@ Update the given properties of a Profile based off of the entry at the given add
 - `input.properties.website` - (*optional*) `String`
 - `input.properties.avatar_image` - (*optional*) `Uint8Array` avatar image byte array
 
-Returns [`ProfileInfo`](../Entity_Models.md#profile-info-profileinfo) in an
+Returns [`ProfileEntry`](../Entry_Types.md#profile-profileentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -147,26 +147,29 @@ Returns a list of `Link` values in a [`CollectionResponse`](../API.md#translatio
 
 ### Zomes
 
-#### `create_zome( input ) -> EntityResponse<ZomeInfo>`
-Create a new Zome where the Agent of this cell will be used for the `developer.pubkey`.
+#### `create_zome( input ) -> EntityResponse<ZomeEntry>`
+Create a new Zome where the Agent of this cell will be used for the `developer`.
 
 - `input.name` - (*required*) `String`
 - `input.description` - (*required*) `String`
+- `input.display_name` - (*optional*) `String`
+- `input.tags` - (*optional*) `Array<String>`
 - `input.published_at` - (*optional*) `Number`
   - defaults to the current time
 - `input.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.metadata` - (*optional*) `Object`
 
-Returns [`ZomeInfo`](../Entity_Models.md#zome-info-zomeinfo) in an
+Returns [`ZomeEntry`](../Entry_Types.md#zome-zomeentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `get_zome( input ) -> EntityResponse<ZomeInfo>`
+#### `get_zome( input ) -> EntityResponse<ZomeEntry>`
 Get the latest info for the given Zome ID.
 
 - `input.id` - (*required*) `Uint8Array(39)` an EntryHash
 
-Returns [`ZomeInfo`](../Entity_Models.md#zome-info-zomeinfo) in an
+Returns [`ZomeEntry`](../Entry_Types.md#zome-zomeentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -176,7 +179,7 @@ Get a list of Zomes that were created by the given Agent pubkey.
 - `input.agent` - (*optional*) `Uint8Array(39)` an AgentPubKey
   - defaults to the cell Agent
 
-Returns a list of [`ZomeSummary`](../Entity_Models.md#zome-summary-zomesummary) values in an
+Returns a list of [`ZomeSummary`](../Entry_Types.md#zome-summary-zomesummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
@@ -186,7 +189,7 @@ Get a list of deprecated Zomes that were created by the given Agent pubkey.
 - `input.agent` - (*optional*) `Uint8Array(39)` an AgentPubKey
   - defaults to the cell Agent
 
-Returns a list of [`ZomeSummary`](../Entity_Models.md#zome-summary-zomesummary) values in an
+Returns a list of [`ZomeSummary`](../Entry_Types.md#zome-summary-zomesummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
@@ -198,61 +201,67 @@ Alias for `get_zomes( None )`.
 Alias for `get_deprecated_zomes( None )`.
 
 
-#### `update_zome( input ) -> EntityResponse<ZomeInfo>`
+#### `update_zome( input ) -> EntityResponse<ZomeEntry>`
 Update the given properties of a Zome based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.properties` - (*required*) `Object` properties to be updated
 - `input.properties.name` - (*optional*) `String`
+- `input.properties.display_name` - (*optional*) `String`
 - `input.properties.description` - (*optional*) `String`
+- `input.properties.tags` - (*optional*) `Array<String>`
 - `input.properties.published_at` - (*optional*) `Number`
 - `input.properties.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.properties.metadata` - (*optional*) `Object`
 
-Returns [`ZomeInfo`](../Entity_Models.md#zome-info-zomeinfo) in an
+Returns [`ZomeEntry`](../Entry_Types.md#zome-zomeentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `deprecate_zome( input ) -> EntityResponse<ZomeInfo>`
+#### `deprecate_zome( input ) -> EntityResponse<ZomeEntry>`
 Update the deprecation info of a Zome based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.message` - (*required*) `String`
 
-Returns [`ZomeInfo`](../Entity_Models.md#zome-info-zomeinfo) in an
+Returns [`ZomeEntry`](../Entry_Types.md#zome-zomeentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
 
 ### Zome Versions
 
-#### `create_zome_version( input ) -> EntityResponse<ZomeVersionInfo>`
+#### `create_zome_version( input ) -> EntityResponse<ZomeVersionEntry>`
 Create a new Zome Version for a specific Zome.
 
 - `input.for_zome` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.version` - (*required*) `Number`
-- `input.mere_memory_addr` - (*optional*) `Uint8Array(39)` an EntryHash
-- `input.zome_bytes` - (*optional*) `Uint8Array` WASM bytes
+- `input.hdk_version` - (*required*) `String`
+- (*required*)
+  - `input.mere_memory_addr` - (*optional*) `Uint8Array(39)` an EntryHash
+  - `input.zome_bytes` - (*optional*) `Uint8Array` WASM bytes
 - `input.changelog` - (*optional*) `String`
 - `input.published_at` - (*optional*) `Number`
   - defaults to the current time
 - `input.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.metadata` - (*optional*) `Object`
 
 If a `mere_memory_addr` is not provided, `zome_bytes` must be present.  When `zome_bytes` are
 provided, a Mere Memory record is automatically created and the resulting address is stored as the
 `mere_memory_addr`.
 
-Returns [`ZomeInfo`](../Entity_Models.md#zome-info-zomeinfo) in an
+Returns [`ZomeEntry`](../Entry_Types.md#zome-zomeentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `get_zome_version( input ) -> EntityResponse<ZomeVersionInfo>`
+#### `get_zome_version( input ) -> EntityResponse<ZomeVersionEntry>`
 Get the latest info for the given Zome Version ID.
 
 - `input.id` - (*required*) `Uint8Array(39)` an EntryHash
 
-Returns [`ZomeVersionInfo`](../Entity_Models.md#zome-version-info-zomeversioninfo) in an
+Returns [`ZomeVersionEntry`](../Entry_Types.md#zome-version-zomeversionentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -262,11 +271,11 @@ Get a list of Zome Versions that were created for the given Zome ID.
 - `input.for_zome` - (*required*) `Uint8Array(39)` an EntryHash
 
 Returns a list of
-[`ZomeVersionSummary`](../Entity_Models.md#zome-version-summary-zomeversionsummary) values in an
+[`ZomeVersionSummary`](../Entry_Types.md#zome-version-summary-zomeversionsummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
-#### `update_zome_version( input ) -> EntityResponse<ZomeVersionInfo>`
+#### `update_zome_version( input ) -> EntityResponse<ZomeVersionEntry>`
 Update the given properties of a Zome based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
@@ -275,8 +284,9 @@ Update the given properties of a Zome based off of the entry at the given addres
 - `input.properties.published_at` - (*optional*) `Number`
 - `input.properties.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.properties.metadata` - (*optional*) `Object`
 
-Returns [`ZomeVersionInfo`](../Entity_Models.md#zome-version-info-zomeversioninfo) in an
+Returns [`ZomeVersionEntry`](../Entry_Types.md#zome-version-zomeversionentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -291,27 +301,30 @@ Returns a `HeaderHash` in a [`DevHubResponse`](../API.md#translation-layer) pack
 
 ### DNAs
 
-#### `create_dna( input ) -> EntityResponse<DnaInfo>`
-Create a new DNA where the Agent of this cell will be used for the `developer.pubkey`.
+#### `create_dna( input ) -> EntityResponse<DnaEntry>`
+Create a new DNA where the Agent of this cell will be used for the `developer`.
 
 - `input.name` - (*required*) `String`
 - `input.description` - (*required*) `String`
+- `input.display_name` - (*optional*) `String`
+- `input.tags` - (*optional*) `Array<String>`
 - `input.icon` - (*optional*) `Uint8Array` the image bytes
 - `input.published_at` - (*optional*) `Number`
   - defaults to the current time
 - `input.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.metadata` - (*optional*) `Object`
 
-Returns [`DnaInfo`](../Entity_Models.md#dna-info-dnainfo) in an
+Returns [`DnaEntry`](../Entry_Types.md#dna-dnaentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `get_dna( input ) -> EntityResponse<DnaInfo>`
+#### `get_dna( input ) -> EntityResponse<DnaEntry>`
 Get the latest info for the given DNA ID.
 
 - `input.id` - (*required*) `Uint8Array(39)` an EntryHash
 
-Returns [`DnaInfo`](../Entity_Models.md#dna-info-dnainfo) in an
+Returns [`DnaEntry`](../Entry_Types.md#dna-dnaentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -321,7 +334,7 @@ Get a list of DNAs that were created by the given Agent pubkey.
 - `input.agent` - (*optional*) `Uint8Array(39)` an AgentPubKey
   - defaults to the cell Agent
 
-Returns a list of [`DnaSummary`](../Entity_Models.md#dna-summary-dnasummary) values in an
+Returns a list of [`DnaSummary`](../Entry_Types.md#dna-summary-dnasummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
@@ -331,7 +344,7 @@ Get a list of deprecated DNAs that were created by the given Agent pubkey.
 - `input.agent` - (*optional*) `Uint8Array(39)` an AgentPubKey
   - defaults to the cell Agent
 
-Returns a list of [`DnaSummary`](../Entity_Models.md#dna-summary-dnasummary) values in an
+Returns a list of [`DnaSummary`](../Entry_Types.md#dna-summary-dnasummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
@@ -343,61 +356,67 @@ Alias for `get_dnas( None )`.
 Alias for `get_deprecated_dnas( None )`.
 
 
-#### `update_dna( input ) -> EntityResponse<DnaInfo>`
+#### `update_dna( input ) -> EntityResponse<DnaEntry>`
 Update the given properties of a DNA based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.properties` - (*required*) `Object` properties to be updated
 - `input.properties.name` - (*optional*) `String`
+- `input.properties.display_name` - (*optional*) `String`
 - `input.properties.description` - (*optional*) `String`
+- `input.properties.tags` - (*optional*) `Array<String>`
 - `input.properties.icon` - (*optional*) `Uint8Array`
 - `input.properties.published_at` - (*optional*) `Number`
 - `input.properties.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.properties.metadata` - (*optional*) `Object`
 
-Returns [`DnaInfo`](../Entity_Models.md#dna-info-dnainfo) in an
+Returns [`DnaEntry`](../Entry_Types.md#dna-dnaentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `deprecate_dna( input ) -> EntityResponse<DnaInfo>`
+#### `deprecate_dna( input ) -> EntityResponse<DnaEntry>`
 Update the deprecation info of a DNA based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.message` - (*required*) `String`
 
-Returns [`DnaInfo`](../Entity_Models.md#dna-info-dnainfo) in an
+Returns [`DnaEntry`](../Entry_Types.md#dna-dnaentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
 
 ### DNA Versions
 
-#### `create_dna_version( input ) -> EntityResponse<DnaVersionInfo>`
+#### `create_dna_version( input ) -> EntityResponse<DnaVersionEntry>`
 Create a new DNA Version for a specific DNA.
 
 - `input.for_dna` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.version` - (*required*) `Number`
-- `input.zomes` - (*optional*) `Array`
-- `input.zomes[].name` - (*optional*) `String`
-- `input.zomes[].zome` - (*optional*) `Uint8Array(39)` an EntryHash
-- `input.zomes[].version` - (*optional*) `Uint8Array(39)` an EntryHash
-- `input.zomes[].resource` - (*optional*) `Uint8Array(39)` an EntryHash
+- `input.hdk_version` - (*required*) `String`
+- `input.zomes` - (*required*) `Array`
+- `input.zomes[].name` - (*required*) `String`
+- `input.zomes[].zome` - (*required*) `Uint8Array(39)` an EntryHash
+- `input.zomes[].version` - (*required*) `Uint8Array(39)` an EntryHash
+- `input.zomes[].resource` - (*required*) `Uint8Array(39)` an EntryHash
 - `input.changelog.` - (*optional*) `String`
 - `input.published_at` - (*optional*) `Number`
   - defaults to the current time
 - `input.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.properties` - (*optional*) `Object`
+- `input.metadata` - (*optional*) `Object`
 
-Returns [`DnaVersionInfo`](../Entity_Models.md#dna-version-info-dnaversioninfo) in an
+Returns [`DnaVersionEntry`](../Entry_Types.md#dna-version-dnaversionentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
-#### `get_dna_version( input ) -> EntityResponse<DnaVersionInfo>`
+#### `get_dna_version( input ) -> EntityResponse<DnaVersionEntry>`
 Get the latest info for the given DNA Version ID.
 
 - `input.id` - (*required*) `Uint8Array(39)` an EntryHash
 
-Returns [`DnaVersionInfo`](../Entity_Models.md#dna-version-info-dnaversioninfo) in an
+Returns [`DnaVersionEntry`](../Entry_Types.md#dna-version-dnaversionentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -407,11 +426,11 @@ Get a list of DNA Versions that were created for the given DNA ID.
 - `input.for_dna` - (*required*) `Uint8Array(39)` an EntryHash
 
 Returns a list of
-[`DnaVersionSummary`](../Entity_Models.md#dna-version-summary-dnaversionsummary) values in an
+[`DnaVersionSummary`](../Entry_Types.md#dna-version-summary-dnaversionsummary) values in an
 [`EntityCollectionResponse`](../API.md#translation-layer) package
 
 
-#### `update_dna_version( input ) -> EntityResponse<DnaVersionInfo>`
+#### `update_dna_version( input ) -> EntityResponse<DnaVersionEntry>`
 Update the given properties of a DNA based off of the entry at the given address.
 
 - `input.addr` - (*required*) `Uint8Array(39)` an EntryHash
@@ -420,8 +439,9 @@ Update the given properties of a DNA based off of the entry at the given address
 - `input.properties.published_at` - (*optional*) `Number`
 - `input.properties.last_updated` - (*optional*) `Number`
   - defaults to the current time
+- `input.properties.metadata` - (*optional*) `Object`
 
-Returns [`DnaVersionInfo`](../Entity_Models.md#dna-version-info-dnaversioninfo) in an
+Returns [`DnaVersionEntry`](../Entry_Types.md#dna-version-dnaversionentry) in an
 [`EntityResponse`](../API.md#translation-layer) package
 
 
@@ -441,5 +461,5 @@ Get the latest info for the given DNA Version ID and include the assembled DNA p
 
 - `input.id` - (*required*) `Uint8Array(39)` an EntryHash
 
-Returns [`DnaVersionPackage`](../Entity_Models.md#dna-version-package-dnaversionpackage) in an
+Returns [`DnaVersionPackage`](../Entry_Types.md#dna-version-package-dnaversionpackage) in an
 [`EntityResponse`](../API.md#translation-layer) package

@@ -1,9 +1,25 @@
 manifest_version: "1"
 name: dnarepo
-uuid: 00000000-0000-0000-0000-000000000000
-properties: ~
-zomes:
-  - name: dna_library
-    bundled: ../../zomes/dna_library.wasm
-  - name: mere_memory
-    bundled: ../../zomes/mere_memory.wasm
+integrity:
+  uuid: 00000000-0000-0000-0000-000000000000
+  properties: ~
+  origin_time: 2022-07-21T00:00:00.000000Z
+  zomes:
+    - name: dnarepo_core
+      bundled: ../../zomes/dnarepo_core.wasm
+    - name: mere_memory_core
+      bundled: ../../zomes/mere_memory_core.wasm
+coordinator:
+  zomes:
+    - name: dna_library
+      bundled: ../../zomes/dna_library.wasm
+      dependencies:
+        - name: dnarepo_core
+    - name: reviews
+      bundled: ../../zomes/reviews.wasm
+      dependencies:
+        - name: dnarepo_core
+    - name: mere_memory
+      bundled: ../../zomes/mere_memory.wasm
+      dependencies:
+        - name: mere_memory_core

@@ -10,9 +10,10 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
-hc_crud_ceps = "0.33.1"
+happs_core = {path = "../happs_core"}
+hc_crud_ceps = "0.68.0"
 # hc_crud_ceps = {path = "../../../rust-hc-crud-ceps"}
-hdk = "0.0.136"
+hdk = "0.0.160"
 hex = "0"
 serde = "1"
 serde_yaml = "0.8.17"

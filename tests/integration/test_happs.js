@@ -10,12 +10,21 @@ const expect				= require('chai').expect;
 const { HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
+const { ConductorError,
+	EntryNotFoundError,
+	DeserializationError,
+	CustomError,
+	...hc_client }			= require('@whi/holochain-client');
 
+const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs.dna");
 
+let happ_1;
+let happ_release_1;
+let happ_release_2;
 
 function basic_tests () {
     it("should manage happ configurations", async function () {
@@ -30,14 +39,14 @@ function basic_tests () {
 	    "tags": [ "Games", "Strategy" ],
 	};
 
-	let happ			= await alice.call( "happs", "happ_library", "create_happ", happ_input );
+	let happ			= happ_1 = await alice.call( "happs", "happ_library", "create_happ", happ_input );
 	log.normal("New hApp: %s -> %s", String(happ.$addr), happ.title );
 
 	expect( happ.description	).to.equal( happ_input.description );
 
 	{
 	    let happs			= await alice.call( "happs", "happ_library", "get_my_happs" );
-	    log.normal("My hApps: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("My hApps: %s", happs.length );
 
 	    expect( happs		).to.have.length( 1 );
 	}
@@ -47,36 +56,36 @@ function basic_tests () {
 		"filter": "title",
 		"keyword": happ_input.title.toLowerCase(),
 	    });
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 1 );
 	}
 
 	{
 	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "Games" ] );
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 1 );
 	}
 	{
 	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "strategy" ] );
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 1 );
 	}
 	{
 	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "Games", "Action" ] );
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 0 );
 	}
 
-	let happ_addr			= happ.$addr;
+	let happ_addr			= happ.$action;
 	{
 	    let title			= "Chess++";
 	    let description		= "New description";
 	    let tags			= [ "Games", "Boardgame" ];
-	    let update			= await alice.call( "happs", "happ_library", "update_happ", {
+	    let update			= happ_1 = await alice.call( "happs", "happ_library", "update_happ", {
 		"addr": happ_addr,
 		"properties": {
 		    title,
@@ -85,7 +94,7 @@ function basic_tests () {
 		},
 	    });
 	    log.normal("New hApp: %s -> %s", String(update.$addr), update.title );
-	    happ_addr			= update.$addr;
+	    happ_addr			= update.$action;
 
 	    expect( update.title	).to.equal( title );
 	    expect( update.description	).to.equal( description );
@@ -100,13 +109,13 @@ function basic_tests () {
 
 	{
 	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "strategy" ] );
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 0 );
 	}
 	{
 	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "boardgame" ] );
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 1 );
 	}
@@ -116,7 +125,7 @@ function basic_tests () {
 		"filter": "title",
 		"keyword": happ_input.title.toLowerCase(),
 	    });
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 0 );
 	}
@@ -126,26 +135,26 @@ function basic_tests () {
 		"filter": "title",
 		"keyword": happ.title.toLowerCase(),
 	    });
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 1 );
 	}
 
 	{
 	    let happs			= await clients.alice.call( "happs", "happ_library", "get_all_happs");
-	    log.normal("hApps by hash: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by hash: %s", happs.length );
 
 	    expect( happs		).to.have.length( 1 );
 	}
 
 	{
 	    let message			= "This hApp is no longer maintained";
-	    let update			= await alice.call( "happs", "happ_library", "deprecate_happ", {
+	    let update			= happ_1 = await alice.call( "happs", "happ_library", "deprecate_happ", {
 		"addr": happ_addr,
 		"message": message,
 	    });
 	    log.normal("New hApp: %s -> %s", String(update.$addr), update.title );
-	    happ_addr			= update.$addr;
+	    happ_addr			= update.$action;
 
 	    expect( update.deprecation		).to.be.an( "object" );
 	    expect( update.deprecation.message	).to.equal( message );
@@ -164,14 +173,14 @@ function basic_tests () {
 		"filter": "title",
 		"keyword": happ.title.toLowerCase(),
 	    });
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 0 );
 	}
 
 	{
 	    let happs			= await alice.call( "happs", "happ_library", "get_happs_by_tags", [ "games", "boardgame" ] );
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 0 );
 	}
@@ -184,6 +193,7 @@ function basic_tests () {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
+	    "ordering": 1,
 	    "manifest": {
 		"manifest_version": "1",
 		"roles": [
@@ -207,10 +217,14 @@ function basic_tests () {
 	    ],
 	};
 
-	let release			= await alice.call( "happs", "happ_library", "create_happ_release", release_input );
+	let release			= happ_release_1 = await alice.call( "happs", "happ_library", "create_happ_release", release_input );
 	log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
 
 	expect( release.description	).to.equal( release_input.description );
+
+	{
+	    happ_release_2		= await alice.call( "happs", "happ_library", "create_happ_release", release_input );
+	}
 
 	{
 	    let dna_hash_bytes		= Buffer.from( dna_wasm_hash, "hex" );
@@ -221,9 +235,9 @@ function basic_tests () {
 		"filter": "uniqueness_hash",
 		"keyword": hash.digest("hex"),
 	    });
-	    log.normal("hApp releases by hash: %s -> %s", versions.length, String(versions.$base) );
+	    log.normal("hApp releases by hash: %s", versions.length );
 
-	    expect( versions		).to.have.length( 1 );
+	    expect( versions		).to.have.length( 2 );
 	}
 
 	{
@@ -239,17 +253,16 @@ function basic_tests () {
 	    let releases		= await alice.call( "happs", "happ_library", "get_happ_releases", {
 		"for_happ": happ.$id,
 	    });
-	    log.normal("hApp Releases %s -> %s", releases.length, String(releases.$base) );
+	    log.normal("hApp Releases %s", releases.length );
 
-	    expect( happ.$id		).to.deep.equal( releases.$base );
-	    expect( releases		).to.have.length( 1 );
+	    expect( releases		).to.have.length( 2 );
 	}
 
 	let happ_release_addr;
 	{
 	    let description		= "The first release (updated)";
-	    let update			= await alice.call( "happs", "happ_library", "update_happ_release", {
-		"addr": release.$addr,
+	    let update			= happ_release_1 = await alice.call( "happs", "happ_library", "update_happ_release", {
+		"addr": release.$action,
 		"properties": {
 		    description,
 		},
@@ -261,10 +274,10 @@ function basic_tests () {
 	}
 
 	{
-	    let header			= await alice.call( "happs", "happ_library", "delete_happ_release", {
+	    let action			= await alice.call( "happs", "happ_library", "delete_happ_release", {
 		"id": release.$id,
 	    });
-	    log.normal("Delete hApp: %s", new HoloHash( header ) );
+	    log.normal("Delete hApp: %s", new HoloHash( action ) );
 	}
 
 	{
@@ -276,9 +289,9 @@ function basic_tests () {
 		"filter": "uniqueness_hash",
 		"keyword": hash.digest("hex"),
 	    });
-	    log.normal("hApp releases by hash: %s -> %s", versions.length, String(versions.$base) );
+	    log.normal("hApp releases by hash: %s", versions.length );
 
-	    expect( versions		).to.have.length( 0 );
+	    expect( versions		).to.have.length( 1 );
 	}
 
 	{
@@ -290,7 +303,7 @@ function basic_tests () {
 	    } catch (err) {
 		expect( err.kind	).to.equal( "UserError" );
 		expect( err.name	).to.equal( "EntryNotFoundError" );
-		expect( err.message	).to.have.string( "Entry not found for address: " );
+		expect( err.message	).to.have.string( "Record not found for Entry address" );
 
 		failed			= true;
 	    }
@@ -305,7 +318,7 @@ function basic_tests () {
 		"filter": "title",
 		"keyword": crypto.randomBytes( 10 ).toString("hex"),
 	    });
-	    log.normal("hApps by title: %s -> %s", happs.length, String(happs.$base) );
+	    log.normal("hApps by title: %s", happs.length );
 
 	    expect( happs		).to.have.length( 0 );
 	}) );
@@ -317,7 +330,7 @@ function basic_tests () {
 		"filter": "uniqueness_hash",
 		"keyword": crypto.randomBytes( 10 ).toString("hex"),
 	    });
-	    log.normal("hApp releases by hash: %s -> %s", versions.length, String(versions.$base) );
+	    log.normal("hApp releases by hash: %s", versions.length );
 
 	    expect( versions		).to.have.length( 0 );
 	}) );
@@ -325,13 +338,70 @@ function basic_tests () {
 
     it("should get all hApps", async function () {
 	let happs			= await clients.alice.call( "happs", "happ_library", "get_all_happs");
-	log.normal("hApps by hash: %s -> %s", happs.length, String(happs.$base) );
+	log.normal("hApps by hash: %s", happs.length );
 
 	expect( happs			).to.have.length( 0 );
     });
 }
 
 function errors_tests () {
+    it("should fail to update another Agent's happ", async function () {
+	await expect_reject( async () => {
+	    await clients.bobby.call( "happs", "happ_library", "update_happ", {
+		"addr": happ_1.$action,
+		"properties": {
+		    "name": "bla bla bla",
+		}
+	    });
+	}, ConductorError, "InvalidCommit error: Previous entry author does not match Action author" );
+    });
+
+    it("should fail to update deprecated happ", async function () {
+	await expect_reject( async () => {
+	    await clients.alice.call( "happs", "happ_library", "update_happ", {
+		"addr": happ_1.$action,
+		"properties": {
+		    "name": "bla bla bla",
+		}
+	    });
+	}, ConductorError, "InvalidCommit error: Cannot update deprecated hApp" );
+    });
+
+    it("should fail to update another Agent's happ release", async function () {
+	await expect_reject( async () => {
+	    await clients.bobby.call( "happs", "happ_library", "update_happ_release", {
+		"addr": happ_release_2.$action,
+		"properties": {
+		    "changelog": "",
+		}
+	    });
+	}, ConductorError, "InvalidCommit error: HappEntry author does not match Action author" );
+    });
+
+    it("should fail to delete another Agent's happ release", async function () {
+	await expect_reject( async () => {
+	    await clients.bobby.call( "happs", "happ_library", "delete_happ_release", {
+		"id": happ_release_2.$id,
+	    });
+	}, ConductorError, "InvalidCommit error: Delete author does not match Create author" );
+    });
+
+    it("should fail to create hApp release with empty DNAs", async function () {
+	await expect_reject( async () => {
+	    await clients.alice.call( "happs", "happ_library", "create_happ_release", {
+		"name": "v0.1.0",
+		"description": "The first release",
+		"for_happ": happ_1.$id,
+		"ordering": 1,
+		"manifest": {
+		    "manifest_version": "1",
+		    "roles": [],
+		},
+		"hdk_version": "v0.0.120",
+		"dnas": [],
+	    });
+	}, Error, "HappReleaseEntry DNA list cannot be empty" );
+    });
 }
 
 describe("hApps", () => {
@@ -347,6 +417,7 @@ describe("hApps", () => {
 	    "happs": HAPPS_PATH,
 	}, [
 	    "alice",
+	    "bobby",
 	]);
 
 	// Must call whoami on each cell to ensure that init has finished.

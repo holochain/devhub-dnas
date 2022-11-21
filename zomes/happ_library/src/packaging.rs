@@ -5,7 +5,7 @@ use devhub_types::{
     errors::{ AppError },
     dnarepo_entry_types::{ DnaVersionPackage },
     happ_entry_types::{ HappManifest, WebHappManifest, ResourceRef },
-    web_asset_entry_types::{ FileInfo },
+    web_asset_entry_types::{ FilePackage },
     call_local_dna_zome,
     encode_bundle,
 };
@@ -17,17 +17,13 @@ use hdk::prelude::*;
 
 
 #[derive(Debug, Deserialize)]
-pub struct GetGUIInput {
+pub struct GetWebAssetInput {
     pub id: EntryHash,
 }
 
-pub fn get_gui(input: GetGUIInput) -> AppResult<Entity<FileInfo>> {
+pub fn get_webasset(input: GetWebAssetInput) -> AppResult<Entity<FilePackage>> {
     debug!("Get GUI from: {}", input.id );
-    let pubkey = agent_info()?.agent_initial_pubkey;
-    let webassets_hash = devhub_types::webassets_hash()?;
-    let cell_id = CellId::new( webassets_hash, pubkey );
-
-    let file_info = call_local_dna_zome( &cell_id, "web_assets", "get_file", GetEntityInput {
+    let file_info = call_local_dna_zome( "web_assets", "web_assets", "get_file", GetEntityInput {
 	id: input.id,
     })?;
 
@@ -80,10 +76,6 @@ pub struct GetReleasePackageInput {
 
 pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> {
     debug!("Get release package: {}", input.id );
-    let pubkey = agent_info()?.agent_initial_pubkey;
-    let dnarepo_hash = devhub_types::dnarepo_hash()?;
-    let cell_id = CellId::new( dnarepo_hash, pubkey );
-
     let mut entity = crate::happ_release::get_happ_release(GetEntityInput {
 	id: input.id,
     })?;
@@ -94,7 +86,7 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
     for (i, dna_ref) in entity.content.dnas.iter().enumerate() {
 	debug!("Fetching DNA package: {}", dna_ref.version );
 
-	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( &cell_id, "dna_library", "get_dna_package", GetEntityInput {
+	let version_entity : Entity<DnaVersionPackage> = call_local_dna_zome( "dnarepo", "dna_library", "get_dna_package", GetEntityInput {
 	    id: dna_ref.version.to_owned(),
 	})?;
 
@@ -142,20 +134,24 @@ pub struct WebHappBundle {
 #[derive(Debug, Deserialize)]
 pub struct GetWebHappPackageInput {
     pub name: String,
-    pub id: EntryHash,
+    pub happ_release_id: EntryHash,
+    pub gui_release_id: EntryHash,
 }
 pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> {
+    let gui_release = crate::gui_release::get_gui_release(GetEntityInput {
+	id: input.gui_release_id.clone(),
+    })?;
+
     let happ_release = crate::happ_release::get_happ_release(GetEntityInput {
-	id: input.id.clone(),
+	id: input.happ_release_id.clone(),
     })?;
 
-    debug!("Get release package: {}", input.id );
     let happ_pack_bytes = get_release_package(GetReleasePackageInput {
-	id: input.id.clone(),
+	id: input.happ_release_id.clone(),
     })?;
 
-    let web_asset_entity = get_gui(GetGUIInput {
-	id: happ_release.content.gui.ok_or(AppError::UnexpectedStateError(String::from("Missing GUI asset")))?.asset_group_id,
+    let web_asset_entity = get_webasset(GetWebAssetInput {
+	id: gui_release.content.web_asset_id,
     })?;
 
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
@@ -171,7 +167,7 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
     debug!("Adding hApp bundle resource with {} bytes", happ_pack_bytes.len() );
     resources.insert( happ_ref.clone(), happ_pack_bytes );
 
-    debug!("Assembling 'webhapp' package: {:?}", happ_release.content.for_happ.ok_or(AppError::UnexpectedStateError(String::from("Missing parent hApp")))?.content.title );
+    debug!("Assembling 'webhapp' package for hApp: {}", happ_release.content.for_happ );
     let package = WebHappBundle {
 	manifest: WebHappManifest {
 	    manifest_version: String::from("1"),
@@ -190,3 +186,24 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
 
     Ok( happ_pack_bytes )
 }
+
+// WasmError: WasmError {
+//     file: "crates/holochain/src/core/ribosome/host_fn/call.rs",
+//     line: 141,
+//     error: Host("Wasm runtime error while working with Ribosome: RuntimeError: ")
+// }
+// WasmError {
+//     file: "/build/cargo-vendor-dir/holochain_wasmer_host-0.0.80/src/guest.rs",
+//     line: 259,
+//     error: CallError("
+// RuntimeError: unreachable
+//     at miniz_oxide::deflate::core::compress_inner::h79f9a7ea99bb2840 (<module>[2241]:0x32b0b4)
+//     at miniz_oxide::deflate::stream::deflate::h18357b407d294976 (<module>[2244]:0x32c89a)
+//     at <flate2::mem::Compress as flate2::zio::Ops>::run_vec::hafa76368e22a0b14 (<module>[2210]:0x326581)
+//     at <flate2::zio::Writer<W,D> as std::io::Write>::write::h3f17566e1f8bb1d7 (<module>[98]:0x7eee)
+//     at std::io::Write::write_all::h4f003acf95533db1 (<module>[162]:0x17467)
+//     at devhub_types::encode_bundle::h61f82fb84419427e (<module>[335]:0x46a48)
+//     at dna_library::packaging::get_dna_package::h9c34a8ced6abdd0f (<module>[236]:0x20d4e)
+//     at dna_library::get_dna_package::ha90632cc769615d8 (<module>[958]:0x16ec45)
+//     at get_dna_package (<module>[305]:0x3a075)
+// ") }
