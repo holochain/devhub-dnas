@@ -18,45 +18,45 @@ use crate::{
 fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     match op {
 	Op::StoreRecord( store_record ) => {
-	    if let Some(EntryType::App(AppEntryType{ id, zome_id, .. })) = store_record.record.action().entry_type() {
-		if *zome_id != zome_info().unwrap().id {
+	    if let Some(EntryType::App(AppEntryDef{ entry_index, zome_index, .. })) = store_record.record.action().entry_type() {
+		if *zome_index != zome_info().unwrap().id {
 		    // This Record does not belong to our Zome so we don't know how to validate it
 		    return Ok(ValidateCallbackResult::Valid);
 		}
 
 		debug!("Forwarding validation for StoreRecord->Action::Create->EntryType::App to validation handler");
 		if let RecordEntry::Present(entry) = store_record.record.entry() {
-		    if let Some(entry_type) = EntryTypes::deserialize_from_type(*zome_id, *id, &entry )? {
+		    if let Some(entry_type) = EntryTypes::deserialize_from_type(*zome_index, *entry_index, &entry )? {
 			validate_record( entry_type, &store_record.record )
 		    }
 		    else {
-			Ok(ValidateCallbackResult::Invalid(format!("No matching EntryTypes value for: {}/{}", zome_id.0, id.0 )))
+			Ok(ValidateCallbackResult::Invalid(format!("No matching EntryTypes value for: {}/{}", zome_index.0, entry_index.0 )))
 		    }
 		}
 		else {
-		    Ok(ValidateCallbackResult::Invalid(format!("Record with AppEntryType was expected to have a Present(entry): {:?}", store_record.record )))
+		    Ok(ValidateCallbackResult::Invalid(format!("Record with AppEntryDef was expected to have a Present(entry): {:?}", store_record.record )))
 		}
 	    }
 	    else if let Action::Delete(delete) = store_record.record.action() {
 		let original_record = must_get_valid_record( delete.deletes_address.to_owned() )?;
 		let original_action = original_record.signed_action.action();
 
-		if let Some(EntryType::App(AppEntryType{ id, zome_id, .. })) = original_action.entry_type() {
-		    if *zome_id != zome_info().unwrap().id {
+		if let Some(EntryType::App(AppEntryDef{ entry_index, zome_index, .. })) = original_action.entry_type() {
+		    if *zome_index != zome_info().unwrap().id {
 			// This Record does not belong to our Zome so we don't know how to validate it
 			return Ok(ValidateCallbackResult::Valid)
 		    }
 
 		    if let RecordEntry::Present(entry) = original_record.entry() {
-			if let Some(entry_type) = EntryTypes::deserialize_from_type(*zome_id, *id, &entry )? {
+			if let Some(entry_type) = EntryTypes::deserialize_from_type(*zome_index, *entry_index, &entry )? {
 			    validate_record( entry_type, &store_record.record )
 			}
 			else {
-			    Ok(ValidateCallbackResult::Invalid(format!("No matching EntryTypes value for: {}/{}", zome_id.0, id.0 )))
+			    Ok(ValidateCallbackResult::Invalid(format!("No matching EntryTypes value for: {}/{}", zome_index.0, entry_index.0 )))
 			}
 		    }
 		    else {
-			Ok(ValidateCallbackResult::Invalid(format!("Record with AppEntryType was expected to have a Present(entry): {:?}", store_record.record )))
+			Ok(ValidateCallbackResult::Invalid(format!("Record with AppEntryDef was expected to have a Present(entry): {:?}", store_record.record )))
 		    }
 		}
 		else {

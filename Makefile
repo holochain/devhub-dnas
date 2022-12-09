@@ -75,9 +75,9 @@ zomes/%/Cargo.lock:
 	touch $@
 
 $(MERE_MEMORY_WASM):
-	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.60.1/mere_memory.wasm' --output $@
+	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.75.0/mere_memory.wasm' --output $@
 $(MERE_MEMORY_CORE_WASM):
-	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.60.1/mere_memory_core.wasm' --output $@
+	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.75.0/mere_memory_core.wasm' --output $@
 
 
 
@@ -154,17 +154,17 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.0.151"
-NEW_HDK_VERSION = "0.0.160"
+PRE_HDK_VERSION = "0.0.160"
+NEW_HDK_VERSION = "0.0.163"
 
-PRE_HDI_VERSION = "0.1.1"
-NEW_HDI_VERSION = "0.1.8"
+PRE_HDI_VERSION = "0.1.8"
+NEW_HDI_VERSION = "0.1.10"
 
-PRE_CRUD_VERSION = "0.59.0"
-NEW_CRUD_VERSION = "0.68.0"
+PRE_CRUD_VERSION = "0.68.0"
+NEW_CRUD_VERSION = "0.71.0"
 
-PRE_MM_VERSION = "0.51.0"
-NEW_MM_VERSION = "0.60.0"
+PRE_MM_VERSION = "0.60.0"
+NEW_MM_VERSION = "0.75.0"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 
