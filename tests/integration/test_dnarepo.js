@@ -50,7 +50,7 @@ function basic_tests () {
 	let profile_input		= {
 	    "name": "Zed Shaw",
 	    "email": "zed.shaw@example.com",
-	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( alice._agent ).toString("hex"), 10)).toString(), "base64"),
+	    "avatar_image": Buffer.from( (new Identicon( Buffer.from( alice.cellAgent() ).toString("hex"), 10)).toString(), "base64"),
 	};
 
 	{
@@ -69,12 +69,12 @@ function basic_tests () {
 
 	{
 	    let action_hash		= await alice.call( "dnarepo", "dna_library", "follow_developer", {
-		"agent": clients.bobby._agent,
+		"agent": clients.bobby.cellAgent(),
 	    });
 	    log.normal("Following link hash: %s", String(new HoloHash(action_hash)) );
 
 	    await alice.call( "dnarepo", "dna_library", "follow_developer", {
-		"agent": clients.carol._agent,
+		"agent": clients.carol.cellAgent(),
 	    });
 
 	    let following		= await alice.call( "dnarepo", "dna_library", "get_following", null );
@@ -83,7 +83,7 @@ function basic_tests () {
 	    expect( following		).to.have.length( 2 );
 
 	    let delete_hash		= await alice.call( "dnarepo", "dna_library", "unfollow_developer", {
-		"agent": clients.carol._agent,
+		"agent": clients.carol.cellAgent(),
 	    });
 	    log.normal("Unfollowing link hash: %s", String(new HoloHash(delete_hash)) );
 
@@ -261,7 +261,7 @@ function basic_tests () {
 	    expect( zomes		).to.have.length( 2 );
 
 	    let b_zomes			= await alice.call( "dnarepo", "dna_library", "get_zomes", {
-		"agent": clients.bobby._agent,
+		"agent": clients.bobby.cellAgent(),
 	    });
 	    log.normal("Bobby ZOMEs: %s", b_zomes.length );
 	    expect( b_zomes		).to.have.length( 0 );
@@ -565,7 +565,7 @@ function basic_tests () {
 	    expect( dnas		).to.have.length( 1 );
 
 	    let b_dnas			= await alice.call( "dnarepo", "dna_library", "get_dnas", {
-		"agent": clients.bobby._agent,
+		"agent": clients.bobby.cellAgent(),
 	    });
 	    log.normal("Bobby DNAs: %s", b_dnas.length );
 	    expect( b_dnas		).to.have.length( 0 );
@@ -971,7 +971,37 @@ describe("DNArepo", () => {
 	this.timeout( 60_000 );
 
 	clients				= await backdrop( holochain, {
-	    "dnarepo": DNAREPO_PATH,
+	    "dnarepo": {
+		"path": DNAREPO_PATH,
+		"zomes": {
+		    "dna_library": [
+			"whoami",
+
+			"create_profile", "get_profile", "update_profile",
+			"follow_developer", "get_following", "unfollow_developer",
+
+			"create_zome", "get_zome", "update_zome", "deprecate_zome",
+			"get_my_zomes", "get_zomes", "get_all_zomes", "get_zomes_by_filter", "get_zomes_by_tags",
+
+			"create_zome_version", "get_zome_version", "update_zome_version", "delete_zome_version",
+			"get_zome_versions", "get_zome_versions_by_filter",
+
+			"create_dna", "get_dna", "update_dna", "deprecate_dna",
+			"get_my_dnas", "get_dnas", "get_all_dnas", "get_dnas_by_filter", "get_dnas_by_tags",
+
+			"create_dna_version", "get_dna_version", "update_dna_version", "delete_dna_version",
+			"get_dna_versions", "get_dna_versions_by_filter",
+
+			"get_dna_package",
+			"get_hdk_versions",
+
+			"get_zome_versions_by_hdk_version",
+			"get_dna_versions_by_hdk_version",
+			"get_zomes_with_an_hdk_version",
+			"get_dnas_with_an_hdk_version",
+		    ],
+		},
+	    },
 	}, [
 	    "alice",
 	    "bobby",

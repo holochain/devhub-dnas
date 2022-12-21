@@ -136,8 +136,8 @@ fn zome_call_response_as_result(response: ZomeCallResponse) -> AppResult<zome_io
     Ok( match response {
 	ZomeCallResponse::Ok(bytes)
 	    => Ok(bytes),
-	ZomeCallResponse::Unauthorized(cell_id, zome, func, agent)
-	    => Err(AppError::UnauthorizedError( cell_id, zome, func, agent )),
+	ZomeCallResponse::Unauthorized(zome_call_auth, cell_id, zome, func, agent)
+	    => Err(AppError::UnauthorizedError(zome_call_auth, cell_id, zome, func, agent )),
 	ZomeCallResponse::NetworkError(message)
 	    => Err(AppError::NetworkError(message)),
 	ZomeCallResponse::CountersigningSession(message)

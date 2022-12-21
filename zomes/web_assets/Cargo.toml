@@ -11,11 +11,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
 web_assets_core = {path = "../web_assets_core"}
-hc_crud_ceps = "0.71.0"
-# hc_crud_ceps = {path = "../../../rust-hc-crud-ceps"}
-mere_memory_types = "0.75.0"
-# mere_memory_types = { path = "../../../zome-mere-memory/mere_memory_types" }
-hdk = "0.0.163"
+hc_crud_ceps = "0.72.0"
+mere_memory_types = "0.76.0"
+hdk = "0.1.0-beta-rc.0"
 serde = "1"
 serde_yaml = "0.8.17"
 thiserror = "1"
