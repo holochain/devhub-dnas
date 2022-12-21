@@ -75,9 +75,25 @@ zomes/%/Cargo.lock:
 	touch $@
 
 $(MERE_MEMORY_WASM):
-	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.75.0/mere_memory.wasm' --output $@
+	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory.wasm" --output $@
 $(MERE_MEMORY_CORE_WASM):
-	curl --fail -L 'https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v0.75.0/mere_memory_core.wasm' --output $@
+	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory_core.wasm" --output $@
+
+use-local-holochain-backdrop:
+	cd tests; npm uninstall @whi/holochain-backdrop
+	cd tests; npm install --save-dev ../../node-holochain-backdrop
+use-npm-holochain-backdrop:
+	cd tests; npm uninstall @whi/holochain-backdrop
+	cd tests; npm install --save-dev @whi/holochain-backdrop
+use-local-holochain-client:
+	cd tests; npm uninstall @whi/holochain-client
+	cd tests; npm install --save-dev ../../js-holochain-client
+use-npm-holochain-client:
+	cd tests; npm uninstall @whi/holochain-client
+	cd tests; npm install --save-dev @whi/holochain-client
+
+use-local:		use-local-holochain-client use-local-holochain-backdrop
+use-npm:		  use-npm-holochain-client   use-npm-holochain-backdrop
 
 
 
@@ -154,25 +170,26 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.0.160"
-NEW_HDK_VERSION = "0.0.163"
+PRE_HDK_VERSION = "0.0.163"
+NEW_HDK_VERSION = "0.1.0-beta-rc.0"
 
-PRE_HDI_VERSION = "0.1.8"
-NEW_HDI_VERSION = "0.1.10"
+PRE_HDI_VERSION = "0.1.10"
+NEW_HDI_VERSION = "0.2.0-beta-rc.0"
 
-PRE_CRUD_VERSION = "0.68.0"
-NEW_CRUD_VERSION = "0.71.0"
+PRE_CRUD_VERSION = "0.71.0"
+NEW_CRUD_VERSION = "0.72.0"
 
-PRE_MM_VERSION = "0.60.0"
-NEW_MM_VERSION = "0.75.0"
+PRE_MM_VERSION = "0.75.0"
+NEW_MM_VERSION = "0.76.0"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 
 update-hdk-version:
-	git grep -l $(PRE_HDK_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_HDK_VERSION)/$(NEW_HDK_VERSION)/g'
+	git grep -l '$(PRE_HDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDK_VERSION)|$(NEW_HDK_VERSION)|g'
 update-hdi-version:
-	git grep -l $(PRE_HDI_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_HDI_VERSION)/$(NEW_HDI_VERSION)/g'
+	git grep -l '$(PRE_HDI_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDI_VERSION)|$(NEW_HDI_VERSION)|g'
 update-crud-version:
-	git grep -l $(PRE_CRUD_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_CRUD_VERSION)/$(NEW_CRUD_VERSION)/g'
+	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'
 update-mere-memory-version:
-	git grep -l $(PRE_MM_VERSION) -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_MM_VERSION)/$(NEW_MM_VERSION)/g'
+	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
+	rm zomes/mere_memory*.wasm

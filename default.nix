@@ -19,8 +19,8 @@ let
     holochainVersionId = "custom";
     holochainVersion = {
       url = "https://github.com/holochain/holochain";
-      rev = "holochain-0.0.175"; # Nov 30, 2022 - 64286bf7aa10e9e93032361a69843daa354fdb1b
-      sha256 = "0djcycqp2g2ci9gr03v5bh2r7419bcgp06fwb9hh2asa6qm18909";
+      rev = "holochain-0.1.0-beta-rc.1"; # Dec 16, 2022 - eb1e637c353190bfdba8b742c6b8bbb1b3f4a669
+      sha256 = "1b619mnwq5nkh35xagzyzall4yzxdl50avdyf48c63gnhdwhka8z";
       cargoLock = {
         outputHashes = {
         };
@@ -34,8 +34,8 @@ let
 
       lair = {
         url = "https://github.com/holochain/lair";
-        rev = "lair_keystore-v0.2.2"; # Nov 2, 2022 - 004d15c05f51bb625cb5c8db6e71f4a58ff4d3fe
-        sha256 = "1kh2p6lyw3yi9ah8ci6y0815w6fnmwplrkl2wsdc535qp7wmqm3y";
+        rev = "lair_keystore-v0.2.3"; # Dec 13, 2022 - cbfbefefe43073904a914c8181a450209a74167b
+        sha256 = "011c0cng4h1vjb9wkjplhnpl6vnc41c8h8l4k6ldgc5k4ppap8vj";
 
         binsFilter = [
           "lair-keystore"

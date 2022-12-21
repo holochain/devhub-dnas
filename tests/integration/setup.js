@@ -27,14 +27,16 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
     const clients			= {};
 
     log.debug("Waiting for DNAs and actors to be set up...");
-    const agents			= await holochain.backdrop( app_id, app_port, dnas, actors );
+    const agents			= await holochain.backdrop( app_id, app_port, dnas, actors, {
+	"timeout": 20_000,
+    });
     const crux_config			= new CruxConfig();
 
     log.debug("Creating clients actors: %s", actors.join(", ") );
     await Promise.all( Object.entries( agents ).map( async ([ actor, happ ]) => {
 	const dna_map			= {};
 	await Promise.all( Object.entries( happ.cells ).map( async ([ role_id, cell ]) => {
-	    dna_map[role_id]		= cell.dna.hash;
+	    dna_map[role_id]		= cell.dna;
 	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, role_id, String(cell.dna.hash), String(happ.agent) );
 	}) );
 

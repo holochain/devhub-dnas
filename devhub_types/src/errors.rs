@@ -11,8 +11,8 @@ pub enum AppError {
     #[error("Unexpected state: {0}")]
     UnexpectedStateError(String),
 
-    #[error("Agent '{3}' does not have the capability to call {0}::{1}->{2}( [args] )")]
-    UnauthorizedError(CellId, ZomeName, FunctionName, AgentPubKey),
+    #[error("Agent '{4}' does not have the capability to call {1}::{2}->{3}( [args] ) because; {0}")]
+    UnauthorizedError(ZomeCallAuthorization, CellId, ZomeName, FunctionName, AgentPubKey),
 
     #[error("{0}")]
     NetworkError(String),

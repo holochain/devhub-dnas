@@ -252,8 +252,30 @@ describe("GUIs", () => {
 	this.timeout( 30_000 );
 
 	clients				= await backdrop( holochain, {
-	    "happs": HAPPS_PATH,
-	    "web_assets": WEBASSETS_PATH,
+	    "happs": {
+		"path": HAPPS_PATH,
+		"zomes": {
+		    "happ_library": [
+			"whoami",
+
+			"create_gui", "get_gui", "update_gui", "deprecate_gui",
+			"get_my_guis", "get_guis", "get_all_guis", "get_guis_by_filter", "get_guis_by_tags",
+
+			"create_gui_release", "get_gui_release", "update_gui_release", "delete_gui_release",
+			"get_gui_releases", "get_gui_releases_by_filter",
+		    ],
+		},
+	    },
+	    "web_assets": {
+		"path": WEBASSETS_PATH,
+		"zomes": {
+		    "web_assets": [
+			"whoami",
+
+			"create_file",
+		    ],
+		},
+	    },
 	}, [
 	    "alice",
 	]);
