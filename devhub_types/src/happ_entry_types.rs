@@ -63,9 +63,8 @@ pub struct RoleDnaInfo {
     pub clone_limit: u32,
 
     // Optional fields
-    pub uid: Option<String>,
+    pub modifiers: Option<DnaModifiersOpt<serde_yaml::Value>>,
     pub version: Option<String>,
-    pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -76,7 +75,7 @@ pub struct RoleProvisioning {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RoleInfo {
-    pub id: String,
+    pub name: String,
     pub dna: RoleDnaInfo,
 
     // Optional fields
@@ -151,7 +150,7 @@ pub struct HappEntry {
 //
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct DnaReference {
-    pub role_id: String,
+    pub role_name: String,
     pub dna : EntryHash, // Dna ID
     pub version : EntryHash, // Version ID
     pub wasm_hash : String,

@@ -137,7 +137,7 @@ Source [../devhub_types/src/happ_entry_types.rs](../devhub_types/src/happ_entry_
 - `dna_hash` - A hash of the WASM hashes from each associated DNA Version
 - `hdk_version` - The HDK version that built the associated WASM
 - `dnas` - A list containing references to DNA and DNA Version entries
-  - `role_id` - An identifier that is unique within this list of DNAs
+  - `role_name` - An identifier that is unique within this list of DNAs
   - `dna` - The Entity ID for the referenced DNA
   - `version` - The Entity ID for the specific DNA Version selected
   - `wasm_hash` - The `wasm_hash` from the DNA Version entity

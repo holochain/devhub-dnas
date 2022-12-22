@@ -38,17 +38,19 @@ pub fn get_webasset(input: GetWebAssetInput) -> AppResult<Entity<FilePackage>> {
 //         "description": "Holochain App Store",
 //         "roles": [
 //             {
-//                 "id": "file_storage",
+//                 "name": "file_storage",
 //                 "provisioning": {
 //                     "strategy": "create",
 //                     "deferred": false
 //                 },
 //                 "dna": {
 //                     "bundled": "file_storage/file_storage.dna",
-//                     "properties": {
-//                         "foo": 1111
+//                     "modifiers": {
+//                         "network_seed": "",
+//                         "properties": {
+//                             "foo": 1111
+//                         },
 //                     },
-//                     "uuid": null,
 //                     "version": null,
 //                     "clone_limit": 10
 //                 }
@@ -90,7 +92,7 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 	    id: dna_ref.version.to_owned(),
 	})?;
 
-	let path = format!("./{}.dna", dna_ref.role_id );
+	let path = format!("./{}.dna", dna_ref.role_name );
 
 	debug!("Adding resource pack '{}' with {} bytes", path, version_entity.content.bytes.len() );
 	resources.insert( path.clone(), version_entity.content.bytes );
@@ -186,24 +188,3 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
 
     Ok( happ_pack_bytes )
 }
-
-// WasmError: WasmError {
-//     file: "crates/holochain/src/core/ribosome/host_fn/call.rs",
-//     line: 141,
-//     error: Host("Wasm runtime error while working with Ribosome: RuntimeError: ")
-// }
-// WasmError {
-//     file: "/build/cargo-vendor-dir/holochain_wasmer_host-0.0.80/src/guest.rs",
-//     line: 259,
-//     error: CallError("
-// RuntimeError: unreachable
-//     at miniz_oxide::deflate::core::compress_inner::h79f9a7ea99bb2840 (<module>[2241]:0x32b0b4)
-//     at miniz_oxide::deflate::stream::deflate::h18357b407d294976 (<module>[2244]:0x32c89a)
-//     at <flate2::mem::Compress as flate2::zio::Ops>::run_vec::hafa76368e22a0b14 (<module>[2210]:0x326581)
-//     at <flate2::zio::Writer<W,D> as std::io::Write>::write::h3f17566e1f8bb1d7 (<module>[98]:0x7eee)
-//     at std::io::Write::write_all::h4f003acf95533db1 (<module>[162]:0x17467)
-//     at devhub_types::encode_bundle::h61f82fb84419427e (<module>[335]:0x46a48)
-//     at dna_library::packaging::get_dna_package::h9c34a8ced6abdd0f (<module>[236]:0x20d4e)
-//     at dna_library::get_dna_package::ha90632cc769615d8 (<module>[958]:0x16ec45)
-//     at get_dna_package (<module>[305]:0x3a075)
-// ") }

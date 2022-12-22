@@ -7,6 +7,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
+const YAML				= require('yaml');
 const { HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
@@ -188,28 +189,23 @@ function basic_tests () {
 	const dna_id			= new HoloHash("uhCEkh3HCoTRCZD2I7H-gcf5VNdqXUdT4Nq6B8WUo-pzMZ338XDlb");
 	const dna_version_id		= new HoloHash("uhCEkxe-5fTSvh_WVchpAmEvMbN9aGAu_Nm3GwN03IM2kmmyPmLxy");
 	const dna_wasm_hash		= "07bb7ae9898a64c69617a8dc0faf0c9449ccd0c0b2a81be29763b8a95d7bd708";
-	const manifest_yaml		= fs.readFileSync( path.resolve(__dirname, "../test_happ.yaml"), "utf8" );
+
+	const yaml_text			= fs.readFileSync( path.resolve(__dirname, "../../bundled/happ.yaml"), "utf-8" );
+	const manifest			= YAML.parse( yaml_text );
+
+	manifest.roles			= manifest.roles.slice( 0, 1 );
+	manifest.roles[0].name		= "test_dna";
+
 	let release_input		= {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
 	    "ordering": 1,
-	    "manifest": {
-		"manifest_version": "1",
-		"roles": [
-		    {
-			"id": "test_dna",
-			"dna": {
-			    "path": "./this/does/not/matter.dna",
-			    "clone_limit": 0,
-			},
-		    },
-		],
-	    },
+	    "manifest": manifest,
 	    "hdk_version": "v0.0.120",
 	    "dnas": [
 		{
-		    "role_id": "test_dna",
+		    "role_name": "test_dna",
 		    "dna": dna_id,
 		    "version": dna_version_id,
 		    "wasm_hash": dna_wasm_hash,

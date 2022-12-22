@@ -7,6 +7,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
+const YAML				= require('yaml');
 const { EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
@@ -97,28 +98,22 @@ function basic_tests () {
 
 	expect( happ.description	).to.equal( happ_input.description );
 
+	const yaml_text			= fs.readFileSync( path.resolve(__dirname, "../../bundled/happ.yaml"), "utf-8" );
+	const manifest			= YAML.parse( yaml_text );
+
+	manifest.roles			= manifest.roles.slice( 0, 1 );
+	manifest.roles[0].name		= "test_dna";
 
 	let release_input		= {
 	    "name": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
 	    "ordering": 1,
-	    "manifest": {
-		"manifest_version": "1",
-		"roles": [
-		    {
-			"id": "test_dna",
-			"dna": {
-			    "path": "./this/does/not/matter.dna",
-			},
-			"clone_limit": 0,
-		    },
-		],
-	    },
+	    "manifest": manifest,
 	    "hdk_version": "v0.0.120",
 	    "dnas": [
 		{
-		    "role_id": "test_dna",
+		    "role_name": "test_dna",
 		    "dna": dna.$id,
 		    "version": version.$id,
 		    "wasm_hash": version.wasm_hash,

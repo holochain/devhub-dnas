@@ -172,13 +172,13 @@ where
     Ok( interpret_zome_response( response )? )
 }
 
-pub fn call_local_dna_zome<T, A>(role_id: &str, zome: &str, func: &str, input: A) -> AppResult<T>
+pub fn call_local_dna_zome<T, A>(role_name: &str, zome: &str, func: &str, input: A) -> AppResult<T>
 where
     T: serde::de::DeserializeOwned + std::fmt::Debug,
     A: serde::Serialize + std::fmt::Debug,
 {
     let response = call(
-	CallTargetCell::OtherRole( role_id.to_string() ),
+	CallTargetCell::OtherRole( role_name.to_string() ),
 	zome,
 	func.into(),
 	None,
