@@ -20,7 +20,7 @@ use hdk::prelude::*;
 //     "manifest": {
 //         "manifest_version": "1",
 //         "name": "dnarepo",
-//         "uid": null,
+//         "network_seed": null,
 //         "properties": null,
 //         "zomes": [
 //             {
@@ -80,7 +80,7 @@ pub struct IntegrityZomes {
     zomes: Vec<BundleIntegrityZomeInfo>,
 
     // Optional fields
-    pub uid: Option<String>,
+    pub network_seed: Option<String>,
     pub properties: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
@@ -152,8 +152,8 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 	    manifest_version: "1".into(),
 	    name: dna.content.name,
 	    integrity: IntegrityZomes {
-		origin_time: String::from("2022-02-11T23:05:19.470323Z"),
-		uid: None,
+		origin_time: entry.origin_time.clone(),
+		network_seed: entry.network_seed.clone(),
 		properties: entry.properties.clone(),
 		zomes: integrity_zomes,
 	    },

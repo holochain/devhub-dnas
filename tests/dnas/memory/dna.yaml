@@ -1,7 +1,9 @@
 manifest_version: "1"
 name: memory
-uuid: 00000000-0000-0000-0000-000000000000
-properties: ~
-zomes:
-  - name: mere_memory
-    bundled: ../../../zomes/target/wasm32-unknown-unknown/release/mere_memory.wasm
+integrity:
+  origin_time: 2022-07-21T00:00:00.000000Z
+  network_seed: 00000000-0000-0000-0000-000000000000
+  properties: ~
+  zomes:
+    - name: mere_memory
+      bundled: ../../../zomes/target/wasm32-unknown-unknown/release/mere_memory.wasm

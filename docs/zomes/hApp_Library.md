@@ -147,7 +147,7 @@ Create a new hApp Release for a specific hApp.
 - `input.manifest.roles[].dna` - (*required*) `Object`
 - `input.manifest.roles[].dna.bundled` - (*required*) `String`
 - `input.manifest.roles[].dna.clone_limit` - (*required*) `Number`
-- `input.manifest.roles[].dna.uid` - (*optional*) `String`
+- `input.manifest.roles[].dna.network_seed` - (*optional*) `String`
 - `input.manifest.roles[].dna.version` - (*optional*) `String`
 - `input.manifest.roles[].dna.properties` - (*optional*) `Object` any key/values allowed
 - `input.manifest.roles[].provisioning` - (*optional*) `Object`

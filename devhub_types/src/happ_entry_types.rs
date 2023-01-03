@@ -48,7 +48,7 @@ impl HoloGUIConfig {
 //                 "properties": {
 //                     "foo": 1111
 //                 },
-//                 "uuid": null,
+//                 "network_seed": null,
 //                 "version": null,
 //                 "clone_limit": 10
 //             }

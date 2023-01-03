@@ -484,6 +484,7 @@ function basic_tests () {
 			"mere_memory_core",
 		    ],
 		}],
+		"origin_time": "2022-02-11T23:05:19.470323Z",
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 
@@ -520,6 +521,7 @@ function basic_tests () {
 		    "resource_hash": zome_version_1_core.mere_memory_hash,
 		}],
 		"zomes": [],
+		"origin_time": "2022-02-11T23:05:19.470323Z",
 	    });
 	    log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
 	}
@@ -956,6 +958,7 @@ function errors_tests () {
 		"hdk_version": HDK_VERSION,
 		"integrity_zomes": [],
 		"zomes": [],
+		"origin_time": "2022-02-11T23:05:19.470323Z",
 	    });
 	}, Error, "Must have at least 1 integrity zome" );
     });

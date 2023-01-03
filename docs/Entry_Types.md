@@ -126,7 +126,7 @@ Source [../devhub_types/src/happ_entry_types.rs](../devhub_types/src/happ_entry_
     - `dna` - Info about the DNA for this role
       - `bundled` - An identifier that matches one of `this.dnas[].name`
       - `clone_limit` - The number of clones to be created at runtime
-      - `uid` - A value for forcing a unique DNA hash
+      - `network_seed` - A value for forcing a unique DNA hash
       - `version` - A specific list of compatible DNA Versions
       - `properties` - Implementation specific properties
     - `provisioning` - Provisioning instructions for Holochain

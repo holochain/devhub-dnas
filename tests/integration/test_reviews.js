@@ -320,6 +320,7 @@ describe("Reviews", () => {
 		"resource_hash":	zome_version_1.mere_memory_hash,
 	    }],
 	    "zomes": [],
+	    "origin_time": "2022-02-11T23:05:19.470323Z",
 	});
     });
 
