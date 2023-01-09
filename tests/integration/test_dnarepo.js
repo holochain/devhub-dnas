@@ -330,6 +330,7 @@ function basic_tests () {
 	    // Update ZOME Version
 	    const properties		= {
 		"changelog": "# Changelog\nFeatures\n...",
+		"hdk_version": "0.1.0-beta-rc.1",
 	    };
 	    let zome_version		= await alice.call( "dnarepo", "dna_library", "update_zome_version", {
 		"addr": zome_version_1.$action,
@@ -342,6 +343,7 @@ function basic_tests () {
 	    });
 	    log.info("ZOME Version post update: %s", zome_version_info.version );
 	    expect( zome_version_info.changelog		).to.equal( properties.changelog );
+	    expect( zome_version_info.hdk_version	).to.equal( properties.hdk_version );
 	}
 
 	{

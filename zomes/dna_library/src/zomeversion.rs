@@ -129,6 +129,7 @@ pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Vec<Entity<Zo
 pub struct ZomeVersionUpdateOptions {
     pub ordering: Option<u64>,
     pub changelog: Option<String>,
+    pub hdk_version: Option<String>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub source_code_commit_url: Option<String>,
@@ -156,7 +157,8 @@ pub fn update_zome_version(input: ZomeVersionUpdateInput) -> AppResult<Entity<Zo
 		mere_memory_hash: current.mere_memory_hash,
 		changelog: props.changelog
 		    .unwrap_or( current.changelog ),
-		hdk_version: current.hdk_version,
+		hdk_version: props.hdk_version
+		    .unwrap_or( current.hdk_version ),
 		review_summary: current.review_summary,
 		source_code_commit_url: props.source_code_commit_url
 		    .or( current.source_code_commit_url ),
