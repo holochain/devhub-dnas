@@ -45,10 +45,12 @@ impl HoloGUIConfig {
 //             },
 //             "dna": {
 //                 "bundled": "file_storage/file_storage.dna",
-//                 "properties": {
-//                     "foo": 1111
+//                 "modifiers": {
+//                     "network_seed": null,
+//                     "properties": null,
+//                     "origin_time": null,
+//                     "quantum_time": null,
 //                 },
-//                 "network_seed": null,
 //                 "version": null,
 //                 "clone_limit": 10
 //             }

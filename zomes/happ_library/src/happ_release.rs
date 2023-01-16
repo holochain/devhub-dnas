@@ -40,7 +40,7 @@ pub struct CreateInput {
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
 }
 
-pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEntry>> {
+pub fn create_happ_release(mut input: CreateInput) -> AppResult<Entity<HappReleaseEntry>> {
     debug!("Creating HAPPRELEASE: {}", input.name );
     let default_now = now()?;
 
@@ -48,6 +48,17 @@ pub fn create_happ_release(input: CreateInput) -> AppResult<Entity<HappReleaseEn
 	.map( |dna| hex::decode( dna.wasm_hash.to_owned() ) )
 	.collect::<Result<Vec<Vec<u8>>, hex::FromHexError>>()
 	.or(Err(devhub_types::errors::UserError::CustomError("Bad hex value")))?;
+
+    for role in input.manifest.roles.iter_mut() {
+	if role.dna.modifiers.is_none() {
+	    role.dna.modifiers = Some(DnaModifiersOpt::<serde_yaml::Value> {
+		network_seed: None,
+		properties: None,
+		origin_time: None,
+		quantum_time: None,
+	    });
+	}
+    }
 
     let happ_release = HappReleaseEntry {
 	name: input.name,
