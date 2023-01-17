@@ -224,50 +224,9 @@ describe("All DNAs", () => {
 	this.timeout( 60_000 );
 
 	clients				= await backdrop( holochain, {
-	    "dnarepo": {
-		"path": DNAREPO_PATH,
-		"zomes": {
-		    "dna_library": [
-			"whoami",
-
-			"create_zome",
-			"create_zome_version",
-
-			"create_dna",
-			"create_dna_version",
-		    ],
-		},
-	    },
-	    "happs": {
-		"path": HAPPS_PATH,
-		"zomes": {
-		    "happ_library": [
-			"whoami",
-
-			"create_happ",
-
-			"create_happ_release", "update_happ_release",
-
-			"create_gui",
-
-			"create_gui_release",
-
-			"get_webasset",
-			"get_release_package",
-			"get_webhapp_package",
-		    ],
-		},
-	    },
-	    "web_assets": {
-		"path": WEBASSETS_PATH,
-		"zomes": {
-		    "web_assets": [
-			"whoami",
-
-			"create_file",
-		    ],
-		},
-	    },
+	    "dnarepo": DNAREPO_PATH,
+	    "happs": HAPPS_PATH,
+	    "web_assets": WEBASSETS_PATH,
 	}, [
 	    "alice",
 	]);

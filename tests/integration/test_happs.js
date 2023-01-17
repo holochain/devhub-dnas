@@ -410,20 +410,7 @@ describe("hApps", () => {
 	this.timeout( 30_000 );
 
 	clients				= await backdrop( holochain, {
-	    "happs": {
-		"path": HAPPS_PATH,
-		"zomes": {
-		    "happ_library": [
-			"whoami",
-
-			"create_happ", "get_happ", "update_happ", "deprecate_happ",
-			"get_my_happs", "get_happs", "get_all_happs", "get_happs_by_filter", "get_happs_by_tags",
-
-			"create_happ_release", "get_happ_release", "update_happ_release", "delete_happ_release",
-			"get_happ_releases", "get_happ_releases_by_filter",
-		    ],
-		},
-	    },
+	    "happs": HAPPS_PATH,
 	}, [
 	    "alice",
 	    "bobby",

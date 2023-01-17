@@ -64,16 +64,7 @@ describe("Web Assets", () => {
 	this.timeout( 30_000 );
 
 	clients				= await backdrop( holochain, {
-	    "webassets": {
-		"path": WEBASSETS_PATH,
-		"zomes": {
-		    "web_assets": [
-			"whoami",
-
-			"create_file", "get_file",
-		    ],
-		},
-	    },
+	    "webassets": WEBASSETS_PATH,
 	}, [
 	    "alice",
 	]);

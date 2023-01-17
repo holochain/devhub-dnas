@@ -175,20 +175,7 @@ describe("Generic", () => {
 	this.timeout( 30_000 );
 
 	clients				= await backdrop( holochain, {
-	    "dnarepo": {
-		"path": DNAREPO_PATH,
-		"zomes": {
-		    "dna_library": [
-			"whoami",
-			"create_zome",
-			"create_zome_version",
-			"create_dna",
-			"update_dna",
-			"create_dna_version",
-			"get_record", "get_record_latest",
-		    ],
-		},
-	    },
+	    "dnarepo": DNAREPO_PATH,
 	}, [
 	    "alice",
 	]);

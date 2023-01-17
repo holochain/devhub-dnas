@@ -974,37 +974,7 @@ describe("DNArepo", () => {
 	this.timeout( 60_000 );
 
 	clients				= await backdrop( holochain, {
-	    "dnarepo": {
-		"path": DNAREPO_PATH,
-		"zomes": {
-		    "dna_library": [
-			"whoami",
-
-			"create_profile", "get_profile", "update_profile",
-			"follow_developer", "get_following", "unfollow_developer",
-
-			"create_zome", "get_zome", "update_zome", "deprecate_zome",
-			"get_my_zomes", "get_zomes", "get_all_zomes", "get_zomes_by_filter", "get_zomes_by_tags",
-
-			"create_zome_version", "get_zome_version", "update_zome_version", "delete_zome_version",
-			"get_zome_versions", "get_zome_versions_by_filter",
-
-			"create_dna", "get_dna", "update_dna", "deprecate_dna",
-			"get_my_dnas", "get_dnas", "get_all_dnas", "get_dnas_by_filter", "get_dnas_by_tags",
-
-			"create_dna_version", "get_dna_version", "update_dna_version", "delete_dna_version",
-			"get_dna_versions", "get_dna_versions_by_filter",
-
-			"get_dna_package",
-			"get_hdk_versions",
-
-			"get_zome_versions_by_hdk_version",
-			"get_dna_versions_by_hdk_version",
-			"get_zomes_with_an_hdk_version",
-			"get_dnas_with_an_hdk_version",
-		    ],
-		},
-	    },
+	    "dnarepo": DNAREPO_PATH,
 	}, [
 	    "alice",
 	    "bobby",

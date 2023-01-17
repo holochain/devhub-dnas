@@ -252,33 +252,7 @@ describe("Reviews", () => {
 	this.timeout( 30_000 );
 
 	clients				= await backdrop( holochain, {
-	    "dnarepo": {
-		"path": DNAREPO_PATH,
-		"zomes": {
-		    "dna_library": [
-			"whoami",
-
-			"create_zome",
-			"create_zome_version",
-
-			"create_dna",
-			"create_dna_version",
-
-			"create_zome_version_review_summary",
-		    ],
-		    "reviews": [
-			"create_review", "get_review", "update_review", "delete_review",
-			"get_my_reviews", "get_reviews_for_subject",
-
-			"get_review_summary", "update_review_summary",
-			"get_review_summaries_for_subject",
-
-			"create_reaction",
-
-			"create_review_reaction_summary",
-		    ],
-		},
-	    },
+	    "dnarepo": DNAREPO_PATH,
 	}, agents );
 
 	// Must call whoami on each cell to ensure that init has finished.
