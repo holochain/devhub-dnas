@@ -11,8 +11,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
 happs_core = {path = "../happs_core"}
-hc_crud_ceps = "0.72.0"
-hdk = "0.1.0-beta-rc.0"
+hc_crud_ceps = "0.73.0"
+hdk = "0.1.0-beta-rc.2"
 hex = "0"
 serde = "1"
 serde_yaml = "0.8.17"

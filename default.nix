@@ -1,7 +1,7 @@
 let
-  holonixPath = builtins.fetchTarball { # main as of Sep 1, 2022
-    url = "https://github.com/holochain/holonix/archive/a983ff292331d7553efadc5ab3916d5c2197dcee.tar.gz";
-    sha256 = "0zpkw7wppdxl3pznkb39i7svfhg8pc0ly87n89sxsczj1fb17028";
+  holonixPath = builtins.fetchTarball { # main as of Jan 19, 2022
+    url = "https://github.com/holochain/holonix/archive/ca3211a9cf3c7a8bdd9229d5be8af2f5888469b6.tar.gz";
+    sha256 = "1cqq274z7gg4s0bhrf188nbsn46zv6i46xych20afaj636d44llf";
   };
   holonix = import (holonixPath) {
     include = {
@@ -19,8 +19,8 @@ let
     holochainVersionId = "custom";
     holochainVersion = {
       url = "https://github.com/holochain/holochain";
-      rev = "holochain-0.1.0-beta-rc.2"; # Dec 23, 2022 - c8e953101af374f57f0aa7b46bee631300655045
-      sha256 = "0b2caglq6cgz9ywkiblbrryz030228cjqdk88zb3jd0dh3fwxf0r";
+      rev = "holochain-0.1.0-beta-rc.3"; # Jan 17, 2023 - 60c042dbc8cc11aef091931c2758bb3e0d816662
+      sha256 = "0j6asm64abymswrylh39xm9c924biccdk3zlcsbjrbz019z3rp0l";
       cargoLock = {
         outputHashes = {
         };
@@ -51,8 +51,4 @@ let
   nixpkgs = holonix.pkgs;
 in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
-
-  buildInputs = with nixpkgs; [
-    nodejs-14_x
-  ];
 }
