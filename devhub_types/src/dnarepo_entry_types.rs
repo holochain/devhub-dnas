@@ -98,7 +98,7 @@ pub struct DnaVersionEntry {
     pub integrity_zomes: Vec<IntegrityZomeReference>,
     pub zomes: Vec<ZomeReference>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
-    pub origin_time: String,
+    pub origin_time: HumanTimestamp,
 
     // optional
     pub network_seed: Option<String>,

@@ -76,7 +76,7 @@ pub struct Manifest {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct IntegrityZomes {
-    origin_time: String,
+    origin_time: HumanTimestamp,
     zomes: Vec<BundleIntegrityZomeInfo>,
 
     // Optional fields

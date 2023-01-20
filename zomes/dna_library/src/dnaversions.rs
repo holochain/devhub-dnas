@@ -31,7 +31,7 @@ pub struct DnaVersionInput {
     pub hdk_version: String,
     pub integrity_zomes: Vec<IntegrityZomeReference>,
     pub zomes: Vec<ZomeReference>,
-    pub origin_time: String,
+    pub origin_time: HumanTimestamp,
 
     // optional
     pub changelog: Option<String>,
