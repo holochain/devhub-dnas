@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@msgpack/msgpack": "^2.7.0",
-    "@whi/holochain-backdrop": "^0.70.0",
-    "@whi/holochain-client": "^0.78.0"
+    "@whi/holochain-backdrop": "^0.71.0",
+    "@whi/holochain-client": "^0.80.0"
   }
 }

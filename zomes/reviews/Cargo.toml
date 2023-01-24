@@ -11,8 +11,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
 dnarepo_core = {path = "../dnarepo_core"}
-hc_crud_ceps = "0.73.0"
-hdk = "0.1.0-beta-rc.2"
+hc_crud_ceps = "0.74.0"
+hdk = "0.1.0-beta-rc.3"
 serde = "1"
 serde_yaml = "0.8.17"
 thiserror = "1"
