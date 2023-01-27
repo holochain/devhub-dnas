@@ -170,17 +170,17 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.1.0-beta-rc.2"
-NEW_HDK_VERSION = "0.1.0-beta-rc.3"
+PRE_HDK_VERSION = "0.1.0-beta-rc.3"
+NEW_HDK_VERSION = "0.1.0"
 
-PRE_HDI_VERSION = "0.2.0-beta-rc.2"
-NEW_HDI_VERSION = "0.2.0-beta-rc.3"
+PRE_HDI_VERSION = "0.2.0-beta-rc.3"
+NEW_HDI_VERSION = "0.2.0"
 
-PRE_CRUD_VERSION = "0.73.0"
-NEW_CRUD_VERSION = "0.74.0"
+PRE_CRUD_VERSION = "0.74.0"
+NEW_CRUD_VERSION = "0.75.0"
 
-PRE_MM_VERSION = "0.77.0"
-NEW_MM_VERSION = "0.78.0"
+PRE_MM_VERSION = "0.78.0"
+NEW_MM_VERSION = "0.79.0"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 
