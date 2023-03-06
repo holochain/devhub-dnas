@@ -7,6 +7,7 @@ HAPP_BUNDLE		= DevHub.happ
 DNAREPO			= bundled/dnarepo.dna
 HAPPDNA			= bundled/happs.dna
 ASSETSDNA		= bundled/web_assets.dna
+PORTAL			= bundled/portal.dna
 
 TARGET			= release
 
@@ -49,7 +50,7 @@ rebuild:			clean build
 build:				$(HAPP_BUNDLE)
 
 
-$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) bundled/happ.yaml
+$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) $(PORTAL) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
 $(DNAREPO):			$(DNAREPO_CORE) $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_CORE_WASM)
@@ -94,6 +95,11 @@ use-npm-holochain-client:
 
 use-local:		use-local-holochain-client use-local-holochain-backdrop
 use-npm:		  use-npm-holochain-client   use-npm-holochain-backdrop
+
+$(PORTAL):
+	$(error Download missing Portal DNA into location ./$@)
+copy-portal-from-local:
+	cp ../app-store-dnas/bundled/portal.dna $(PORTAL)
 
 
 
