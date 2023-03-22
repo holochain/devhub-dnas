@@ -24,7 +24,7 @@ WEB_ASSETS_WASM		= zomes/web_assets.wasm
 
 # External WASM dependencies
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
-MERE_MEMORY_CORE_WASM	= zomes/mere_memory_core.wasm
+MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 
 #
@@ -44,7 +44,7 @@ clean:
 	    zomes/target \
 	    $(HAPP_BUNDLE) \
 	    $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) \
-	    $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_WASM)
+	    $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_API_WASM)
 
 rebuild:			clean build
 build:				$(HAPP_BUNDLE)
@@ -53,7 +53,7 @@ build:				$(HAPP_BUNDLE)
 $(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) $(PORTAL) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
-$(DNAREPO):			$(DNAREPO_CORE) $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_CORE_WASM)
+$(DNAREPO):			$(DNAREPO_CORE) $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_API_WASM) $(MERE_MEMORY_WASM)
 $(HAPPDNA):			$(HAPPS_CORE) $(HAPP_LIBRARY_WASM)
 $(ASSETSDNA):			$(WEB_ASSETS_CORE) $(WEB_ASSETS_WASM)
 
@@ -77,8 +77,8 @@ zomes/%/Cargo.lock:
 
 $(MERE_MEMORY_WASM):
 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory.wasm" --output $@
-$(MERE_MEMORY_CORE_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory_core.wasm" --output $@
+$(MERE_MEMORY_API_WASM):
+	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory_api.wasm" --output $@
 
 use-local-holochain-backdrop:
 	cd tests; npm uninstall @whi/holochain-backdrop
@@ -176,17 +176,17 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.1.0-beta-rc.3"
-NEW_HDK_VERSION = "0.1.0"
+PRE_HDK_VERSION = "0.1.0"
+NEW_HDK_VERSION = "0.2.0-beta-rc.1"
 
-PRE_HDI_VERSION = "0.2.0-beta-rc.3"
-NEW_HDI_VERSION = "0.2.0"
+PRE_HDI_VERSION = "0.2.0"
+NEW_HDI_VERSION = "0.3.0-beta-rc.1"
 
-PRE_CRUD_VERSION = "0.74.0"
-NEW_CRUD_VERSION = "0.75.0"
+PRE_CRUD_VERSION = "0.75.0"
+NEW_CRUD_VERSION = "0.76.0"
 
-PRE_MM_VERSION = "0.78.0"
-NEW_MM_VERSION = "0.79.0"
+PRE_MM_VERSION = "0.79.0"
+NEW_MM_VERSION = "0.80.0"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 

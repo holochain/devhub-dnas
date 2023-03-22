@@ -468,14 +468,14 @@ function basic_tests () {
 		"ordering": 1,
 		"hdk_version": HDK_VERSION,
 		"integrity_zomes": [{
-		    "name": "mere_memory_core",
+		    "name": "mere_memory",
 		    "zome": new EntryHash( zome_version_1_core.for_zome ),
 		    "version": zome_version_1_core.$id,
 		    "resource": new EntryHash( zome_version_1_core.mere_memory_addr ),
 		    "resource_hash": zome_version_1_core.mere_memory_hash,
 		}],
 		"zomes": [{
-		    "name": "mere_memory",
+		    "name": "mere_memory_api",
 		    "zome": new EntryHash( zome_version_1.for_zome ),
 		    "version": zome_version_1.$id,
 		    "resource": new EntryHash( zome_version_1.mere_memory_addr ),

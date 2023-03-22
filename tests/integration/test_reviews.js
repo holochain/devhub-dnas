@@ -257,7 +257,7 @@ describe("Reviews", () => {
 
 	// Must call whoami on each cell to ensure that init has finished.
 	{
-	    let whoami			= await clients.alice.call( "dnarepo", "dna_library", "whoami" );
+	    let whoami			= await clients.alice.call( "dnarepo", "dna_library", "whoami", null, 30_000 );
 	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
 	}
 

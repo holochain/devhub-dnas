@@ -45,7 +45,7 @@ impl FileEntry {
     pub fn to_package(&self) -> FilePackage {
 	let mut file_bytes : Option<Vec<u8>> = None;
 
-	if let Some(bytes) = call_local_zome("mere_memory", "retrieve_bytes", self.mere_memory_addr.to_owned() ).ok() {
+	if let Some(bytes) = call_local_zome("mere_memory_api", "retrieve_bytes", self.mere_memory_addr.to_owned() ).ok() {
 	    file_bytes = Some( bytes );
 	};
 
