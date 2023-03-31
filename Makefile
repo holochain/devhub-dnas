@@ -92,6 +92,12 @@ use-local-holochain-client:
 use-npm-holochain-client:
 	cd tests; npm uninstall @whi/holochain-client
 	cd tests; npm install --save-dev @whi/holochain-client
+use-local-crux:
+	cd tests; npm uninstall @whi/crux-payload-parser
+	cd tests; npm install --save-dev ../../js-crux-payload-parser
+use-npm-crux:
+	cd tests; npm uninstall @whi/crux-payload-parser
+	cd tests; npm install --save-dev @whi/crux-payload-parser
 
 use-local:		use-local-holochain-client use-local-holochain-backdrop
 use-npm:		  use-npm-holochain-client   use-npm-holochain-backdrop

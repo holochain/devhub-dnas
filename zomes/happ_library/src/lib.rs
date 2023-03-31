@@ -2,7 +2,8 @@ use happs_core::{
     LinkTypes,
 };
 use devhub_types::{
-    DevHubResponse, Entity, EntityResponse, GetEntityInput, FilterInput,
+    DevHubResponse, AppResult, ErrorKinds,
+    Entity, EntityResponse, GetEntityInput, FilterInput,
     constants::{ VALUE_MD, ENTITY_MD, ENTITY_COLLECTION_MD },
     happ_entry_types::{
 	HappEntry,
@@ -14,10 +15,12 @@ use devhub_types::{
     web_asset_entry_types::{
 	FilePackage,
     },
+    call_local_dna_zome,
     composition,
     catch,
 };
 use hdk::prelude::*;
+use holo_hash::DnaHash;
 
 mod happ;
 mod happ_release;
@@ -48,9 +51,48 @@ pub fn agent_path_base(pubkey: Option<AgentPubKey>) -> String {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(non_snake_case)]
+pub struct ListedFunctions {
+    Listed: Vec<(String, String)>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RegisterHostInput {
+    pub dna: DnaHash,
+    pub granted_functions: ListedFunctions,
+}
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    let info = dna_info()?;
+    let result : AppResult<serde_yaml::Value> = call_local_dna_zome( "portal", "portal_api", "register_host", RegisterHostInput {
+	dna: info.hash,
+	granted_functions: ListedFunctions {
+	    Listed: vec![
+		( "happ_library".to_string(), "get_webhapp_package".to_string() ),
+		( "happ_library".to_string(), "get_happ".to_string() ),
+		( "happ_library".to_string(), "get_happ_release".to_string() ),
+		( "happ_library".to_string(), "get_happ_releases".to_string() ),
+		( "happ_library".to_string(), "get_gui".to_string() ),
+		( "happ_library".to_string(), "get_gui_release".to_string() ),
+		( "happ_library".to_string(), "get_gui_releases".to_string() ),
+	    ],
+	},
+    });
+
+    if let Err(err) = result {
+	if let ErrorKinds::HDKError(WasmError { error, .. }) = &err {
+	    match error {
+		WasmErrorInner::Host(msg) => match msg.contains("Role not found") {
+		    true => (),
+		    false => Err(err)?,
+		},
+		_ => Err(err)?,
+	    }
+	}
+    }
+
     Ok(InitCallbackResult::Pass)
 }
 

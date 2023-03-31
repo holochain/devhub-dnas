@@ -106,7 +106,7 @@ function basic_tests () {
 	manifest.roles[0].name		= "test_dna";
 
 	let release_input		= {
-	    "name": "v0.1.0",
+	    "version": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
 	    "ordering": 1,
@@ -123,7 +123,7 @@ function basic_tests () {
 	};
 
 	let release			= await alice.call( "happs", "happ_library", "create_happ_release", release_input );
-	log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
+	log.normal("New hApp release: %s -> %s", String(release.$addr), release.version );
 
 	expect( release.description	).to.equal( release_input.description );
 
@@ -204,7 +204,7 @@ function basic_tests () {
 		"official_gui": gui_release.$id,
 	    },
 	});
-	log.normal("Updated hApp release: %s -> %s", String(release.$addr), release.name );
+	log.normal("Updated hApp release: %s -> %s", String(release.$addr), release.version );
 
 	expect( release.official_gui	).to.deep.equal( gui_release.$id.bytes() );
     });

@@ -197,7 +197,7 @@ function basic_tests () {
 	manifest.roles[0].name		= "test_dna";
 
 	let release_input		= {
-	    "name": "v0.1.0",
+	    "version": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
 	    "ordering": 1,
@@ -214,7 +214,7 @@ function basic_tests () {
 	};
 
 	let release			= happ_release_1 = await alice.call( "happs", "happ_library", "create_happ_release", release_input );
-	log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
+	log.normal("New hApp release: %s -> %s", String(release.$addr), release.version );
 
 	expect( release.description	).to.equal( release_input.description );
 
@@ -240,7 +240,7 @@ function basic_tests () {
 	    let _release		= await alice.call( "happs", "happ_library", "get_happ_release", {
 		"id": release.$id,
 	    });
-	    log.normal("Updated release: %s -> %s", String(_release.$addr), _release.name );
+	    log.normal("Updated release: %s -> %s", String(_release.$addr), _release.version );
 
 	    expect( _release.description	).to.equal( release_input.description );
 	}
@@ -263,7 +263,7 @@ function basic_tests () {
 		    description,
 		},
 	    });
-	    log.normal("New hApp: %s -> %s", String(update.$addr), update.name );
+	    log.normal("New hApp: %s -> %s", String(update.$addr), update.version );
 	    happ_release_addr		= update.$addr;
 
 	    expect( update.description	).to.equal( description );
@@ -385,7 +385,7 @@ function errors_tests () {
     it("should fail to create hApp release with empty DNAs", async function () {
 	await expect_reject( async () => {
 	    await clients.alice.call( "happs", "happ_library", "create_happ_release", {
-		"name": "v0.1.0",
+		"version": "v0.1.0",
 		"description": "The first release",
 		"for_happ": happ_1.$id,
 		"ordering": 1,

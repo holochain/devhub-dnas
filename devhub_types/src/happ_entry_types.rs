@@ -161,7 +161,7 @@ pub struct DnaReference {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct HappReleaseEntry {
-    pub name: String,
+    pub version: String,
     pub description: String,
     pub for_happ: EntryHash,
     pub ordering: u64,
