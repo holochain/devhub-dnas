@@ -177,6 +177,7 @@ where
     T: serde::de::DeserializeOwned + std::fmt::Debug,
     A: serde::Serialize + std::fmt::Debug,
 {
+    debug!("Calling target cell '{}' {}->{}()", role_name, zome, func );
     let response = call(
 	CallTargetCell::OtherRole( role_name.to_string() ),
 	zome,

@@ -84,7 +84,7 @@ pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> 
 
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
 
-    debug!("Fetching DNA package for {} resources", entity.content.dnas.len() );
+    debug!("Fetching DNA package(s) for {} resources", entity.content.dnas.len() );
     for (i, dna_ref) in entity.content.dnas.iter().enumerate() {
 	debug!("Fetching DNA package: {}", dna_ref.version );
 

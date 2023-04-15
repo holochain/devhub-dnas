@@ -9,13 +9,14 @@ const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const YAML				= require('yaml');
 const { HoloHash }			= require('@whi/holo-hash');
-const { Holochain }			= require('@whi/holochain-backdrop');
+const { Holochain,
+	HolochainClientLib }		= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
 const { ConductorError,
 	EntryNotFoundError,
 	DeserializationError,
 	CustomError,
-	...hc_client }			= require('@whi/holochain-client');
+	...hc_client }			= HolochainClientLib;
 
 const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');

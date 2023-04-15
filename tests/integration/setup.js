@@ -4,7 +4,6 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 });
 
 global.WebSocket			= require('ws');
-const { AgentClient }			= require('@whi/holochain-client');
 const { CruxConfig, ...crux }		= require('@whi/crux-payload-parser');
 
 // crux.log.setLevel("trace");
@@ -27,20 +26,22 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
     const clients			= {};
 
     log.debug("Waiting for DNAs and actors to be set up...");
-    const agents			= await holochain.backdrop( app_id, app_port, dnas, actors, {
+    const agents			= await holochain.backdrop({ "test_happ": dnas, }, {
 	"timeout": 20_000,
+	actors,
     });
     const crux_config			= new CruxConfig();
 
     log.debug("Creating clients actors: %s", actors.join(", ") );
-    await Promise.all( Object.entries( agents ).map( async ([ actor, happ ]) => {
+    await Promise.all( Object.entries( agents ).map( async ([ actor, happs ]) => {
+	const happ			= happs.test_happ;
 	const dna_map			= {};
 	await Promise.all( Object.entries( happ.cells ).map( async ([ role_name, cell ]) => {
 	    dna_map[role_name]		= cell.dna;
 	    log.info("Established a new cell for '%s': %s => [ %s :: %s ]", actor, role_name, String(cell.dna), String(happ.agent) );
 	}) );
 
-	const client			= new AgentClient( happ.agent, dna_map, app_port, client_options );
+	const client			= happ.client;
 	crux_config.upgrade( client );
 	clients[actor]			= client
 

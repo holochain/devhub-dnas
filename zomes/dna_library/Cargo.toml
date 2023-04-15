@@ -1,6 +1,6 @@
 [package]
 name = "dna_library"
-version = "0.2.0-beta-rc.1"
+version = "0.2.0-beta-rc.4"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
@@ -11,9 +11,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
 dnarepo_core = {path = "../dnarepo_core"}
-hc_crud_ceps = "0.76.0"
-mere_memory_types = "0.80.0"
-hdk = "0.2.0-beta-rc.1"
+hc_crud_ceps = "0.77.0"
+mere_memory_types = "0.82.0"
+hdk = "0.2.0-beta-rc.4"
 hex = "0"
 serde = "1"
 serde_yaml = "0.8.17"

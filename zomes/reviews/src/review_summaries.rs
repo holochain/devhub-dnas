@@ -12,6 +12,7 @@ use devhub_types::{
     trace_action_origin_entry,
     trace_action_history,
     fmt_path,
+    link_target_to_entry,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
@@ -60,7 +61,8 @@ fn assemble_summary_entry(subject_action: &ActionHash) -> AppResult<ReviewSummar
 
 	factored_count = factored_count + 1;
 
-	let review : Entity<ReviewEntry> = get_entity( &link.target.to_owned().into() )?;
+	let addr = link_target_to_entry( &link, format!("Review link target ({}) for subject ({}) is not an EntryHash", link.target, subject_id ) )?;
+	let review : Entity<ReviewEntry> = get_entity( &addr )?;
 
 	if review.content.subject_ids.iter().find( |pair| pair.0 == subject_id ).is_none() {
 	    debug!("Review doesn't belong to this subject: ID {} not in review subjects {:?}", subject_id, review.content.subject_ids );

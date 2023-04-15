@@ -11,7 +11,7 @@ pub use hc_crud::{
 };
 
 use crate::{
-    AppResult, UserError,
+    AppResult, UserError, AppError,
     fmt_path, fmt_tag,
     constants::{
 	ANCHOR_TAGS,
@@ -20,6 +20,11 @@ use crate::{
     },
 };
 
+
+pub fn link_target_to_entry( link: &Link, error: String ) -> AppResult<EntryHash> {
+    Ok( link.target.to_owned().into_entry_hash()
+	.ok_or(AppError::UnexpectedStateError(error))? )
+}
 
 
 pub fn create_path<T>( base: &str, segments: T ) -> (Path, EntryHash)
@@ -77,7 +82,8 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity::<T,ET>( &link.target.into() ).ok()
+	    link.target.into_entry_hash()
+		.and_then( |target| get_entity( &target ).ok() )
 	})
 	.collect();
 
@@ -117,7 +123,8 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    get_entity::<T,ET>( &link.target.into() ).ok()
+	    link.target.into_entry_hash()
+		.and_then( |target| get_entity::<T,ET>( &target ).ok() )
 	})
 	.collect();
 
@@ -143,10 +150,12 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    let result = get_entity::<T,ET>( &link.target.clone().into() );
-	    debug!("get_entity::<{},ET>( {} ) -> {:?}", T::name(), link.target, result );
-
-	    result.ok()
+	    link.target.into_entry_hash()
+		.and_then( |target| {
+		    let result = get_entity::<T,ET>( &target );
+		    debug!("get_entity::<{},ET>( {} ) -> {:?}", T::name(), target, result );
+		    result.ok()
+		})
 	})
 	.collect();
 
@@ -197,7 +206,8 @@ where
 
     let list = full_matches.into_iter()
 	.filter_map(|link| {
-	    get_entity::<T,ET>( &link.target.into() ).ok()
+	    link.target.into_entry_hash()
+		.and_then( |target| get_entity::<T,ET>( &target ).ok() )
 	})
 	.collect();
 

@@ -10,7 +10,6 @@ const expect				= require('chai').expect;
 const { HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
-const { ...hc_client }			= require('@whi/holochain-client');
 
 const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');

@@ -11,14 +11,15 @@ const Identicon				= require('identicon.js');
 const msgpack				= require('@msgpack/msgpack');
 const { EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
-const { Holochain }			= require('@whi/holochain-backdrop');
+const { Holochain,
+	HolochainClientLib }		= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
 const why				= require('why-is-node-running');
 const { ConductorError,
 	EntryNotFoundError,
 	DeserializationError,
 	CustomError,
-	...hc_client }			= require('@whi/holochain-client');
+	...hc_client }			= HolochainClientLib;
 
 const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');
