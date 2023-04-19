@@ -70,6 +70,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 	dna: info.hash,
 	granted_functions: ListedFunctions {
 	    Listed: vec![
+		( "happ_library".to_string(), "get_release_package".to_string() ),
 		( "happ_library".to_string(), "get_webhapp_package".to_string() ),
 		( "happ_library".to_string(), "get_happ".to_string() ),
 		( "happ_library".to_string(), "get_happ_release".to_string() ),
@@ -77,6 +78,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 		( "happ_library".to_string(), "get_gui".to_string() ),
 		( "happ_library".to_string(), "get_gui_release".to_string() ),
 		( "happ_library".to_string(), "get_gui_releases".to_string() ),
+		( "happ_library".to_string(), "get_webasset".to_string() ),
 	    ],
 	},
     });

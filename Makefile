@@ -8,7 +8,6 @@ DNAREPO			= bundled/dnarepo.dna
 HAPPDNA			= bundled/happs.dna
 ASSETSDNA		= bundled/web_assets.dna
 
-PORTAL_VERSION		= v0.3.0
 PORTAL_DNA		= bundled/portal.dna
 
 TARGET			= release
@@ -105,7 +104,7 @@ use-local:		use-local-client use-local-backdrop
 use-npm:		  use-npm-client   use-npm-backdrop
 
 $(PORTAL_DNA):
-	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/$(PORTAL_VERSION)/portal.dna"
+	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(NEW_PORTAL_VERSION)/portal.dna"
 copy-portal-from-local:
 	cp ../app-store-dnas/bundled/portal.dna $(PORTAL_DNA)
 
@@ -196,6 +195,9 @@ NEW_CRUD_VERSION = "0.77.0"
 PRE_MM_VERSION = "0.80.0"
 NEW_MM_VERSION = "0.82.0"
 
+# PRE_PORTAL_VERSION = "0.3.0"
+NEW_PORTAL_VERSION = "0.4.0"
+
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 
 update-hdk-version:
@@ -207,3 +209,5 @@ update-crud-version:
 update-mere-memory-version:
 	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
 	rm zomes/mere_memory*.wasm
+update-portal-version:
+	rm -f $(PORTAL_DNA)
