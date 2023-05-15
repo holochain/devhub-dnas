@@ -20,3 +20,9 @@ roles:
       deferred: false
     dna:
       bundled: ./web_assets.dna
+  - name: portal
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: ./portal.dna

@@ -8,6 +8,8 @@ DNAREPO			= bundled/dnarepo.dna
 HAPPDNA			= bundled/happs.dna
 ASSETSDNA		= bundled/web_assets.dna
 
+PORTAL_DNA		= bundled/portal.dna
+
 TARGET			= release
 
 # Integrity WASMs
@@ -23,7 +25,7 @@ WEB_ASSETS_WASM		= zomes/web_assets.wasm
 
 # External WASM dependencies
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
-MERE_MEMORY_CORE_WASM	= zomes/mere_memory_core.wasm
+MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 
 #
@@ -43,16 +45,16 @@ clean:
 	    zomes/target \
 	    $(HAPP_BUNDLE) \
 	    $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) \
-	    $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_WASM)
+	    $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_API_WASM)
 
 rebuild:			clean build
 build:				$(HAPP_BUNDLE)
 
 
-$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) bundled/happ.yaml
+$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) $(PORTAL_DNA) bundled/happ.yaml
 	hc app pack -o $@ ./bundled/
 
-$(DNAREPO):			$(DNAREPO_CORE) $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_CORE_WASM)
+$(DNAREPO):			$(DNAREPO_CORE) $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_API_WASM) $(MERE_MEMORY_WASM)
 $(HAPPDNA):			$(HAPPS_CORE) $(HAPP_LIBRARY_WASM)
 $(ASSETSDNA):			$(WEB_ASSETS_CORE) $(WEB_ASSETS_WASM)
 
@@ -76,24 +78,35 @@ zomes/%/Cargo.lock:
 
 $(MERE_MEMORY_WASM):
 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory.wasm" --output $@
-$(MERE_MEMORY_CORE_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory_core.wasm" --output $@
+$(MERE_MEMORY_API_WASM):
+	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory_api.wasm" --output $@
 
-use-local-holochain-backdrop:
+use-local-backdrop:
 	cd tests; npm uninstall @whi/holochain-backdrop
 	cd tests; npm install --save-dev ../../node-holochain-backdrop
-use-npm-holochain-backdrop:
+use-npm-backdrop:
 	cd tests; npm uninstall @whi/holochain-backdrop
 	cd tests; npm install --save-dev @whi/holochain-backdrop
-use-local-holochain-client:
+use-local-client:
 	cd tests; npm uninstall @whi/holochain-client
 	cd tests; npm install --save-dev ../../js-holochain-client
-use-npm-holochain-client:
+use-npm-client:
 	cd tests; npm uninstall @whi/holochain-client
 	cd tests; npm install --save-dev @whi/holochain-client
+use-local-crux:
+	cd tests; npm uninstall @whi/crux-payload-parser
+	cd tests; npm install --save-dev ../../js-crux-payload-parser
+use-npm-crux:
+	cd tests; npm uninstall @whi/crux-payload-parser
+	cd tests; npm install --save-dev @whi/crux-payload-parser
 
-use-local:		use-local-holochain-client use-local-holochain-backdrop
-use-npm:		  use-npm-holochain-client   use-npm-holochain-backdrop
+use-local:		use-local-client use-local-backdrop
+use-npm:		  use-npm-client   use-npm-backdrop
+
+$(PORTAL_DNA):
+	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(NEW_PORTAL_VERSION)/portal.dna"
+copy-portal-from-local:
+	cp ../app-store-dnas/bundled/portal.dna $(PORTAL_DNA)
 
 
 
@@ -170,17 +183,20 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.1.0-beta-rc.3"
-NEW_HDK_VERSION = "0.1.0"
+PRE_HDK_VERSION = "0.2.0-beta-rc.4"
+NEW_HDK_VERSION = "0.2.0"
 
-PRE_HDI_VERSION = "0.2.0-beta-rc.3"
-NEW_HDI_VERSION = "0.2.0"
+PRE_HDI_VERSION = "0.3.0-beta-rc.3"
+NEW_HDI_VERSION = "0.3.0"
 
-PRE_CRUD_VERSION = "0.74.0"
-NEW_CRUD_VERSION = "0.75.0"
+PRE_CRUD_VERSION = "0.76.0"
+NEW_CRUD_VERSION = "0.77.0"
 
-PRE_MM_VERSION = "0.78.0"
-NEW_MM_VERSION = "0.79.0"
+PRE_MM_VERSION = "0.80.0"
+NEW_MM_VERSION = "0.82.0"
+
+# PRE_PORTAL_VERSION = "0.3.0"
+NEW_PORTAL_VERSION = "0.4.0"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 
@@ -193,3 +209,5 @@ update-crud-version:
 update-mere-memory-version:
 	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
 	rm zomes/mere_memory*.wasm
+update-portal-version:
+	rm -f $(PORTAL_DNA)

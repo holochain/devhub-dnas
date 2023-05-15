@@ -25,7 +25,7 @@ use hex;
 
 #[derive(Debug, Deserialize)]
 pub struct CreateInput {
-    pub name: String,
+    pub version: String,
     pub description: String,
     pub for_happ: EntryHash,
     pub ordering: u64,
@@ -41,7 +41,7 @@ pub struct CreateInput {
 }
 
 pub fn create_happ_release(mut input: CreateInput) -> AppResult<Entity<HappReleaseEntry>> {
-    debug!("Creating HAPPRELEASE: {}", input.name );
+    debug!("Creating HAPPRELEASE: {}", input.version );
     let default_now = now()?;
 
     let hashes = input.dnas.iter()
@@ -61,7 +61,7 @@ pub fn create_happ_release(mut input: CreateInput) -> AppResult<Entity<HappRelea
     }
 
     let happ_release = HappReleaseEntry {
-	name: input.name,
+	version: input.version,
 	description: input.description,
 	for_happ: input.for_happ.clone(),
 	ordering: input.ordering,
@@ -108,7 +108,7 @@ pub fn get_happ_release(input: GetEntityInput) -> AppResult<Entity<HappReleaseEn
 
 #[derive(Debug, Deserialize)]
 pub struct HappReleaseUpdateOptions {
-    pub name: Option<String>,
+    pub version: Option<String>,
     pub description: Option<String>,
     pub ordering: Option<u64>,
     pub official_gui: Option<EntryHash>,
@@ -126,8 +126,8 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 	&input.addr,
 	|current : HappReleaseEntry, _| {
 	    Ok(HappReleaseEntry {
-		name: props.name
-		    .unwrap_or( current.name ),
+		version: props.version
+		    .unwrap_or( current.version ),
 		description: props.description
 		    .unwrap_or( current.description ),
 		for_happ: current.for_happ,

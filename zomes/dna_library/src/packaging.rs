@@ -29,7 +29,7 @@ use hdk::prelude::*;
 //                 "bundled": "../../zomes/dnarepo/target/wasm32-unknown-unknown/release/dna_library.wasm"
 //             },
 //             {
-//                 "name": "mere_memory",
+//                 "name": "mere_memory_api",
 //                 "hash": null,
 //                 "bundled": "../../zomes/mere_memory.wasm"
 //             }
@@ -113,7 +113,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     let mut resources : BTreeMap<String, Vec<u8>> = BTreeMap::new();
 
     for zome_ref in entry.integrity_zomes.iter() {
-	let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", zome_ref.resource.clone() )?;
+	let bytes : Vec<u8> = call_local_zome( "mere_memory_api", "retrieve_bytes", zome_ref.resource.clone() )?;
 	let path = format!("./{}.wasm", zome_ref.name );
 
 	integrity_zomes.push( BundleIntegrityZomeInfo {
@@ -129,7 +129,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
     }
 
     for zome_ref in entry.zomes.iter() {
-	let bytes : Vec<u8> = call_local_zome( "mere_memory", "retrieve_bytes", zome_ref.resource.clone() )?;
+	let bytes : Vec<u8> = call_local_zome( "mere_memory_api", "retrieve_bytes", zome_ref.resource.clone() )?;
 	let path = format!("./{}.wasm", zome_ref.name );
 
 	coordinator_zomes.push( BundleZomeInfo {

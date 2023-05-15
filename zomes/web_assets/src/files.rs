@@ -43,10 +43,10 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileEntry>> {
 	    let bytes = input.file_bytes
 		.ok_or( UserError::CustomError("You must supply an address or bytes for the file") )?;
 
-	    call_local_zome("mere_memory", "save_bytes", bytes )?
+	    call_local_zome("mere_memory_api", "save_bytes", bytes )?
 	},
     };
-    let memory : MemoryEntry = call_local_zome("mere_memory", "get_memory", mere_memory_addr.to_owned() )?;
+    let memory : MemoryEntry = call_local_zome("mere_memory_api", "get_memory", mere_memory_addr.to_owned() )?;
 
     let file = FileEntry {
 	author: pubkey.clone(),

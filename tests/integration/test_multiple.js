@@ -76,7 +76,7 @@ function basic_tests () {
 	    "ordering": 1,
 	    "hdk_version": "v0.0.120",
 	    "integrity_zomes": [{
-		"name": "mere_memory",
+		"name": "mere_memory_api",
 		"zome": new EntryHash( zome_version_1.for_zome ),
 		"version": zome_version_1.$id,
 		"resource": new EntryHash( zome_version_1.mere_memory_addr ),
@@ -106,7 +106,7 @@ function basic_tests () {
 	manifest.roles[0].name		= "test_dna";
 
 	let release_input		= {
-	    "name": "v0.1.0",
+	    "version": "v0.1.0",
 	    "description": "The first release",
 	    "for_happ": happ.$id,
 	    "ordering": 1,
@@ -123,7 +123,7 @@ function basic_tests () {
 	};
 
 	let release			= await alice.call( "happs", "happ_library", "create_happ_release", release_input );
-	log.normal("New hApp release: %s -> %s", String(release.$addr), release.name );
+	log.normal("New hApp release: %s -> %s", String(release.$addr), release.version );
 
 	expect( release.description	).to.equal( release_input.description );
 
@@ -204,7 +204,7 @@ function basic_tests () {
 		"official_gui": gui_release.$id,
 	    },
 	});
-	log.normal("Updated hApp release: %s -> %s", String(release.$addr), release.name );
+	log.normal("Updated hApp release: %s -> %s", String(release.$addr), release.version );
 
 	expect( release.official_gui	).to.deep.equal( gui_release.$id.bytes() );
     });
@@ -231,30 +231,17 @@ describe("All DNAs", () => {
 	    "alice",
 	]);
 
-	// {
-	//     let dna_info		= await clients.alice.call( "dnarepo", "dna_library", "dna_info" );
-	//     log.info("Alice dnarepo dna_info zomes: %s", dna_info.zome_names );
-	// }
-	// {
-	//     let dna_info		= await clients.alice.call( "happs", "happ_library", "dna_info" );
-	//     log.info("Alice happs dna_info zomes: %s", dna_info.zome_names );
-	// }
-	// {
-	//     let dna_info		= await clients.alice.call( "web_assets", "web_assets", "dna_info" );
-	//     log.info("Alice web_assets dna_info zomes: %s", dna_info.zome_names );
-	// }
-
 	// Must call whoami on each cell to ensure that init has finished.
 	{
-	    let whoami			= await clients.alice.call( "dnarepo", "dna_library", "whoami" );
+	    let whoami			= await clients.alice.call( "dnarepo", "dna_library", "whoami", null, 30_000 );
 	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
 	}
 	{
-	    let whoami			= await clients.alice.call( "happs", "happ_library", "whoami" );
+	    let whoami			= await clients.alice.call( "happs", "happ_library", "whoami", null, 30_000 );
 	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
 	}
 	{
-	    let whoami			= await clients.alice.call( "web_assets", "web_assets", "whoami" );
+	    let whoami			= await clients.alice.call( "web_assets", "web_assets", "whoami", null, 30_000 );
 	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
 	}
     });

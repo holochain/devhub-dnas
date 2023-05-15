@@ -110,7 +110,7 @@ function basic_tests () {
 		"ordering": 1,
 		"hdk_version": "v0.0.120",
 		"integrity_zomes": [{
-		    "name": "mere_memory",
+		    "name": "mere_memory_api",
 		    "zome": new EntryHash( zome_version_1.for_zome ),
 		    "version": zome_version_1.$id,
 		    "resource": new EntryHash( zome_version_1.mere_memory_addr ),
@@ -182,7 +182,7 @@ describe("Generic", () => {
 
 	// Must call whoami on each cell to ensure that init has finished.
 	{
-	    let whoami			= await clients.alice.call( "dnarepo", "dna_library", "whoami" );
+	    let whoami			= await clients.alice.call( "dnarepo", "dna_library", "whoami", null, 30_000 );
 	    log.normal("Alice whoami: %s", String(new HoloHash( whoami.agent_initial_pubkey )) );
 	}
     });

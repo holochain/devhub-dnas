@@ -11,6 +11,7 @@ use devhub_types::{
     trace_action_origin_entry,
     trace_action_history,
     fmt_path,
+    link_target_to_entry,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
@@ -59,7 +60,8 @@ fn assemble_summary_entry(subject_action: &ActionHash) -> AppResult<ReactionSumm
 
 	factored_count = factored_count + 1;
 
-	let reaction : Entity<ReactionEntry> = get_entity( &link.target.to_owned().into() )?;
+	let addr = link_target_to_entry( &link, format!("Reaction link target ({}) for subject ({}) is not an EntryHash", link.target, subject_id ) )?;
+	let reaction : Entity<ReactionEntry> = get_entity( &addr )?;
 
 	if reaction.content.subject_ids.iter().find( |pair| pair.0 == subject_id ).is_none() {
 	    debug!("Reaction doesn't belong to this subject: ID {} not in reaction subjects {:?}", subject_id, reaction.content.subject_ids );

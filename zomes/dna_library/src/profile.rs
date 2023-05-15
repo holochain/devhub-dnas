@@ -6,6 +6,7 @@ use devhub_types::{
     errors::{ UserError },
     dnarepo_entry_types::{ ProfileEntry },
     fmt_path,
+    link_target_to_entry,
 };
 use hc_crud::{
     create_entity, get_entity, update_entity,
@@ -92,13 +93,14 @@ pub struct GetProfileInput {
 }
 
 pub fn get_profile(input: GetProfileInput) -> AppResult<Entity<ProfileEntry>> {
-    let links = get_profile_links( input.agent )?;
+    let links = get_profile_links( input.agent.to_owned() )?;
 
     let link = find_earliest_link( links )
 	.ok_or( UserError::CustomError("Agent Profile has not been created yet") )?;
 
     debug!("Get Profile: {}", link.target );
-    let entity = get_entity( &link.target.into() )?;
+    let addr = link_target_to_entry( &link, format!("link target ({}) for Agent ({:?}) profiles is not an EntryHash", link.target, input.agent ) )?;
+    let entity = get_entity( &addr )?;
 
     Ok( entity )
 }

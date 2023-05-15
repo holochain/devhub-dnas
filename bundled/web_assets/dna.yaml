@@ -7,15 +7,15 @@ integrity:
   zomes:
     - name: web_assets_core
       bundled: ../../zomes/web_assets_core.wasm
-    - name: mere_memory_core
-      bundled: ../../zomes/mere_memory_core.wasm
+    - name: mere_memory
+      bundled: ../../zomes/mere_memory.wasm
 coordinator:
   zomes:
     - name: web_assets
       bundled: ../../zomes/web_assets.wasm
       dependencies:
         - name: web_assets_core
-    - name: mere_memory
-      bundled: ../../zomes/mere_memory.wasm
+    - name: mere_memory_api
+      bundled: ../../zomes/mere_memory_api.wasm
       dependencies:
-        - name: mere_memory_core
+        - name: mere_memory
