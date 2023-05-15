@@ -40,18 +40,10 @@ This project implements the CEPS pattern *(pattern documentation is in process)*
 ### Naming Conventions
 
 - Entry type names always end with `Entry`
-- Entity models ending in
-  - `Info` - are representations of the corresponding `Entry` type, where properties may be
-    reformatted or references to other entries may be replaced
-    - eg. an `EntryHash` is fetched and replaced with the entry content
-  - `Summary` - are a subset of properties from the corrosponding `Info` type.
-    - *Summary types are intended to be quicker so they should avoid properties with content that
-      would require additional DHT requests*
 
 
 ### Environment
 
-- Developed using rustc `1.54.0 (a178d0322 2021-07-26)`
 - Enter `nix-shell` for other development environment dependencies.
 
 

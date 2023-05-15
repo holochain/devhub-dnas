@@ -8,7 +8,6 @@ const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const { faker }				= require('@faker-js/faker');
-const msgpack				= require('@msgpack/msgpack');
 const { EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
