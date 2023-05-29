@@ -9,14 +9,8 @@ const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const YAML				= require('yaml');
 const { HoloHash }			= require('@whi/holo-hash');
-const { Holochain,
-	HolochainClientLib }		= require('@whi/holochain-backdrop');
+const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
-const { ConductorError,
-	EntryNotFoundError,
-	DeserializationError,
-	CustomError,
-	...hc_client }			= HolochainClientLib;
 
 const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');
@@ -350,7 +344,7 @@ function errors_tests () {
 		    "name": "bla bla bla",
 		}
 	    });
-	}, ConductorError, "InvalidCommit error: Previous entry author does not match Action author" );
+	}, "InvalidCommit error: Previous entry author does not match Action author" );
     });
 
     it("should fail to update deprecated happ", async function () {
@@ -361,7 +355,7 @@ function errors_tests () {
 		    "name": "bla bla bla",
 		}
 	    });
-	}, ConductorError, "InvalidCommit error: Cannot update deprecated hApp" );
+	}, "InvalidCommit error: Cannot update deprecated hApp" );
     });
 
     it("should fail to update another Agent's happ release", async function () {
@@ -372,7 +366,7 @@ function errors_tests () {
 		    "changelog": "",
 		}
 	    });
-	}, ConductorError, "InvalidCommit error: HappEntry author does not match Action author" );
+	}, "InvalidCommit error: HappEntry author does not match Action author" );
     });
 
     it("should fail to delete another Agent's happ release", async function () {
@@ -380,7 +374,7 @@ function errors_tests () {
 	    await clients.bobby.call( "happs", "happ_library", "delete_happ_release", {
 		"id": happ_release_2.$id,
 	    });
-	}, ConductorError, "InvalidCommit error: Delete author does not match Create author" );
+	}, "InvalidCommit error: Delete author does not match Create author" );
     });
 
     it("should fail to create hApp release with empty DNAs", async function () {

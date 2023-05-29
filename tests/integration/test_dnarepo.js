@@ -11,15 +11,9 @@ const Identicon				= require('identicon.js');
 const msgpack				= require('@msgpack/msgpack');
 const { EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
-const { Holochain,
-	HolochainClientLib }		= require('@whi/holochain-backdrop');
+const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
 const why				= require('why-is-node-running');
-const { ConductorError,
-	EntryNotFoundError,
-	DeserializationError,
-	CustomError,
-	...hc_client }			= HolochainClientLib;
 
 const { expect_reject }			= require('./utils.js');
 const { backdrop }			= require('./setup.js');
@@ -857,7 +851,7 @@ function errors_tests () {
 		    "name": "bla bla bla",
 		}
 	    });
-	}, ConductorError, "InvalidCommit error: Previous entry author does not match Action author" );
+	}, "InvalidCommit error: Previous entry author does not match Action author" );
     });
 
     it("should fail to update deprecated zome", async function () {
@@ -871,7 +865,7 @@ function errors_tests () {
 		    "name": "bla bla bla",
 		}
 	    });
-	}, ConductorError, "InvalidCommit error: Cannot update deprecated Zome" );
+	}, "InvalidCommit error: Cannot update deprecated Zome" );
     });
 
     it("should fail to update another Agent's zome version", async function () {
@@ -885,7 +879,7 @@ function errors_tests () {
 		    "changelog": "",
 		}
 	    });
-	}, ConductorError, "InvalidCommit error: ZomeEntry author does not match Action author" );
+	}, "InvalidCommit error: ZomeEntry author does not match Action author" );
     });
 
     it("should fail to delete another Agent's zome version", async function () {
@@ -896,7 +890,7 @@ function errors_tests () {
 	    await clients.bobby.call( "dnarepo", "dna_library", "delete_zome_version", {
 		"id": zome_version_2.$id,
 	    });
-	}, ConductorError, "InvalidCommit error: Delete author does not match Create author" );
+	}, "InvalidCommit error: Delete author does not match Create author" );
     });
 
     it("should fail to get profile because it is not made yet", async function () {
@@ -918,7 +912,7 @@ function errors_tests () {
 	    await clients.alice.call( "dnarepo", "dna_library", "get_dna_version", {
 		"id": dna_version_hash,
 	    });
-	}, EntryNotFoundError, "Record not found for Entry address" );
+	}, "Record not found for Entry address" );
     });
 
     it("should fail to create ZOME version because missing ZOME package info", async function () {
