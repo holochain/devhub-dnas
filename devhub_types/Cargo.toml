@@ -1,6 +1,6 @@
 [package]
 name = "devhub_types"
-version = "0.2.0"
+version = "0.3.0-beta-dev.2"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
@@ -11,8 +11,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 essence_payloads = "0.1"
 flate2 = "1"
-hc_crud_ceps = "0.77.0"
-hdk = "0.2.0"
+hc_crud_ceps = "0.78.0"
+hdk = "0.3.0-beta-dev.2"
 hex = "0"
 rmp-serde = "0.15.5"
 serde = "1"
