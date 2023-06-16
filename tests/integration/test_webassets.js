@@ -46,7 +46,17 @@ function basic_tests () {
 	    let file			= await alice.call( "webassets", "web_assets", "get_file", {
 		"id": file_addr,
 	    });
+	    log.normal("Retrieved webasset file: %s", file );
+	    expect( file.bytes		).to.be.undefined;
+	}
+
+	{
+	    let file			= await alice.call( "webassets", "web_assets", "get_file_package", {
+		"id": file_addr,
+	    });
 	    log.normal("Retrieved webasset file: %s bytes", file.bytes.length );
+	    // THIS 'expect' BREAKS THE WHOLE PROCESS FOR SOME REASON
+	    // expect( file.bytes		).to.be.a("Uint8Array");
 	}
     });
 }

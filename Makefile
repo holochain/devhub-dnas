@@ -3,7 +3,7 @@ SHELL			= bash
 
 NAME			= devhub
 
-HAPP_BUNDLE		= DevHub.happ
+HAPP_BUNDLE		= $(NAME).happ
 DNAREPO			= bundled/dnarepo.dna
 HAPPDNA			= bundled/happs.dna
 ASSETSDNA		= bundled/web_assets.dna
