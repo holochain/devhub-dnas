@@ -132,7 +132,7 @@ pub fn fmt_tag( tag: &Option<Vec<u8>> ) -> String {
 }
 
 
-fn zome_call_response_as_result(response: ZomeCallResponse) -> AppResult<zome_io::ExternIO> {
+fn zome_call_response_as_result(response: ZomeCallResponse) -> AppResult<ExternIO> {
     Ok( match response {
 	ZomeCallResponse::Ok(bytes)
 	    => Ok(bytes),
