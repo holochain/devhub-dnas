@@ -3,11 +3,15 @@ use std::collections::BTreeMap;
 use devhub_types::{
     AppResult, GetEntityInput,
     errors::{ AppError },
-    dnarepo_entry_types::{ DnaVersionPackage },
+    dnarepo_entry_types::{ DnaVersionEntry, DnaVersionPackage },
     happ_entry_types::{ HappManifest, WebHappManifest, ResourceRef },
-    web_asset_entry_types::{ FilePackage },
+    web_asset_entry_types::{ FileEntry, FilePackage },
     call_local_dna_zome,
     encode_bundle,
+};
+use mere_memory_types::{
+    MemoryEntry,
+    MemoryBlockEntry,
 };
 use hc_crud::{
     Entity,
@@ -16,18 +20,49 @@ use hdk::prelude::*;
 
 
 
-#[derive(Debug, Deserialize)]
-pub struct GetWebAssetInput {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetByIdInput {
     pub id: EntryHash,
 }
 
-pub fn get_webasset(input: GetWebAssetInput) -> AppResult<Entity<FilePackage>> {
+pub fn get_webasset_file(input: GetByIdInput) -> AppResult<Entity<FileEntry>> {
     debug!("Get GUI from: {}", input.id );
     let file_info = call_local_dna_zome( "web_assets", "web_assets", "get_file", GetEntityInput {
 	id: input.id,
     })?;
 
     Ok( file_info )
+}
+
+pub fn get_webasset_file_package(input: GetByIdInput) -> AppResult<Entity<FilePackage>> {
+    debug!("Get GUI from: {}", input.id );
+    let file_info = call_local_dna_zome( "web_assets", "web_assets", "get_file_package", GetEntityInput {
+	id: input.id,
+    })?;
+
+    Ok( file_info )
+}
+
+// Mere Memory forwarders
+pub fn dnarepo_get_memory(addr: EntryHash) -> AppResult<MemoryEntry> {
+    Ok( call_local_dna_zome( "dnarepo", "mere_memory_api", "get_memory", addr )? )
+}
+
+pub fn dnarepo_get_memory_block(addr: EntryHash) -> AppResult<MemoryBlockEntry> {
+    Ok( call_local_dna_zome( "dnarepo", "mere_memory_api", "get_memory_block", addr )? )
+}
+
+pub fn web_assets_get_memory(addr: EntryHash) -> AppResult<MemoryEntry> {
+    Ok( call_local_dna_zome( "web_assets", "mere_memory_api", "get_memory", addr )? )
+}
+
+pub fn web_assets_get_memory_block(addr: EntryHash) -> AppResult<MemoryBlockEntry> {
+    Ok( call_local_dna_zome( "web_assets", "mere_memory_api", "get_memory_block", addr )? )
+}
+
+// DNA Repo forwarders
+pub fn get_dna_version(input: GetByIdInput) -> AppResult<Entity<DnaVersionEntry>> {
+    Ok( call_local_dna_zome( "dnarepo", "dna_library", "get_dna_version", input )? )
 }
 
 
@@ -152,7 +187,7 @@ pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> 
 	id: input.happ_release_id.clone(),
     })?;
 
-    let web_asset_entity = get_webasset(GetWebAssetInput {
+    let web_asset_entity = get_webasset_file_package(GetByIdInput {
 	id: gui_release.content.web_asset_id,
     })?;
 

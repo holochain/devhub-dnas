@@ -164,7 +164,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappEntry>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving title link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
-	    entity.move_link_from( LinkTypes::Happ, None, &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LinkTypes::Happ, None, &previous_path_hash, &new_path_hash ).ok();
 	}
 
 	let (previous_title_path, previous_path_hash) = devhub_types::create_path( ANCHOR_TITLES, vec![ &previous.title.to_lowercase() ] );
@@ -172,7 +172,7 @@ pub fn update_happ(input: HappUpdateInput) -> AppResult<Entity<HappEntry>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving title (lowercase) link: {} -> {}", fmt_path( &previous_title_path ), fmt_path( &new_title_path ) );
-	    entity.move_link_from( LinkTypes::Happ, None, &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LinkTypes::Happ, None, &previous_path_hash, &new_path_hash ).ok();
 	}
     }
 

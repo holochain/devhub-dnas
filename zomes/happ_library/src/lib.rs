@@ -5,6 +5,9 @@ use devhub_types::{
     DevHubResponse, AppResult, ErrorKinds,
     Entity, EntityResponse, GetEntityInput, FilterInput,
     constants::{ VALUE_MD, ENTITY_MD, ENTITY_COLLECTION_MD },
+    dnarepo_entry_types::{
+	DnaVersionEntry,
+    },
     happ_entry_types::{
 	HappEntry,
 	HappReleaseEntry,
@@ -13,11 +16,15 @@ use devhub_types::{
 	GUIReleaseEntry,
     },
     web_asset_entry_types::{
-	FilePackage,
+	FileEntry,
     },
     call_local_dna_zome,
     composition,
     catch,
+};
+use mere_memory_types::{
+    MemoryEntry,
+    MemoryBlockEntry,
 };
 use hdk::prelude::*;
 use holo_hash::DnaHash;
@@ -78,7 +85,12 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 		( "happ_library".to_string(), "get_gui".to_string() ),
 		( "happ_library".to_string(), "get_gui_release".to_string() ),
 		( "happ_library".to_string(), "get_gui_releases".to_string() ),
-		( "happ_library".to_string(), "get_webasset".to_string() ),
+		( "happ_library".to_string(), "get_webasset_file".to_string() ),
+		( "happ_library".to_string(), "dnarepo_get_memory".to_string() ),
+		( "happ_library".to_string(), "dnarepo_get_memory_block".to_string() ),
+		( "happ_library".to_string(), "web_assets_get_memory".to_string() ),
+		( "happ_library".to_string(), "web_assets_get_memory_block".to_string() ),
+		( "happ_library".to_string(), "get_dna_version".to_string() ),
 	    ],
 	},
     });
@@ -354,13 +366,6 @@ fn get_gui_releases(input: gui_release::GetGUIReleasesInput) -> ExternResult<Dev
 
 // Packaging
 #[hdk_extern]
-fn get_webasset(input: packaging::GetWebAssetInput) -> ExternResult<EntityResponse<FilePackage>> {
-    let entity = catch!( packaging::get_webasset( input ) );
-
-    Ok(composition( entity, ENTITY_MD ))
-}
-
-#[hdk_extern]
 fn get_release_package(input: packaging::GetReleasePackageInput) -> ExternResult<DevHubResponse<Vec<u8>>> {
     let value = catch!( packaging::get_release_package( input ) );
 
@@ -372,4 +377,42 @@ fn get_webhapp_package(input: packaging::GetWebHappPackageInput) -> ExternResult
     let value = catch!( packaging::get_webhapp_package( input ) );
 
     Ok(composition( value, VALUE_MD ))
+}
+
+#[hdk_extern]
+fn get_webasset_file(input: packaging::GetByIdInput) -> ExternResult<EntityResponse<FileEntry>> {
+    let entity = catch!( packaging::get_webasset_file( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn dnarepo_get_memory(addr: EntryHash) -> ExternResult<DevHubResponse<MemoryEntry>> {
+    let entity = catch!( packaging::dnarepo_get_memory( addr ) );
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn dnarepo_get_memory_block(addr: EntryHash) -> ExternResult<DevHubResponse<MemoryBlockEntry>> {
+    let entity = catch!( packaging::dnarepo_get_memory_block( addr ) );
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn web_assets_get_memory(addr: EntryHash) -> ExternResult<DevHubResponse<MemoryEntry>> {
+    let entity = catch!( packaging::web_assets_get_memory( addr ) );
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn web_assets_get_memory_block(addr: EntryHash) -> ExternResult<DevHubResponse<MemoryBlockEntry>> {
+    let entity = catch!( packaging::web_assets_get_memory_block( addr ) );
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_dna_version(input: packaging::GetByIdInput) -> ExternResult<EntityResponse<DnaVersionEntry>> {
+    let entity = catch!( packaging::get_dna_version( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
 }

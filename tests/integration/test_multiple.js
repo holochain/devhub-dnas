@@ -8,6 +8,8 @@ const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const YAML				= require('yaml');
+const pako				= require('pako');
+const msgpack				= require('@msgpack/msgpack');
 const { EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
@@ -21,9 +23,25 @@ const DNAREPO_PATH			= path.join(__dirname, "../../bundled/dnarepo.dna");
 const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs.dna");
 const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets.dna");
 
-const chunk_size			= (2**20 /*1 megabyte*/) * 2;
-
 let clients;
+let release;
+
+
+async function downloadMemory ( client, address, dna_name ) {
+    let memory				= await client.call( "happs", "happ_library", `${dna_name}_get_memory`, address );
+
+    const bytes				= new Uint8Array( memory.memory_size );
+
+    let index				= 0;
+    for ( let block_addr of memory.block_addresses ) {
+	const block				= await client.call( "happs", "happ_library", `${dna_name}_get_memory_block`, block_addr );
+	bytes.set( block.bytes, index );
+
+	index			       += block.bytes.length;
+    }
+
+    return bytes;
+}
 
 
 function basic_tests () {
@@ -122,7 +140,7 @@ function basic_tests () {
 	    ],
 	};
 
-	let release			= await alice.call( "happs", "happ_library", "create_happ_release", release_input );
+	release				= await alice.call( "happs", "happ_library", "create_happ_release", release_input );
 	log.normal("New hApp release: %s -> %s", String(release.$addr), release.version );
 
 	expect( release.description	).to.equal( release_input.description );
@@ -152,7 +170,7 @@ function basic_tests () {
 	}
 
 	{
-	    let webasset		= await alice.call( "happs", "happ_library", "get_webasset", {
+	    let webasset		= await alice.call( "happs", "happ_library", "get_webasset_file", {
 		"id": webasset_addr,
 	    });
 	    log.normal("Updated hApp UI: %s", webasset.file_size );
@@ -208,6 +226,139 @@ function basic_tests () {
 
 	expect( release.official_gui	).to.deep.equal( gui_release.$id.bytes() );
     });
+
+    it("should assemble webhapp bundle", async function () {
+	this.timeout( 30_000 );
+
+	const alice			= clients.alice;
+
+	log.normal("Get Webhapp (official) GUI release: %s", release.official_gui );
+	const gui_release		= await alice.call("happs", "happ_library", "get_gui_release", {
+	    "id": release.official_gui,
+	});
+	console.log( gui_release );
+
+	log.normal("Get UI webasset zip: %s", gui_release.web_asset_id );
+	const file			= await alice.call("happs", "happ_library", "get_webasset_file", {
+	    "id": gui_release.web_asset_id,
+	});
+	console.log( file );
+
+	const ui_bytes			= await downloadMemory(
+	    alice,
+	    file.mere_memory_addr,
+	    "web_assets"
+	);
+	console.log( ui_bytes );
+
+	const happ_manifest		= JSON.parse( JSON.stringify( release.manifest ) )
+	const dna_resources		= {};
+
+	log.normal("Assemble hApp release package:", release );
+	for ( let i in release.dnas ) {
+	    const dna_ref		= release.dnas[i];
+
+	    log.normal("Assemble DNA release package:", dna_ref );
+	    const dna_version		= await alice.call("happs", "happ_library", "get_dna_version", {
+		"id": dna_ref.version,
+	    });
+	    console.log( dna_version );
+
+	    const resources		= {};
+	    const integrity_zomes	= [];
+	    const coordinator_zomes	= [];
+
+	    for ( let zome_ref of dna_version.integrity_zomes ) {
+		const rpath		= `${zome_ref.name}.wasm`;
+		const wasm_bytes	= await downloadMemory(
+		    alice,
+		    zome_ref.resource,
+		    "dnarepo"
+		);
+		console.log("Zome %s wasm bytes: %s", zome_ref.name, wasm_bytes.length );
+		integrity_zomes.push({
+		    "name": zome_ref.name,
+		    "bundled": rpath,
+		    "hash": null,
+		});
+		resources[ rpath ]	= wasm_bytes;
+	    }
+
+	    for ( let zome_ref of dna_version.zomes ) {
+		const rpath		= `${zome_ref.name}.wasm`;
+		const wasm_bytes	= await downloadMemory(
+		    alice,
+		    zome_ref.resource,
+		    "dnarepo"
+		);
+		console.log("Zome %s wasm bytes: %s", zome_ref.name, wasm_bytes.length );
+		coordinator_zomes.push({
+		    "name": zome_ref.name,
+		    "bundled": rpath,
+		    "hash": null,
+		});
+		resources[ rpath ]	= wasm_bytes;
+	    }
+
+	    const dna_config		= {
+		"manifest": {
+		    "manifest_version": "1",
+		    "name": dna_ref.role_name,
+		    "integrity": {
+			"origin_time": dna_version.origin_time,
+			"network_seed": dna_version.network_seed,
+			"properties": dna_version.properties,
+			"zomes": integrity_zomes,
+		    },
+		    "coordinator": {
+			"zomes": coordinator_zomes,
+		    },
+		},
+		resources,
+	    };
+	    const msgpacked_bytes	= msgpack.encode( dna_config );
+	    const gzipped_bytes		= pako.gzip( msgpacked_bytes );
+
+	    const rpath			= `${dna_ref.role_name}.dna`;
+	    dna_resources[ rpath ]	= gzipped_bytes;
+	    happ_manifest.roles[i].dna.bundled = rpath;
+	    log.normal("Finished packing DNA: %s", dna_ref.role_name );
+	}
+
+	console.log( happ_manifest );
+	const happ_config		= {
+	    "manifest": happ_manifest,
+	    "resources": dna_resources,
+	};
+	console.log( happ_config );
+	const happ_bytes		= pako.gzip( msgpack.encode( happ_config ) );
+	log.normal("Finished packing hApp");
+
+	const webhapp_config		= {
+	    "manifest": {
+		"manifest_version": "1",
+		"name": "Something",
+		"ui": {
+		    "bundled": "ui.zip"
+		},
+		"happ_manifest": {
+		    "bundled": "bundled.happ"
+		}
+	    },
+	    "resources": {
+		"ui.zip":		ui_bytes,
+		"bundled.happ":		happ_bytes,
+	    },
+	};
+	log.debug("Final webhapp config");
+	console.log( webhapp_config );
+	const msgpacked_bytes		= msgpack.encode( webhapp_config );
+	const webhapp_package		= pako.gzip( msgpacked_bytes );
+
+	log.normal("Download Webhapp package");
+	fs.writeFileSync( path.resolve(__dirname, "../multitesting.webhapp"), Buffer.from(webhapp_package) );
+    });
+
 }
 
 
@@ -218,6 +369,7 @@ describe("All DNAs", () => {
 
     const holochain			= new Holochain({
 	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
+	"timeout": 30_000,
     });
 
     before(async function () {

@@ -3,7 +3,7 @@ SHELL			= bash
 
 NAME			= devhub
 
-HAPP_BUNDLE		= DevHub.happ
+HAPP_BUNDLE		= devhub.happ
 DNAREPO			= bundled/dnarepo.dna
 HAPPDNA			= bundled/happs.dna
 ASSETSDNA		= bundled/web_assets.dna
@@ -104,7 +104,7 @@ use-local:		use-local-client use-local-backdrop
 use-npm:		  use-npm-client   use-npm-backdrop
 
 $(PORTAL_DNA):
-	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(NEW_PORTAL_VERSION)/portal.dna"
+	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(NEW_PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
 copy-portal-from-local:
 	cp ../app-store-dnas/bundled/portal.dna $(PORTAL_DNA)
 
@@ -183,20 +183,20 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.2.0-beta-rc.4"
-NEW_HDK_VERSION = "0.2.0"
+PRE_HDK_VERSION = "0.3.0-beta-dev.2"
+NEW_HDK_VERSION = "0.3.0-beta-dev.7"
 
-PRE_HDI_VERSION = "0.3.0-beta-rc.3"
-NEW_HDI_VERSION = "0.3.0"
+PRE_HDI_VERSION = "0.4.0-beta-dev.1"
+NEW_HDI_VERSION = "0.4.0-beta-dev.5"
 
-PRE_CRUD_VERSION = "0.76.0"
-NEW_CRUD_VERSION = "0.77.0"
+PRE_CRUD_VERSION = "0.78.0"
+NEW_CRUD_VERSION = "0.79.0"
 
-PRE_MM_VERSION = "0.80.0"
-NEW_MM_VERSION = "0.82.0"
+PRE_MM_VERSION = "0.85.0"
+NEW_MM_VERSION = "0.86.0"
 
 # PRE_PORTAL_VERSION = "0.3.0"
-NEW_PORTAL_VERSION = "0.4.0"
+NEW_PORTAL_VERSION = "0.6.0"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 
@@ -208,6 +208,6 @@ update-crud-version:
 	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'
 update-mere-memory-version:
 	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
-	rm zomes/mere_memory*.wasm
+	rm -f zomes/mere_memory*.wasm
 update-portal-version:
 	rm -f $(PORTAL_DNA)

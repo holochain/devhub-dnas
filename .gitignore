@@ -1,4 +1,4 @@
-DevHub.happ
+devhub.happ
 bundled/*.dna
 zomes/*.wasm
 node_modules

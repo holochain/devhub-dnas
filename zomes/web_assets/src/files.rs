@@ -72,7 +72,13 @@ pub fn create_file(input: CreateInput) -> AppResult<Entity<FileEntry>> {
 }
 
 
-pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FilePackage>> {
+pub fn get_file(input: GetEntityInput) -> AppResult<Entity<FileEntry>> {
+    debug!("Get file: {}", input.id );
+    Ok( get_entity( &input.id )? )
+}
+
+
+pub fn get_file_package(input: GetEntityInput) -> AppResult<Entity<FilePackage>> {
     debug!("Get file: {}", input.id );
     let entity : Entity<FileEntry> = get_entity( &input.id )?;
 

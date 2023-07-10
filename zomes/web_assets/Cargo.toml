@@ -1,6 +1,6 @@
 [package]
 name = "web_assets"
-version = "0.2.0"
+version = "0.3.0-beta-dev.7"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
@@ -11,9 +11,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
 web_assets_core = {path = "../web_assets_core"}
-hc_crud_ceps = "0.77.0"
-mere_memory_types = "0.82.0"
-hdk = "0.2.0"
+hc_crud_ceps = "0.79.0"
+hdk = "0.3.0-beta-dev.7"
+mere_memory_types = "0.86.0"
 serde = "1"
 serde_yaml = "0.8.17"
 thiserror = "1"

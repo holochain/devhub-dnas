@@ -49,8 +49,15 @@ fn create_file(input: files::CreateInput) -> ExternResult<EntityResponse<FileEnt
 }
 
 #[hdk_extern]
-fn get_file(input: GetEntityInput) -> ExternResult<EntityResponse<FilePackage>> {
+fn get_file(input: GetEntityInput) -> ExternResult<EntityResponse<FileEntry>> {
     let entity = catch!( files::get_file( input ) );
+
+    Ok(composition( entity, ENTITY_MD ))
+}
+
+#[hdk_extern]
+fn get_file_package(input: GetEntityInput) -> ExternResult<EntityResponse<FilePackage>> {
+    let entity = catch!( files::get_file_package( input ) );
 
     Ok(composition( entity, ENTITY_MD ))
 }
