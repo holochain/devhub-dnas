@@ -166,7 +166,7 @@ pub fn update_gui(input: GUIUpdateInput) -> AppResult<Entity<GUIEntry>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-	    entity.move_link_from( LinkTypes::GUI, None, &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LinkTypes::GUI, None, &previous_path_hash, &new_path_hash ).ok();
 	}
 
 	let (previous_name_path, previous_path_hash) = devhub_types::create_path( ANCHOR_NAMES, vec![ &previous.name.to_lowercase() ] );
@@ -174,7 +174,7 @@ pub fn update_gui(input: GUIUpdateInput) -> AppResult<Entity<GUIEntry>> {
 
 	if previous_path_hash != new_path_hash {
 	    debug!("Moving name (lowercase) link: {} -> {}", fmt_path( &previous_name_path ), fmt_path( &new_name_path ) );
-	    entity.move_link_from( LinkTypes::GUI, None, &previous_path_hash, &new_path_hash )?;
+	    entity.move_link_from( LinkTypes::GUI, None, &previous_path_hash, &new_path_hash ).ok();
 	}
     }
 
