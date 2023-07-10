@@ -14,6 +14,7 @@ happs_core = {path = "../happs_core"}
 hc_crud_ceps = "0.79.0"
 hdk = "0.3.0-beta-dev.7"
 hex = "0"
+mere_memory_types = "0.86.0"
 serde = "1"
 serde_yaml = "0.8.17"
 thiserror = "1"

@@ -19,7 +19,7 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
     log.normal("Setting up backdrop with %s DNAs and %s Agents", Object.keys(dnas).length, actors.length );
 
     log.debug("Waiting for holochain to start...");
-    await holochain.start( 5_000 );
+    await holochain.start( 30_000 );
 
     const app_id			= "test";
     const app_port			= 44910;
@@ -27,7 +27,7 @@ async function backdrop ( holochain, dnas, actors, client_options ) {
 
     log.debug("Waiting for DNAs and actors to be set up...");
     const agents			= await holochain.backdrop({ "test_happ": dnas, }, {
-	"timeout": 20_000,
+	"timeout": 30_000,
 	actors,
     });
     const crux_config			= new CruxConfig();

@@ -836,6 +836,7 @@ dependencies = [
  "hc_crud_ceps",
  "hdk",
  "hex",
+ "mere_memory_types",
  "rand",
  "serde",
  "serde_yaml",

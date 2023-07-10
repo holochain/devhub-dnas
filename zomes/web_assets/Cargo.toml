@@ -12,8 +12,8 @@ crate-type = ["cdylib", "rlib"]
 devhub_types = {path = "../../devhub_types"}
 web_assets_core = {path = "../web_assets_core"}
 hc_crud_ceps = "0.79.0"
-mere_memory_types = "0.86.0"
 hdk = "0.3.0-beta-dev.7"
+mere_memory_types = "0.86.0"
 serde = "1"
 serde_yaml = "0.8.17"
 thiserror = "1"
