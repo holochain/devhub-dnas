@@ -1,10 +1,4 @@
-use hdi::prelude::*;
-use devhub_types::{
-    dnarepo_entry_types::{
-	// ProfileEntry,
-	trace_action_origin_entry,
-    },
-};
+use crate::hdi::prelude::*;
 use crate::{
     EntryTypes,
 };

@@ -287,7 +287,7 @@ pub mod tests {
 
     fn create_dnaentry() -> DnaEntry {
 	let bytes = rand::thread_rng().gen::<[u8; 32]>();
-	let hash = ActionHash::from_raw_32( bytes.to_vec() );
+	let agent = AgentPubKey::from_raw_32( bytes.to_vec() );
 
 	DnaEntry {
 	    name: String::from("game_turns"),
@@ -299,7 +299,7 @@ pub mod tests {
 	    last_updated: 1618855430,
 
 	    // optional
-	    developer: hash.into(),
+	    developer: agent.into(),
 	    deprecation: None,
 	    source_code_url: None,
 	    metadata: BTreeMap::new(),

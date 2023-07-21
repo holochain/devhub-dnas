@@ -402,7 +402,7 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	if let Action::Update(update) = review_record.action() {
             let history = hdi_extensions::trace_origin( &update.original_action_address )?;
             let origin_id = history.last().unwrap().0.to_owned();
-            let depth = (history.len() as u64) - 1;
+            let depth = history.len() as u64;
 
 	    if origin_id != review_id {
 		return Ok(ValidateCallbackResult::Invalid(format!("Traced origin ID for action ({}) does not match review ID: {} != {}", review_action_hash, origin_id, review_id )))

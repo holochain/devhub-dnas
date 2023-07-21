@@ -13,7 +13,7 @@ use devhub_types::{
 };
 use hc_crud::{
     now, create_entity, get_entity,
-    Entity, EntityType,
+    Entity,
 };
 use mere_memory_types::{ MemoryEntry };
 use hdk::prelude::*;
@@ -88,7 +88,7 @@ pub fn get_file_package(input: GetEntityInput) -> AppResult<Entity<FilePackage>>
 	id: entity.id,
 	action: entity.action,
 	address: entity.address,
-	ctype: EntityType::new( "file", "package" ),
+	ctype: "package".to_string(),
 	content: package,
     })
 }

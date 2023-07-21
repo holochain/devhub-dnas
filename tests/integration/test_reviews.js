@@ -8,7 +8,7 @@ const fs				= require('fs');
 const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const { faker }				= require('@faker-js/faker');
-const { EntryHash,
+const { ActionHash, EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
@@ -287,7 +287,7 @@ describe("Reviews", () => {
 	    "hdk_version": "v0.0.120",
 	    "integrity_zomes": [{
 		"name":			"file_storage",
-		"zome":			new EntryHash( zome_version_1.for_zome ),
+		"zome":			new ActionHash( zome_version_1.for_zome ),
 		"version":		zome_version_1.$id,
 		"resource":		new EntryHash( zome_version_1.mere_memory_addr ),
 		"resource_hash":	zome_version_1.mere_memory_hash,
