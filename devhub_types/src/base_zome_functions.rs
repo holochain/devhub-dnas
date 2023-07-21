@@ -17,7 +17,7 @@ fn get_record(hash: EntryHash) -> ExternResult<DevHubResponse<Record>> {
 }
 
 #[hdk_extern]
-fn get_record_latest(hash: EntryHash) -> ExternResult<DevHubResponse<Record>> {
+fn get_record_latest(hash: ActionHash) -> ExternResult<DevHubResponse<Record>> {
     let entity = hc_crud::fetch_record_latest( &hash )
 	.map_err( |err| wasm_error!(WasmErrorInner::Guest(format!("fetch_record_latest Error: {:?}", err ))) )?;
 

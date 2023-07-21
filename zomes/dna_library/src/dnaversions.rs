@@ -25,7 +25,7 @@ use hex;
 
 #[derive(Debug, Deserialize)]
 pub struct DnaVersionInput {
-    pub for_dna: EntryHash,
+    pub for_dna: ActionHash,
     pub version: String,
     pub ordering: u64,
     pub hdk_version: String,
@@ -102,7 +102,7 @@ pub fn create_dna_version(input: DnaVersionInput) -> AppResult<Entity<DnaVersion
 
 #[derive(Debug, Deserialize)]
 pub struct GetDnaVersionInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn get_dna_version(input: GetDnaVersionInput) -> AppResult<Entity<DnaVersionEntry>> {
@@ -117,7 +117,7 @@ pub fn get_dna_version(input: GetDnaVersionInput) -> AppResult<Entity<DnaVersion
 
 #[derive(Debug, Deserialize)]
 pub struct GetDnaVersionsInput {
-    pub for_dna: EntryHash,
+    pub for_dna: ActionHash,
 }
 
 pub fn get_dna_versions(input: GetDnaVersionsInput) -> AppResult<Vec<Entity<DnaVersionEntry>>> {
@@ -178,7 +178,7 @@ pub fn update_dna_version(input: DnaVersionUpdateInput) -> AppResult<Entity<DnaV
 
 #[derive(Debug, Deserialize)]
 pub struct DeleteDnaVersionInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn delete_dna_version(input: DeleteDnaVersionInput) -> AppResult<ActionHash> {

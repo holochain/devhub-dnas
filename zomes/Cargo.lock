@@ -534,7 +534,7 @@ version = "0.2.1-beta-rc.0"
 dependencies = [
  "essence_payloads",
  "flate2",
- "hc_crud_ceps",
+ "hc_crud_caps",
  "hdk",
  "hex",
  "rmp-serde",
@@ -569,7 +569,7 @@ version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
  "dnarepo_core",
- "hc_crud_ceps",
+ "hc_crud_caps",
  "hdk",
  "hex",
  "mere_memory_types",
@@ -584,13 +584,13 @@ name = "dnarepo_core"
 version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
- "hc_crud_ceps",
- "hdi",
+ "hc_crud_caps",
  "hex",
  "rand",
  "serde",
  "serde_yaml",
  "thiserror",
+ "whi_hdi_extensions",
 ]
 
 [[package]]
@@ -833,7 +833,7 @@ version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
  "happs_core",
- "hc_crud_ceps",
+ "hc_crud_caps",
  "hdk",
  "hex",
  "mere_memory_types",
@@ -848,7 +848,7 @@ name = "happs_core"
 version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
- "hc_crud_ceps",
+ "hc_crud_caps",
  "hdi",
  "hex",
  "rand",
@@ -876,10 +876,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "hc_crud_ceps"
-version = "0.80.0"
+name = "hc_crud_caps"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e8464413d7affb6425c71e27677d428cdd573019d6136693d2a7d71d684911f"
+checksum = "7fa44d48eabcca01ac2c2985dff3bf8cc0247d5859ac32058757a668e5c06e71"
 dependencies = [
  "hdk",
  "holo_hash",
@@ -1811,12 +1811,13 @@ version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
  "dnarepo_core",
- "hc_crud_ceps",
+ "hc_crud_caps",
  "hdk",
  "rand",
  "serde",
  "serde_yaml",
  "thiserror",
+ "whi_hdi_extensions",
 ]
 
 [[package]]
@@ -2684,7 +2685,7 @@ name = "web_assets"
 version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
- "hc_crud_ceps",
+ "hc_crud_caps",
  "hdk",
  "mere_memory_types",
  "rand",
@@ -2699,13 +2700,24 @@ name = "web_assets_core"
 version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
- "hc_crud_ceps",
+ "hc_crud_caps",
  "hdi",
  "hex",
  "rand",
  "serde",
  "serde_yaml",
  "thiserror",
+]
+
+[[package]]
+name = "whi_hdi_extensions"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1deebf4ff8f31dd07ac8fc8c99a79396994fbf4d3059e7ce0479af23e01de1cd"
+dependencies = [
+ "hdi",
+ "holo_hash",
+ "serde",
 ]
 
 [[package]]

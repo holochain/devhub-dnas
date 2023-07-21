@@ -26,13 +26,11 @@
     - Mere Memory API
 
 ### Entity Relationship Pattern
-This project implements the CEPS pattern *(pattern documentation is in process)*.
+This project implements the CAPS pattern *(pattern documentation is in process)*.
 
-- [github.com/mjbrisebois/rust-hc-crud-ceps/](https://github.com/mjbrisebois/rust-hc-crud-ceps/)
-- [docs.rs/hc_crud_ceps/](https://docs.rs/hc_crud_ceps/) - Rust library that implements th CEPS pattern
+- [github.com/mjbrisebois/rust-hc-crud-caps/](https://github.com/mjbrisebois/rust-hc-crud-caps/)
+- [docs.rs/hc_crud_caps/](https://docs.rs/hc_crud_caps/) - Rust library that implements th CAPS pattern
 
-#### CEPS Concept Example
-![](https://drive.google.com/a/webheroes.ca/thumbnail?sz=w1000&id=1oJTioA_IlGrcZI4tn-AyM0orMCt5kP6r)
 
 
 ## Development
@@ -94,7 +92,7 @@ make test-all-debug
 ## Dependencies
 
 - DevHub
-  - CRUD (`hc_crud_ceps`)
+  - CRUD (`hc_crud_caps`)
   - Mere Memory
   - dev / testing
     - `@whi/holochain-client`
@@ -103,7 +101,7 @@ make test-all-debug
       - Holochain Conductor API
 
 
-#### [CRUD](https://crates.io/crates/hc_crud_ceps)
+#### [CRUD](https://crates.io/crates/hc_crud_caps)
 
 This library handles the underlying CRUD patter for all DevHub's entry types.  If there is a new HDK
 for Holochain, the CRUD library will need to be bumped and possibly updated to handle any API

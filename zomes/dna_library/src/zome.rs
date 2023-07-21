@@ -106,7 +106,7 @@ pub fn create_zome(input: ZomeInput) -> AppResult<Entity<ZomeEntry>> {
 
 #[derive(Debug, Deserialize)]
 pub struct GetZomeInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn get_zome(input: GetZomeInput) -> AppResult<Entity<ZomeEntry>> {
@@ -227,7 +227,7 @@ pub fn deprecate_zome(input: DeprecateZomeInput) -> AppResult<Entity<ZomeEntry>>
 pub fn get_zomes_with_an_hdk_version( input: String ) -> AppResult<Vec<Entity<ZomeEntry>>> {
     let collection : Vec<Entity<ZomeVersionEntry>> = devhub_types::get_hdk_version_entities( LinkTypes::ZomeVersion, input )?;
 
-    let mut zomes : BTreeMap<EntryHash, Entity<ZomeEntry>> = BTreeMap::new();
+    let mut zomes : BTreeMap<ActionHash, Entity<ZomeEntry>> = BTreeMap::new();
 
     for zome_version in collection.into_iter() {
 	let zome = get_entity( &zome_version.content.for_zome )?;

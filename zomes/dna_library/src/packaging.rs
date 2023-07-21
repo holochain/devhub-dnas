@@ -11,7 +11,7 @@ use devhub_types::{
 };
 use hc_crud::{
     get_entity,
-    Entity, EntityType,
+    Entity,
 };
 use hdk::prelude::*;
 
@@ -99,7 +99,7 @@ pub struct Bundle {
 
 #[derive(Debug, Deserialize)]
 pub struct GetDnaPackageInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersionPackage>> {
@@ -171,7 +171,7 @@ pub fn get_dna_package(input: GetDnaPackageInput) -> AppResult<Entity<DnaVersion
 	id: entity.id,
 	action: entity.action,
 	address: entity.address,
-	ctype: EntityType::new( "dna_version", "package" ),
+	ctype: "dna_version".to_string(),
 	content: package,
     })
 }

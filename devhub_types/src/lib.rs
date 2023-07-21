@@ -14,7 +14,7 @@ use sha2::{ Sha256, Digest };
 pub use helper_functions::*;
 pub use hc_crud::{
     get_entity,
-    Entity, EntryModel, EntityType,
+    Entity, EntryModel,
     UtilsError,
 };
 pub use dnarepo_entry_types::{
@@ -43,12 +43,12 @@ pub type AppResult<T> = Result<T, ErrorKinds>;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetEntityInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateEntityInput<T> {
-    pub id: Option<EntryHash>,
+    pub id: Option<ActionHash>,
     pub addr: ActionHash,
     pub properties: T,
 }
@@ -231,7 +231,6 @@ pub mod tests {
     use rand::Rng;
     use serde_json::json;
     use thiserror::Error;
-    use hc_crud::{ EntityType };
 
     #[derive(Debug, Error)]
     enum AppError<'a> {
@@ -277,15 +276,16 @@ pub mod tests {
     ///
     fn success_entity_test() {
 	let bytes = rand::thread_rng().gen::<[u8; 32]>();
-	let ehash = crate::holo_hash::EntryHash::from_raw_32( bytes.to_vec() );
+	let bhash = crate::holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
 	let hhash = crate::holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
+	let ehash = crate::holo_hash::EntryHash::from_raw_32( bytes.to_vec() );
 
 	let _ : DevHubResponse<Entity<_>> = DevHubResponse::success(
 	    Entity {
-		id: ehash.clone(),
+		id: bhash,
 		action: hhash,
 		address: ehash,
-		ctype: EntityType::new( "boolean", "primitive" ),
+		ctype: "boolean".to_string(),
 		content: true,
 	    },
 	    Some(Metadata {

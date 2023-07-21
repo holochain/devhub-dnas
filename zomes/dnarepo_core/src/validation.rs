@@ -1,4 +1,4 @@
-use hdi::prelude::*;
+use crate::hdi::prelude::*;
 use devhub_types::{
     dnarepo_entry_types::{
 	// ProfileEntry,
@@ -9,7 +9,6 @@ use devhub_types::{
 	ReviewEntry,
 	ReviewSummaryEntry,
     },
-    trace_action_origin_entry,
 };
 use crate::{
     EntryTypes,
@@ -175,7 +174,7 @@ fn validate_zome_update(action: &action::Update, zome: ZomeEntry) -> ExternResul
 // Zome Version
 //
 fn validate_zome_version_create(action: &action::Create, zome_version: ZomeVersionEntry) -> ExternResult<ValidateCallbackResult> {
-    let zome : ZomeEntry = must_get_entry( zome_version.for_zome.into() )?.try_into()?;
+    let zome : ZomeEntry = hdi_extensions::summon_app_entry( &zome_version.for_zome.into() )?;
 
     if zome.developer != action.author {
 	Ok(ValidateCallbackResult::Invalid(format!("ZomeEntry author does not match Action author: {} != {}", zome.developer, action.author )))
@@ -186,7 +185,7 @@ fn validate_zome_version_create(action: &action::Create, zome_version: ZomeVersi
 }
 
 fn validate_zome_version_update(action: &action::Update, zome_version: ZomeVersionEntry) -> ExternResult<ValidateCallbackResult> {
-    let zome : ZomeEntry = must_get_entry( zome_version.for_zome.to_owned().into() )?.try_into()?;
+    let zome : ZomeEntry = hdi_extensions::summon_app_entry( &zome_version.for_zome.clone().into() )?;
     let prev_entry : ZomeVersionEntry = must_get_entry( action.original_entry_address.to_owned() )?.try_into()?;
 
     if zome_version.review_summary.is_some() {
@@ -266,7 +265,7 @@ fn validate_dna_update(action: &action::Update, dna: DnaEntry) -> ExternResult<V
 // Dna Version
 //
 fn validate_dna_version_create(action: &action::Create, dna_version: DnaVersionEntry) -> ExternResult<ValidateCallbackResult> {
-    let dna : DnaEntry = must_get_entry( dna_version.for_dna.into() )?.try_into()?;
+    let dna : DnaEntry = hdi_extensions::summon_app_entry( &dna_version.for_dna.clone().into() )?;
 
     if dna.developer != action.author {
 	Ok(ValidateCallbackResult::Invalid(format!("DnaEntry author does not match Action author: {} != {}", dna.developer, action.author )))
@@ -280,7 +279,7 @@ fn validate_dna_version_create(action: &action::Create, dna_version: DnaVersionE
 }
 
 fn validate_dna_version_update(action: &action::Update, dna_version: DnaVersionEntry) -> ExternResult<ValidateCallbackResult> {
-    let dna : DnaEntry = must_get_entry( dna_version.for_dna.into() )?.try_into()?;
+    let dna : DnaEntry = hdi_extensions::summon_app_entry( &dna_version.for_dna.clone().into() )?;
 
     if dna.developer != action.author {
 	return Ok(ValidateCallbackResult::Invalid(format!("DnaEntry author does not match Action author: {} != {}", dna.developer, action.author )));
@@ -385,18 +384,25 @@ fn validate_review_delete(action: &action::Delete) -> ExternResult<ValidateCallb
 //
 fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> ExternResult<ValidateCallbackResult> {
     let mut factored_count = (review_summary.review_refs.len() + review_summary.deleted_reviews.len()) as u64;
-    let mut all_factored_reviews : Vec<(EntryHash,ActionHash)> = Vec::new();
+    let mut all_factored_reviews : Vec<(ActionHash,ActionHash)> = Vec::new();
 
-    all_factored_reviews.extend( review_summary.review_refs.values().map( |values| (values.0.to_owned(), values.1.to_owned()) ).collect::<Vec<(EntryHash,ActionHash)>>() );
+    all_factored_reviews.extend(
+        review_summary.review_refs
+            .values()
+            .map( |values| (values.0.to_owned(), values.1.to_owned()) )
+            .collect::<Vec<(ActionHash,ActionHash)>>()
+    );
     // all_factored_reviews.extend( review_summary.deleted_reviews.values().cloned().collect::<Vec<(EntryHash,ActionHash)>>() );
-    all_factored_reviews.extend( review_summary.deleted_reviews.values().map( |values| (values.0.to_owned(), values.1.to_owned()) ).collect::<Vec<(EntryHash,ActionHash)>>() );
+    all_factored_reviews.extend( review_summary.deleted_reviews.values().map( |values| (values.0.to_owned(), values.1.to_owned()) ).collect::<Vec<(ActionHash,ActionHash)>>() );
 
     // Verfiy review references
     for (review_id, review_action_hash) in all_factored_reviews {
 	let review_record = must_get_valid_record( review_action_hash.to_owned().into() )?;
 
 	if let Action::Update(update) = review_record.action() {
-	    let (origin_id, depth) = trace_action_origin_entry( &update.original_action_address, Some(1) )?;
+            let history = hdi_extensions::trace_origin( &update.original_action_address )?;
+            let origin_id = history.last().unwrap().0.to_owned();
+            let depth = (history.len() as u64) - 1;
 
 	    if origin_id != review_id {
 		return Ok(ValidateCallbackResult::Invalid(format!("Traced origin ID for action ({}) does not match review ID: {} != {}", review_action_hash, origin_id, review_id )))
@@ -406,9 +412,9 @@ fn validate_review_summary_content(review_summary: &ReviewSummaryEntry) -> Exter
 	    factored_count += depth;
 	}
 
-	if let Action::Create(create) = review_record.action() {
-	    if create.entry_hash != review_id {
-		return Ok(ValidateCallbackResult::Invalid(format!("Action is not related to review ID: {} != {}", create.entry_hash, review_id )))
+	if let Action::Create(_) = review_record.action() {
+	    if review_record.action_hashed().hash != review_id {
+		return Ok(ValidateCallbackResult::Invalid(format!("Action is not related to review ID: {} != {}", review_record.action_hashed().hash, review_id )))
 	    }
 	}
 

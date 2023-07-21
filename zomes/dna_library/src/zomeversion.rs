@@ -28,7 +28,7 @@ use hdk::prelude::*;
 
 #[derive(Debug, Deserialize)]
 pub struct ZomeVersionInput {
-    pub for_zome: EntryHash,
+    pub for_zome: ActionHash,
     pub version: String,
     pub ordering: u64,
     pub hdk_version: String,
@@ -100,7 +100,7 @@ pub fn create_zome_version(input: ZomeVersionInput) -> AppResult<Entity<ZomeVers
 
 #[derive(Debug, Deserialize)]
 pub struct GetZomeVersionInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn get_zome_version(input: GetZomeVersionInput) -> AppResult<Entity<ZomeVersionEntry>> {
@@ -115,7 +115,7 @@ pub fn get_zome_version(input: GetZomeVersionInput) -> AppResult<Entity<ZomeVers
 
 #[derive(Debug, Deserialize)]
 pub struct GetZomeVersionsInput {
-    pub for_zome: EntryHash,
+    pub for_zome: ActionHash,
 }
 
 pub fn get_zome_versions(input: GetZomeVersionsInput) -> AppResult<Vec<Entity<ZomeVersionEntry>>> {
@@ -211,7 +211,7 @@ pub fn create_zome_version_review_summary(input: EntityAddressInput) -> AppResul
 
 #[derive(Debug, Deserialize)]
 pub struct DeleteZomeVersionInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn delete_zome_version(input: DeleteZomeVersionInput) -> AppResult<ActionHash> {
