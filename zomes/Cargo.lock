@@ -849,12 +849,12 @@ version = "0.2.1-beta-rc.0"
 dependencies = [
  "devhub_types",
  "hc_crud_caps",
- "hdi",
  "hex",
  "rand",
  "serde",
  "serde_yaml",
  "thiserror",
+ "whi_hdi_extensions",
 ]
 
 [[package]]

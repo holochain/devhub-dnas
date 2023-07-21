@@ -187,8 +187,8 @@ function basic_tests () {
 	    expect( happs		).to.have.length( 0 );
 	}
 
-	const dna_id			= new HoloHash("uhCEkh3HCoTRCZD2I7H-gcf5VNdqXUdT4Nq6B8WUo-pzMZ338XDlb");
-	const dna_version_id		= new HoloHash("uhCEkxe-5fTSvh_WVchpAmEvMbN9aGAu_Nm3GwN03IM2kmmyPmLxy");
+	const dna_id			= new HoloHash("uhCkkEkalYbhcVEa6sb-GWviJU3yBH1UNrVPQrF7fQ8FtNXLXiFKM");
+	const dna_version_id		= new HoloHash("uhCkkZe5L3FhbZNW9QI2Em1klODrVbPXx_im5Z9J83ih2DgLQ8pO7");
 	const dna_wasm_hash		= "07bb7ae9898a64c69617a8dc0faf0c9449ccd0c0b2a81be29763b8a95d7bd708";
 
 	const yaml_text			= fs.readFileSync( path.resolve(__dirname, "../../bundled/happ.yaml"), "utf-8" );
@@ -298,9 +298,9 @@ function basic_tests () {
 		    "id": release.$id,
 		});
 	    } catch (err) {
-		expect( err.kind	).to.equal( "UserError" );
-		expect( err.name	).to.equal( "EntryNotFoundError" );
-		expect( err.message	).to.have.string( "Record not found for Entry address" );
+		expect( err.kind	).to.equal( "UtilsError" );
+		expect( err.name	).to.equal( "ActionNotFoundError" );
+		expect( err.message	).to.have.string( "Record not found for Action address" );
 
 		failed			= true;
 	    }
@@ -405,6 +405,7 @@ describe("hApps", () => {
 
     const holochain			= new Holochain({
 	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
+	"timeout": 30_000,
     });
 
     before(async function () {

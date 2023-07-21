@@ -27,14 +27,14 @@ use hex;
 pub struct CreateInput {
     pub version: String,
     pub description: String,
-    pub for_happ: EntryHash,
+    pub for_happ: ActionHash,
     pub ordering: u64,
     pub manifest: HappManifest,
     pub hdk_version: String,
     pub dnas: Vec<DnaReference>,
 
     // optional
-    pub official_gui: Option<EntryHash>,
+    pub official_gui: Option<ActionHash>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
@@ -111,7 +111,7 @@ pub struct HappReleaseUpdateOptions {
     pub version: Option<String>,
     pub description: Option<String>,
     pub ordering: Option<u64>,
-    pub official_gui: Option<EntryHash>,
+    pub official_gui: Option<ActionHash>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
@@ -155,7 +155,7 @@ pub fn update_happ_release(input: HappReleaseUpdateInput) -> AppResult<Entity<Ha
 
 #[derive(Debug, Deserialize)]
 pub struct DeleteInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn delete_happ_release(input: DeleteInput) -> AppResult<ActionHash> {
@@ -170,7 +170,7 @@ pub fn delete_happ_release(input: DeleteInput) -> AppResult<ActionHash> {
 
 #[derive(Debug, Deserialize)]
 pub struct GetHappReleasesInput {
-    pub for_happ: EntryHash,
+    pub for_happ: ActionHash,
 }
 
 pub fn get_happ_releases(input: GetHappReleasesInput) -> AppResult<Vec<Entity<HappReleaseEntry>>> {
