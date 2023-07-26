@@ -183,20 +183,23 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.3.0-beta-dev.7"
-NEW_HDK_VERSION = "0.2.1-beta-rc.0"
+PRE_HDK_VERSION = "=0.2.1-beta-rc.0"
+NEW_HDK_VERSION = "=0.2.1"
 
-PRE_HDI_VERSION = "0.4.0-beta-dev.5"
-NEW_HDI_VERSION = "0.3.1-beta-rc.0"
+PRE_HDI_VERSION = "0.3.1-beta-rc.0"
+NEW_HDI_VERSION = "=0.3.1"
 
-PRE_CRUD_VERSION = "0.80.0"
-NEW_CRUD_VERSION = "0.8.0"
+PRE_HDIEV	= "0.2"
+NEW_HDIEV	= "0.2.1"
 
-PRE_MM_VERSION = "0.86.0"
-NEW_MM_VERSION = "0.87.0"
+PRE_CRUD_VERSION = "0.8.0"
+NEW_CRUD_VERSION = "0.9.0"
+
+PRE_MM_VERSION = "0.87.0"
+NEW_MM_VERSION = "0.88.0"
 
 # PRE_PORTAL_VERSION = "0.3.0"
-NEW_PORTAL_VERSION = "0.7.0"
+NEW_PORTAL_VERSION = "0.8.0"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
 
@@ -204,6 +207,8 @@ update-hdk-version:
 	git grep -l '$(PRE_HDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDK_VERSION)|$(NEW_HDK_VERSION)|g'
 update-hdi-version:
 	git grep -l '$(PRE_HDI_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDI_VERSION)|$(NEW_HDI_VERSION)|g'
+update-extensions-version:
+	git grep -l '$(PRE_HDIEV)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIEV)|$(NEW_HDIEV)|g'
 update-crud-version:
 	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'
 update-mere-memory-version:

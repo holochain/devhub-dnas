@@ -1,6 +1,6 @@
 [package]
 name = "happ_library"
-version = "0.2.1-beta-rc.0"
+version = "0.0.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
@@ -11,10 +11,10 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
 happs_core = {path = "../happs_core"}
-hc_crud_caps = "0.8.0"
-hdk = "0.2.1-beta-rc.0"
+hc_crud_caps = "0.9.0"
+hdk = "=0.2.1"
 hex = "0"
-mere_memory_types = "0.87.0"
+mere_memory_types = "0.88.0"
 serde = "1"
 serde_yaml = "0.8.17"
 thiserror = "1"
