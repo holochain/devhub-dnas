@@ -17,9 +17,7 @@
 - [Translation Layer](#translation-layer) - A layer for communicating the purpose and/or meaning of
   the response
   - Payload Layer - a layer for delivering the content
-    - A single item - [`Entity<...>`](https://docs.rs/hc_crud_ceps/0.*/hc_crud/struct.Entity.html)
-      - eg. DevHub [Entity Models](Entity_Models.md)
-    - A list of items - [`Collection<...>`](https://docs.rs/hc_crud_ceps/0.*/hc_crud/struct.Collection.html)
+    - A single item - [`Entity<...>`](https://docs.rs/hc_crud_caps/0.*/hc_crud/struct.Entity.html)
     - Other
       - eg. [AgentInfo](https://docs.rs/hdk/0.0.*/hdk/prelude/struct.AgentInfo.html)
 

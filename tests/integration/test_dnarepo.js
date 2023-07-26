@@ -9,7 +9,7 @@ const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const Identicon				= require('identicon.js');
 const msgpack				= require('@msgpack/msgpack');
-const { EntryHash,
+const { ActionHash, EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain,
 	HolochainClientLib }		= require('@whi/holochain-backdrop');
@@ -470,14 +470,14 @@ function basic_tests () {
 		"hdk_version": HDK_VERSION,
 		"integrity_zomes": [{
 		    "name": "mere_memory",
-		    "zome": new EntryHash( zome_version_1_core.for_zome ),
+		    "zome": new ActionHash( zome_version_1_core.for_zome ),
 		    "version": zome_version_1_core.$id,
 		    "resource": new EntryHash( zome_version_1_core.mere_memory_addr ),
 		    "resource_hash": zome_version_1_core.mere_memory_hash,
 		}],
 		"zomes": [{
 		    "name": "mere_memory_api",
-		    "zome": new EntryHash( zome_version_1.for_zome ),
+		    "zome": new ActionHash( zome_version_1.for_zome ),
 		    "version": zome_version_1.$id,
 		    "resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		    "resource_hash": zome_version_1.mere_memory_hash,
@@ -516,7 +516,7 @@ function basic_tests () {
 		"hdk_version": HDK_VERSION,
 		"integrity_zomes": [{
 		    "name": "mere_memory_core",
-		    "zome": new EntryHash( zome_version_1_core.for_zome ),
+		    "zome": new ActionHash( zome_version_1_core.for_zome ),
 		    "version": zome_version_1_core.$id,
 		    "resource": new EntryHash( zome_version_1_core.mere_memory_addr ),
 		    "resource_hash": zome_version_1_core.mere_memory_hash,
@@ -918,13 +918,13 @@ function errors_tests () {
 	    await clients.alice.call( "dnarepo", "dna_library", "get_dna_version", {
 		"id": dna_version_hash,
 	    });
-	}, EntryNotFoundError, "Record not found for Entry address" );
+	}, EntryNotFoundError, "Record not found for Action address" );
     });
 
     it("should fail to create ZOME version because missing ZOME package info", async function () {
 	await expect_reject( async () => {
 	    await clients.alice.call( "dnarepo", "dna_library", "create_zome_version", {
-		"for_zome": new HoloHash("uhCEkvriXQtLwCt8urCSqAxS6MYUGPEVbb3h0CH0aVj4QVba1fEzj"),
+		"for_zome": new HoloHash("uhCkkyQAZujwi8Mn5MrR49xHiXpM9ElqPq_PYOFlera05rI5Itt4X"),
 		"version": "v0.1.0",
 		"ordering": 1,
 		"file_size": 0,

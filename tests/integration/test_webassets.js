@@ -38,8 +38,8 @@ function basic_tests () {
 	    let file			= await alice.call( "webassets", "web_assets", "create_file", {
 		"file_bytes": file_bytes,
 	    });
-	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
-	    file_addr			= file.$address;
+	    log.normal("New webasset file: %s -> %s", String(file.$action), file.version );
+	    file_addr			= file.$action;
 	}
 
 	{
@@ -60,6 +60,7 @@ describe("Web Assets", () => {
 
     const holochain			= new Holochain({
 	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
+	"timeout": 30_000,
     });
 
     before(async function () {

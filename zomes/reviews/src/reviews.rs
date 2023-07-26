@@ -29,7 +29,7 @@ use crate::constants::{
 
 #[derive(Debug, Deserialize)]
 pub struct ReviewInput {
-    pub subject_ids: Vec<(EntryHash, ActionHash)>,
+    pub subject_ids: Vec<(ActionHash, ActionHash)>,
     pub ratings: BTreeMap<String,u8>,
     pub message: String,
 
@@ -37,7 +37,7 @@ pub struct ReviewInput {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
-    pub related_entries: Option<BTreeMap<String, EntryHash>>,
+    pub related_entries: Option<BTreeMap<String, ActionHash>>,
 }
 
 pub fn create_review(input: ReviewInput) -> AppResult<Entity<ReviewEntry>> {
@@ -97,7 +97,7 @@ pub struct ReviewUpdateOptions {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
-    pub related_entries: Option<BTreeMap<String, EntryHash>>,
+    pub related_entries: Option<BTreeMap<String, ActionHash>>,
 }
 pub type ReviewUpdateInput = UpdateEntityInput<ReviewUpdateOptions>;
 

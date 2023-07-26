@@ -9,7 +9,7 @@ const crypto				= require('crypto');
 const expect				= require('chai').expect;
 const Identicon				= require('identicon.js');
 const msgpack				= require('@msgpack/msgpack');
-const { EntryHash,
+const { ActionHash, EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
@@ -111,7 +111,7 @@ function basic_tests () {
 		"hdk_version": "v0.0.120",
 		"integrity_zomes": [{
 		    "name": "mere_memory_api",
-		    "zome": new EntryHash( zome_version_1.for_zome ),
+		    "zome": new ActionHash( zome_version_1.for_zome ),
 		    "version": zome_version_1.$id,
 		    "resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		    "resource_hash": zome_version_1.mere_memory_hash,
@@ -169,6 +169,7 @@ describe("Generic", () => {
 
     const holochain			= new Holochain({
 	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
+	"timeout": 30_000,
     });
 
     before(async function () {

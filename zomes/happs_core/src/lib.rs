@@ -1,5 +1,7 @@
 mod validation;
 
+pub use hdi_extensions::hdi;
+
 use hdi::prelude::*;
 use serde::de::{ Deserializer, Error };
 use devhub_types::{
@@ -16,7 +18,8 @@ pub use devhub_types::{
     AppResult,
 };
 pub use hc_crud::{
-    EntryModel, EntityType,
+    EntryModel,
+    entry_model,
 };
 
 #[hdk_entry_defs]
@@ -32,6 +35,11 @@ pub enum EntryTypes {
     #[entry_def]
     GUIRelease(GUIReleaseEntry),
 }
+
+entry_model!( EntryTypes::Happ( HappEntry ) );
+entry_model!( EntryTypes::HappRelease( HappReleaseEntry ) );
+entry_model!( EntryTypes::GUI( GUIEntry ) );
+entry_model!( EntryTypes::GUIRelease( GUIReleaseEntry ) );
 
 
 #[hdk_link_types]
@@ -66,47 +74,5 @@ impl<'de> Deserialize<'de> for LinkTypes {
 
 	    value => Err(D::Error::custom(format!("No LinkTypes value matching '{}'", value ))),
 	}
-    }
-}
-
-
-
-impl EntryModel<EntryTypes> for HappEntry {
-    fn name() -> &'static str { "Happ" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::Happ(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for HappReleaseEntry {
-    fn name() -> &'static str { "HappRelease" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "happ_release", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::HappRelease(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for GUIEntry {
-    fn name() -> &'static str { "GUI" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "gui", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::GUI(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for GUIReleaseEntry {
-    fn name() -> &'static str { "GUIRelease" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "gui_release", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::GUIRelease(self.clone())
     }
 }

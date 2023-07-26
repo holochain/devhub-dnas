@@ -11,7 +11,7 @@ pub struct DeprecationNotice {
     pub message: String,
 
     // optional
-    pub recommended_alternatives: Option<Vec<EntryHash>>,
+    pub recommended_alternatives: Option<Vec<ActionHash>>,
 }
 
 impl DeprecationNotice {
@@ -68,8 +68,8 @@ pub struct DnaEntry {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct IntegrityZomeReference {
     pub name: String,
-    pub zome : EntryHash, // Zome ID
-    pub version : EntryHash, // Version ID
+    pub zome : ActionHash, // Zome ID
+    pub version : ActionHash, // Version ID
     pub resource : EntryHash, // Mere Memory address for a short-circuit download
     pub resource_hash : String, // Hash of resource contents
 }
@@ -77,8 +77,8 @@ pub struct IntegrityZomeReference {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ZomeReference {
     pub name: String,
-    pub zome : EntryHash, // Zome ID
-    pub version : EntryHash, // Version ID
+    pub zome : ActionHash, // Zome ID
+    pub version : ActionHash, // Version ID
     pub resource : EntryHash, // Mere Memory address for a short-circuit download
     pub resource_hash : String, // Hash of resource contents
     pub dependencies: Vec<String>,
@@ -87,7 +87,7 @@ pub struct ZomeReference {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct DnaVersionEntry {
-    pub for_dna: EntryHash,
+    pub for_dna: ActionHash,
     pub version: String,
     pub ordering: u64,
     pub published_at: u64,
@@ -109,7 +109,7 @@ pub struct DnaVersionEntry {
 // Package
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DnaVersionPackage {
-    pub for_dna: EntryHash,
+    pub for_dna: ActionHash,
     pub version: String,
     pub published_at: u64,
     pub last_updated: u64,
@@ -163,7 +163,7 @@ pub struct ZomeEntry {
 #[hdk_entry_helper]
 #[derive(Clone, PartialEq)]
 pub struct ZomeVersionEntry {
-    pub for_zome: EntryHash,
+    pub for_zome: ActionHash,
     pub version: String,
     pub ordering: u64,
     // pub properties: Option<serde_yaml::Value>,
@@ -176,7 +176,7 @@ pub struct ZomeVersionEntry {
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // optional
-    pub review_summary: Option<EntryHash>,
+    pub review_summary: Option<ActionHash>,
     pub source_code_commit_url: Option<String>,
 }
 
@@ -188,18 +188,18 @@ pub struct ZomeVersionEntry {
 #[hdk_entry_helper]
 #[derive(Clone, PartialEq)]
 pub struct ReviewEntry {
-    pub subject_ids: Vec<(EntryHash, ActionHash)>,
+    pub subject_ids: Vec<(ActionHash, ActionHash)>,
     pub author: AgentPubKey,
     pub ratings: BTreeMap<String,u8>,
     pub message: String,
     pub published_at: u64,
     pub last_updated: u64,
-    pub reaction_summary: Option<EntryHash>,
+    pub reaction_summary: Option<ActionHash>,
     pub metadata: BTreeMap<String, serde_yaml::Value>,
     pub deleted: bool,
 
     // optional
-    pub related_entries: Option<BTreeMap<String, EntryHash>>,
+    pub related_entries: Option<BTreeMap<String, ActionHash>>,
 }
 
 
@@ -210,7 +210,7 @@ pub struct ReviewEntry {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ReactionEntry {
-    pub subject_ids: Vec<(EntryHash, ActionHash)>,
+    pub subject_ids: Vec<(ActionHash, ActionHash)>,
     pub author: AgentPubKey,
     pub reaction_type: u64,
 
@@ -221,7 +221,7 @@ pub struct ReactionEntry {
     pub deleted: bool,
 
     // optional
-    pub related_entries: Option<BTreeMap<String, EntryHash>>,
+    pub related_entries: Option<BTreeMap<String, ActionHash>>,
 }
 
 
@@ -232,7 +232,7 @@ pub struct ReactionEntry {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ReactionSummaryEntry {
-    pub subject_id: EntryHash,
+    pub subject_id: ActionHash,
     pub subject_history: Vec<ActionHash>,
 
     pub published_at: u64,
@@ -240,8 +240,8 @@ pub struct ReactionSummaryEntry {
 
     pub factored_action_count: u64,
 
-    pub reaction_refs: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, u64, u64)>,
-    pub deleted_reactions: BTreeMap<String,(EntryHash, ActionHash)>,
+    pub reaction_refs: BTreeMap<String,(ActionHash, ActionHash, AgentPubKey, u64, u64)>,
+    pub deleted_reactions: BTreeMap<String,(ActionHash, ActionHash)>,
 }
 
 
@@ -252,7 +252,7 @@ pub struct ReactionSummaryEntry {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ReviewSummaryEntry {
-    pub subject_id: EntryHash,
+    pub subject_id: ActionHash,
     pub subject_history: Vec<ActionHash>,
 
     pub published_at: u64,
@@ -274,8 +274,8 @@ pub struct ReviewSummaryEntry {
     //
     //   review_total_activity - the activity count for all review revisions
     //
-    pub review_refs: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, u64, BTreeMap<String,u8>, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
-    pub deleted_reviews: BTreeMap<String,(EntryHash, ActionHash, AgentPubKey, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
+    pub review_refs: BTreeMap<String,(ActionHash, ActionHash, AgentPubKey, u64, BTreeMap<String,u8>, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
+    pub deleted_reviews: BTreeMap<String,(ActionHash, ActionHash, AgentPubKey, Option<(ActionHash, u64, BTreeMap<u64,u64>)>)>,
 }
 
 
@@ -287,7 +287,7 @@ pub mod tests {
 
     fn create_dnaentry() -> DnaEntry {
 	let bytes = rand::thread_rng().gen::<[u8; 32]>();
-	let hash = EntryHash::from_raw_32( bytes.to_vec() );
+	let agent = AgentPubKey::from_raw_32( bytes.to_vec() );
 
 	DnaEntry {
 	    name: String::from("game_turns"),
@@ -299,7 +299,7 @@ pub mod tests {
 	    last_updated: 1618855430,
 
 	    // optional
-	    developer: hash.into(),
+	    developer: agent.into(),
 	    deprecation: None,
 	    source_code_url: None,
 	    metadata: BTreeMap::new(),

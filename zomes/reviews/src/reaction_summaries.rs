@@ -8,10 +8,9 @@ use devhub_types::{
 	ReactionEntry,
 	ReactionSummaryEntry,
     },
-    trace_action_origin_entry,
     trace_action_history,
     fmt_path,
-    link_target_to_entry,
+    link_target_to_action,
 };
 use hc_crud::{
     now, create_entity, get_entity, update_entity,
@@ -34,7 +33,7 @@ fn assemble_summary_entry(subject_action: &ActionHash) -> AppResult<ReactionSumm
     debug!("Assembling Reaction Summary based on subject starting point: {}", subject_action );
     let subject_history = trace_action_history( subject_action )?;
     let subject_pointer = subject_history.last().unwrap();
-    let subject_id = subject_pointer.1.to_owned();
+    let subject_id = subject_pointer.0.to_owned();
     debug!("Subject's root entry ID: {}", subject_id );
 
     let mut reaction_refs = BTreeMap::new();
@@ -60,7 +59,7 @@ fn assemble_summary_entry(subject_action: &ActionHash) -> AppResult<ReactionSumm
 
 	factored_count = factored_count + 1;
 
-	let addr = link_target_to_entry( &link, format!("Reaction link target ({}) for subject ({}) is not an EntryHash", link.target, subject_id ) )?;
+	let addr = link_target_to_action( &link, format!("Reaction link target ({}) for subject ({}) is not an ActionHash", link.target, subject_id ) )?;
 	let reaction : Entity<ReactionEntry> = get_entity( &addr )?;
 
 	if reaction.content.subject_ids.iter().find( |pair| pair.0 == subject_id ).is_none() {
@@ -70,8 +69,10 @@ fn assemble_summary_entry(subject_action: &ActionHash) -> AppResult<ReactionSumm
 
 	let mut action_count = 1;
 
-	if reaction.id != reaction.address {
-	    let (origin_id, depth) = trace_action_origin_entry( &reaction.action, None )?;
+	if reaction.id != reaction.action {
+            let history = hdi_extensions::trace_origin( &reaction.action )?;
+            let origin_id = history.last().unwrap().0.to_owned();
+            let depth = (history.len() as u64) - 1;
 
 	    if origin_id != reaction.id {
 		Err(AppError::UnexpectedStateError(format!("Traced origin ID for action ({}) does not match reaction ID: {} != {}", reaction.action, origin_id, reaction.id )))?
@@ -145,7 +146,7 @@ pub fn get_reaction_summary(input: GetEntityInput) -> AppResult<Entity<ReactionS
 
 
 
-pub fn update_reaction_summary(id: EntryHash) -> AppResult<Entity<ReactionSummaryEntry>> {
+pub fn update_reaction_summary(id: ActionHash) -> AppResult<Entity<ReactionSummaryEntry>> {
     let summary : Entity<ReactionSummaryEntry> = get_entity( &id )?;
     let (subject_action, ..) = fetch_record_latest( &summary.content.subject_id )?;
     let updated_summary = assemble_summary_entry( &subject_action )?;

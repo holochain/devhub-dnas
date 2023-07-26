@@ -11,7 +11,7 @@ pub struct DeprecationNotice {
     pub message: String,
 
     // optional
-    pub recommended_alternatives: Option<Vec<EntryHash>>,
+    pub recommended_alternatives: Option<Vec<ActionHash>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -153,8 +153,8 @@ pub struct HappEntry {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct DnaReference {
     pub role_name: String,
-    pub dna : EntryHash, // Dna ID
-    pub version : EntryHash, // Version ID
+    pub dna : ActionHash, // Dna ID
+    pub version : ActionHash, // Version ID
     pub wasm_hash : String,
 }
 
@@ -163,7 +163,7 @@ pub struct DnaReference {
 pub struct HappReleaseEntry {
     pub version: String,
     pub description: String,
-    pub for_happ: EntryHash,
+    pub for_happ: ActionHash,
     pub ordering: u64,
     pub published_at: u64,
     pub last_updated: u64,
@@ -174,7 +174,7 @@ pub struct HappReleaseEntry {
     pub metadata: BTreeMap<String, serde_yaml::Value>,
 
     // Optional fields
-    pub official_gui: Option<EntryHash>,
+    pub official_gui: Option<ActionHash>,
 }
 
 
@@ -209,9 +209,9 @@ pub struct GUIEntry {
 pub struct GUIReleaseEntry {
     pub version: String,
     pub changelog: String,
-    pub for_gui: EntryHash,
-    pub for_happ_releases: Vec<EntryHash>,
-    pub web_asset_id: EntryHash,
+    pub for_gui: ActionHash,
+    pub for_happ_releases: Vec<ActionHash>,
+    pub web_asset_id: ActionHash,
     pub published_at: u64,
     pub last_updated: u64,
     pub metadata: BTreeMap<String, serde_yaml::Value>,

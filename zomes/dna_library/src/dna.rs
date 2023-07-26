@@ -105,7 +105,7 @@ pub fn create_dna(input: DnaInput) -> AppResult<Entity<DnaEntry>> {
 
 #[derive(Debug, Deserialize)]
 pub struct GetDnaInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn get_dna(input: GetDnaInput) -> AppResult<Entity<DnaEntry>> {
@@ -226,7 +226,7 @@ pub fn deprecate_dna(input: DeprecateDnaInput) -> AppResult<Entity<DnaEntry>> {
 pub fn get_dnas_with_an_hdk_version( input: String ) -> AppResult<Vec<Entity<DnaEntry>>> {
     let collection : Vec<Entity<DnaVersionEntry>> = devhub_types::get_hdk_version_entities( LinkTypes::DnaVersion, input ).unwrap();
 
-    let mut dnas : BTreeMap<EntryHash, Entity<DnaEntry>> = BTreeMap::new();
+    let mut dnas : BTreeMap<ActionHash, Entity<DnaEntry>> = BTreeMap::new();
 
     for dna_version in collection.into_iter() {
 	let dna = get_entity( &dna_version.content.for_dna )?;

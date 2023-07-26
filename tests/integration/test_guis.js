@@ -146,14 +146,15 @@ function basic_tests () {
 
 	let webasset_addr;
 	{
+	    console.log( webasset_bytes );
 	    let webasset			= await alice.call( "web_assets", "web_assets", "create_file", {
-		"file_bytes": webasset_bytes,
+		"file_bytes": Array.from( webasset_bytes ),
 	    });
 	    log.normal("New webasset file: %s -> %s", String(webasset.$address), webasset.version );
-	    webasset_addr			= webasset.$address;
+	    webasset_addr			= webasset.$action;
 	}
 
-	const happ_release_id		= new HoloHash("uhCEkxe-5fTSvh_WVchpAmEvMbN9aGAu_Nm3GwN03IM2kmmyPmLxy");
+	const happ_release_id		= new HoloHash("uhCkkmZ3XaSyrpwpGgjtZ48EiLqpGS6_igB0oueBfBJ6VVm98gKO5");
 
 	let release_input		= {
 	    "version": "v0.1.0",
@@ -219,9 +220,9 @@ function basic_tests () {
 		    "id": release.$id,
 		});
 	    } catch (err) {
-		expect( err.kind	).to.equal( "UserError" );
-		expect( err.name	).to.equal( "EntryNotFoundError" );
-		expect( err.message	).to.have.string( "Record not found for Entry address" );
+		expect( err.kind	).to.equal( "UtilsError" );
+		expect( err.name	).to.equal( "ActionNotFoundError" );
+		expect( err.message	).to.have.string( "Record not found for Action address" );
 
 		failed			= true;
 	    }
@@ -245,6 +246,7 @@ describe("GUIs", () => {
 
     const holochain			= new Holochain({
 	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
+	"timeout": 30_000,
     });
 
     before(async function () {

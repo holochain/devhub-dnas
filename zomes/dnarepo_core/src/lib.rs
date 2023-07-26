@@ -1,5 +1,7 @@
 mod validation;
 
+pub use hdi_extensions::hdi;
+
 use hdi::prelude::*;
 use serde::de::{ Deserializer, Error };
 use devhub_types::{
@@ -20,7 +22,8 @@ pub use devhub_types::{
     AppResult,
 };
 pub use hc_crud::{
-    EntryModel, EntityType,
+    EntryModel,
+    entry_model,
 };
 
 #[hdk_entry_defs]
@@ -49,6 +52,16 @@ pub enum EntryTypes {
     #[entry_def]
     ReactionSummary(ReactionSummaryEntry),
 }
+
+entry_model!( EntryTypes::Profile( ProfileEntry ) );
+entry_model!( EntryTypes::Zome( ZomeEntry ) );
+entry_model!( EntryTypes::ZomeVersion( ZomeVersionEntry ) );
+entry_model!( EntryTypes::Dna( DnaEntry ) );
+entry_model!( EntryTypes::DnaVersion( DnaVersionEntry ) );
+entry_model!( EntryTypes::Review( ReviewEntry ) );
+entry_model!( EntryTypes::ReviewSummary( ReviewSummaryEntry ) );
+entry_model!( EntryTypes::Reaction( ReactionEntry ) );
+entry_model!( EntryTypes::ReactionSummary( ReactionSummaryEntry ) );
 
 
 #[hdk_link_types]
@@ -101,97 +114,5 @@ impl<'de> Deserialize<'de> for LinkTypes {
 
 	    value => Err(D::Error::custom(format!("No LinkTypes value matching '{}'", value ))),
 	}
-    }
-}
-
-
-
-impl EntryModel<EntryTypes> for ProfileEntry {
-    fn name() -> &'static str { "Profile" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "profile", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::Profile(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for DnaEntry {
-    fn name() -> &'static str { "Dna" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::Dna(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for DnaVersionEntry {
-    fn name() -> &'static str { "DnaVersion" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "dna_version", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::DnaVersion(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for ZomeEntry {
-    fn name() -> &'static str { "Zome" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::Zome(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for ZomeVersionEntry {
-    fn name() -> &'static str { "ZomeVersion" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "zome_version", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::ZomeVersion(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for ReviewEntry {
-    fn name() -> &'static str { "Review" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "review", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::Review(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for ReactionEntry {
-    fn name() -> &'static str { "Reaction" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "reaction", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::Reaction(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for ReactionSummaryEntry {
-    fn name() -> &'static str { "ReactionSummary" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "reaction_summary", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::ReactionSummary(self.clone())
-    }
-}
-
-impl EntryModel<EntryTypes> for ReviewSummaryEntry {
-    fn name() -> &'static str { "ReviewSummary" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "review_summary", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::ReviewSummary(self.clone())
     }
 }

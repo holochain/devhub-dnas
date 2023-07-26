@@ -6,7 +6,7 @@ use hdk::hash_path::path::{ Component };
 
 pub use hc_crud::{
     get_entity,
-    Entity, EntryModel, EntityType,
+    Entity, EntryModel,
     UtilsError,
 };
 
@@ -21,8 +21,8 @@ use crate::{
 };
 
 
-pub fn link_target_to_entry( link: &Link, error: String ) -> AppResult<EntryHash> {
-    Ok( link.target.to_owned().into_entry_hash()
+pub fn link_target_to_action( link: &Link, error: String ) -> AppResult<ActionHash> {
+    Ok( link.target.to_owned().into_action_hash()
 	.ok_or(AppError::UnexpectedStateError(error))? )
 }
 
@@ -82,7 +82,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    link.target.into_entry_hash()
+	    link.target.into_action_hash()
 		.and_then( |target| get_entity( &target ).ok() )
 	})
 	.collect();
@@ -123,7 +123,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    link.target.into_entry_hash()
+	    link.target.into_action_hash()
 		.and_then( |target| get_entity::<T,ET>( &target ).ok() )
 	})
 	.collect();
@@ -150,7 +150,7 @@ where
 
     let list = links.into_iter()
 	.filter_map(|link| {
-	    link.target.into_entry_hash()
+	    link.target.into_action_hash()
 		.and_then( |target| {
 		    let result = get_entity::<T,ET>( &target );
 		    debug!("get_entity::<{},ET>( {} ) -> {:?}", T::name(), target, result );
@@ -206,7 +206,7 @@ where
 
     let list = full_matches.into_iter()
 	.filter_map(|link| {
-	    link.target.into_entry_hash()
+	    link.target.into_action_hash()
 		.and_then( |target| get_entity::<T,ET>( &target ).ok() )
 	})
 	.collect();

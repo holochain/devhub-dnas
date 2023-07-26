@@ -20,9 +20,9 @@ use hdk::prelude::*;
 pub struct CreateInput {
     pub version: String,
     pub changelog: String,
-    pub for_gui: EntryHash,
-    pub for_happ_releases: Vec<EntryHash>,
-    pub web_asset_id: EntryHash,
+    pub for_gui: ActionHash,
+    pub for_happ_releases: Vec<ActionHash>,
+    pub web_asset_id: ActionHash,
 
     // optional
     pub screenshots: Option<Vec<EntryHash>>,
@@ -78,7 +78,7 @@ pub fn get_gui_release(input: GetEntityInput) -> AppResult<Entity<GUIReleaseEntr
 pub struct GUIReleaseUpdateOptions {
     pub version: Option<String>,
     pub changelog: Option<String>,
-    pub for_happ_releases: Option<Vec<EntryHash>>,
+    pub for_happ_releases: Option<Vec<ActionHash>>,
     pub screenshots: Option<Vec<EntryHash>>,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -120,7 +120,7 @@ pub fn update_gui_release(input: GUIReleaseUpdateInput) -> AppResult<Entity<GUIR
 
 #[derive(Debug, Deserialize)]
 pub struct DeleteInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn delete_gui_release(input: DeleteInput) -> AppResult<ActionHash> {
@@ -135,7 +135,7 @@ pub fn delete_gui_release(input: DeleteInput) -> AppResult<ActionHash> {
 
 #[derive(Debug, Deserialize)]
 pub struct GetGUIReleasesInput {
-    pub for_gui: EntryHash,
+    pub for_gui: ActionHash,
 }
 
 pub fn get_gui_releases(input: GetGUIReleasesInput) -> AppResult<Vec<Entity<GUIReleaseEntry>>> {

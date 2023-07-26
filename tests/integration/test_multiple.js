@@ -10,7 +10,7 @@ const expect				= require('chai').expect;
 const YAML				= require('yaml');
 const pako				= require('pako');
 const msgpack				= require('@msgpack/msgpack');
-const { EntryHash,
+const { ActionHash, EntryHash,
 	HoloHash }			= require('@whi/holo-hash');
 const { Holochain }			= require('@whi/holochain-backdrop');
 const json				= require('@whi/json');
@@ -77,7 +77,7 @@ function basic_tests () {
 	    "zome_bytes": zome_bytes,
 	    "hdk_version": "v0.0.120",
 	});
-	log.normal("New ZOME version: %s -> %s", String(zome_version_1.$address), zome_version_1.version );
+	log.normal("New ZOME version: %s -> %s", String(zome_version_1.$action), zome_version_1.version );
 
 
 	const dna_input			= {
@@ -95,7 +95,7 @@ function basic_tests () {
 	    "hdk_version": "v0.0.120",
 	    "integrity_zomes": [{
 		"name": "mere_memory_api",
-		"zome": new EntryHash( zome_version_1.for_zome ),
+		"zome": new ActionHash( zome_version_1.for_zome ),
 		"version": zome_version_1.$id,
 		"resource": new EntryHash( zome_version_1.mere_memory_addr ),
 		"resource_hash": zome_version_1.mere_memory_hash,
@@ -103,7 +103,7 @@ function basic_tests () {
 	    "zomes": [],
 	    "origin_time": "2022-02-11T23:05:19.470323Z",
 	});
-	log.normal("New DNA version: %s -> %s", String(version.$address), version.version );
+	log.normal("New DNA version: %s -> %s", String(version.$action), version.version );
 
 
 	let happ_input			= {
@@ -165,8 +165,8 @@ function basic_tests () {
 	    let file			= await alice.call( "web_assets", "web_assets", "create_file", {
 		"file_bytes": file_bytes,
 	    });
-	    log.normal("New webasset file: %s -> %s", String(file.$address), file.version );
-	    webasset_addr		= file.$address;
+	    log.normal("New webasset file: %s -> %s", String(file.$action), file.version );
+	    webasset_addr		= file.$action;
 	}
 
 	{

@@ -26,14 +26,14 @@ use crate::constants::{
 
 #[derive(Debug, Deserialize)]
 pub struct ReactionInput {
-    pub subject_ids: Vec<(EntryHash, ActionHash)>,
+    pub subject_ids: Vec<(ActionHash, ActionHash)>,
     pub reaction_type: u64,
 
     // optional
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
-    pub related_entries: Option<BTreeMap<String, EntryHash>>,
+    pub related_entries: Option<BTreeMap<String, ActionHash>>,
 }
 
 pub fn create_reaction(input: ReactionInput) -> AppResult<Entity<ReactionEntry>> {
@@ -90,7 +90,7 @@ pub struct ReactionUpdateOptions {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
     pub metadata: Option<BTreeMap<String, serde_yaml::Value>>,
-    pub related_entries: Option<BTreeMap<String, EntryHash>>,
+    pub related_entries: Option<BTreeMap<String, ActionHash>>,
 }
 pub type ReactionUpdateInput = UpdateEntityInput<ReactionUpdateOptions>;
 

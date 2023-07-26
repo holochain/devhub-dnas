@@ -1,4 +1,4 @@
-use hdi::prelude::*;
+use crate::hdi::prelude::*;
 use devhub_types::{
     happ_entry_types::{
 	HappEntry,
@@ -153,7 +153,7 @@ fn validate_happ_update(action: &action::Update, happ: HappEntry) -> ExternResul
 // Happ Release
 //
 fn validate_happ_release_create(action: &action::Create, happ_release: HappReleaseEntry) -> ExternResult<ValidateCallbackResult> {
-    let happ : HappEntry = must_get_entry( happ_release.for_happ.into() )?.try_into()?;
+    let happ : HappEntry = hdi_extensions::summon_app_entry( &happ_release.for_happ.into() )?;
 
     if happ.designer != action.author {
 	Ok(ValidateCallbackResult::Invalid(format!("HappEntry author does not match Action author: {} != {}", happ.designer, action.author )))
@@ -167,7 +167,7 @@ fn validate_happ_release_create(action: &action::Create, happ_release: HappRelea
 }
 
 fn validate_happ_release_update(action: &action::Update, happ_release: HappReleaseEntry) -> ExternResult<ValidateCallbackResult> {
-    let happ : HappEntry = must_get_entry( happ_release.for_happ.into() )?.try_into()?;
+    let happ : HappEntry = hdi_extensions::summon_app_entry( &happ_release.for_happ.into() )?;
 
     if happ.designer != action.author {
 	return Ok(ValidateCallbackResult::Invalid(format!("HappEntry author does not match Action author: {} != {}", happ.designer, action.author )));

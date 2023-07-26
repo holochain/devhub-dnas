@@ -1,5 +1,7 @@
 // mod validation;
 
+pub use hdi_extensions::hdi;
+
 use hdi::prelude::*;
 use serde::de::{ Deserializer, Error };
 use devhub_types::{
@@ -12,7 +14,8 @@ pub use devhub_types::{
     AppResult,
 };
 pub use hc_crud::{
-    EntryModel, EntityType,
+    EntryModel,
+    entry_model,
 };
 
 #[hdk_entry_defs]
@@ -21,6 +24,8 @@ pub enum EntryTypes {
     #[entry_def]
     File(FileEntry),
 }
+
+entry_model!( EntryTypes::File( FileEntry ) );
 
 
 #[hdk_link_types]
@@ -40,17 +45,5 @@ impl<'de> Deserialize<'de> for LinkTypes {
 	    "File" => Ok(LinkTypes::File),
 	    value => Err(D::Error::custom(format!("No LinkTypes value matching '{}'", value ))),
 	}
-    }
-}
-
-
-
-impl EntryModel<EntryTypes> for FileEntry {
-    fn name() -> &'static str { "File" }
-    fn get_type(&self) -> EntityType {
-	EntityType::new( "file", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-	EntryTypes::File(self.clone())
     }
 }

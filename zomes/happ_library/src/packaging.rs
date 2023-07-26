@@ -22,7 +22,7 @@ use hdk::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetByIdInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn get_webasset_file(input: GetByIdInput) -> AppResult<Entity<FileEntry>> {
@@ -108,7 +108,7 @@ pub struct Bundle {
 
 #[derive(Debug, Deserialize)]
 pub struct GetReleasePackageInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 pub fn get_release_package(input: GetReleasePackageInput) -> AppResult<Vec<u8>> {
@@ -171,8 +171,8 @@ pub struct WebHappBundle {
 #[derive(Debug, Deserialize)]
 pub struct GetWebHappPackageInput {
     pub name: String,
-    pub happ_release_id: EntryHash,
-    pub gui_release_id: EntryHash,
+    pub happ_release_id: ActionHash,
+    pub gui_release_id: ActionHash,
 }
 pub fn get_webhapp_package(input: GetWebHappPackageInput) -> AppResult<Vec<u8>> {
     let gui_release = crate::gui_release::get_gui_release(GetEntityInput {
