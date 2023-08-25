@@ -1,0 +1,15 @@
+[package]
+name = "hc_devhub_sdk"
+version = "0.0.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "devhub_sdk"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+flate2 = "1"
+rmp-serde = "0.15.5"
+serde = "1"
+whi_hdk_extensions = "=0.2.1"

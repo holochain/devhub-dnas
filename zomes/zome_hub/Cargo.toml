@@ -1,0 +1,16 @@
+[package]
+name = "zome_hub"
+version = "0.0.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "zome_hub"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+getrandom = { version = "=0.2.7", features = ["custom"] } # temporary fix for compile error in
+                                                          # - v0.2.1
+serde = "1"
+whi_hdi_extensions = "=0.2.1"
+zome_hub_types = { path = "../../dnas/zome_hub/entry_types" }

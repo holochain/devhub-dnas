@@ -1,13 +1,8 @@
 devhub.happ
-bundled/*.dna
+dnas/*.dna
+dnas/*/zomelets/node_modules
 zomes/*.wasm
-node_modules
 tests/node_modules
 tests/test.dna
-tests/dnas/*/*.dna
-tests/test.gz
 .cargo
 target
-devhub_types/target
-tests/multitesting.happ
-tests/multitesting.webhapp

@@ -1,31 +1,38 @@
 
 SHELL			= bash
-
 NAME			= devhub
 
-HAPP_BUNDLE		= devhub.happ
-DNAREPO			= bundled/dnarepo.dna
-HAPPDNA			= bundled/happs.dna
-ASSETSDNA		= bundled/web_assets.dna
-
-PORTAL_DNA		= bundled/portal.dna
-
-TARGET			= release
-
-# Integrity WASMs
-DNAREPO_CORE		= zomes/dnarepo_core.wasm
-HAPPS_CORE		= zomes/happs_core.wasm
-WEB_ASSETS_CORE		= zomes/web_assets_core.wasm
-
-# Coordination WASMs
-DNA_LIBRARY_WASM	= zomes/dna_library.wasm
-HAPP_LIBRARY_WASM	= zomes/happ_library.wasm
-REVIEWS_WASM		= zomes/reviews.wasm
-WEB_ASSETS_WASM		= zomes/web_assets.wasm
-
 # External WASM dependencies
+MERE_MEMORY_VERSION	= 0.88.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
+
+# External DNA dependencies
+PORTAL_DNA		= dnas/portal.dna
+
+
+# hApp
+DEVHUB_HAPP		= devhub.happ
+
+# DNAs
+ZOMEHUB_DNA		= dnas/zome_hub.dna
+DNAHUB_DNA		= dnas/dna_hub.dna
+APPHUB_DNA		= dnas/app_hub.dna
+
+# Integrity Zomes
+ZOMEHUB_WASM		= zomes/zome_hub.wasm
+DNAHUB_WASM		= zomes/dna_hub.wasm
+APPHUB_WASM		= zomes/app_hub.wasm
+
+# Coordinator WASMs
+ZOMEHUB_CSR_WASM	= zomes/zome_hub_csr.wasm
+DNAHUB_CSR_WASM		= zomes/dna_hub_csr.wasm
+APPHUB_CSR_WASM		= zomes/app_hub_csr.wasm
+
+TARGET			= release
+TARGET_DIR		= target/wasm32-unknown-unknown/release
+SOURCE_FILES		= Makefile zomes/Cargo.* zomes/*/Cargo.toml zomes/%/src/*.rs \
+				devhub_sdk/Cargo.toml devhub_sdk/src/*.rs
 
 
 #
@@ -40,46 +47,40 @@ tests/node_modules:		tests/package-lock.json
 clean:
 	rm -rf \
 	    tests/node_modules \
-	    .cargo \
-	    target \
-	    zomes/target \
-	    $(HAPP_BUNDLE) \
-	    $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) \
-	    $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(HAPP_LIBRARY_WASM) $(WEB_ASSETS_WASM) $(MERE_MEMORY_API_WASM)
+	    .cargo target zomes/target \
+	    $(DEVHUB_HAPP) \
+	    $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) \
+	    $(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) \
+	    $(DNAHUB_WASM) $(DNAHUB_CSR_WASM) \
+	    $(APPHUB_WASM) $(APPHUB_CSR_WASM) \
+	    $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
 
 rebuild:			clean build
-build:				$(HAPP_BUNDLE)
+build:				$(DEVHUB_HAPP)
 
 
-$(HAPP_BUNDLE):			$(DNAREPO) $(HAPPDNA) $(ASSETSDNA) $(PORTAL_DNA) bundled/happ.yaml
-	hc app pack -o $@ ./bundled/
+$(DEVHUB_HAPP):			$(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) happ/happ.yaml
+	hc app pack -o $@ ./happ/
 
-$(DNAREPO):			$(DNAREPO_CORE) $(DNA_LIBRARY_WASM) $(REVIEWS_WASM) $(MERE_MEMORY_API_WASM) $(MERE_MEMORY_WASM)
-$(HAPPDNA):			$(HAPPS_CORE) $(HAPP_LIBRARY_WASM)
-$(ASSETSDNA):			$(WEB_ASSETS_CORE) $(WEB_ASSETS_WASM)
+$(ZOMEHUB_DNA):			$(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
+$(DNAHUB_DNA):			$(DNAHUB_WASM) $(DNAHUB_CSR_WASM)
+$(APPHUB_DNA):			$(APPHUB_WASM) $(APPHUB_CSR_WASM)
 
-# bundled/happs/dna.yaml:		$(DNAREPO) #$(ASSETSDNA)
-# 	node tests/update_happ_dna_yaml.js
-bundled/%.dna:			bundled/%/dna.yaml
+dnas/%.dna:			dnas/%/dna.yaml
 	@echo "Packaging '$*': $@"
-	@hc dna pack -o $@ bundled/$*
+	@hc dna pack -o $@ dnas/$*
 
-zomes/%.wasm:			zomes/target/wasm32-unknown-unknown/release/%.wasm
+zomes/%.wasm:			zomes/$(TARGET_DIR)/%.wasm
+	@echo -e "\x1b[38;2mCopying WASM ($<) to 'zomes' directory: $@\x1b[0m"; \
 	cp $< $@
-zomes/target/wasm32-unknown-unknown/release/%.wasm:	Makefile devhub_types/src/*.rs devhub_types/Cargo.toml zomes/%/src/*.rs zomes/%/Cargo.toml zomes/%/Cargo.lock
-	@echo "Building  '$*' WASM: $@"; \
+zomes/$(TARGET_DIR)/%.wasm:	$(SOURCE_FILES)
+	rm -f zomes/$*.wasm
+	@echo -e "\x1b[37mBuilding zome '$*' -> $@\x1b[0m";
 	cd zomes; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
-zomes/%/Cargo.lock:
-	touch $@
-
-$(MERE_MEMORY_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory.wasm" --output $@
-$(MERE_MEMORY_API_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$$(echo $(NEW_MM_VERSION))/mere_memory_api.wasm" --output $@
 
 use-local-backdrop:
 	cd tests; npm uninstall @whi/holochain-backdrop
@@ -103,10 +104,16 @@ use-npm-crux:
 use-local:		use-local-client use-local-backdrop
 use-npm:		  use-npm-client   use-npm-backdrop
 
+copy-portal-from-local:
+	cp ../portal-dnas/bundled/portal.dna $(PORTAL_DNA)
+
 $(PORTAL_DNA):
 	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(NEW_PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
-copy-portal-from-local:
-	cp ../app-store-dnas/bundled/portal.dna $(PORTAL_DNA)
+
+$(MERE_MEMORY_WASM):
+	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory.wasm" --output $@
+$(MERE_MEMORY_API_WASM):
+	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory_api.wasm" --output $@
 
 
 
@@ -122,6 +129,14 @@ test-unit:
 test-unit-%:
 	cd zomes;		RUST_BACKTRACE=1 cargo test $* -- --nocapture
 
+test-integration-debug:
+	make test-zome-hub-integration-debug;
+
+test-zome-hub-integration:		$(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_zome_hub.js
+test-zome-hub-integration-debug:	$(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_zome_hub.js
+
 tests/test.dna:
 	cp $(DNAREPO) $@
 tests/test.gz:
@@ -130,43 +145,6 @@ tests/test.gz:
 # DNAs
 test-setup:			tests/node_modules
 
-test-dnas:			test-setup test-general		test-dnarepo		test-happs		test-webassets		test-multi		test-reviews
-test-dnas-debug:		test-setup test-general-debug	test-dnarepo-debug	test-happs-debug	test-webassets-debug	test-multi-debug	test-reviews-debug
-
-test-general:			test-setup $(DNAREPO)
-	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_generic_fns.js
-test-general-debug:		test-setup $(DNAREPO)
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_generic_fns.js
-
-test-dnarepo:			test-setup $(DNAREPO)
-	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_dnarepo.js
-test-dnarepo-debug:		test-setup $(DNAREPO)
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_dnarepo.js
-
-test-reviews:			test-setup $(DNAREPO)
-	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_reviews.js
-test-reviews-debug:		test-setup $(DNAREPO)
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_reviews.js
-
-test-happs:			test-setup $(HAPPDNA)
-	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_happs.js
-test-happs-debug:		test-setup $(HAPPDNA)
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_happs.js
-
-test-guis:			test-setup $(HAPPDNA) $(ASSETSDNA)
-	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_guis.js
-test-guis-debug:		test-setup $(HAPPDNA) $(ASSETSDNA)
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_guis.js
-
-test-webassets:			test-setup $(ASSETSDNA) tests/test.gz
-	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_webassets.js
-test-webassets-debug:		test-setup $(ASSETSDNA) tests/test.gz
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_webassets.js
-
-test-multi:			test-setup $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) tests/test.gz tests/test.dna
-	cd tests; RUST_LOG=none LOG_LEVEL=fatal npx mocha integration/test_multiple.js
-test-multi-debug:		test-setup $(DNAREPO) $(HAPPDNA) $(ASSETSDNA) tests/test.gz tests/test.dna
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_multiple.js
 
 
 #
@@ -182,37 +160,3 @@ clean-files-all:	clean-remove-chaff
 	git clean -ndx
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
-
-PRE_HDK_VERSION = "=0.2.1-beta-rc.0"
-NEW_HDK_VERSION = "=0.2.1"
-
-PRE_HDI_VERSION = "0.3.1-beta-rc.0"
-NEW_HDI_VERSION = "=0.3.1"
-
-PRE_HDIEV	= "0.2"
-NEW_HDIEV	= "0.2.1"
-
-PRE_CRUD_VERSION = "0.8.0"
-NEW_CRUD_VERSION = "0.9.0"
-
-PRE_MM_VERSION = "0.87.0"
-NEW_MM_VERSION = "0.88.0"
-
-# PRE_PORTAL_VERSION = "0.3.0"
-NEW_PORTAL_VERSION = "0.8.0"
-
-GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_types/ zomes/*/
-
-update-hdk-version:
-	git grep -l '$(PRE_HDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDK_VERSION)|$(NEW_HDK_VERSION)|g'
-update-hdi-version:
-	git grep -l '$(PRE_HDI_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDI_VERSION)|$(NEW_HDI_VERSION)|g'
-update-extensions-version:
-	git grep -l '$(PRE_HDIEV)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIEV)|$(NEW_HDIEV)|g'
-update-crud-version:
-	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'
-update-mere-memory-version:
-	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
-	rm -f zomes/mere_memory*.wasm
-update-portal-version:
-	rm -f $(PORTAL_DNA)

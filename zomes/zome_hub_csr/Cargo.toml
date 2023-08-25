@@ -1,0 +1,14 @@
+[package]
+name = "zome_hub_csr"
+version = "0.0.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "zome_hub_csr"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hc_devhub_sdk = { path = "../../devhub_sdk" }
+serde = "1"
+zome_hub = { path = "../zome_hub" }
