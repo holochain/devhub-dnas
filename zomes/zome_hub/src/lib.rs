@@ -1,11 +1,8 @@
 mod validation;
 
+pub use zome_hub_types::hdi_extensions;
 pub use hdi_extensions::hdi;
-pub use hdi_extensions;
-pub use zome_hub_types::{
-    WasmEntry,
-    // ZomeEntry,
-};
+pub use zome_hub_types::*;
 
 use serde::{
     Deserialize, Deserializer,
@@ -19,8 +16,7 @@ use hdi_extensions::{
 
 
 
-
-/// The entry types defined for this `merklicious` integrity zome
+/// The entry types defined for this integrity zome
 #[hdk_entry_defs]
 #[unit_enum(EntryTypesUnit)]
 pub enum EntryTypes {
@@ -35,7 +31,7 @@ scoped_type_connector!(
 
 
 
-/// The link types defined for this `merklicious` integrity zome
+/// The link types defined for this integrity zome
 #[hdk_link_types]
 pub enum LinkTypes {
     Wasm,

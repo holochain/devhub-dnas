@@ -40,6 +40,11 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	return WasmEntry( result );
     },
+    async get_wasm_entries_for_agent ( input ) {
+	const entries			= await this.call(); // new AgentPubKey( input )
+
+	return entries.map( entry => WasmEntry( entry ) );
+    },
 
     //
     // Virtual functions

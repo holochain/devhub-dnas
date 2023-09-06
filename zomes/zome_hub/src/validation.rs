@@ -6,7 +6,7 @@
 
 use crate::hdi;
 use crate::hdi::prelude::*;
-use hdi_extensions::{
+use crate::hdi_extensions::{
     // Macros
     valid, // invalid,
 };

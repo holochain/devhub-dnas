@@ -32,6 +32,7 @@ APPHUB_CSR_WASM		= zomes/app_hub_csr.wasm
 TARGET			= release
 TARGET_DIR		= target/wasm32-unknown-unknown/release
 SOURCE_FILES		= Makefile zomes/Cargo.* zomes/*/Cargo.toml zomes/%/src/*.rs \
+				dnas/*/entry_types/Cargo.toml dnas/*/entry_types/src/*.rs \
 				devhub_sdk/Cargo.toml devhub_sdk/src/*.rs
 
 

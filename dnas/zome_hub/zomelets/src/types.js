@@ -8,13 +8,9 @@ import {
 
 
 export const WasmStruct = {
-    "author":			AgentPubKey,
+    "wasm_type":		String,
     "mere_memory_addr":		EntryHash,
-
-    // Common fields
-    "published_at":		Number, // Date,
-    "last_updated":		Number, // Date,
-    "metadata":			Object,
+    "file_size":		Number,
 };
 
 export function WasmEntry ( entry ) {

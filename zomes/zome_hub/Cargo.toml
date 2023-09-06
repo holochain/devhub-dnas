@@ -12,5 +12,4 @@ crate-type = ["cdylib", "rlib"]
 getrandom = { version = "=0.2.7", features = ["custom"] } # temporary fix for compile error in
                                                           # - v0.2.1
 serde = "1"
-whi_hdi_extensions = "=0.2.1"
 zome_hub_types = { path = "../../dnas/zome_hub/entry_types" }
