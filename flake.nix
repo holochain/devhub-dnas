@@ -8,8 +8,8 @@
 
     holochain-flake = {
       url = "github:holochain/holochain";
-      inputs.holochain.url = "github:holochain/holochain/holochain-0.1.5-beta-rc.1";
-      inputs.lair.url = "github:holochain/lair/lair_keystore-v0.2.3";
+      inputs.holochain.url = "github:holochain/holochain/holochain-0.1.6";
+      inputs.lair.url = "github:holochain/lair/lair_keystore-v0.3.0";
     };
   };
 
@@ -29,6 +29,7 @@
             devShells.default = pkgs.mkShell {
               inputsFrom = [ inputs.holochain-flake.devShells.${system}.holonix ];
               packages = with pkgs; [
+                nodejs-18_x
               ];
             };
           };

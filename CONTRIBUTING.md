@@ -44,7 +44,7 @@ This project implements the CEPS pattern *(pattern documentation is in process)*
 
 ### Environment
 
-- Enter `nix-shell` for other development environment dependencies.
+- Enter `nix develop` for other development environment dependencies.
 
 
 ### Building

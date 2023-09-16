@@ -23,8 +23,6 @@ const DNAREPO_PATH			= path.join(__dirname, "../../bundled/dnarepo.dna");
 const HAPPS_PATH			= path.join(__dirname, "../../bundled/happs.dna");
 const WEBASSETS_PATH			= path.join(__dirname, "../../bundled/web_assets.dna");
 
-const chunk_size			= (2**20 /*1 megabyte*/) * 2;
-
 let clients;
 let release;
 
