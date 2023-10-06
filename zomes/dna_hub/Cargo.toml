@@ -1,15 +1,14 @@
 [package]
-name = "zome_hub_types"
+name = "dna_hub"
 version = "0.0.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "zome_hub_types"
+name = "dna_hub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mere_memory_types = "=0.89.1"
-rmpv = { version = "=1.0.0", features = ["with-serde"] }
 serde = "1"
-whi_hdi_extensions = "=0.3.0"
+dna_hub_types = { path = "../../dnas/dna_hub/entry_types" }
+zome_hub_types = { path = "../../dnas/zome_hub/entry_types" }

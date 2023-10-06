@@ -3,7 +3,7 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.88.0
+MERE_MEMORY_VERSION	= 0.89.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
@@ -121,30 +121,35 @@ $(MERE_MEMORY_API_WASM):
 #
 # Testing
 #
-test:				test-unit-all test-dnas
-test-debug:			test-unit-all test-dnas-debug
+test:
+	make test-unit
+	make test-integration
+test-debug:
+	make test-unit
+	make test-integration-debug
 
-test-unit-all:			test-unit test-unit-dna_library test-unit-happ_library test-unit-web_assets
 test-unit:
-	cd devhub_types;	RUST_BACKTRACE=1 cargo test
-test-unit-%:
-	cd zomes;		RUST_BACKTRACE=1 cargo test $* -- --nocapture
+	cd zomes; RUST_BACKTRACE=1 cargo test zome_hub -- --nocapture
+	cd zomes; RUST_BACKTRACE=1 cargo test zome_hub_csr -- --nocapture
+	cd zomes; RUST_BACKTRACE=1 cargo test dna_hub -- --nocapture
+	cd zomes; RUST_BACKTRACE=1 cargo test dna_hub_csr -- --nocapture
 
+test-integration:
+	make test-zome-hub-integration
+	make test-dna-hub-integration
 test-integration-debug:
-	make test-zome-hub-integration-debug;
+	make test-zome-hub-integration-debug
+	make test-dna-hub-integration-debug
 
 test-zome-hub-integration:		$(ZOMEHUB_DNA)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_zome_hub.js
 test-zome-hub-integration-debug:	$(ZOMEHUB_DNA)
 	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_zome_hub.js
 
-tests/test.dna:
-	cp $(DNAREPO) $@
-tests/test.gz:
-	gzip -kc $(DNAREPO) > $@
-
-# DNAs
-test-setup:			tests/node_modules
+test-dna-hub-integration:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_dna_hub.js
+test-dna-hub-integration-debug:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_dna_hub.js
 
 
 

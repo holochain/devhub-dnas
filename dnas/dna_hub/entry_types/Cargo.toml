@@ -1,15 +1,17 @@
 [package]
-name = "zome_hub_types"
+name = "dna_hub_types"
 version = "0.0.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "zome_hub_types"
+name = "dna_hub_types"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mere_memory_types = "=0.89.1"
+holo_hash = "=0.2.2"
+holochain_integrity_types = "=0.2.2"
+holochain_zome_types = { version = "=0.2.2", features = [ "properties" ] }
 rmpv = { version = "=1.0.0", features = ["with-serde"] }
 serde = "1"
 whi_hdi_extensions = "=0.3.0"

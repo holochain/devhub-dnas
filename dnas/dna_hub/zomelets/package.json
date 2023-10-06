@@ -1,11 +1,11 @@
 {
-  "name": "@holochain/zome-hub-zomelets",
+  "name": "@holochain/dna-hub-zomelets",
   "version": "0.1.0",
-  "description": "Zomelets for DevHub's ZomeHub DNA",
+  "description": "Zomelets for DevHub's DnaHub DNA",
   "type": "module",
   "main": "src/index.js",
   "module": "src/index.js",
-  "browser": "dist/zome-hub-zomelets.js",
+  "browser": "dist/dna-hub-zomelets.js",
   "files": [
     "README.md",
     "src/index.js",
@@ -22,9 +22,10 @@
     "url": "https://github.com/holochain/devhub-dnas/"
   },
   "dependencies": {
+    "@holochain/zome-hub-zomelets": "file:../../zome_hub/zomelets",
+    "@spartan-hc/bundles": "^0.1.0",
     "@spartan-hc/holo-hash": "^0.5.4",
-    "@spartan-hc/mere-memory-zomelets": "^0.1.0",
-    "@spartan-hc/zomelets": "^0.1.0",
+    "@spartan-hc/zomelets": "^0.1.2",
     "@whi/into-struct": "^0.1.1"
   }
 }

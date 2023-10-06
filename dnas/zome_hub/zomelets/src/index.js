@@ -6,7 +6,7 @@ import {
 import {
     Zomelet,
 }					from '@spartan-hc/zomelets';
-import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-sdk';
+import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
 import {
     WasmEntry,
 }					from './types.js';
@@ -50,19 +50,19 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     // Virtual functions
     //
     async save_wasm ( bytes ) {
-	const mere_memory_addr		= await this.peers.mere_memory_api.save( bytes );
+	const mere_memory_addr		= await this.zomes.mere_memory_api.save( bytes );
 
 	return await this.functions.create_wasm_entry({
 	    mere_memory_addr,
 	});
     },
 }, {
-    "peers": {
+    "zomes": {
 	"mere_memory_api": MereMemoryZomelet,
     },
 });
 
-export { MereMemoryZomelet }		from '@spartan-hc/mere-memory-sdk';
+export { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
 
 export default {
     ZomeHubCSRZomelet,

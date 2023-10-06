@@ -2,8 +2,6 @@
 members = [
   "zome_hub",
   "zome_hub_csr",
-  # "dna_hub",
-  # "dna_hub_csr",
-  # "app_hub",
-  # "app_hub_csr",
+  "dna_hub",
+  "dna_hub_csr",
 ]

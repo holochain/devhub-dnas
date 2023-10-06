@@ -1,3 +1,5 @@
+use crate::hdi;
+
 use hdi::prelude::*;
 use hdi_extensions::{
     guest_error,

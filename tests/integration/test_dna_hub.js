@@ -1,5 +1,5 @@
 import { Logger }			from '@whi/weblogger';
-const log				= new Logger("test-zome_hub-basic", process.env.LOG_LEVEL );
+const log				= new Logger("test-dna_hub-basic", process.env.LOG_LEVEL );
 
 import why				from 'why-is-node-running';
 
@@ -23,6 +23,9 @@ import {
     MereMemoryZomelet,
 }					from '@holochain/zome-hub-zomelets';
 import {
+    DnaHubCSRZomelet,
+}					from '@holochain/dna-hub-zomelets';
+import {
     AppInterfaceClient,
     CellZomelets,
     Zomelet,
@@ -36,21 +39,24 @@ import {
 
 
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
-const DNA_PATH				= path.join( __dirname, "../../dnas/zome_hub.dna" );
+const DNA_PATH				= path.join( __dirname, "../../dnas/dna_hub.dna" );
+const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zome_hub.dna" );
 const APP_PORT				= 23_567;
 
-const DNA_NAME				= "zome_hub";
-const MAIN_ZOME				= "zome_hub_csr";
-const MERE_ZOME				= "mere_memory_api";
+const DNA_NAME				= "dna_hub";
+const ZOMEHUB_DNA_NAME			= "zome_hub";
 
 const zome_hub_spec			= new CellZomelets({
-    [MAIN_ZOME]: ZomeHubCSRZomelet,
-    [MERE_ZOME]: MereMemoryZomelet,
+    "zome_hub_csr": ZomeHubCSRZomelet,
+    "mere_memory_api": MereMemoryZomelet,
 });
 
-let agents				= {};
+const dna_hub_spec			= new CellZomelets({
+    "dna_hub_csr": DnaHubCSRZomelet,
+});
 
-describe("ZomeHub", function () {
+
+describe("DnaHub", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
 	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
@@ -61,7 +67,8 @@ describe("ZomeHub", function () {
 
 	const actors			= await holochain.backdrop({
 	    "test": {
-		[DNA_NAME]:	DNA_PATH,
+		[DNA_NAME]:		DNA_PATH,
+		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
 	    },
 	}, {
 	    "app_port": APP_PORT,
@@ -71,8 +78,6 @@ describe("ZomeHub", function () {
 	await holochain.admin.grantUnrestrictedCapability(
 	    "testing", cell.agent, cell.dna, "*"
 	);
-
-	// console.log( actors );
     });
 
     linearSuite( "Basic", basic_tests );
@@ -91,49 +96,54 @@ function basic_tests () {
     let app_client;
     let zome_hub;
     let zome_hub_csr;
-    let wasm1_addr, wasm_entry;
+    let dna_hub;
+    let dna_hub_csr;
+    let dna1_addr, dna_entry;
 
     before(async function () {
 	client				= new AppInterfaceClient( APP_PORT, {
-	    "logging": "normal",
+	    "logging": process.env.LOG_LEVEL || "normal",
 	});
 	app_client			= await client.app( "test-alice" );
 
-	app_client.setCellZomelets( DNA_NAME, zome_hub_spec );
+	app_client.setCellZomelets( DNA_NAME,		dna_hub_spec );
+	app_client.setCellZomelets( ZOMEHUB_DNA_NAME,	zome_hub_spec );
+
 	zome_hub			= app_client.cells.zome_hub.zomes;
 	zome_hub_csr			= zome_hub.zome_hub_csr.functions;
+
+	dna_hub				= app_client.cells.dna_hub.zomes;
+	dna_hub_csr			= dna_hub.dna_hub_csr.functions;
     });
 
     it("should call whoami", async function () {
 	this.timeout( 30_000 );
 
-	const agent_info		= await zome_hub_csr.whoami();
-	log.trace("%s", json.debug(agent_info) );
+	{
+	    const agent_info		= await zome_hub_csr.whoami();
+	    log.trace("ZomeHub: %s", json.debug(agent_info) );
+	}
+	{
+	    const agent_info		= await dna_hub_csr.whoami();
+	    log.trace("DnaHub: %s", json.debug(agent_info) );
+	}
     });
 
-    it("should create wasm entry", async function () {
-	this.timeout( 10_000 );
+    it("should create DNA entry", async function () {
+	this.timeout( 30_000 );
 
-	const WASM_PATH			= path.join( __dirname, "../../zomes/zome_hub.wasm" );
-	const wasm_bytes		= await fs.readFile( WASM_PATH );
+	const dna_bytes			= await fs.readFile( ZOMEHUB_DNA_PATH );
 
-	wasm1_addr			= await zome_hub_csr.save_wasm( wasm_bytes );
+	dna1_addr			= await dna_hub_csr.save_dna( dna_bytes );
 
-	expect( wasm1_addr		).to.be.a("ActionHash");
+	expect( dna1_addr		).to.be.a("ActionHash");
     });
 
-    it("should get wasm entry", async function () {
-	wasm_entry			= await zome_hub_csr.get_wasm_entry( wasm1_addr );
-	log.trace("%s", json.debug(wasm_entry) );
+    it("should get DNA entry", async function () {
+	dna_entry			= await dna_hub_csr.get_dna_entry( dna1_addr );
+	log.trace("%s", json.debug(dna_entry) );
 
-	expect( wasm_entry		).to.have.any.keys( "mere_memory_addr" );
-    });
-
-    it("should get all wasm entries for agent", async function () {
-	const wasm_entries		= await zome_hub_csr.get_wasm_entries_for_agent();
-	log.trace("%s", json.debug(wasm_entries) );
-
-	expect( wasm_entries		).to.have.length( 1 );
+	// expect( dna_entry		).to.have.any.keys( "mere_memory_addr" );
     });
 
     after(async function () {

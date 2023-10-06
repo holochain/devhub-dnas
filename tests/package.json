@@ -9,10 +9,12 @@
   "license": "ISC",
   "dependencies": {
     "@faker-js/faker": "^7.3.0",
+    "@holochain/dna-hub-zomelets": "file:../dnas/dna_hub/zomelets",
     "@holochain/zome-hub-zomelets": "file:../dnas/zome_hub/zomelets",
-    "@spartan-hc/app-interface-client": "file:../../holochain-app-interface-client-js",
+    "@spartan-hc/app-interface-client": "^0.1.1",
     "@spartan-hc/holo-hash": "^0.5.4",
     "@spartan-hc/holochain-backdrop": "^2.2.3",
+    "@spartan-hc/zomelets": "^0.1.0",
     "@whi/json": "^0.1.5",
     "@whi/stdlog": "^0.3.4",
     "@whi/weblogger": "^0.1.6",
