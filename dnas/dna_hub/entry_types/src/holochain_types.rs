@@ -1,10 +1,16 @@
 use crate::hdi;
 
-use std::path::PathBuf;
+use std::{
+    collections::BTreeMap,
+    path::PathBuf,
+};
 use hdi::prelude::*;
 use holo_hash::WasmHashB64;
 use holochain_integrity_types::ZomeName;
 use holochain_zome_types::properties::YamlProperties;
+
+
+pub type ResourceMap = BTreeMap<PathBuf, ActionHash>;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

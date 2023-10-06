@@ -70,6 +70,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "app_hub"
+version = "0.0.0"
+dependencies = [
+ "app_hub_types",
+ "getrandom 0.2.7",
+ "serde",
+]
+
+[[package]]
+name = "app_hub_csr"
+version = "0.0.0"
+dependencies = [
+ "app_hub",
+ "hc_devhub_sdk",
+ "serde",
+]
+
+[[package]]
+name = "app_hub_types"
+version = "0.0.0"
+dependencies = [
+ "holo_hash",
+ "holochain_zome_types",
+ "serde",
+ "whi_hdi_extensions",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -669,8 +697,8 @@ name = "dna_hub"
 version = "0.0.0"
 dependencies = [
  "dna_hub_types",
+ "getrandom 0.2.7",
  "serde",
- "zome_hub_types",
 ]
 
 [[package]]
@@ -689,7 +717,6 @@ dependencies = [
  "holo_hash",
  "holochain_integrity_types",
  "holochain_zome_types",
- "rmpv",
  "serde",
  "whi_hdi_extensions",
 ]

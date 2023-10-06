@@ -5,6 +5,7 @@ import {
 }					from '@spartan-hc/holo-hash';
 import {
     Zomelet,
+    CellZomelets,
 }					from '@spartan-hc/zomelets';
 import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
 import {
@@ -62,9 +63,20 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     },
 });
 
+
+export const ZomeHubCell		= new CellZomelets({
+    "zome_hub_csr": ZomeHubCSRZomelet,
+    "mere_memory_api": MereMemoryZomelet,
+});
+
+
 export { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
 
 export default {
+    // Zomelets
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
+
+    // CellZomelets
+    ZomeHubCell,
 };

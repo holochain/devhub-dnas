@@ -66,13 +66,6 @@ describe("ZomeHub", function () {
 	}, {
 	    "app_port": APP_PORT,
 	});
-
-	const cell			= actors.alice.test.cells[ DNA_NAME ];
-	await holochain.admin.grantUnrestrictedCapability(
-	    "testing", cell.agent, cell.dna, "*"
-	);
-
-	// console.log( actors );
     });
 
     linearSuite( "Basic", basic_tests );
@@ -95,7 +88,7 @@ function basic_tests () {
 
     before(async function () {
 	client				= new AppInterfaceClient( APP_PORT, {
-	    "logging": "normal",
+	    "logging": process.env.LOG_LEVEL || "normal",
 	});
 	app_client			= await client.app( "test-alice" );
 

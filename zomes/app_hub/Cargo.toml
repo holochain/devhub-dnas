@@ -1,16 +1,16 @@
 [package]
-name = "dna_hub"
+name = "app_hub"
 version = "0.0.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "dna_hub"
+name = "app_hub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 serde = "1"
-dna_hub_types = { path = "../../dnas/dna_hub/entry_types" }
+app_hub_types = { path = "../../dnas/app_hub/entry_types" }
 
 # temporary fix for compile error in
 getrandom = { version = "=0.2.7", features = ["custom"] }

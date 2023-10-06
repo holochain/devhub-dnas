@@ -2,27 +2,12 @@ manifest_version: "1"
 name: Holochain DevHub
 description: A hApp for publishing, searching, and organizing hApp resources
 roles:
-  - name: dnarepo
-    provisioning:
-      strategy: create
-      deferred: false
+  - name: zome_hub
     dna:
-      bundled: ./dnarepo.dna
-  - name: happs
-    provisioning:
-      strategy: create
-      deferred: false
+      bundled: ../dnas/zome_hub.dna
+  - name: dna_hub
     dna:
-      bundled: ./happs.dna
-  - name: web_assets
-    provisioning:
-      strategy: create
-      deferred: false
+      bundled: ../dnas/dna_hub.dna
+  - name: app_hub
     dna:
-      bundled: ./web_assets.dna
-  - name: portal
-    provisioning:
-      strategy: create
-      deferred: false
-    dna:
-      bundled: ./portal.dna
+      bundled: ../dnas/app_hub.dna

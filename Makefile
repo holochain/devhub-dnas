@@ -12,7 +12,7 @@ PORTAL_DNA		= dnas/portal.dna
 
 
 # hApp
-DEVHUB_HAPP		= devhub.happ
+DEVHUB_HAPP		= happ/$(NAME).happ
 
 # DNAs
 ZOMEHUB_DNA		= dnas/zome_hub.dna
@@ -133,13 +133,17 @@ test-unit:
 	cd zomes; RUST_BACKTRACE=1 cargo test zome_hub_csr -- --nocapture
 	cd zomes; RUST_BACKTRACE=1 cargo test dna_hub -- --nocapture
 	cd zomes; RUST_BACKTRACE=1 cargo test dna_hub_csr -- --nocapture
+	cd zomes; RUST_BACKTRACE=1 cargo test app_hub -- --nocapture
+	cd zomes; RUST_BACKTRACE=1 cargo test app_hub_csr -- --nocapture
 
 test-integration:
 	make test-zome-hub-integration
 	make test-dna-hub-integration
+	make test-app-hub-integration
 test-integration-debug:
 	make test-zome-hub-integration-debug
 	make test-dna-hub-integration-debug
+	make test-app-hub-integration-debug
 
 test-zome-hub-integration:		$(ZOMEHUB_DNA)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_zome_hub.js
@@ -150,6 +154,11 @@ test-dna-hub-integration:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_dna_hub.js
 test-dna-hub-integration-debug:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
 	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_dna_hub.js
+
+test-app-hub-integration:		$(DEVHUB_HAPP)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_app_hub.js
+test-app-hub-integration-debug:		$(DEVHUB_HAPP)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_app_hub.js
 
 
 

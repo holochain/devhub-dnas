@@ -19,9 +19,10 @@ import HolochainBackdrop		from '@spartan-hc/holochain-backdrop';
 const { Holochain }			= HolochainBackdrop;
 
 import {
+    AppHubCell,
     DnaHubCell,
     ZomeHubCell,
-}					from '@holochain/dna-hub-zomelets';
+}					from '@holochain/app-hub-zomelets';
 import {
     AppInterfaceClient,
 }					from '@spartan-hc/app-interface-client';
@@ -33,15 +34,19 @@ import {
 
 
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
-const DNA_PATH				= path.join( __dirname, "../../dnas/dna_hub.dna" );
+const DNA_PATH				= path.join( __dirname, "../../dnas/app_hub.dna" );
+const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dna_hub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zome_hub.dna" );
+const DEVHUB_APP_PATH			= path.join( __dirname, "../../happ/devhub.happ" );
 const APP_PORT				= 23_567;
 
-const DNA_NAME				= "dna_hub";
+const DNA_NAME				= "app_hub";
+const DNAHUB_DNA_NAME			= "dna_hub";
 const ZOMEHUB_DNA_NAME			= "zome_hub";
 
 
-describe("DnaHub", function () {
+
+describe("AppHub", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
 	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
@@ -53,6 +58,7 @@ describe("DnaHub", function () {
 	const actors			= await holochain.backdrop({
 	    "test": {
 		[DNA_NAME]:		DNA_PATH,
+		[DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
 		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
 	    },
 	}, {
@@ -78,7 +84,9 @@ function basic_tests () {
     let zome_hub_csr;
     let dna_hub;
     let dna_hub_csr;
-    let dna1_addr, dna_entry;
+    let app_hub;
+    let app_hub_csr;
+    let app1_addr, app_entry;
 
     before(async function () {
 	client				= new AppInterfaceClient( APP_PORT, {
@@ -86,7 +94,8 @@ function basic_tests () {
 	});
 	app_client			= await client.app( "test-alice" );
 
-	app_client.setCellZomelets( DNA_NAME,		DnaHubCell );
+	app_client.setCellZomelets( DNA_NAME,		AppHubCell );
+	app_client.setCellZomelets( DNAHUB_DNA_NAME,	DnaHubCell );
 	app_client.setCellZomelets( ZOMEHUB_DNA_NAME,	ZomeHubCell );
 
 	zome_hub			= app_client.cells.zome_hub.zomes;
@@ -94,6 +103,9 @@ function basic_tests () {
 
 	dna_hub				= app_client.cells.dna_hub.zomes;
 	dna_hub_csr			= dna_hub.dna_hub_csr.functions;
+
+	app_hub				= app_client.cells.app_hub.zomes;
+	app_hub_csr			= app_hub.app_hub_csr.functions;
     });
 
     it("should call whoami", async function () {
@@ -107,23 +119,25 @@ function basic_tests () {
 	    const agent_info		= await dna_hub_csr.whoami();
 	    log.trace("DnaHub: %s", json.debug(agent_info) );
 	}
+	{
+	    const agent_info		= await app_hub_csr.whoami();
+	    log.trace("AppHub: %s", json.debug(agent_info) );
+	}
     });
 
-    it("should create DNA entry", async function () {
+    it("should create APP entry", async function () {
 	this.timeout( 30_000 );
 
-	const dna_bytes			= await fs.readFile( ZOMEHUB_DNA_PATH );
+	const app_bytes			= await fs.readFile( DEVHUB_APP_PATH );
 
-	dna1_addr			= await dna_hub_csr.save_dna( dna_bytes );
+	app1_addr			= await app_hub_csr.save_app( app_bytes );
 
-	expect( dna1_addr		).to.be.a("ActionHash");
+	expect( app1_addr		).to.be.a("ActionHash");
     });
 
-    it("should get DNA entry", async function () {
-	dna_entry			= await dna_hub_csr.get_dna_entry( dna1_addr );
-	log.trace("%s", json.debug(dna_entry) );
-
-	// expect( dna_entry		).to.have.any.keys( "mere_memory_addr" );
+    it("should get APP entry", async function () {
+	app_entry			= await app_hub_csr.get_app_entry( app1_addr );
+	log.trace("%s", json.debug(app_entry) );
     });
 
     after(async function () {

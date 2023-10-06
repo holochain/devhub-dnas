@@ -1,9 +1,9 @@
 mod validation;
 
-pub use dna_hub_types::hdi_extensions;
-pub use dna_hub_types;
+pub use app_hub_types::hdi_extensions;
+pub use app_hub_types;
 pub use hdi_extensions::hdi;
-pub use dna_hub_types::*;
+pub use app_hub_types::*;
 
 use serde::{
     Deserialize, Deserializer,
@@ -17,25 +17,25 @@ use hdi_extensions::{
 
 
 
-/// The entry types defined for this integrity dna
+/// The entry types defined for this integrity app
 #[hdk_entry_defs]
 #[unit_enum(EntryTypesUnit)]
 pub enum EntryTypes {
     #[entry_def]
-    Dna(DnaEntry),
+    App(AppEntry),
 }
 
 scoped_type_connector!(
-    EntryTypesUnit::Dna,
-    EntryTypes::Dna( DnaEntry )
+    EntryTypesUnit::App,
+    EntryTypes::App( AppEntry )
 );
 
 
 
-/// The link types defined for this integrity dna
+/// The link types defined for this integrity app
 #[hdk_link_types]
 pub enum LinkTypes {
-    Dna,
+    App,
 }
 
 impl TryFrom<String> for LinkTypes {
@@ -44,7 +44,7 @@ impl TryFrom<String> for LinkTypes {
     fn try_from(name: String) -> Result<Self, Self::Error> {
         Ok(
             match name.as_str() {
-                "Dna" => LinkTypes::Dna,
+                "App" => LinkTypes::App,
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }
         )

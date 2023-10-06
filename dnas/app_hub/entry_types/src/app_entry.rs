@@ -2,18 +2,18 @@ use crate::hdi;
 
 use hdi::prelude::*;
 pub use crate::holochain_types::{
-    DnaManifestV1,
+    AppManifestV1,
     ResourceMap,
 };
 
 
 
 //
-// Dna Entry
+// App Entry
 //
 #[hdk_entry_helper]
 #[derive(Clone)]
-pub struct DnaEntry {
-    pub manifest: DnaManifestV1,
+pub struct AppEntry {
+    pub manifest: AppManifestV1,
     pub resources: ResourceMap,
 }

@@ -1,7 +1,7 @@
 
 import {
     AgentPubKey,
-    ActionHash,
+    ActionHash, EntryHash,
 }					from '@spartan-hc/holo-hash';
 import {
     Zomelet,
@@ -11,16 +11,18 @@ import {
     Bundle,
 }					from '@spartan-hc/bundles';
 import {
+    DnaHubCSRZomelet,
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
 
+    DnaHubCell,
     ZomeHubCell,
-}					from '@holochain/zome-hub-zomelets';
+}					from '@holochain/dna-hub-zomelets';
 import {
-    DnaEntry,
+    AppEntry,
 }					from './types.js';
 
-export const DnaHubCSRZomelet		= new Zomelet({
+export const AppHubCSRZomelet		= new Zomelet({
     "whoami": {
 	output ( response ) {
 	    // Struct - https://docs.rs/hdk/*/hdk/prelude/struct.AgentInfo.html
@@ -37,8 +39,8 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    };
 	},
     },
-    async create_dna_entry ({ manifest, resources }) {
-	this.log.info("DNA entry input (%s resources):", Object.keys(resources).length, manifest );
+    async create_app_entry ({ manifest, resources }) {
+	this.log.info("App entry input (%s resources):", Object.keys(resources).length, manifest );
 	const result			= await this.call({
 	    "manifest": manifest,
 	    "resources": resources,
@@ -46,53 +48,56 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	return new ActionHash( result );
     },
-    async get_dna_entry ( input ) {
+    async get_app_entry ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
 
-	return DnaEntry( result );
+	return AppEntry( result );
     },
 
     //
     // Virtual functions
     //
-    async save_dna ( bytes ) {
-	const bundle			= new Bundle( bytes, "dna" );
+    async save_app ( bytes ) {
+	const bundle			= new Bundle( bytes, "happ" );
 	const resources			= {};
 
-	for ( let [ rpath, zome_bytes ] of Object.entries( bundle.resources ) ) {
-	    this.log.info("Save WASM resource '%s' (%s bytes)", rpath, zome_bytes.length );
-	    resources[ rpath ]		= await this.cells.zome_hub.zome_hub_csr.save_wasm( zome_bytes );
+	for ( let [ rpath, dna_bytes ] of Object.entries( bundle.resources ) ) {
+	    this.log.info("Save WASM resource '%s' (%s bytes)", rpath, dna_bytes.length );
+	    resources[ rpath ]		= await this.cells.dna_hub.dna_hub_csr.save_dna( dna_bytes );
 	}
 
-	return await this.functions.create_dna_entry({
+	return await this.functions.create_app_entry({
 	    "manifest": bundle.manifest,
 	    resources,
 	});
     },
 }, {
     "cells": {
-	"zome_hub": ZomeHubCell,
+	"dna_hub": DnaHubCell,
     },
 });
 
 
-export const DnaHubCell			= new CellZomelets({
-    "dna_hub_csr": DnaHubCSRZomelet,
+export const AppHubCell			= new CellZomelets({
+    "app_hub_csr": AppHubCSRZomelet,
 });
 
-
 export  {
+    DnaHubCSRZomelet,
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
+    DnaHubCell,
     ZomeHubCell,
-}					from '@holochain/zome-hub-zomelets';
+}					from '@holochain/dna-hub-zomelets';
 
 export default {
+    AppHubCSRZomelet,
     DnaHubCSRZomelet,
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
 
     // CellZomelets
+    AppHubCell,
     DnaHubCell,
     ZomeHubCell,
 };
