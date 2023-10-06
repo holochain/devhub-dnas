@@ -51,10 +51,12 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     // Virtual functions
     //
     async save_wasm ( bytes ) {
-	const mere_memory_addr		= await this.zomes.mere_memory_api.save( bytes );
+	const addr			= await this.zomes.mere_memory_api.save( bytes, {
+	    "compress": true,
+	});
 
 	return await this.functions.create_wasm_entry({
-	    mere_memory_addr,
+	    "mere_memory_addr": addr,
 	});
     },
 }, {

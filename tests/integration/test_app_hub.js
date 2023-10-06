@@ -125,7 +125,7 @@ function basic_tests () {
 	}
     });
 
-    it("should create APP entry", async function () {
+    it("should create App entry", async function () {
 	this.timeout( 30_000 );
 
 	const app_bytes			= await fs.readFile( DEVHUB_APP_PATH );
@@ -135,7 +135,7 @@ function basic_tests () {
 	expect( app1_addr		).to.be.a("ActionHash");
     });
 
-    it("should get APP entry", async function () {
+    it("should get App entry", async function () {
 	app_entry			= await app_hub_csr.get_app_entry( app1_addr );
 	log.trace("%s", json.debug(app_entry) );
     });

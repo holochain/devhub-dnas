@@ -9,7 +9,7 @@ name = "zome_hub_types"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mere_memory_types = "=0.89.1"
+mere_memory_types = "=0.90.0"
 rmpv = { version = "=1.0.0", features = ["with-serde"] }
 serde = "1"
 whi_hdi_extensions = "=0.3.0"

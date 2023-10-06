@@ -3,7 +3,7 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.89.0
+MERE_MEMORY_VERSION	= 0.90.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
@@ -116,6 +116,17 @@ $(MERE_MEMORY_WASM):
 $(MERE_MEMORY_API_WASM):
 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory_api.wasm" --output $@
 
+reset-mere-memory:
+	rm zomes/mere_memory*.wasm
+	make $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
+
+PRE_MM_VERSION = mere_memory_types = "=0.89.1"
+NEW_MM_VERSION = mere_memory_types = "=0.90.0"
+
+GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/entry_types/Cargo.toml zomes/*/Cargo.toml
+
+update-mere-memory-version:	reset-mere-memory
+	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
 
 
 #
