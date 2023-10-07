@@ -31,8 +31,12 @@ APPHUB_CSR_WASM		= zomes/app_hub_csr.wasm
 
 TARGET			= release
 TARGET_DIR		= target/wasm32-unknown-unknown/release
-SOURCE_FILES		= Makefile zomes/Cargo.* zomes/*/Cargo.toml zomes/%/src/*.rs \
-				dnas/*/entry_types/Cargo.toml dnas/*/entry_types/src/*.rs \
+COMMON_SOURCE_FILES	= Makefile zomes/Cargo.toml
+INT_SOURCE_FILES	= $(COMMON_SOURCE_FILES) \
+				dnas/%/entry_types/Cargo.toml dnas/%/entry_types/src/*.rs \
+				zomes/%/Cargo.toml zomes/%/src/*.rs
+CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
+				zomes/%_csr/Cargo.toml zomes/%_csr/src/*.rs \
 				devhub_sdk/Cargo.toml devhub_sdk/src/*.rs
 
 
@@ -74,13 +78,22 @@ dnas/%.dna:			dnas/%/dna.yaml
 zomes/%.wasm:			zomes/$(TARGET_DIR)/%.wasm
 	@echo -e "\x1b[38;2mCopying WASM ($<) to 'zomes' directory: $@\x1b[0m"; \
 	cp $< $@
-zomes/$(TARGET_DIR)/%.wasm:	$(SOURCE_FILES)
+
+zomes/$(TARGET_DIR)/%.wasm:	$(INT_SOURCE_FILES)
 	rm -f zomes/$*.wasm
 	@echo -e "\x1b[37mBuilding zome '$*' -> $@\x1b[0m";
 	cd zomes; \
 	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*
+	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
+zomes/$(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
+	rm -f zomes/$*_csr.wasm
+	@echo -e "\x1b[37mBuilding zome '$*_csr' -> $@\x1b[0m";
+	cd zomes; \
+	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build --release \
+	    --target wasm32-unknown-unknown \
+	    --package $*_csr
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
 
 use-local-backdrop:
@@ -132,6 +145,15 @@ update-mere-memory-version:	reset-mere-memory
 #
 # Testing
 #
+TEST_UI			= tests/test.zip
+TEST_WEBHAPP		= tests/test.webhapp
+
+$(TEST_UI):
+	dd if=/dev/zero of=$@ bs=1M count=1
+$(TEST_WEBHAPP):	$(TEST_UI)
+	@echo "Packaging '$*': $@"
+	@hc web-app pack -o $@ tests/test_webhapp/
+
 test:
 	make test-unit
 	make test-integration
@@ -151,10 +173,12 @@ test-integration:
 	make test-zome-hub-integration
 	make test-dna-hub-integration
 	make test-app-hub-integration
+	make test-webapp-integration
 test-integration-debug:
 	make test-zome-hub-integration-debug
 	make test-dna-hub-integration-debug
 	make test-app-hub-integration-debug
+	make test-webapp-integration-debug
 
 test-zome-hub-integration:		$(ZOMEHUB_DNA)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_zome_hub.js
@@ -166,10 +190,15 @@ test-dna-hub-integration:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
 test-dna-hub-integration-debug:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
 	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_dna_hub.js
 
-test-app-hub-integration:		$(DEVHUB_HAPP)
+test-app-hub-integration:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_app_hub.js
-test-app-hub-integration-debug:		$(DEVHUB_HAPP)
+test-app-hub-integration-debug:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
 	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_app_hub.js
+
+test-webapp-integration:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_webapp.js
+test-webapp-integration-debug:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_webapp.js
 
 
 

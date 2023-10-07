@@ -37,7 +37,6 @@ const __dirname				= path.dirname( new URL(import.meta.url).pathname );
 const DNA_PATH				= path.join( __dirname, "../../dnas/app_hub.dna" );
 const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dna_hub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zome_hub.dna" );
-const DEVHUB_APP_PATH			= path.join( __dirname, "../../happ/devhub.happ" );
 const TEST_WEBAPP_PATH			= path.join( __dirname, "../test.webhapp" );
 const TEST_UI_PATH			= path.join( __dirname, "../test.zip" );
 const APP_PORT				= 23_567;
@@ -48,7 +47,7 @@ const ZOMEHUB_DNA_NAME			= "zome_hub";
 
 
 
-describe("AppHub", function () {
+describe("AppHub: WebApp", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
 	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
@@ -88,7 +87,6 @@ function basic_tests () {
     let dna_hub_csr;
     let app_hub;
     let app_hub_csr;
-    let app1_addr, app_entry;
     let webapp1_addr, webapp_entry;
 
     before(async function () {
@@ -128,20 +126,11 @@ function basic_tests () {
 	}
     });
 
-    it("should create App entry", async function () {
-	this.timeout( 30_000 );
-
-	const app_bytes			= await fs.readFile( DEVHUB_APP_PATH );
-
-	app1_addr			= await app_hub_csr.save_app( app_bytes );
-
-	expect( app1_addr		).to.be.a("ActionHash");
-    });
-
     it("should create WebApp entry", async function () {
 	this.timeout( 30_000 );
 
 	const webapp_bytes		= await fs.readFile( TEST_WEBAPP_PATH );
+	// const ui_bytes			= await fs.readFile( TEST_UI_PATH );
 
 	webapp1_addr			= await app_hub_csr.save_webapp( webapp_bytes );
 
@@ -149,8 +138,8 @@ function basic_tests () {
     });
 
     it("should get App entry", async function () {
-	app_entry			= await app_hub_csr.get_app_entry( app1_addr );
-	log.trace("%s", json.debug(app_entry) );
+	webapp_entry			= await app_hub_csr.get_webapp_entry( webapp1_addr );
+	log.trace("%s", json.debug(webapp_entry) );
     });
 
     after(async function () {

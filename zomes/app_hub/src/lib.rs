@@ -23,11 +23,21 @@ use hdi_extensions::{
 pub enum EntryTypes {
     #[entry_def]
     App(AppEntry),
+    WebApp(WebAppEntry),
+    Ui(UiEntry),
 }
 
 scoped_type_connector!(
     EntryTypesUnit::App,
     EntryTypes::App( AppEntry )
+);
+scoped_type_connector!(
+    EntryTypesUnit::WebApp,
+    EntryTypes::WebApp( WebAppEntry )
+);
+scoped_type_connector!(
+    EntryTypesUnit::Ui,
+    EntryTypes::Ui( UiEntry )
 );
 
 
@@ -36,6 +46,8 @@ scoped_type_connector!(
 #[hdk_link_types]
 pub enum LinkTypes {
     App,
+    WebApp,
+    Ui,
 }
 
 impl TryFrom<String> for LinkTypes {
@@ -45,6 +57,8 @@ impl TryFrom<String> for LinkTypes {
         Ok(
             match name.as_str() {
                 "App" => LinkTypes::App,
+                "WebApp" => LinkTypes::WebApp,
+                "Ui" => LinkTypes::Ui,
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }
         )

@@ -3,6 +3,7 @@ dnas/*.dna
 dnas/*/zomelets/node_modules
 zomes/*.wasm
 tests/node_modules
-tests/test.dna
+tests/test.webhapp
+tests/test.zip
 .cargo
 target

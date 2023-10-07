@@ -93,6 +93,7 @@ version = "0.0.0"
 dependencies = [
  "holo_hash",
  "holochain_zome_types",
+ "mere_memory_types",
  "serde",
  "whi_hdi_extensions",
 ]
@@ -2316,18 +2317,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rmpv"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de8813b3a2f95c5138fe5925bfb8784175d88d6bff059ba8ce090aa891319754"
-dependencies = [
- "num-traits",
- "rmp",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
 name = "rusqlite"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3469,7 +3458,6 @@ name = "zome_hub_types"
 version = "0.0.0"
 dependencies = [
  "mere_memory_types",
- "rmpv",
  "serde",
  "whi_hdi_extensions",
 ]

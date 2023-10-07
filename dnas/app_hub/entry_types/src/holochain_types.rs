@@ -55,3 +55,22 @@ impl Default for CellProvisioning {
         Self::Create { deferred: false }
     }
 }
+
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WebAppManifestV1 {
+    pub name: String,
+    pub ui: WebUI,
+    pub happ_manifest: AppManifestLocation,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WebUI {
+    pub bundled: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AppManifestLocation {
+    pub bundled: String,
+}

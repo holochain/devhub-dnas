@@ -17,7 +17,19 @@ export function AppEntry ( entry ) {
 }
 
 
+export const WebAppStruct = {
+    "manifest":			Object,
+    "resources":		Object,
+};
+
+export function WebAppEntry ( entry ) {
+    return intoStruct( entry, WebAppStruct );
+}
+
+
 export default {
     AppStruct,
     AppEntry,
+    WebAppStruct,
+    WebAppEntry,
 };

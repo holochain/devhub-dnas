@@ -20,6 +20,7 @@ import {
 }					from '@holochain/dna-hub-zomelets';
 import {
     AppEntry,
+    WebAppEntry,
 }					from './types.js';
 
 export const AppHubCSRZomelet		= new Zomelet({
@@ -54,6 +55,35 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return AppEntry( result );
     },
 
+    async create_ui_entry ( input ) {
+	const result			= await this.call({
+	    "mere_memory_addr": new EntryHash( input.mere_memory_addr ),
+	});
+
+	return new ActionHash( result );
+    },
+    async get_ui_entry ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return AppEntry( result );
+    },
+
+    async create_webapp_entry ({ manifest, resources }) {
+	this.log.info("WebApp entry input (%s resources):", Object.keys(resources).length, manifest );
+	const result			= await this.call({
+	    "manifest": manifest,
+	    "resources": resources,
+	});
+
+	return new ActionHash( result );
+    },
+    async get_webapp_entry ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return WebAppEntry( result );
+    },
+
+
     //
     // Virtual functions
     //
@@ -62,7 +92,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const resources			= {};
 
 	for ( let [ rpath, dna_bytes ] of Object.entries( bundle.resources ) ) {
-	    this.log.info("Save WASM resource '%s' (%s bytes)", rpath, dna_bytes.length );
+	    this.log.info("Save DNA resource '%s' (%s bytes)", rpath, dna_bytes.length );
 	    resources[ rpath ]		= await this.cells.dna_hub.dna_hub_csr.save_dna( dna_bytes );
 	}
 
@@ -71,7 +101,42 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    resources,
 	});
     },
+    async save_ui ( bytes ) {
+	const addr			= await this.zomes.mere_memory_api.save( bytes );
+
+	return await this.functions.create_ui_entry({
+	    "mere_memory_addr": addr,
+	});
+    },
+    async save_webapp ( bytes ) {
+	const bundle			= new Bundle( bytes, "webhapp" );
+	const resources			= {};
+
+	// const happ_bundle		= bundle.happ();
+	// const ui_bytes			= bundle.ui();
+
+	{
+	    const rpath			= bundle.manifest.happ_manifest.bundled;
+	    const happ_bytes		= bundle.resources[ rpath ];
+	    this.log.info("Save hApp resource '%s' (%s bytes)", rpath, happ_bytes.length );
+	    resources[ rpath ]		= await this.functions.save_app( happ_bytes );
+	}
+	{
+	    const rpath			= bundle.manifest.ui.bundled;
+	    const ui_bytes		= bundle.resources[ rpath ];
+	    this.log.info("Save UI resource '%s' (%s bytes)", rpath, ui_bytes.length );
+	    resources[ rpath ]		= await this.functions.save_ui( ui_bytes );
+	}
+
+	return await this.functions.create_webapp_entry({
+	    "manifest": bundle.manifest,
+	    resources,
+	});
+    },
 }, {
+    "zomes": {
+	"mere_memory_api": MereMemoryZomelet,
+    },
     "cells": {
 	"dna_hub": DnaHubCell,
     },
@@ -80,6 +145,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 export const AppHubCell			= new CellZomelets({
     "app_hub_csr": AppHubCSRZomelet,
+    "mere_memory_api": MereMemoryZomelet,
 });
 
 export  {

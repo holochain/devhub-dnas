@@ -11,6 +11,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 holo_hash = "=0.2.2"
 holochain_zome_types = { version = "=0.2.2", features = [ "properties" ] }
+mere_memory_types = "=0.90.0"
 # rmpv = { version = "=1.0.0", features = ["with-serde"] }
 serde = "1"
 whi_hdi_extensions = "=0.3.0"
