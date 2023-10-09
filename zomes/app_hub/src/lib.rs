@@ -1,5 +1,6 @@
 mod validation;
 
+pub use hc_crud;
 pub use app_hub_types::hdi_extensions;
 pub use app_hub_types;
 pub use hdi_extensions::hdi;
@@ -14,7 +15,9 @@ use hdi_extensions::{
     scoped_type_connector,
     ScopedTypeConnector,
 };
-
+use hc_crud::{
+    entry_model,
+};
 
 
 /// The entry types defined for this integrity app
@@ -24,6 +27,7 @@ pub enum EntryTypes {
     #[entry_def]
     App(AppEntry),
     WebApp(WebAppEntry),
+    WebAppPackage(WebAppPackageEntry),
     Ui(UiEntry),
 }
 
@@ -36,9 +40,16 @@ scoped_type_connector!(
     EntryTypes::WebApp( WebAppEntry )
 );
 scoped_type_connector!(
+    EntryTypesUnit::WebAppPackage,
+    EntryTypes::WebAppPackage( WebAppPackageEntry )
+);
+scoped_type_connector!(
     EntryTypesUnit::Ui,
     EntryTypes::Ui( UiEntry )
 );
+
+// Entry Types with CRUD models
+entry_model!( EntryTypes::WebAppPackage( WebAppPackageEntry ) );
 
 
 
@@ -47,6 +58,7 @@ scoped_type_connector!(
 pub enum LinkTypes {
     App,
     WebApp,
+    WebAppPackage,
     Ui,
 }
 
@@ -58,6 +70,7 @@ impl TryFrom<String> for LinkTypes {
             match name.as_str() {
                 "App" => LinkTypes::App,
                 "WebApp" => LinkTypes::WebApp,
+                "WebAppPackage" => LinkTypes::WebAppPackage,
                 "Ui" => LinkTypes::Ui,
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }

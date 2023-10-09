@@ -9,6 +9,7 @@ name = "app_hub_csr"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_devhub_sdk = { path = "../../devhub_sdk" }
-serde = "1"
 app_hub = { path = "../app_hub" }
+hc_devhub_sdk = { path = "../../devhub_sdk" }
+rmpv = { version = "1.0.0", features = ["with-serde"] }
+serde = "1"

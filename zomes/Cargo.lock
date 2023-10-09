@@ -75,6 +75,7 @@ version = "0.0.0"
 dependencies = [
  "app_hub_types",
  "getrandom 0.2.7",
+ "hc_crud_caps",
  "serde",
 ]
 
@@ -84,6 +85,7 @@ version = "0.0.0"
 dependencies = [
  "app_hub",
  "hc_devhub_sdk",
+ "rmpv",
  "serde",
 ]
 
@@ -94,8 +96,9 @@ dependencies = [
  "holo_hash",
  "holochain_zome_types",
  "mere_memory_types",
+ "rmpv",
  "serde",
- "whi_hdi_extensions",
+ "whi_hdi_extensions 0.3.0",
 ]
 
 [[package]]
@@ -719,7 +722,7 @@ dependencies = [
  "holochain_integrity_types",
  "holochain_zome_types",
  "serde",
- "whi_hdi_extensions",
+ "whi_hdi_extensions 0.3.0",
 ]
 
 [[package]]
@@ -1043,10 +1046,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "hc_crud_caps"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9b3a8d624b3d8429df3fe061efa388d400888f12207fe43d8e8771075530ddc"
+dependencies = [
+ "serde",
+ "whi_hdk_extensions 0.4.0",
+]
+
+[[package]]
 name = "hc_devhub_sdk"
 version = "0.0.0"
 dependencies = [
- "whi_hdk_extensions",
+ "whi_hdk_extensions 0.3.0",
 ]
 
 [[package]]
@@ -2317,6 +2330,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rmpv"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de8813b3a2f95c5138fe5925bfb8784175d88d6bff059ba8ce090aa891319754"
+dependencies = [
+ "num-traits",
+ "rmp",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3249,6 +3274,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "whi_hdi_extensions"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e54dce41f91708d68ef32b84b4f262d93eca988559db1f680c41bcd35332d9e"
+dependencies = [
+ "hdi",
+ "holo_hash",
+ "serde",
+]
+
+[[package]]
 name = "whi_hdk_extensions"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3257,7 +3293,19 @@ dependencies = [
  "hdk",
  "serde",
  "thiserror",
- "whi_hdi_extensions",
+ "whi_hdi_extensions 0.3.0",
+]
+
+[[package]]
+name = "whi_hdk_extensions"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a155e68bf23e1bd3fa1908502b9623250089f18ee1814ea4bcabc87147a80870"
+dependencies = [
+ "hdk",
+ "serde",
+ "thiserror",
+ "whi_hdi_extensions 0.4.0",
 ]
 
 [[package]]
@@ -3459,5 +3507,5 @@ version = "0.0.0"
 dependencies = [
  "mere_memory_types",
  "serde",
- "whi_hdi_extensions",
+ "whi_hdi_extensions 0.3.0",
 ]

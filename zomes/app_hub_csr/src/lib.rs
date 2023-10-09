@@ -1,20 +1,29 @@
 use devhub_sdk::hdk;
 use devhub_sdk::hdk_extensions;
+use app_hub::hdi_extensions;
+use app_hub::hc_crud;
 
+use std::collections::BTreeMap;
 use hdk::prelude::*;
 use hdk_extensions::{
     must_get,
 };
-use app_hub::hdi_extensions::{
+use hdi_extensions::{
     ScopedTypeConnector,
     // AnyLinkableHashTransformer,
 };
 use app_hub::{
+    LinkTypes,
     AppEntry, AppManifestV1,
     UiEntry,
     WebAppEntry, WebAppManifestV1,
+    WebAppPackageEntry,
     ResourceMap,
-    LinkTypes,
+    Authority, MemoryAddr, // DeprecationNotice,
+};
+use hc_crud::{
+    create_entity, get_entity,
+    Entity,
 };
 
 
@@ -113,4 +122,46 @@ fn get_webapp_entry(addr: ActionHash) -> ExternResult<WebAppEntry> {
     let record = must_get( &addr )?;
 
     Ok( WebAppEntry::try_from_record( &record )? )
+}
+
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateWebAppPackageEntryInput {
+    pub title: String,
+    pub subtitle: String,
+    pub description: String,
+    pub icon: MemoryAddr,
+    #[serde(default)]
+    pub metadata: BTreeMap<String, rmpv::Value>,
+
+    // Optional
+    pub maintainer: Option<Authority>,
+    pub source_code_url: Option<String>,
+}
+
+#[hdk_extern]
+fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) -> ExternResult<Entity<WebAppPackageEntry>> {
+    let agent_id = hdk_extensions::agent_id()?;
+    let entry = WebAppPackageEntry {
+        title: input.title,
+        subtitle: input.subtitle,
+        description: input.description,
+        maintainer: agent_id.clone().into(),
+        icon: input.icon,
+        source_code_url: input.source_code_url,
+        deprecation: None,
+        metadata: input.metadata,
+    };
+
+    let entity = create_entity( &entry )?;
+
+    create_link( agent_id, entity.id.clone(), LinkTypes::WebAppPackage, () )?;
+
+    Ok( entity )
+}
+
+#[hdk_extern]
+fn get_webapp_package_entry(addr: ActionHash) -> ExternResult<Entity<WebAppPackageEntry>> {
+    Ok( get_entity( &addr )? )
 }

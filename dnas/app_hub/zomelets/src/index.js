@@ -7,9 +7,8 @@ import {
     Zomelet,
     CellZomelets,
 }					from '@spartan-hc/zomelets';
-import {
-    Bundle,
-}					from '@spartan-hc/bundles';
+import { Bundle }			from '@spartan-hc/bundles';
+import { Entity }			from '@spartan-hc/caps-entities';
 import {
     DnaHubCSRZomelet,
     ZomeHubCSRZomelet,
@@ -21,6 +20,10 @@ import {
 import {
     AppEntry,
     WebAppEntry,
+    WebAppPackageEntry,
+
+    // Entity Classes
+    WebAppPackage,
 }					from './types.js';
 
 export const AppHubCSRZomelet		= new Zomelet({
@@ -81,6 +84,20 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const result			= await this.call( new ActionHash( input ) );
 
 	return WebAppEntry( result );
+    },
+
+    async create_webapp_package_entry ( input ) {
+	input.icon			= await this.zomes.mere_memory_api.save( input.icon );
+
+	this.log.info("WebApp package entry input:", input );
+	const result			= await this.call( input );
+
+	return new WebAppPackage( result );
+    },
+    async get_webapp_package_entry ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return new WebAppPackage( result );
     },
 
 

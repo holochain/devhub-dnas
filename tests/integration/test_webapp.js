@@ -8,6 +8,7 @@ import path				from 'path';
 import crypto				from 'crypto';
 
 import { expect }			from 'chai';
+import { faker }			from '@faker-js/faker';
 
 import json				from '@whi/json';
 import {
@@ -87,7 +88,9 @@ function basic_tests () {
     let dna_hub_csr;
     let app_hub;
     let app_hub_csr;
-    let webapp1_addr, webapp_entry;
+    let webapp1_addr;
+    let pack1_addr, pack1;
+    let pack1_v1_addr;
 
     before(async function () {
 	client				= new AppInterfaceClient( APP_PORT, {
@@ -138,8 +141,22 @@ function basic_tests () {
     });
 
     it("should get App entry", async function () {
-	webapp_entry			= await app_hub_csr.get_webapp_entry( webapp1_addr );
-	log.trace("%s", json.debug(webapp_entry) );
+	const webapp_entry		= await app_hub_csr.get_webapp_entry( webapp1_addr );
+	log.trace("App entry: %s", json.debug(webapp_entry) );
+    });
+
+    it("should create WebApp Package entry", async function () {
+	pack1				= await app_hub_csr.create_webapp_package_entry({
+	    "title": faker.commerce.productName(),
+	    "subtitle": faker.lorem.sentence(),
+	    "description": faker.lorem.paragraphs( 2 ),
+	    "icon": crypto.randomBytes( 1_000 ),
+	    "source_code_url": faker.internet.url(),
+	});
+
+	log.normal("Create WebApp package result:", pack1 );
+	// log.normal("Create WebApp package JSON: %s", json.debug(pack1) );
+	// expect( pack1_addr		).to.be.a("ActionHash");
     });
 
     after(async function () {

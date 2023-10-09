@@ -17,20 +17,10 @@
     "@spartan-hc/holochain-backdrop": "^2.2.3",
     "@spartan-hc/zomelets": "^0.1.0",
     "@whi/json": "^0.1.5",
-    "@whi/stdlog": "^0.3.4",
-    "@whi/weblogger": "^0.1.6",
+    "@whi/weblogger": "^0.2.1",
     "chai": "^4.3.4",
     "identicon.js": "^2.3.3",
     "mocha": "^10.1.0",
-    "node-gzip": "^1.1.2",
-    "pako": "^2.1.0",
-    "why-is-node-running": "^2.2.0",
-    "ws": "^8.2.2",
-    "yaml": "^1.10.2"
-  },
-  "devDependencies": {
-    "@msgpack/msgpack": "^2.7.0",
-    "@whi/crux-payload-parser": "^0.3.2",
-    "@whi/holochain-client": "^0.81.0"
+    "why-is-node-running": "^2.2.0"
   }
 }
