@@ -15,7 +15,7 @@ use hdi::prelude::*;
 
 
 pub type EntityId = ActionHash;
-pub type BundleAddr = EntryHash;
+pub type BundleAddr = ActionHash; // TODO: should this be EntryHash?
 pub type MemoryAddr = EntryHash;
 
 

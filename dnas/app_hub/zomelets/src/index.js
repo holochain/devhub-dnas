@@ -24,7 +24,10 @@ import {
 
     // Entity Classes
     WebAppPackage,
+    WebAppPackageVersion,
 }					from './types.js';
+
+
 
 export const AppHubCSRZomelet		= new Zomelet({
     "whoami": {
@@ -43,6 +46,10 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    };
 	},
     },
+
+
+    // App
+
     async create_app_entry ({ manifest, resources }) {
 	this.log.info("App entry input (%s resources):", Object.keys(resources).length, manifest );
 	const result			= await this.call({
@@ -58,6 +65,9 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return AppEntry( result );
     },
 
+
+    // UI
+
     async create_ui_entry ( input ) {
 	const result			= await this.call({
 	    "mere_memory_addr": new EntryHash( input.mere_memory_addr ),
@@ -70,6 +80,9 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return AppEntry( result );
     },
+
+
+    // WebApp
 
     async create_webapp_entry ({ manifest, resources }) {
 	this.log.info("WebApp entry input (%s resources):", Object.keys(resources).length, manifest );
@@ -86,18 +99,45 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return WebAppEntry( result );
     },
 
+
+    // WebApp Package
+
     async create_webapp_package_entry ( input ) {
 	input.icon			= await this.zomes.mere_memory_api.save( input.icon );
 
 	this.log.info("WebApp package entry input:", input );
 	const result			= await this.call( input );
 
-	return new WebAppPackage( result );
+	return new WebAppPackage( result, this );
     },
     async get_webapp_package_entry ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
 
-	return new WebAppPackage( result );
+	return new WebAppPackage( result, this );
+    },
+    "link_webapp_package_version":	true,
+    async get_webapp_package_versions ( input ) {
+	const version_map		= await this.call( input );
+
+	for ( let key in version_map ) {
+	    version_map[ key ]		= new WebAppPackageVersion( version_map[ key ], this );
+	}
+
+	return version_map;
+    },
+
+
+    // WebApp Package Version
+
+    async create_webapp_package_version_entry ( input ) {
+	const result			= await this.call( input );
+
+	return new WebAppPackageVersion( result, this );
+    },
+    async get_webapp_package_version_entry ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return new WebAppPackageVersion( result, this );
     },
 
 
@@ -149,6 +189,20 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    "manifest": bundle.manifest,
 	    resources,
 	});
+    },
+    async create_webapp_package_version ( input ) {
+	if ( typeof input.version !== "string" )
+	    throw new TypeError(`Missing 'version' input`);
+
+	const entity			= await this.functions.create_webapp_package_version_entry( input );
+
+	await this.functions.link_webapp_package_version({
+	    "version":				input.version,
+	    "webapp_package_id":		entity.for_package,
+	    "webapp_package_version_id":	entity.$id,
+	});
+
+	return entity;
     },
 }, {
     "zomes": {

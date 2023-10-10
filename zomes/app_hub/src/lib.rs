@@ -28,6 +28,7 @@ pub enum EntryTypes {
     App(AppEntry),
     WebApp(WebAppEntry),
     WebAppPackage(WebAppPackageEntry),
+    WebAppPackageVersion(WebAppPackageVersionEntry),
     Ui(UiEntry),
 }
 
@@ -44,12 +45,17 @@ scoped_type_connector!(
     EntryTypes::WebAppPackage( WebAppPackageEntry )
 );
 scoped_type_connector!(
+    EntryTypesUnit::WebAppPackageVersion,
+    EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry )
+);
+scoped_type_connector!(
     EntryTypesUnit::Ui,
     EntryTypes::Ui( UiEntry )
 );
 
 // Entry Types with CRUD models
 entry_model!( EntryTypes::WebAppPackage( WebAppPackageEntry ) );
+entry_model!( EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry ) );
 
 
 
@@ -59,6 +65,7 @@ pub enum LinkTypes {
     App,
     WebApp,
     WebAppPackage,
+    WebAppPackageVersion,
     Ui,
 }
 
@@ -71,6 +78,7 @@ impl TryFrom<String> for LinkTypes {
                 "App" => LinkTypes::App,
                 "WebApp" => LinkTypes::WebApp,
                 "WebAppPackage" => LinkTypes::WebAppPackage,
+                "WebAppPackageVersion" => LinkTypes::WebAppPackageVersion,
                 "Ui" => LinkTypes::Ui,
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }

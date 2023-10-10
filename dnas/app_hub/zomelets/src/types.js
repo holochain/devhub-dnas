@@ -1,11 +1,12 @@
 
 import { AgentPubKey, HoloHash,
 	 ActionHash, EntryHash }	from '@spartan-hc/holo-hash';
-import { Entity }			from '@spartan-hc/caps-entities';
 import {
+    ScopedEntity,
     intoStruct,
     OptionType, VecType, MapType,
-}					from '@whi/into-struct';
+}					from '@spartan-hc/caps-entities';
+
 
 
 //
@@ -42,7 +43,7 @@ export const WebAppPackageStruct = {
     "subtitle":			String,
     "description":		String,
     "icon":			EntryHash,
-    "source_code_url":		String,
+    "source_code_url":		OptionType( String ),
     "maintainer":		{
 	"group":		OptionType([ ActionHash, ActionHash ]),
 	"agent":		OptionType( AgentPubKey ),
@@ -55,12 +56,37 @@ export function WebAppPackageEntry ( entry ) {
     return intoStruct( entry, WebAppPackageStruct );
 }
 
-export class WebAppPackage extends Entity {
-    constructor ( entity ) {
-	entity.content		= intoStruct( entity.content, WebAppPackageStruct );
-	super( entity );
+export class WebAppPackage extends ScopedEntity {
+    static STRUCT		= WebAppPackageStruct;
+
+    async versions () {
+	return await this.zome.get_webapp_package_versions( this.$id );
     }
 }
+
+
+//
+// WebAppPackageVersionEntry Handling
+//
+export const WebAppPackageVersionStruct = {
+    "for_package":		ActionHash,
+    "webapp":			ActionHash,
+    "source_code_url":		OptionType( String ),
+    "maintainer":		{
+	"group":		OptionType([ ActionHash, ActionHash ]),
+	"agent":		OptionType( AgentPubKey ),
+    },
+};
+
+export function WebAppPackageVersionEntry ( entry ) {
+    return intoStruct( entry, WebAppPackageVersionStruct );
+}
+
+export class WebAppPackageVersion extends ScopedEntity {
+    static STRUCT		= WebAppPackageVersionStruct;
+}
+
+
 
 export default {
     AppStruct,
@@ -72,4 +98,8 @@ export default {
     WebAppPackageStruct,
     WebAppPackageEntry,
     WebAppPackage,
+
+    WebAppPackageVersionStruct,
+    WebAppPackageVersionEntry,
+    WebAppPackageVersion,
 };

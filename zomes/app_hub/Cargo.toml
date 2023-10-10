@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 app_hub_types = { path = "../../dnas/app_hub/entry_types" }
-hc_crud_caps = "=0.10.1"
+hc_crud_caps = "0.10.2"
 serde = "1"
 
 # temporary fix for compile error in

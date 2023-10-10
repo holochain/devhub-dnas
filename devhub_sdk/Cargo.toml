@@ -9,4 +9,4 @@ name = "devhub_sdk"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-whi_hdk_extensions = "=0.3.0"
+whi_hdk_extensions = "0.4"

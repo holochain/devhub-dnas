@@ -89,8 +89,8 @@ function basic_tests () {
     let app_hub;
     let app_hub_csr;
     let webapp1_addr;
-    let pack1_addr, pack1;
-    let pack1_v1_addr;
+    let pack1;
+    let pack1_v1;
 
     before(async function () {
 	client				= new AppInterfaceClient( APP_PORT, {
@@ -155,8 +155,25 @@ function basic_tests () {
 	});
 
 	log.normal("Create WebApp package result:", pack1 );
-	// log.normal("Create WebApp package JSON: %s", json.debug(pack1) );
-	// expect( pack1_addr		).to.be.a("ActionHash");
+	log.normal("Create WebApp package JSON: %s", json.debug(pack1) );
+    });
+
+    it("should create WebApp Package Version entry", async function () {
+	pack1_v1			= await app_hub_csr.create_webapp_package_version({
+	    "version": "0.1.0",
+	    "for_package": pack1.$id,
+	    "webapp": webapp1_addr,
+	    "source_code_url": faker.internet.url(),
+	});
+
+	log.normal("Create WebApp package version result:", pack1_v1 );
+	log.normal("Create WebApp package version JSON: %s", json.debug(pack1_v1) );
+    });
+
+    it("should get WebApp Package versions", async function () {
+	const versions			= await pack1.versions();
+
+	log.normal("WebApp package versions JSON: %s", json.debug(versions) );
     });
 
     after(async function () {

@@ -3,4 +3,4 @@ name: test-webhapp
 ui:
   bundled: "../test.zip"
 happ_manifest:
-  bundled: "../../happ/devhub.happ"
+  bundled: "../test.happ"

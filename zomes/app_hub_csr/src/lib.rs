@@ -3,7 +3,10 @@ use devhub_sdk::hdk_extensions;
 use app_hub::hdi_extensions;
 use app_hub::hc_crud;
 
-use std::collections::BTreeMap;
+use std::{
+    str,
+    collections::BTreeMap,
+};
 use hdk::prelude::*;
 use hdk_extensions::{
     must_get,
@@ -18,12 +21,14 @@ use app_hub::{
     UiEntry,
     WebAppEntry, WebAppManifestV1,
     WebAppPackageEntry,
+    WebAppPackageVersionEntry,
     ResourceMap,
-    Authority, MemoryAddr, // DeprecationNotice,
+    Authority, // DeprecationNotice,
+    MemoryAddr, BundleAddr,
 };
 use hc_crud::{
     create_entity, get_entity,
-    Entity,
+    Entity, EntityId,
 };
 
 
@@ -164,4 +169,101 @@ fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) -> ExternRe
 #[hdk_extern]
 fn get_webapp_package_entry(addr: ActionHash) -> ExternResult<Entity<WebAppPackageEntry>> {
     Ok( get_entity( &addr )? )
+}
+
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateWebAppPackageVersionEntryInput {
+    pub for_package: EntityId,
+    pub webapp: BundleAddr,
+
+    // Optional
+    pub maintainer: Option<Authority>,
+    pub source_code_url: Option<String>,
+}
+
+#[hdk_extern]
+fn create_webapp_package_version_entry(input: CreateWebAppPackageVersionEntryInput) -> ExternResult<Entity<WebAppPackageVersionEntry>> {
+    let agent_id = hdk_extensions::agent_id()?;
+    let entry = WebAppPackageVersionEntry {
+        for_package: input.for_package,
+        webapp: input.webapp,
+        maintainer: agent_id.clone().into(),
+        source_code_url: input.source_code_url,
+    };
+
+    let entity = create_entity( &entry )?;
+
+    create_link( agent_id, entity.id.clone(), LinkTypes::WebAppPackageVersion, () )?;
+
+    Ok( entity )
+}
+
+#[hdk_extern]
+fn get_webapp_package_version_entry(addr: ActionHash) ->
+    ExternResult<Entity<WebAppPackageVersionEntry>>
+{
+    Ok( get_entity( &addr )? )
+}
+
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct LinkWebAppPackageVersionInput {
+    pub version: String,
+    pub webapp_package_id: EntityId,
+    pub webapp_package_version_id: EntityId,
+}
+
+#[hdk_extern]
+fn link_webapp_package_version(input: LinkWebAppPackageVersionInput) -> ExternResult<ActionHash> {
+    create_link(
+        input.webapp_package_id,
+        input.webapp_package_version_id,
+        LinkTypes::WebAppPackageVersion,
+        input.version.as_bytes().to_vec()
+    )
+}
+
+
+type VersionMap<T> = BTreeMap<String, T>;
+type WebAppPackageVersionMap = VersionMap<Entity<WebAppPackageVersionEntry>>;
+
+#[hdk_extern]
+fn get_webapp_package_versions(webapp_package_id: EntityId) ->
+    ExternResult<WebAppPackageVersionMap>
+{
+    let links = get_links(
+        webapp_package_id.clone(),
+	LinkTypes::WebAppPackageVersion,
+	None
+    )?;
+    let mut version_map = BTreeMap::new();
+
+    debug!("Found {} versions for WebApp package: {}", links.len(), webapp_package_id );
+    for link in links.iter() {
+        debug!("Get WebApp package version: {:?}", link.target );
+	if let Some(target) = link.target.clone().into_action_hash() {
+            match get_entity( &target ) {
+                Ok(version) => {
+                    match str::from_utf8( &link.tag.0 ) {
+                        Ok(tag) => {
+                            version_map.insert( tag.to_string(), version );
+                        },
+                        Err(err) => {
+                            debug!("Failed to parse version from tag {:?}: {:#?}", link.tag, err );
+                            continue;
+                        },
+                    }
+                },
+                Err(err) => {
+                    debug!("Failed to get version {}: {:#?}", target, err );
+                    continue;
+                },
+            }
+        }
+    }
+
+    Ok( version_map )
 }

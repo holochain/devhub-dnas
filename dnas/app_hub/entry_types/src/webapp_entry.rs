@@ -66,6 +66,8 @@ pub struct WebAppPackageVersionEntry {
 
     // Properties
     /// Pointer to the uploaded bundle WebAppEntry
-    pub web_app: BundleAddr,
+    pub webapp: BundleAddr,
+
+    // Optional
     pub source_code_url: Option<String>,
 }

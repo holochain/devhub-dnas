@@ -8,6 +8,7 @@ MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 # External DNA dependencies
+PORTAL_VERSION		= 0.8.0
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -96,33 +97,11 @@ zomes/$(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 	    --package $*_csr
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
 
-use-local-backdrop:
-	cd tests; npm uninstall @whi/holochain-backdrop
-	cd tests; npm install --save-dev ../../node-holochain-backdrop
-use-npm-backdrop:
-	cd tests; npm uninstall @whi/holochain-backdrop
-	cd tests; npm install --save-dev @whi/holochain-backdrop
-use-local-client:
-	cd tests; npm uninstall @whi/holochain-client
-	cd tests; npm install --save-dev ../../js-holochain-client
-use-npm-client:
-	cd tests; npm uninstall @whi/holochain-client
-	cd tests; npm install --save-dev @whi/holochain-client
-use-local-crux:
-	cd tests; npm uninstall @whi/crux-payload-parser
-	cd tests; npm install --save-dev ../../js-crux-payload-parser
-use-npm-crux:
-	cd tests; npm uninstall @whi/crux-payload-parser
-	cd tests; npm install --save-dev @whi/crux-payload-parser
-
-use-local:		use-local-client use-local-backdrop
-use-npm:		  use-npm-client   use-npm-backdrop
-
 copy-portal-from-local:
 	cp ../portal-dnas/bundled/portal.dna $(PORTAL_DNA)
 
 $(PORTAL_DNA):
-	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(NEW_PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
+	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
 
 $(MERE_MEMORY_WASM):
 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory.wasm" --output $@
@@ -133,24 +112,43 @@ reset-mere-memory:
 	rm zomes/mere_memory*.wasm
 	make $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
 
-PRE_MM_VERSION = mere_memory_types = "=0.89.1"
-NEW_MM_VERSION = mere_memory_types = "=0.90.0"
+PRE_MM_VERSION = mere_memory_types = "0.89.1"
+NEW_MM_VERSION = mere_memory_types = "0.90.0"
+
+PRE_CRUD_VERSION = hc_crud_caps = "=0.10.1"
+NEW_CRUD_VERSION = hc_crud_caps = "0.10.2"
+
+PRE_HDIE_VERSION = whi_hdi_extensions = "=0.3.0"
+NEW_HDIE_VERSION = whi_hdi_extensions = "0.4"
+
+PRE_HDKE_VERSION = whi_hdk_extensions = "=0.3.0"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.4"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/entry_types/Cargo.toml zomes/*/Cargo.toml
 
 update-mere-memory-version:	reset-mere-memory
 	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
+update-crud-version:
+	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'
+update-hdk-extensions-version:
+	git grep -l '$(PRE_HDKE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDKE_VERSION)|$(NEW_HDKE_VERSION)|g'
+update-hdi-extensions-version:
+	git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIE_VERSION)|$(NEW_HDIE_VERSION)|g'
 
 
 #
 # Testing
 #
 TEST_UI			= tests/test.zip
+TEST_HAPP		= tests/test.happ
 TEST_WEBHAPP		= tests/test.webhapp
 
 $(TEST_UI):
 	dd if=/dev/zero of=$@ bs=1M count=1
-$(TEST_WEBHAPP):	$(TEST_UI)
+$(TEST_HAPP):		$(ZOMEHUB_DNA)
+	@echo "Packaging '$*': $@"
+	@hc app pack -o $@ tests/test_happ/
+$(TEST_WEBHAPP):	$(TEST_HAPP) $(TEST_UI)
 	@echo "Packaging '$*': $@"
 	@hc web-app pack -o $@ tests/test_webhapp/
 
