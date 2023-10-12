@@ -1,0 +1,15 @@
+manifest_version: "1"
+name: dnahub
+integrity:
+  origin_time: 2023-08-01T00:00:00.000000Z
+  network_seed: ~
+  properties: ~
+  zomes:
+    - name: dnahub
+      bundled: ../../zomes/dnahub.wasm
+coordinator:
+  zomes:
+    - name: dnahub_csr
+      bundled: ../../zomes/dnahub_csr.wasm
+      dependencies:
+        - name: dnahub

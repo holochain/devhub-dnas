@@ -1,0 +1,15 @@
+[package]
+name = "apphub_csr"
+version = "0.0.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "apphub_csr"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+apphub = { path = "../apphub" }
+apphub_sdk = { path = "../../dnas/apphub/sdk" }
+rmpv = { version = "1.0.0", features = ["with-serde"] }
+serde = "1"

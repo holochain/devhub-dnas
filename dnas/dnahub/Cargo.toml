@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "types",
+  "scoped_types",
+  "sdk",
+]

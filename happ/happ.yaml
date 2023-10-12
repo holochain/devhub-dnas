@@ -2,12 +2,12 @@ manifest_version: "1"
 name: Holochain DevHub
 description: A hApp for publishing, searching, and organizing hApp resources
 roles:
-  - name: zome_hub
+  - name: zomehub
     dna:
-      bundled: ../dnas/zome_hub.dna
-  - name: dna_hub
+      bundled: ../dnas/zomehub.dna
+  - name: dnahub
     dna:
-      bundled: ../dnas/dna_hub.dna
-  - name: app_hub
+      bundled: ../dnas/dnahub.dna
+  - name: apphub
     dna:
-      bundled: ../dnas/app_hub.dna
+      bundled: ../dnas/apphub.dna

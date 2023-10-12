@@ -16,19 +16,19 @@ PORTAL_DNA		= dnas/portal.dna
 DEVHUB_HAPP		= happ/$(NAME).happ
 
 # DNAs
-ZOMEHUB_DNA		= dnas/zome_hub.dna
-DNAHUB_DNA		= dnas/dna_hub.dna
-APPHUB_DNA		= dnas/app_hub.dna
+ZOMEHUB_DNA		= dnas/zomehub.dna
+DNAHUB_DNA		= dnas/dnahub.dna
+APPHUB_DNA		= dnas/apphub.dna
 
 # Integrity Zomes
-ZOMEHUB_WASM		= zomes/zome_hub.wasm
-DNAHUB_WASM		= zomes/dna_hub.wasm
-APPHUB_WASM		= zomes/app_hub.wasm
+ZOMEHUB_WASM		= zomes/zomehub.wasm
+DNAHUB_WASM		= zomes/dnahub.wasm
+APPHUB_WASM		= zomes/apphub.wasm
 
 # Coordinator WASMs
-ZOMEHUB_CSR_WASM	= zomes/zome_hub_csr.wasm
-DNAHUB_CSR_WASM		= zomes/dna_hub_csr.wasm
-APPHUB_CSR_WASM		= zomes/app_hub_csr.wasm
+ZOMEHUB_CSR_WASM	= zomes/zomehub_csr.wasm
+DNAHUB_CSR_WASM		= zomes/dnahub_csr.wasm
+APPHUB_CSR_WASM		= zomes/apphub_csr.wasm
 
 TARGET			= release
 TARGET_DIR		= target/wasm32-unknown-unknown/release
@@ -46,12 +46,6 @@ CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
 #
 # Project
 #
-tests/package-lock.json:	tests/package.json
-	touch $@
-tests/node_modules:		tests/package-lock.json
-	cd tests; \
-	npm install
-	touch $@
 clean:
 	rm -rf \
 	    tests/node_modules \
@@ -78,23 +72,23 @@ dnas/%.dna:			dnas/%/dna.yaml
 	@echo "Packaging '$*': $@"
 	@hc dna pack -o $@ dnas/$*
 
-zomes/%.wasm:			zomes/$(TARGET_DIR)/%.wasm
+zomes/%.wasm:			$(TARGET_DIR)/%.wasm
 	@echo -e "\x1b[38;2mCopying WASM ($<) to 'zomes' directory: $@\x1b[0m"; \
 	cp $< $@
 
-zomes/$(TARGET_DIR)/%.wasm:	$(INT_SOURCE_FILES)
+$(TARGET_DIR)/%.wasm:		$(INT_SOURCE_FILES)
 	rm -f zomes/$*.wasm
 	@echo -e "\x1b[37mBuilding zome '$*' -> $@\x1b[0m";
 	cd zomes; \
-	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build --release \
+	RUST_BACKTRACE=1 cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
-zomes/$(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
+$(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 	rm -f zomes/$*_csr.wasm
 	@echo -e "\x1b[37mBuilding zome '$*_csr' -> $@\x1b[0m";
 	cd zomes; \
-	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build --release \
+	RUST_BACKTRACE=1 cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*_csr
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
@@ -138,6 +132,16 @@ update-hdi-extensions-version:
 	git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIE_VERSION)|$(NEW_HDIE_VERSION)|g'
 
 
+PRE_TMP = -hub
+NEW_TMP = hub
+
+update-tmp-search:
+	git grep -- '$(PRE_TMP)'
+	git grep -l -- '$(PRE_TMP)'
+update-tmp-replace:
+	git grep -l -- '$(PRE_TMP)' | xargs sed -i 's|$(PRE_TMP)|$(NEW_TMP)|g'
+
+
 #
 # Testing
 #
@@ -154,51 +158,87 @@ $(TEST_WEBHAPP):	$(TEST_HAPP) $(TEST_UI)
 	@echo "Packaging '$*': $@"
 	@hc web-app pack -o $@ tests/test_webhapp/
 
+%/package-lock.json:	%/package.json
+	touch $@
+%/node_modules:		%/package-lock.json
+	cd $*; npm install
+	touch $@
+test-setup:		tests/node_modules \
+			dnas/zomehub/zomelets/node_modules \
+			dnas/dnahub/zomelets/node_modules \
+			dnas/apphub/zomelets/node_modules
+
 test:
 	make test-unit
 	make test-integration
+	make test-real-uploads
 test-debug:
-	make test-unit
+	make test-unit-debug
 	make test-integration-debug
+	make test-real-uploads-debug
 
+# Unit tests
+test-crate:
+	cd $(SRC); cargo test --quiet --tests
+test-crate-debug:
+	cd $(SRC); RUST_BACKTRACE=1 cargo test -- --nocapture --show-output
 test-unit:
-	cd zomes; RUST_BACKTRACE=1 cargo test zome_hub -- --nocapture
-	cd zomes; RUST_BACKTRACE=1 cargo test zome_hub_csr -- --nocapture
-	cd zomes; RUST_BACKTRACE=1 cargo test dna_hub -- --nocapture
-	cd zomes; RUST_BACKTRACE=1 cargo test dna_hub_csr -- --nocapture
-	cd zomes; RUST_BACKTRACE=1 cargo test app_hub -- --nocapture
-	cd zomes; RUST_BACKTRACE=1 cargo test app_hub_csr -- --nocapture
+	SRC=zomes make test-crate
+#	make test-zomehub-unit
+#	make test-dnahub-unit
+#	make test-apphub-unit
+# ISSUE: for some reason these break after wasm has been built (fix 'rm -r target')
+test-unit-debug:
+	SRC=zomes make test-crate-debug
+#	make test-zomehub-unit-debug
+#	make test-dnahub-unit-debug
+#	make test-apphub-unit-debug
 
+test-%hub-unit:
+	SRC=dnas/$*hub make test-crate
+test-%hub-unit-debug:
+	SRC=dnas/$*hub make test-crate-debug
+
+test-zome-unit-%:
+	cd zomes; cargo test -p $* --quiet
+test-zome-unit-%-debug:
+	cd zomes; RUST_BACKTRACE=1 cargo test -p $* -- --nocapture --show-output
+
+# Integration tests
 test-integration:
-	make test-zome-hub-integration
-	make test-dna-hub-integration
-	make test-app-hub-integration
-	make test-webapp-integration
+	make test-webapp-upload
 test-integration-debug:
-	make test-zome-hub-integration-debug
-	make test-dna-hub-integration-debug
-	make test-app-hub-integration-debug
-	make test-webapp-integration-debug
+	make test-webapp-upload-debug
 
-test-zome-hub-integration:		$(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_zome_hub.js
-test-zome-hub-integration-debug:	$(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_zome_hub.js
+test-webapp-upload:			test-setup $(TEST_WEBHAPP)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_webapp_upload.js
+test-webapp-upload-debug:		test-setup $(TEST_WEBHAPP)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_webapp_upload.js
 
-test-dna-hub-integration:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_dna_hub.js
-test-dna-hub-integration-debug:		$(ZOMEHUB_DNA) $(DNAHUB_DNA)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_dna_hub.js
+# Real long-running tests
+test-real-uploads:
+	make test-real-zome-upload
+	make test-real-dna-upload
+	make test-real-app-upload
+test-real-uploads-debug:
+	make test-real-zome-upload-debug
+	make test-real-dna-upload-debug
+	make test-real-app-upload-debug
 
-test-app-hub-integration:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_app_hub.js
-test-app-hub-integration-debug:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_app_hub.js
+test-real-zome-upload:			test-setup $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_real_zome_upload.js
+test-real-zome-upload-debug:		test-setup $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_real_zome_upload.js
 
-test-webapp-integration:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_webapp.js
-test-webapp-integration-debug:		$(DEVHUB_HAPP) $(TEST_WEBHAPP)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_webapp.js
+test-real-dna-upload:			test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_real_dna_upload.js
+test-real-dna-upload-debug:		test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_real_dna_upload.js
+
+test-real-app-upload:			test-setup $(DEVHUB_HAPP)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_real_app_upload.js
+test-real-app-upload-debug:		test-setup $(DEVHUB_HAPP)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_real_app_upload.js
 
 
 

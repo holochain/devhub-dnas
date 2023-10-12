@@ -1,0 +1,21 @@
+manifest_version: "1"
+name: apphub
+integrity:
+  origin_time: 2023-08-01T00:00:00.000000Z
+  network_seed: ~
+  properties: ~
+  zomes:
+    - name: apphub
+      bundled: ../../zomes/apphub.wasm
+    - name: mere_memory
+      bundled: ../../zomes/mere_memory.wasm
+coordinator:
+  zomes:
+    - name: apphub_csr
+      bundled: ../../zomes/apphub_csr.wasm
+      dependencies:
+        - name: apphub
+    - name: mere_memory_api
+      bundled: ../../zomes/mere_memory_api.wasm
+      dependencies:
+        - name: mere_memory

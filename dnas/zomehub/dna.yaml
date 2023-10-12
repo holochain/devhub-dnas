@@ -1,0 +1,21 @@
+manifest_version: "1"
+name: zomehub
+integrity:
+  origin_time: 2023-08-01T00:00:00.000000Z
+  network_seed: ~
+  properties: ~
+  zomes:
+    - name: zomehub
+      bundled: ../../zomes/zomehub.wasm
+    - name: mere_memory
+      bundled: ../../zomes/mere_memory.wasm
+coordinator:
+  zomes:
+    - name: zomehub_csr
+      bundled: ../../zomes/zomehub_csr.wasm
+      dependencies:
+        - name: zomehub
+    - name: mere_memory_api
+      bundled: ../../zomes/mere_memory_api.wasm
+      dependencies:
+        - name: mere_memory

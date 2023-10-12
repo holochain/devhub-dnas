@@ -1,0 +1,12 @@
+[package]
+name = "apphub"
+version = "0.0.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+
+[lib]
+name = "apphub"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+apphub_scoped_types = { path = "../../dnas/apphub/scoped_types" }

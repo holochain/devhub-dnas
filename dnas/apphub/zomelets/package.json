@@ -1,0 +1,31 @@
+{
+  "name": "@holochain/apphub-zomelets",
+  "version": "0.1.0",
+  "description": "Zomelets for DevHub's AppHub DNA",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "browser": "dist/apphub-zomelets.js",
+  "files": [
+    "README.md",
+    "src/index.js",
+    "src/types.js",
+    "dist/**"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Brisebois <matthew.brisebois@holo.host>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holochain/devhub-dnas/"
+  },
+  "dependencies": {
+    "@holochain/dnahub-zomelets": "file:../../dnahub/zomelets",
+    "@spartan-hc/bundles": "^0.1.0",
+    "@spartan-hc/caps-entities": "^0.2.0",
+    "@spartan-hc/holo-hash": "^0.5.4",
+    "@spartan-hc/zomelets": "^0.1.2"
+  }
+}
