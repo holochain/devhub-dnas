@@ -15,3 +15,6 @@ holochain_zome_types = { version = "=0.2.2", features = [ "properties" ] }
 # rmpv = { version = "=1.0.0", features = ["with-serde"] }
 serde = "1"
 whi_hdi_extensions = "0.4"
+
+# temporary fix for compile error in
+getrandom = { version = "=0.2.7", features = ["custom"] }

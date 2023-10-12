@@ -2,6 +2,8 @@ mod holochain_types;
 mod app_entry;
 mod ui_entry;
 mod webapp_entry;
+mod webapp_package_entry;
+mod webapp_package_version_entry;
 
 pub use hdi_extensions;
 pub use hdi_extensions::hdi;
@@ -9,7 +11,10 @@ pub use holochain_types::*;
 
 pub use app_entry::*;
 pub use ui_entry::*;
+
 pub use webapp_entry::*;
+pub use webapp_package_entry::*;
+pub use webapp_package_version_entry::*;
 
 use hdi::prelude::*;
 

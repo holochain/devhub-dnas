@@ -1,12 +1,14 @@
 [package]
-name = "zome_hub"
+name = "dna_hub_scoped_types"
 version = "0.0.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
 [lib]
-name = "zome_hub"
+name = "dna_hub_scoped_types"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-zome_hub_scoped_types = { path = "../../dnas/zome_hub/scoped_types" }
+dna_hub_types = { path = "../types" }
+# hc_crud_caps = "0.10.2"
+serde = "1"

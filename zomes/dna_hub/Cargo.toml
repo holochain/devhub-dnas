@@ -9,8 +9,4 @@ name = "dna_hub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-serde = "1"
-dna_hub_types = { path = "../../dnas/dna_hub/entry_types" }
-
-# temporary fix for compile error in
-getrandom = { version = "=0.2.7", features = ["custom"] }
+dna_hub_scoped_types = { path = "../../dnas/dna_hub/scoped_types" }

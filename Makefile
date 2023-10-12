@@ -34,10 +34,12 @@ TARGET			= release
 TARGET_DIR		= target/wasm32-unknown-unknown/release
 COMMON_SOURCE_FILES	= Makefile zomes/Cargo.toml
 INT_SOURCE_FILES	= $(COMMON_SOURCE_FILES) \
-				dnas/%/entry_types/Cargo.toml dnas/%/entry_types/src/*.rs \
+				dnas/%/types/Cargo.toml dnas/%/types/src/*.rs \
+				dnas/%/scoped_types/Cargo.toml dnas/%/scoped_types/src/*.rs \
 				zomes/%/Cargo.toml zomes/%/src/*.rs
 CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
 				zomes/%_csr/Cargo.toml zomes/%_csr/src/*.rs \
+				dnas/%/sdk/Cargo.toml dnas/%/sdk/src/*.rs \
 				devhub_sdk/Cargo.toml devhub_sdk/src/*.rs
 
 
@@ -124,7 +126,7 @@ NEW_HDIE_VERSION = whi_hdi_extensions = "0.4"
 PRE_HDKE_VERSION = whi_hdk_extensions = "=0.3.0"
 NEW_HDKE_VERSION = whi_hdk_extensions = "0.4"
 
-GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/entry_types/Cargo.toml zomes/*/Cargo.toml
+GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
 update-mere-memory-version:	reset-mere-memory
 	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'

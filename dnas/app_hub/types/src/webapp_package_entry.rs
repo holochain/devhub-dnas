@@ -2,26 +2,11 @@ use crate::hdi;
 
 use std::collections::BTreeMap;
 use hdi::prelude::*;
-pub use crate::holochain_types::{
-    WebAppManifestV1,
-    ResourceMap,
-};
 use crate::{
-    EntityId, BundleAddr, MemoryAddr,
+    MemoryAddr,
     Authority,
     DeprecationNotice,
 };
-
-
-//
-// WebApp Entry
-//
-#[hdk_entry_helper]
-#[derive(Clone)]
-pub struct WebAppEntry {
-    pub manifest: WebAppManifestV1,
-    pub resources: ResourceMap,
-}
 
 
 
@@ -50,24 +35,4 @@ pub struct WebAppPackageEntry {
 
     // Common fields
     pub metadata: BTreeMap<String, rmpv::Value>,
-}
-
-
-
-//
-// WebApp Package Version Entry
-//
-#[hdk_entry_helper]
-#[derive(Clone)]
-pub struct WebAppPackageVersionEntry {
-    // Context
-    pub for_package: EntityId,
-    pub maintainer: Authority,
-
-    // Properties
-    /// Pointer to the uploaded bundle WebAppEntry
-    pub webapp: BundleAddr,
-
-    // Optional
-    pub source_code_url: Option<String>,
 }
