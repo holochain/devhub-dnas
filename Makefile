@@ -181,18 +181,18 @@ test-debug:
 test-crate:
 	cd $(SRC); cargo test --quiet --tests
 test-crate-debug:
-	cd $(SRC); RUST_BACKTRACE=1 cargo test -- --nocapture --show-output
+	cd $(SRC); RUST_BACKTRACE=1 CARGO_TARGET_DIR=../target cargo test -- --nocapture --show-output
 test-unit:
 	SRC=zomes make test-crate
-#	make test-zomehub-unit
-#	make test-dnahub-unit
-#	make test-apphub-unit
+	make test-zomehub-unit
+	make test-dnahub-unit
+	make test-apphub-unit
 # ISSUE: for some reason these break after wasm has been built (fix 'rm -r target')
 test-unit-debug:
 	SRC=zomes make test-crate-debug
-#	make test-zomehub-unit-debug
-#	make test-dnahub-unit-debug
-#	make test-apphub-unit-debug
+	make test-zomehub-unit-debug
+	make test-dnahub-unit-debug
+	make test-apphub-unit-debug
 
 test-%hub-unit:
 	SRC=dnas/$*hub make test-crate
@@ -206,9 +206,20 @@ test-zome-unit-%-debug:
 
 # Integration tests
 test-integration:
+	make test-zomehub
+	make test-dnahub
+	make test-apphub
 	make test-webapp-upload
 test-integration-debug:
+	make test-zomehub-debug
+	make test-dnahub-debug
+	make test-apphub-debug
 	make test-webapp-upload-debug
+
+test-%hub:				test-setup dnas/%hub.dna
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_$*hub.js
+test-%hub-debug:			test-setup dnas/%hub.dna
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_$*hub.js
 
 test-webapp-upload:			test-setup $(TEST_WEBHAPP)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_webapp_upload.js

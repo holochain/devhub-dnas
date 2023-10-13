@@ -1,6 +1,5 @@
 /.cargo
-/target
-/zomes/target
+target
 /zomes/*.wasm
 /dnas/*.dna
 /dnas/*/zomelets/node_modules
