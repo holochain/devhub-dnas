@@ -7,9 +7,7 @@
 ## Overview
 DNAs for sharing source code and distributing compiled WASM that comprise Holochain Apps.
 
-## API Reference
 
-See [docs/API.md](docs/API.md)
 
 ## Contributing
 

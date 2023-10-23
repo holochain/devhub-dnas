@@ -39,3 +39,21 @@ fn get_ui_entry(addr: ActionHash) -> ExternResult<UiEntry> {
 
     Ok( UiEntry::try_from_record( &record )? )
 }
+
+#[hdk_extern]
+fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<UiEntry>> {
+    let agent_id = match maybe_agent_id {
+        Some(agent_id) => agent_id,
+        None => hdk_extensions::agent_id()?,
+    };
+    let uis = get_links( agent_id, LinkTypes::Ui, None )?.into_iter()
+        .filter_map(|link| {
+            link.target.into_action_hash()
+        })
+        .map(|ui_addr| {
+            get_ui_entry( ui_addr )
+        })
+        .collect::<ExternResult<Vec<UiEntry>>>()?;
+
+    Ok( uis )
+}

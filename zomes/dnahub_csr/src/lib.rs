@@ -18,6 +18,17 @@ use dnahub::{
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    let zome_name = zome_info()?.name;
+    debug!("'{}' init", zome_name );
+
+    portal_sdk::register_if_exists!({
+        dna: dna_info()?.hash,
+        granted_functions: vec![
+            ( zome_name.0.as_ref(), "get_dna_entry" ),
+            ( zome_name.0.as_ref(), "get_dna_entries_for_agent" ),
+        ],
+    })?;
+
     Ok(InitCallbackResult::Pass)
 }
 
@@ -54,4 +65,22 @@ fn get_dna_entry(addr: ActionHash) -> ExternResult<DnaEntry> {
     let record = must_get( &addr )?;
 
     Ok( DnaEntry::try_from_record( &record )? )
+}
+
+#[hdk_extern]
+fn get_dna_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<DnaEntry>> {
+    let agent_id = match maybe_agent_id {
+        Some(agent_id) => agent_id,
+        None => hdk_extensions::agent_id()?,
+    };
+    let dnas = get_links( agent_id, LinkTypes::Dna, None )?.into_iter()
+        .filter_map(|link| {
+            link.target.into_action_hash()
+        })
+        .map(|dna_addr| {
+            get_dna_entry( dna_addr )
+        })
+        .collect::<ExternResult<Vec<DnaEntry>>>()?;
+
+    Ok( dnas )
 }

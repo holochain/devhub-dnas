@@ -11,5 +11,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 apphub = { path = "../apphub" }
 apphub_sdk = { path = "../../dnas/apphub/sdk" }
+hc_portal_sdk = "0.1.1"
+lazy_static = "1.4"
 rmpv = { version = "1.0.0", features = ["with-serde"] }
 serde = "1"

@@ -51,6 +51,11 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	return DnaEntry( result );
     },
+    async get_dna_entries_for_agent ( input ) {
+	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
+
+	return entries.map( entry => DnaEntry( entry ) );
+    },
 
     //
     // Virtual functions

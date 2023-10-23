@@ -193,6 +193,12 @@ function basic_tests () {
 	expect( versions[4].version	).to.equal("0.1.0-beta-rc.0");
     });
 
+    it("should get all WebApp Packages", async function () {
+	const result			= await apphub_csr.get_all_webapp_package_entries();
+
+	expect( result			).to.have.length( 1 );
+    });
+
     after(async function () {
 	await client.close();
     });

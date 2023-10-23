@@ -9,6 +9,7 @@ name = "dnahub_csr"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_devhub_sdk = { path = "../../devhub_sdk" }
-serde = "1"
 dnahub = { path = "../dnahub" }
+hc_devhub_sdk = { path = "../../devhub_sdk" }
+hc_portal_sdk = "0.1.1"
+serde = "1"

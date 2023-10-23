@@ -22,8 +22,10 @@ import {
 }					from 'semver'; // approx. 32kb
 import {
     AppEntry,
+    UiEntry,
     WebAppEntry,
-    WebAppPackageEntry,
+    // WebAppPackageEntry,
+    // WebAppPackageVersionEntry,
 
     // Entity Classes
     WebAppPackage,
@@ -67,6 +69,11 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return AppEntry( result );
     },
+    async get_app_entries_for_agent ( input ) {
+	const entries			= await this.call(); // new AgentPubKey( input )
+
+	return entries.map( entry => AppEntry( entry ) );
+    },
 
 
     // UI
@@ -81,7 +88,12 @@ export const AppHubCSRZomelet		= new Zomelet({
     async get_ui_entry ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
 
-	return AppEntry( result );
+	return UiEntry( result );
+    },
+    async get_ui_entries_for_agent ( input ) {
+	const entries			= await this.call(); // new AgentPubKey( input )
+
+	return entries.map( entry => UiEntry( entry ) );
     },
 
 
@@ -100,6 +112,11 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const result			= await this.call( new ActionHash( input ) );
 
 	return WebAppEntry( result );
+    },
+    async get_webapp_entries_for_agent ( input ) {
+	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
+
+	return entries.map( entry => WebAppEntry( entry ) );
     },
 
 
@@ -141,6 +158,11 @@ export const AppHubCSRZomelet		= new Zomelet({
 	});
 
 	return versions;
+    },
+    async get_all_webapp_package_entries ( input ) {
+	const entries			= await this.call(); // new AgentPubKey( input )
+
+	return entries.map( entity => new WebAppPackage( entity, this ) );
     },
 
 

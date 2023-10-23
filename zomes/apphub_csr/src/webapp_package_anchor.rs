@@ -7,12 +7,14 @@ use std::{
 use hdk::prelude::*;
 use apphub::{
     LinkTypes,
-    EntityPointerMap,
-    WebAppPackageVersionMap,
     hc_crud::{
         get_entity,
         EntityId,
     },
+};
+use apphub_sdk::{
+    EntityPointerMap,
+    WebAppPackageVersionMap,
 };
 
 

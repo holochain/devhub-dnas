@@ -1,19 +1,24 @@
-use crate::hdk;
-use crate::hdk_extensions;
-use crate::WebAppPackageAnchor;
+use crate::{
+    hdk,
+    hdk_extensions,
+    WebAppPackageAnchor,
+    ALL_APPS_ANCHOR,
+};
 
 use std::collections::BTreeMap;
 use hdk::prelude::*;
 use apphub::{
     LinkTypes,
     WebAppPackageEntry,
-    WebAppPackageVersionMap,
     Authority,
     MemoryAddr,
     hc_crud::{
         Entity, EntityId,
         create_entity, get_entity,
     },
+};
+use apphub_sdk::{
+    WebAppPackageVersionMap,
 };
 
 
@@ -49,6 +54,7 @@ fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) -> ExternRe
     let entity = create_entity( &entry )?;
 
     create_link( agent_id, entity.id.clone(), LinkTypes::WebAppPackage, () )?;
+    create_link( ALL_APPS_ANCHOR.clone(), entity.id.clone(), LinkTypes::WebAppPackage, () )?;
 
     Ok( entity )
 }
@@ -84,4 +90,17 @@ fn get_webapp_package_versions(webapp_package_id: EntityId) ->
     let anchor = WebAppPackageAnchor::new( &webapp_package_id );
 
     Ok( anchor.versions()? )
+}
+
+
+#[hdk_extern]
+fn get_all_webapp_package_entries(_: ()) -> ExternResult<Vec<Entity<WebAppPackageEntry>>> {
+    let webapps = get_links( ALL_APPS_ANCHOR.clone(), LinkTypes::WebAppPackage, None )?.into_iter()
+        .filter_map(|link| {
+            let addr = link.target.into_action_hash()?;
+            get_webapp_package_entry( addr ).ok()
+        })
+        .collect();
+
+    Ok( webapps )
 }

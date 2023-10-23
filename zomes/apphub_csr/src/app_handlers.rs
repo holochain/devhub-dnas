@@ -43,3 +43,21 @@ fn get_app_entry(addr: ActionHash) -> ExternResult<AppEntry> {
 
     Ok( AppEntry::try_from_record( &record )? )
 }
+
+#[hdk_extern]
+fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<AppEntry>> {
+    let agent_id = match maybe_agent_id {
+        Some(agent_id) => agent_id,
+        None => hdk_extensions::agent_id()?,
+    };
+    let apps = get_links( agent_id, LinkTypes::App, None )?.into_iter()
+        .filter_map(|link| {
+            link.target.into_action_hash()
+        })
+        .map(|app_addr| {
+            get_app_entry( app_addr )
+        })
+        .collect::<ExternResult<Vec<AppEntry>>>()?;
+
+    Ok( apps )
+}

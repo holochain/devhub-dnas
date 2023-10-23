@@ -8,7 +8,7 @@ MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.8.0
+PORTAL_VERSION		= 0.9.0
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -60,7 +60,7 @@ rebuild:			clean build
 build:				$(DEVHUB_HAPP)
 
 
-$(DEVHUB_HAPP):			$(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) happ/happ.yaml
+$(DEVHUB_HAPP):			$(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) $(PORTAL_DNA) happ/happ.yaml
 	hc app pack -o $@ ./happ/
 
 $(ZOMEHUB_DNA):			$(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
@@ -119,6 +119,9 @@ NEW_HDIE_VERSION = whi_hdi_extensions = "0.4"
 PRE_HDKE_VERSION = whi_hdk_extensions = "=0.3.0"
 NEW_HDKE_VERSION = whi_hdk_extensions = "0.4"
 
+PRE_PSDK_VERSION = hc_portal_sdk = "0.1.0"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.1.1"
+
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
 update-mere-memory-version:	reset-mere-memory
@@ -129,6 +132,8 @@ update-hdk-extensions-version:
 	git grep -l '$(PRE_HDKE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDKE_VERSION)|$(NEW_HDKE_VERSION)|g'
 update-hdi-extensions-version:
 	git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIE_VERSION)|$(NEW_HDIE_VERSION)|g'
+update-portal-sdk-version:
+	git grep -l '$(PRE_PSDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_PSDK_VERSION)|$(NEW_PSDK_VERSION)|g'
 
 npm-reinstall-local:
 	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)

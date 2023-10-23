@@ -23,6 +23,19 @@ export function AppEntry ( entry ) {
 
 
 //
+// UiEntry Handling
+//
+export const UiStruct = {
+    "mere_memory_addr":		EntryHash,
+    "file_size":		Number,
+};
+
+export function UiEntry ( entry ) {
+    return intoStruct( entry, UiStruct );
+}
+
+
+//
 // WebAppEntry Handling
 //
 export const WebAppStruct = {

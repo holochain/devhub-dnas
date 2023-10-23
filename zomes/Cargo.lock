@@ -84,6 +84,8 @@ version = "0.0.0"
 dependencies = [
  "apphub",
  "apphub_sdk",
+ "hc_portal_sdk",
+ "lazy_static",
  "rmpv",
  "serde",
 ]
@@ -718,6 +720,7 @@ version = "0.0.0"
 dependencies = [
  "dnahub",
  "hc_devhub_sdk",
+ "hc_portal_sdk",
  "serde",
 ]
 
@@ -1056,7 +1059,32 @@ dependencies = [
 name = "hc_devhub_sdk"
 version = "0.0.0"
 dependencies = [
+ "hc_crud_caps",
  "whi_hdk_extensions",
+]
+
+[[package]]
+name = "hc_portal_sdk"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "651240f0131f676ac927c3ddc24adcf2a18408e12847766a4a036fd8e9d61e9e"
+dependencies = [
+ "hc_crud_caps",
+ "hc_portal_types",
+ "rmpv",
+ "serde",
+ "whi_hdk_extensions",
+]
+
+[[package]]
+name = "hc_portal_types"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d85152162c3eb4ab63c1b8c89959b12b782a66d0a299ac436d97f7b9737fefc"
+dependencies = [
+ "rmpv",
+ "serde",
+ "whi_hdi_extensions",
 ]
 
 [[package]]
@@ -3471,6 +3499,7 @@ name = "zomehub_csr"
 version = "0.0.0"
 dependencies = [
  "hc_devhub_sdk",
+ "hc_portal_sdk",
  "serde",
  "zomehub",
 ]

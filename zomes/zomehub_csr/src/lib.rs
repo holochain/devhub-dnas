@@ -18,6 +18,17 @@ use zomehub::{
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    let zome_name = zome_info()?.name;
+    debug!("'{}' init", zome_name );
+
+    portal_sdk::register_if_exists!({
+        dna: dna_info()?.hash,
+        granted_functions: vec![
+            ( zome_name.0.as_ref(), "get_wasm_entry" ),
+            ( zome_name.0.as_ref(), "get_wasm_entries_for_agent" ),
+        ],
+    })?;
+
     Ok(InitCallbackResult::Pass)
 }
 

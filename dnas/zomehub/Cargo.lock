@@ -790,9 +790,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7dfda62a12f55daeae5015f81b0baea145391cb4520f86c248fc615d72640d12"
 
 [[package]]
+name = "hc_crud_caps"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8088bed51bbe6a12ab727bbe41541991b838599f319679455e3cfbe01da58172"
+dependencies = [
+ "serde",
+ "whi_hdk_extensions",
+]
+
+[[package]]
 name = "hc_devhub_sdk"
 version = "0.0.0"
 dependencies = [
+ "hc_crud_caps",
  "whi_hdk_extensions",
 ]
 

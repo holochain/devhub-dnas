@@ -4,7 +4,6 @@ pub use apphub_types;
 pub use apphub_types::*;
 pub use hc_crud;
 
-use std::collections::BTreeMap;
 use serde::{
     Deserialize, Deserializer,
 };
@@ -17,18 +16,6 @@ use hdi_extensions::{
 use hc_crud::{
     entry_model,
 };
-use hc_crud::{
-    Entity, EntityId,
-};
-
-
-
-pub type EntityMap<T> = BTreeMap<String, Entity<T>>;
-pub type EntityPointerMap = BTreeMap<String, EntityId>;
-
-pub type WebAppMap = EntityMap<WebAppEntry>;
-pub type WebAppPackageMap = EntityMap<WebAppPackageEntry>;
-pub type WebAppPackageVersionMap = EntityMap<WebAppPackageVersionEntry>;
 
 
 

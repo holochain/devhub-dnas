@@ -11,3 +11,6 @@ roles:
   - name: apphub
     dna:
       bundled: ../dnas/apphub.dna
+  - name: portal
+    dna:
+      bundled: ../dnas/portal.dna
