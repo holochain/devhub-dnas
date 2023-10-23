@@ -1,22 +1,25 @@
-
+// 217kb = (-57kb duplicates) 43 + 120 (dnahub) + this
 import {
     AgentPubKey,
     ActionHash, EntryHash,
-}					from '@spartan-hc/holo-hash';
+}					from '@spartan-hc/holo-hash'; // approx. 11kb
 import {
     Zomelet,
     CellZomelets,
-}					from '@spartan-hc/zomelets';
-import { Bundle }			from '@spartan-hc/bundles';
-import { Entity }			from '@spartan-hc/caps-entities';
-import {
+}					from '@spartan-hc/zomelets'; // approx. 7kb
+import { Bundle }			from '@spartan-hc/bundles'; // approx. 39kb
+import { Entity }			from '@spartan-hc/caps-entities'; // approx. 19kb
+import { // Relative import is causing duplicates (holo-hash, zomelets, bundles)
     DnaHubCSRZomelet,
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
 
     DnaHubCell,
     ZomeHubCell,
-}					from '@holochain/dnahub-zomelets';
+}					from '@holochain/dnahub-zomelets'; // approx. 118kb
+import {
+    rsort as semverReverseSort
+}					from 'semver'; // approx. 32kb
 import {
     AppEntry,
     WebAppEntry,
@@ -124,6 +127,20 @@ export const AppHubCSRZomelet		= new Zomelet({
 	}
 
 	return version_map;
+    },
+    async get_webapp_package_versions_sorted ( input ) {
+	const version_map		= await this.functions.get_webapp_package_versions( input );
+	const versions			= [];
+
+	semverReverseSort(
+	    Object.keys( version_map )
+	).forEach( vtag => {
+	    const webapp_pv		= version_map[ vtag ];
+	    webapp_pv.version		= vtag;
+	    versions.push( webapp_pv );
+	});
+
+	return versions;
     },
 
 

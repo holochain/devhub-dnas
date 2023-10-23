@@ -26,6 +26,12 @@
     "@spartan-hc/bundles": "^0.1.0",
     "@spartan-hc/caps-entities": "^0.2.0",
     "@spartan-hc/holo-hash": "^0.5.4",
-    "@spartan-hc/zomelets": "^0.1.2"
+    "@spartan-hc/zomelets": "^0.1.2",
+    "semver": "^7.5.4",
+    "semver-sort": "^1.0.0"
+  },
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   }
 }

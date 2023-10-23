@@ -2,6 +2,7 @@
 target
 /zomes/*.wasm
 /dnas/*.dna
+/dnas/*/zomelets/dist
 /dnas/*/zomelets/node_modules
 /happ/devhub.happ
 /tests/node_modules

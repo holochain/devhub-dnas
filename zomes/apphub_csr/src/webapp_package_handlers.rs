@@ -1,21 +1,19 @@
 use crate::hdk;
 use crate::hdk_extensions;
+use crate::WebAppPackageAnchor;
 
 use std::collections::BTreeMap;
 use hdk::prelude::*;
 use apphub::{
     LinkTypes,
     WebAppPackageEntry,
-    WebAppPackageVersionEntry,
+    WebAppPackageVersionMap,
     Authority,
     MemoryAddr,
     hc_crud::{
         Entity, EntityId,
         create_entity, get_entity,
     },
-};
-use apphub_sdk::{
-    WebAppPackageAnchor,
 };
 
 
@@ -78,9 +76,6 @@ fn link_webapp_package_version(input: LinkWebAppPackageVersionInput) -> ExternRe
     )
 }
 
-
-type VersionMap<T> = BTreeMap<String, T>;
-type WebAppPackageVersionMap = VersionMap<Entity<WebAppPackageVersionEntry>>;
 
 #[hdk_extern]
 fn get_webapp_package_versions(webapp_package_id: EntityId) ->

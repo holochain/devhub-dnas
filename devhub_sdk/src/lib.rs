@@ -6,6 +6,8 @@ pub use hdk_extensions;
 
 use hdk::prelude::*;
 
+
+
 /// Get a microsecond timestamp of now
 pub fn timestamp() -> ExternResult<u64> {
     Ok( sys_time().map( |t| (t.as_micros() / 1000) as u64 )? )

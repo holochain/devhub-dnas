@@ -665,18 +665,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "dnahub_scoped_types"
-version = "0.0.0"
-dependencies = [
- "dnahub_types",
- "serde",
-]
-
-[[package]]
 name = "dnahub_sdk"
 version = "0.0.0"
 dependencies = [
- "dnahub_scoped_types",
+ "dnahub_types",
  "hc_devhub_sdk",
  "serde",
 ]

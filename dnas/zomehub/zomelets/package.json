@@ -26,5 +26,9 @@
     "@spartan-hc/mere-memory-zomelets": "^0.2.0",
     "@spartan-hc/zomelets": "^0.1.0",
     "@whi/into-struct": "^0.1.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   }
 }

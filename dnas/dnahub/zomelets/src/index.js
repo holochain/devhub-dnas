@@ -1,21 +1,21 @@
-
+// 118kb = 114kb + this
 import {
     AgentPubKey,
     ActionHash,
-}					from '@spartan-hc/holo-hash';
+}					from '@spartan-hc/holo-hash'; // approx. 11kb
 import {
     Zomelet,
     CellZomelets,
-}					from '@spartan-hc/zomelets';
+}					from '@spartan-hc/zomelets'; // approx. 7kb
 import {
     Bundle,
-}					from '@spartan-hc/bundles';
-import {
+}					from '@spartan-hc/bundles'; // approx. 39kb
+import { // Relative import is causing duplicates (holo-hash, zomelets)
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
 
     ZomeHubCell,
-}					from '@holochain/zomehub-zomelets';
+}					from '@holochain/zomehub-zomelets'; // approx. 57kb
 import {
     DnaEntry,
 }					from './types.js';

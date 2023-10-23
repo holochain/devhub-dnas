@@ -1,17 +1,112 @@
+mod validation;
 
-pub use apphub_scoped_types;
-pub use apphub_scoped_types::*;
+pub use apphub_types;
+pub use apphub_types::*;
+pub use hc_crud;
 
+use std::collections::BTreeMap;
+use serde::{
+    Deserialize, Deserializer,
+};
 use hdi::prelude::*;
 use hdi_extensions::{
-    // Macros
-    valid, // invalid,
+    guest_error,
+    scoped_type_connector,
+    ScopedTypeConnector,
+};
+use hc_crud::{
+    entry_model,
+};
+use hc_crud::{
+    Entity, EntityId,
 };
 
 
-#[hdk_extern]
-fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
-    let _result = match op.flattened::<EntryTypes, LinkTypes>()? {
-        _ => valid!(),
-    };
+
+pub type EntityMap<T> = BTreeMap<String, Entity<T>>;
+pub type EntityPointerMap = BTreeMap<String, EntityId>;
+
+pub type WebAppMap = EntityMap<WebAppEntry>;
+pub type WebAppPackageMap = EntityMap<WebAppPackageEntry>;
+pub type WebAppPackageVersionMap = EntityMap<WebAppPackageVersionEntry>;
+
+
+
+/// The entry types defined for this integrity app
+#[hdk_entry_defs]
+#[unit_enum(EntryTypesUnit)]
+pub enum EntryTypes {
+    #[entry_def]
+    App(AppEntry),
+    WebApp(WebAppEntry),
+    WebAppPackage(WebAppPackageEntry),
+    WebAppPackageVersion(WebAppPackageVersionEntry),
+    Ui(UiEntry),
+}
+
+scoped_type_connector!(
+    EntryTypesUnit::App,
+    EntryTypes::App( AppEntry )
+);
+scoped_type_connector!(
+    EntryTypesUnit::WebApp,
+    EntryTypes::WebApp( WebAppEntry )
+);
+scoped_type_connector!(
+    EntryTypesUnit::WebAppPackage,
+    EntryTypes::WebAppPackage( WebAppPackageEntry )
+);
+scoped_type_connector!(
+    EntryTypesUnit::WebAppPackageVersion,
+    EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry )
+);
+scoped_type_connector!(
+    EntryTypesUnit::Ui,
+    EntryTypes::Ui( UiEntry )
+);
+
+// Entry Types with CRUD models
+entry_model!( EntryTypes::WebAppPackage( WebAppPackageEntry ) );
+entry_model!( EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry ) );
+
+
+
+/// The link types defined for this integrity app
+#[hdk_link_types]
+pub enum LinkTypes {
+    App,
+    WebApp,
+    WebAppPackage,
+    WebAppPackageVersion,
+    Ui,
+}
+
+impl TryFrom<String> for LinkTypes {
+    type Error = WasmError;
+
+    fn try_from(name: String) -> Result<Self, Self::Error> {
+        Ok(
+            match name.as_str() {
+                "App" => LinkTypes::App,
+                "WebApp" => LinkTypes::WebApp,
+                "WebAppPackage" => LinkTypes::WebAppPackage,
+                "WebAppPackageVersion" => LinkTypes::WebAppPackageVersion,
+                "Ui" => LinkTypes::Ui,
+                _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
+            }
+        )
+    }
+}
+
+impl<'de> Deserialize<'de> for LinkTypes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(deserializer)?;
+        Ok(
+            LinkTypes::try_from( s.clone() )
+                .or(Err(serde::de::Error::custom(format!("Unknown LinkTypes variant: {}", s))))?
+        )
+    }
 }

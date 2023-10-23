@@ -11,4 +11,4 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 hc_devhub_sdk = { path = "../../../devhub_sdk" }
 serde = "1"
-zomehub_scoped_types = { path = "../scoped_types" }
+zomehub_types = { path = "../types" }

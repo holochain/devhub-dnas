@@ -9,4 +9,6 @@ name = "zomehub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-zomehub_scoped_types = { path = "../../dnas/zomehub/scoped_types" }
+# hc_crud_caps = "0.10.2"
+serde = "1"
+zomehub_types = { path = "../../dnas/zomehub/types" }

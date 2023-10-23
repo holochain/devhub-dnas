@@ -73,7 +73,9 @@ dependencies = [
 name = "apphub"
 version = "0.0.0"
 dependencies = [
- "apphub_scoped_types",
+ "apphub_types",
+ "hc_crud_caps",
+ "serde",
 ]
 
 [[package]]
@@ -87,19 +89,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "apphub_scoped_types"
-version = "0.0.0"
-dependencies = [
- "apphub_types",
- "hc_crud_caps",
- "serde",
-]
-
-[[package]]
 name = "apphub_sdk"
 version = "0.0.0"
 dependencies = [
- "apphub_scoped_types",
+ "apphub_types",
  "hc_devhub_sdk",
  "serde",
 ]
@@ -715,7 +708,8 @@ dependencies = [
 name = "dnahub"
 version = "0.0.0"
 dependencies = [
- "dnahub_scoped_types",
+ "dnahub_types",
+ "serde",
 ]
 
 [[package]]
@@ -724,14 +718,6 @@ version = "0.0.0"
 dependencies = [
  "dnahub",
  "hc_devhub_sdk",
- "serde",
-]
-
-[[package]]
-name = "dnahub_scoped_types"
-version = "0.0.0"
-dependencies = [
- "dnahub_types",
  "serde",
 ]
 
@@ -3476,7 +3462,8 @@ checksum = "2a0956f1ba7c7909bfb66c2e9e4124ab6f6482560f6628b5aaeba39207c9aad9"
 name = "zomehub"
 version = "0.0.0"
 dependencies = [
- "zomehub_scoped_types",
+ "serde",
+ "zomehub_types",
 ]
 
 [[package]]
@@ -3486,14 +3473,6 @@ dependencies = [
  "hc_devhub_sdk",
  "serde",
  "zomehub",
-]
-
-[[package]]
-name = "zomehub_scoped_types"
-version = "0.0.0"
-dependencies = [
- "serde",
- "zomehub_types",
 ]
 
 [[package]]

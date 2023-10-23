@@ -9,4 +9,7 @@ name = "apphub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-apphub_scoped_types = { path = "../../dnas/apphub/scoped_types" }
+apphub_types = { path = "../../dnas/apphub/types" }
+hc_crud_caps = "0.10.2"
+serde = "1"
+# whi_hdk_extensions = "0.4"

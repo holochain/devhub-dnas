@@ -35,7 +35,6 @@ TARGET_DIR		= target/wasm32-unknown-unknown/release
 COMMON_SOURCE_FILES	= Makefile zomes/Cargo.toml
 INT_SOURCE_FILES	= $(COMMON_SOURCE_FILES) \
 				dnas/%/types/Cargo.toml dnas/%/types/src/*.rs \
-				dnas/%/scoped_types/Cargo.toml dnas/%/scoped_types/src/*.rs \
 				zomes/%/Cargo.toml zomes/%/src/*.rs
 CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
 				zomes/%_csr/Cargo.toml zomes/%_csr/src/*.rs \
@@ -131,15 +130,15 @@ update-hdk-extensions-version:
 update-hdi-extensions-version:
 	git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIE_VERSION)|$(NEW_HDIE_VERSION)|g'
 
+npm-reinstall-local:
+	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)
+npm-reinstall-public:
+	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(NPM_PACKAGE)
+npm-use-app-interface-client-public:
+npm-use-app-interface-client-local:
+npm-use-app-interface-client-%:
+	NPM_PACKAGE=@spartan-hc/app-interface-client LOCAL_PATH=../../app-interface-client-js make npm-reinstall-$*
 
-PRE_TMP = -hub
-NEW_TMP = hub
-
-update-tmp-search:
-	git grep -- '$(PRE_TMP)'
-	git grep -l -- '$(PRE_TMP)'
-update-tmp-replace:
-	git grep -l -- '$(PRE_TMP)' | xargs sed -i 's|$(PRE_TMP)|$(NEW_TMP)|g'
 
 
 #
@@ -179,7 +178,7 @@ test-debug:
 
 # Unit tests
 test-crate:
-	cd $(SRC); cargo test --quiet --tests
+	cd $(SRC); CARGO_TARGET_DIR=../target cargo test --quiet --tests
 test-crate-debug:
 	cd $(SRC); RUST_BACKTRACE=1 CARGO_TARGET_DIR=../target cargo test -- --nocapture --show-output
 test-unit:
@@ -221,9 +220,9 @@ test-%hub:				test-setup dnas/%hub.dna
 test-%hub-debug:			test-setup dnas/%hub.dna
 	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_$*hub.js
 
-test-webapp-upload:			test-setup $(TEST_WEBHAPP)
+test-webapp-upload:			test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_webapp_upload.js
-test-webapp-upload-debug:		test-setup $(TEST_WEBHAPP)
+test-webapp-upload-debug:		test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
 	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_webapp_upload.js
 
 # Real long-running tests

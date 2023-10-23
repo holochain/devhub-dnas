@@ -33,11 +33,11 @@ import {
 
 
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
-const DNA_PATH				= path.join( __dirname, "../../dnas/dnahub.dna" );
+const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
 const APP_PORT				= 23_567;
 
-const DNA_NAME				= "dnahub";
+const DNAHUB_DNA_NAME			= "dnahub";
 const ZOMEHUB_DNA_NAME			= "zomehub";
 
 
@@ -52,7 +52,7 @@ describe("DnaHub", function () {
 
 	const actors			= await holochain.backdrop({
 	    "test": {
-		[DNA_NAME]:		DNA_PATH,
+		[DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
 		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
 	    },
 	}, {
@@ -60,15 +60,12 @@ describe("DnaHub", function () {
 	});
     });
 
-    linearSuite( "Basic", basic_tests );
+    linearSuite("Basic", basic_tests );
 
     after(async () => {
 	await holochain.destroy();
     });
 });
-
-
-const k					= obj => Object.keys( obj );
 
 
 function basic_tests () {
@@ -87,17 +84,22 @@ function basic_tests () {
 	});
 	app_client			= await client.app( "test-alice" );
 
-	app_client.setCellZomelets( DNA_NAME,		DnaHubCell );
-	app_client.setCellZomelets( ZOMEHUB_DNA_NAME,	ZomeHubCell );
+	({
+	    zomehub,
+	    dnahub,
+	}				= app_client.createInterface({
+	    [ZOMEHUB_DNA_NAME]:		ZomeHubCell,
+	    [DNAHUB_DNA_NAME]:		DnaHubCell,
+	}));
 
-	zomehub				= app_client.cells.zomehub.zomes;
-	zomehub_csr			= zomehub.zomehub_csr.functions;
-
-	dnahub				= app_client.cells.dnahub.zomes;
-	dnahub_csr			= dnahub.dnahub_csr.functions;
+	zomehub_csr			= zomehub.zomes.zomehub_csr.functions;
+	dnahub_csr			= dnahub.zomes.dnahub_csr.functions;
 
 	await zomehub_csr.whoami();
 	await dnahub_csr.whoami();
+    });
+
+    it("should do nothing", async function () {
     });
 
     after(async function () {

@@ -1,13 +1,12 @@
-
 import {
     AgentPubKey,
     ActionHash, EntryHash,
-}					from '@spartan-hc/holo-hash';
+}					from '@spartan-hc/holo-hash'; // approx. 11kb
 import {
     Zomelet,
     CellZomelets,
-}					from '@spartan-hc/zomelets';
-import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
+}					from '@spartan-hc/zomelets'; // approx. 7kb
+import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets'; // approx. 33kb
 import {
     WasmEntry,
 }					from './types.js';

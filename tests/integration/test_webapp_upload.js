@@ -42,7 +42,7 @@ const TEST_WEBAPP_PATH			= path.join( __dirname, "../test.webhapp" );
 const TEST_UI_PATH			= path.join( __dirname, "../test.zip" );
 const APP_PORT				= 23_567;
 
-const DNA_NAME				= "apphub";
+const APPHUB_DNA_NAME			= "apphub";
 const DNAHUB_DNA_NAME			= "dnahub";
 const ZOMEHUB_DNA_NAME			= "zomehub";
 
@@ -59,7 +59,7 @@ describe("AppHub: WebApp", function () {
 
 	const actors			= await holochain.backdrop({
 	    "test": {
-		[DNA_NAME]:		DNA_PATH,
+		[APPHUB_DNA_NAME]:	DNA_PATH,
 		[DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
 		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
 	    },
@@ -74,9 +74,6 @@ describe("AppHub: WebApp", function () {
 	await holochain.destroy();
     });
 });
-
-
-const k					= obj => Object.keys( obj );
 
 
 function basic_tests () {
@@ -100,18 +97,19 @@ function basic_tests () {
 	});
 	app_client			= await client.app( "test-alice" );
 
-	app_client.setCellZomelets( DNA_NAME,		AppHubCell );
-	app_client.setCellZomelets( DNAHUB_DNA_NAME,	DnaHubCell );
-	app_client.setCellZomelets( ZOMEHUB_DNA_NAME,	ZomeHubCell );
+	({
+	    zomehub,
+	    dnahub,
+	    apphub
+	}				= app_client.createInterface({
+	    [ZOMEHUB_DNA_NAME]:		ZomeHubCell,
+	    [DNAHUB_DNA_NAME]:		DnaHubCell,
+	    [APPHUB_DNA_NAME]:		AppHubCell,
+	}));
 
-	zomehub				= app_client.cells.zomehub.zomes;
-	zomehub_csr			= zomehub.zomehub_csr.functions;
-
-	dnahub				= app_client.cells.dnahub.zomes;
-	dnahub_csr			= dnahub.dnahub_csr.functions;
-
-	apphub				= app_client.cells.apphub.zomes;
-	apphub_csr			= apphub.apphub_csr.functions;
+	zomehub_csr			= zomehub.zomes.zomehub_csr.functions;
+	dnahub_csr			= dnahub.zomes.dnahub_csr.functions;
+	apphub_csr			= apphub.zomes.apphub_csr.functions;
 
 	await zomehub_csr.whoami();
 	await dnahub_csr.whoami();
@@ -124,6 +122,7 @@ function basic_tests () {
 	const webapp_bytes		= await fs.readFile( TEST_WEBAPP_PATH );
 
 	webapp1_addr			= await apphub_csr.save_webapp( webapp_bytes );
+	// apphub.zomes.apphub_csr.prevCall().printTree();
 
 	expect( webapp1_addr		).to.be.a("ActionHash");
     });
@@ -144,6 +143,8 @@ function basic_tests () {
 
 	log.normal("Create WebApp package result:", pack1 );
 	log.normal("Create WebApp package JSON: %s", json.debug(pack1) );
+
+	expect( pack1			).to.be.a("WebAppPackage");
     });
 
     it("should create WebApp Package Version entry", async function () {
@@ -156,12 +157,40 @@ function basic_tests () {
 
 	log.normal("Create WebApp package version result:", pack1_v1 );
 	log.normal("Create WebApp package version JSON: %s", json.debug(pack1_v1) );
+
+	expect( pack1_v1		).to.be.a("WebAppPackageVersion");
     });
 
-    it("should get WebApp Package versions", async function () {
+    it("should get Version's WebApp Package", async function () {
+	const result			= await pack1_v1.getWebAppPackage();
+
+	expect( result			).to.deep.equal( pack1 );
+    });
+
+    it("should get WebApp Package versions (sorted with semver)", async function () {
+	async function create_version ( vtag ) {
+	    return await apphub_csr.create_webapp_package_version({
+		"version": vtag,
+		"for_package": pack1.$id,
+		"webapp": webapp1_addr,
+		"source_code_url": faker.internet.url(),
+	    });
+	}
+	await create_version("0.1.0");
+	await create_version("0.1.0-beta-rc.0");
+	await create_version("0.1.0-beta-rc.1");
+	await create_version("0.1.0-beta-rc.2");
+	await create_version("0.1.0-beta-rc.11");
+
 	const versions			= await pack1.versions();
 
 	log.normal("WebApp package versions JSON: %s", json.debug(versions) );
+	expect( versions[0]		).to.be.a("WebAppPackageVersion");
+	expect( versions[0].version	).to.equal("0.1.0");
+	expect( versions[1].version	).to.equal("0.1.0-beta-rc.11");
+	expect( versions[2].version	).to.equal("0.1.0-beta-rc.2");
+	expect( versions[3].version	).to.equal("0.1.0-beta-rc.1");
+	expect( versions[4].version	).to.equal("0.1.0-beta-rc.0");
     });
 
     after(async function () {

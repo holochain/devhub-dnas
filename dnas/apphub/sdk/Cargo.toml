@@ -9,6 +9,6 @@ name = "apphub_sdk"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-apphub_scoped_types = { path = "../scoped_types" }
+apphub_types = { path = "../types" }
 hc_devhub_sdk = { path = "../../../devhub_sdk" }
 serde = "1"

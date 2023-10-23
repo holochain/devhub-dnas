@@ -5,17 +5,14 @@ use std::{
     collections::BTreeMap,
 };
 use hdk::prelude::*;
-use apphub_scoped_types::{
+use apphub::{
     LinkTypes,
-    // WebAppPackageEntry,
-    WebAppPackageVersionEntry,
+    EntityPointerMap,
+    WebAppPackageVersionMap,
     hc_crud::{
         get_entity,
-        Entity, EntityId,
+        EntityId,
     },
-};
-use super::{
-    SimpleMap,
 };
 
 
@@ -34,7 +31,7 @@ impl WebAppPackageAnchor {
     //     Ok( get_entity( &self.id() )? )
     // }
 
-    pub fn version_links(&self) -> ExternResult<SimpleMap<EntityId>> {
+    pub fn version_links(&self) -> ExternResult<EntityPointerMap> {
         let links = get_links(
             self.id(),
 	    LinkTypes::WebAppPackageVersion,
@@ -65,7 +62,7 @@ impl WebAppPackageAnchor {
         Ok( version_links )
     }
 
-    pub fn versions(&self) -> ExternResult<SimpleMap<Entity<WebAppPackageVersionEntry>>> {
+    pub fn versions(&self) -> ExternResult<WebAppPackageVersionMap> {
         let version_links = self.version_links()?;
         let mut version_map = BTreeMap::new();
 

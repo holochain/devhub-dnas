@@ -27,5 +27,9 @@
     "@spartan-hc/holo-hash": "^0.5.4",
     "@spartan-hc/zomelets": "^0.1.2",
     "@whi/into-struct": "^0.1.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   }
 }
