@@ -107,7 +107,7 @@ function basic_tests () {
 
 	const wasm_bytes		= crypto.randomBytes( 1_000 );
 
-	wasm1_addr			= await zomehub_csr.save_wasm( wasm_bytes );
+	wasm1_addr			= await zomehub_csr.save_integrity( wasm_bytes );
 
 	expect( wasm1_addr		).to.be.a("ActionHash");
     });

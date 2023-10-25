@@ -8,7 +8,7 @@ MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.9.0
+PORTAL_VERSION		= 0.9.1
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -92,9 +92,6 @@ $(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 	    --package $*_csr
 	@touch $@ # Cargo must have a cache somewhere because it doesn't update the file time
 
-copy-portal-from-local:
-	cp ../portal-dnas/bundled/portal.dna $(PORTAL_DNA)
-
 $(PORTAL_DNA):
 	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
 
@@ -119,8 +116,8 @@ NEW_HDIE_VERSION = whi_hdi_extensions = "0.4"
 PRE_HDKE_VERSION = whi_hdk_extensions = "=0.3.0"
 NEW_HDKE_VERSION = whi_hdk_extensions = "0.4"
 
-PRE_PSDK_VERSION = hc_portal_sdk = "0.1.0"
-NEW_PSDK_VERSION = hc_portal_sdk = "0.1.1"
+PRE_PSDK_VERSION = hc_portal_sdk = "0.1.1"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.1.2"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 

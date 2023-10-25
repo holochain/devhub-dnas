@@ -11,6 +11,7 @@ use zomehub::hdi_extensions::{
 };
 use zomehub::{
     WasmEntry,
+    WasmType,
     LinkTypes,
 };
 
@@ -41,13 +42,14 @@ fn whoami(_: ()) -> ExternResult<AgentInfo> {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateWasmEntryInput {
+    pub wasm_type: WasmType,
     pub mere_memory_addr: EntryHash,
 }
 
 #[hdk_extern]
 fn create_wasm_entry(input: CreateWasmEntryInput) -> ExternResult<ActionHash> {
     let agent_id = hdk_extensions::agent_id()?;
-    let entry = WasmEntry::new_integrity( input.mere_memory_addr )?;
+    let entry = WasmEntry::new( input.wasm_type, input.mere_memory_addr )?;
 
     let action_hash = create_entry( entry.to_input() )?;
 

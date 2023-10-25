@@ -62,11 +62,19 @@ export const DnaHubCSRZomelet		= new Zomelet({
     //
     async save_dna ( bytes ) {
 	const bundle			= new Bundle( bytes, "dna" );
+	const zomes			= bundle.zomes();
 	const resources			= {};
 
-	for ( let [ rpath, zome_bytes ] of Object.entries( bundle.resources ) ) {
-	    this.log.info("Save WASM resource '%s' (%s bytes)", rpath, zome_bytes.length );
-	    resources[ rpath ]		= await this.cells.zomehub.zomehub_csr.save_wasm( zome_bytes );
+	for ( let wasm of zomes.integrity ) {
+	    const rpath			= wasm.bundled;
+	    this.log.info("Save integrity resource '%s' (%s bytes)", wasm.name, wasm.bytes.length );
+	    resources[ rpath ]		= await this.cells.zomehub.zomehub_csr.save_integrity( wasm.bytes );
+	}
+
+	for ( let wasm of zomes.coordinator ) {
+	    const rpath			= wasm.bundled;
+	    this.log.info("Save integrity resource '%s' (%s bytes)", wasm.name, wasm.bytes.length );
+	    resources[ rpath ]		= await this.cells.zomehub.zomehub_csr.save_coordinator( wasm.bytes );
 	}
 
 	return await this.functions.create_dna_entry({

@@ -1065,9 +1065,9 @@ dependencies = [
 
 [[package]]
 name = "hc_portal_sdk"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "651240f0131f676ac927c3ddc24adcf2a18408e12847766a4a036fd8e9d61e9e"
+checksum = "624a9b444164fbe474d2494230b0fae1a933619369e7696de0585e8e4fccc4db"
 dependencies = [
  "hc_crud_caps",
  "hc_portal_types",

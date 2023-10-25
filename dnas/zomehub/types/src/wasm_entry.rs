@@ -57,7 +57,7 @@ impl<'de> Deserialize<'de> for WasmType {
         let s: String = Deserialize::deserialize(deserializer)?;
         Ok(
             WasmType::try_from( s.clone() )
-                .or(Err(serde::de::Error::custom(format!("Unknown WasmType variant: {}", s))))?
+                .map_err( |err| serde::de::Error::custom(format!("{:?}", err )) )?
         )
     }
 }

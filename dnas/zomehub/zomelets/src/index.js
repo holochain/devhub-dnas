@@ -11,6 +11,14 @@ import {
     WasmEntry,
 }					from './types.js';
 
+
+export const WASM_TYPES			= {
+    "INTEGRITY": "integrity",
+    "COORDINATOR": "coordinator",
+};
+export const WASM_TYPE_NAMES		= Object.values( WASM_TYPES );
+
+
 export const ZomeHubCSRZomelet		= new Zomelet({
     "whoami": {
 	output ( response ) {
@@ -29,9 +37,12 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	},
     },
     async create_wasm_entry ( input ) {
-	const result			= await this.call({
-	    "mere_memory_addr": new EntryHash( input.mere_memory_addr ),
-	});
+	if ( !WASM_TYPE_NAMES.includes( input.wasm_type ) )
+	    throw new TypeError(`Invalid 'wasm_type' input '${input.wasm_type}'; expected ${WASM_TYPE_NAMES.join(", ")}`);
+
+	input.mere_memory_addr		= new EntryHash( input.mere_memory_addr );
+
+	const result			= await this.call( input );
 
 	return new ActionHash( result );
     },
@@ -49,12 +60,23 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     //
     // Virtual functions
     //
-    async save_wasm ( bytes ) {
+    async save_integrity ( bytes ) {
 	const addr			= await this.zomes.mere_memory_api.save( bytes, {
 	    "compress": true,
 	});
 
 	return await this.functions.create_wasm_entry({
+	    "wasm_type": WASM_TYPES.INTEGRITY,
+	    "mere_memory_addr": addr,
+	});
+    },
+    async save_coordinator ( bytes ) {
+	const addr			= await this.zomes.mere_memory_api.save( bytes, {
+	    "compress": true,
+	});
+
+	return await this.functions.create_wasm_entry({
+	    "wasm_type": WASM_TYPES.COORDINATOR,
 	    "mere_memory_addr": addr,
 	});
     },
@@ -74,6 +96,9 @@ export const ZomeHubCell		= new CellZomelets({
 export { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
 
 export default {
+    WASM_TYPES,
+    WASM_TYPE_NAMES,
+
     // Zomelets
     ZomeHubCSRZomelet,
     MereMemoryZomelet,

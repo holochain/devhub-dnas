@@ -10,6 +10,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_devhub_sdk = { path = "../../devhub_sdk" }
-hc_portal_sdk = "0.1.1"
+hc_portal_sdk = "0.1.2"
 serde = "1"
 zomehub = { path = "../zomehub" }
