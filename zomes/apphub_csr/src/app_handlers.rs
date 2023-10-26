@@ -23,22 +23,23 @@ pub struct CreateAppEntryInput {
 }
 
 #[hdk_extern]
-fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<ActionHash> {
+fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<EntryHash> {
     let agent_id = hdk_extensions::agent_id()?;
     let entry = AppEntry {
         manifest: input.manifest,
         resources: input.resources,
     };
 
-    let action_hash = create_entry( entry.to_input() )?;
+    let entry_hash = hash_entry( entry.clone() )?;
+    create_entry( entry.to_input() )?;
 
-    create_link( agent_id, action_hash.clone(), LinkTypes::App, () )?;
+    create_link( agent_id, entry_hash.clone(), LinkTypes::App, () )?;
 
-    Ok( action_hash )
+    Ok( entry_hash )
 }
 
 #[hdk_extern]
-fn get_app_entry(addr: ActionHash) -> ExternResult<AppEntry> {
+fn get_app_entry(addr: EntryHash) -> ExternResult<AppEntry> {
     let record = must_get( &addr )?;
 
     Ok( AppEntry::try_from_record( &record )? )
@@ -52,12 +53,10 @@ fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResul
     };
     let apps = get_links( agent_id, LinkTypes::App, None )?.into_iter()
         .filter_map(|link| {
-            link.target.into_action_hash()
+            let addr = link.target.into_entry_hash()?;
+            get_app_entry( addr ).ok()
         })
-        .map(|app_addr| {
-            get_app_entry( app_addr )
-        })
-        .collect::<ExternResult<Vec<AppEntry>>>()?;
+        .collect();
 
     Ok( apps )
 }

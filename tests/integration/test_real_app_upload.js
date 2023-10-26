@@ -119,7 +119,7 @@ function real_tests () {
 
 	app1_addr			= await apphub_csr.save_app( app_bytes );
 
-	expect( app1_addr		).to.be.a("ActionHash");
+	expect( app1_addr		).to.be.a("EntryHash");
     });
 
     it("should get App entry", async function () {

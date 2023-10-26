@@ -124,7 +124,7 @@ function basic_tests () {
 	webapp1_addr			= await apphub_csr.save_webapp( webapp_bytes );
 	// apphub.zomes.apphub_csr.prevCall().printTree();
 
-	expect( webapp1_addr		).to.be.a("ActionHash");
+	expect( webapp1_addr		).to.be.a("EntryHash");
     });
 
     it("should get App entry", async function () {

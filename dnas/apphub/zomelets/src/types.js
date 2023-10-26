@@ -87,7 +87,7 @@ export const WebAppPackageVersionStruct = {
     "version":			OptionType( String ),
 
     "for_package":		ActionHash,
-    "webapp":			ActionHash,
+    "webapp":			EntryHash,
     "source_code_url":		OptionType( String ),
     "maintainer": {
 	"group":		OptionType([ ActionHash, ActionHash ]),

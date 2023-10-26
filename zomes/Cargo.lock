@@ -103,7 +103,6 @@ dependencies = [
 name = "apphub_types"
 version = "0.0.0"
 dependencies = [
- "holo_hash",
  "holochain_zome_types",
  "mere_memory_types",
  "rmpv",
@@ -729,7 +728,6 @@ name = "dnahub_types"
 version = "0.0.0"
 dependencies = [
  "getrandom 0.2.7",
- "holo_hash",
  "holochain_integrity_types",
  "holochain_zome_types",
  "serde",
@@ -1664,9 +1662,9 @@ dependencies = [
 
 [[package]]
 name = "mere_memory_types"
-version = "0.90.0"
+version = "0.91.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7a89f16e504f65b2ac8293cfe4cea519c818390bfcfd054449aee0839775883"
+checksum = "fe94f2ad6e41ed8ff93142c69c285585d8d4cb9b4ebbbc1c8121599428e0f441"
 dependencies = [
  "getrandom 0.2.7",
  "hdi",

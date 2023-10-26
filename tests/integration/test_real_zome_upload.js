@@ -108,9 +108,9 @@ function real_tests () {
 	const WASM_PATH			= path.join( __dirname, "../../zomes/zomehub.wasm" );
 	const wasm_bytes		= await fs.readFile( WASM_PATH );
 
-	wasm1_addr			= await zomehub_csr.save_wasm( wasm_bytes );
+	wasm1_addr			= await zomehub_csr.save_integrity( wasm_bytes );
 
-	expect( wasm1_addr		).to.be.a("ActionHash");
+	expect( wasm1_addr		).to.be.a("EntryHash");
     });
 
     it("should get wasm entry", async function () {

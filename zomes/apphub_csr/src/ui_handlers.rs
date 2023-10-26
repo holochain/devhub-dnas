@@ -22,19 +22,20 @@ pub struct CreateUiEntryInput {
 }
 
 #[hdk_extern]
-fn create_ui_entry(input: CreateUiEntryInput) -> ExternResult<ActionHash> {
+fn create_ui_entry(input: CreateUiEntryInput) -> ExternResult<EntryHash> {
     let agent_id = hdk_extensions::agent_id()?;
     let entry = UiEntry::new( input.mere_memory_addr )?;
 
-    let action_hash = create_entry( entry.to_input() )?;
+    let entry_hash = hash_entry( entry.clone() )?;
+    create_entry( entry.to_input() )?;
 
-    create_link( agent_id, action_hash.clone(), LinkTypes::Ui, () )?;
+    create_link( agent_id, entry_hash.clone(), LinkTypes::Ui, () )?;
 
-    Ok( action_hash )
+    Ok( entry_hash )
 }
 
 #[hdk_extern]
-fn get_ui_entry(addr: ActionHash) -> ExternResult<UiEntry> {
+fn get_ui_entry(addr: EntryHash) -> ExternResult<UiEntry> {
     let record = must_get( &addr )?;
 
     Ok( UiEntry::try_from_record( &record )? )
@@ -48,12 +49,10 @@ fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult
     };
     let uis = get_links( agent_id, LinkTypes::Ui, None )?.into_iter()
         .filter_map(|link| {
-            link.target.into_action_hash()
+            let addr = link.target.into_entry_hash()?;
+            get_ui_entry( addr ).ok()
         })
-        .map(|ui_addr| {
-            get_ui_entry( ui_addr )
-        })
-        .collect::<ExternResult<Vec<UiEntry>>>()?;
+        .collect();
 
     Ok( uis )
 }

@@ -12,6 +12,9 @@ import { faker }			from '@faker-js/faker';
 
 import json				from '@whi/json';
 import {
+    Bundle,
+}					from '@spartan-hc/bundles';
+import {
     HoloHash,
     DnaHash, AgentPubKey,
     ActionHash, EntryHash,
@@ -31,6 +34,9 @@ import {
 import {
     expect_reject,
     linearSuite,
+    dnaConfig,
+    happConfig,
+    webhappConfig,
 }					from '../utils.js';
 
 
@@ -46,7 +52,7 @@ const ZOMEHUB_DNA_NAME			= "zomehub";
 
 
 
-describe("AppHub: WebApp", function () {
+describe("AppHub", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
 	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
@@ -74,6 +80,22 @@ describe("AppHub: WebApp", function () {
 });
 
 
+const TEST_DNA_CONFIG			= dnaConfig();
+const TEST_HAPP_CONFIG			= happConfig([{
+    "name": "fake-role-1",
+    "provision": {
+	"strategy": "create",
+	"deferred": false,
+    },
+    "dna": {
+	"bytes": Bundle.createDna( TEST_DNA_CONFIG ).toBytes(),
+    },
+}]);
+const TEST_WEBHAPP_CONFIG		= webhappConfig({
+    "bytes": Bundle.createHapp( TEST_HAPP_CONFIG ).toBytes(),
+});
+
+
 function basic_tests () {
     let client;
     let app_client;
@@ -83,6 +105,8 @@ function basic_tests () {
     let dnahub_csr;
     let apphub;
     let apphub_csr;
+    let app1_addr;
+    let webapp1_addr;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -111,7 +135,40 @@ function basic_tests () {
 	await apphub_csr.whoami();
     });
 
-    it("should do nothing", async function () {
+    it("should upload App bundle", async function () {
+	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
+	const bundle_bytes		= bundle.toBytes();
+
+	app1_addr			= await apphub_csr.save_app( bundle_bytes );
+
+	expect( app1_addr		).to.be.a("EntryHash");
+    });
+
+    it("should upload the same App bundle", async function () {
+	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
+	const bundle_bytes		= bundle.toBytes();
+
+	const addr			= await apphub_csr.save_app( bundle_bytes );
+
+	expect( addr			).to.deep.equal( app1_addr );
+    });
+
+    it("should upload WebApp bundle", async function () {
+	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
+	const bundle_bytes		= bundle.toBytes();
+
+	webapp1_addr			= await apphub_csr.save_webapp( bundle_bytes );
+
+	expect( app1_addr		).to.be.a("EntryHash");
+    });
+
+    it("should upload the same WebApp bundle", async function () {
+	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
+	const bundle_bytes		= bundle.toBytes();
+
+	const addr			= await apphub_csr.save_webapp( bundle_bytes );
+
+	expect( addr			).to.deep.equal( webapp1_addr );
     });
 
     after(async function () {

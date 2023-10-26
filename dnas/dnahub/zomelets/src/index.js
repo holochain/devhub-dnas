@@ -1,7 +1,7 @@
 // 118kb = 114kb + this
 import {
     AgentPubKey,
-    ActionHash,
+    ActionHash, EntryHash,
 }					from '@spartan-hc/holo-hash'; // approx. 11kb
 import {
     Zomelet,
@@ -44,10 +44,10 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    "resources": resources,
 	});
 
-	return new ActionHash( result );
+	return new EntryHash( result );
     },
     async get_dna_entry ( input ) {
-	const result			= await this.call( new ActionHash( input ) );
+	const result			= await this.call( new EntryHash( input ) );
 
 	return DnaEntry( result );
     },
@@ -73,7 +73,7 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	for ( let wasm of zomes.coordinator ) {
 	    const rpath			= wasm.bundled;
-	    this.log.info("Save integrity resource '%s' (%s bytes)", wasm.name, wasm.bytes.length );
+	    this.log.info("Save coordinator resource '%s' (%s bytes)", wasm.name, wasm.bytes.length );
 	    resources[ rpath ]		= await this.cells.zomehub.zomehub_csr.save_coordinator( wasm.bytes );
 	}
 

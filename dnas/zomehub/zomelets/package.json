@@ -22,8 +22,9 @@
     "url": "https://github.com/holochain/devhub-dnas/"
   },
   "dependencies": {
+    "@spartan-hc/bundles": "^0.2.2",
     "@spartan-hc/holo-hash": "^0.5.4",
-    "@spartan-hc/mere-memory-zomelets": "^0.2.0",
+    "@spartan-hc/mere-memory-zomelets": "^0.3.0",
     "@spartan-hc/zomelets": "^0.1.0",
     "@whi/into-struct": "^0.1.1"
   },

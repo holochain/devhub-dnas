@@ -11,6 +11,9 @@ import { expect }			from 'chai';
 
 import json				from '@whi/json';
 import {
+    Bundle,
+}					from '@spartan-hc/bundles';
+import {
     HoloHash,
     DnaHash, AgentPubKey,
     ActionHash, EntryHash,
@@ -29,6 +32,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    dnaConfig,
 }					from '../utils.js';
 
 
@@ -68,6 +72,9 @@ describe("DnaHub", function () {
 });
 
 
+const TEST_DNA_CONFIG			= dnaConfig();
+
+
 function basic_tests () {
     let client;
     let app_client;
@@ -75,6 +82,7 @@ function basic_tests () {
     let zomehub_csr;
     let dnahub;
     let dnahub_csr;
+    let dna1_addr;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -99,7 +107,22 @@ function basic_tests () {
 	await dnahub_csr.whoami();
     });
 
-    it("should do nothing", async function () {
+    it("should upload DNA bundle", async function () {
+	const bundle			= Bundle.createDna( TEST_DNA_CONFIG );
+	const bundle_bytes		= bundle.toBytes();
+
+	dna1_addr			= await dnahub_csr.save_dna( bundle_bytes );
+
+	expect( dna1_addr		).to.be.a("EntryHash");
+    });
+
+    it("should upload the same DNA bundle", async function () {
+	const bundle			= Bundle.createDna( TEST_DNA_CONFIG );
+	const bundle_bytes		= bundle.toBytes();
+
+	const addr			= await dnahub_csr.save_dna( bundle_bytes );
+
+	expect( addr			).to.deep.equal( dna1_addr );
     });
 
     after(async function () {

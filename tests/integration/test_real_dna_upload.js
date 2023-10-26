@@ -107,7 +107,7 @@ function real_tests () {
 
 	dna1_addr			= await dnahub_csr.save_dna( dna_bytes );
 
-	expect( dna1_addr		).to.be.a("ActionHash");
+	expect( dna1_addr		).to.be.a("EntryHash");
     });
 
     it("should get DNA entry", async function () {

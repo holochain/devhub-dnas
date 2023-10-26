@@ -47,19 +47,20 @@ pub struct CreateWasmEntryInput {
 }
 
 #[hdk_extern]
-fn create_wasm_entry(input: CreateWasmEntryInput) -> ExternResult<ActionHash> {
+fn create_wasm_entry(input: CreateWasmEntryInput) -> ExternResult<EntryHash> {
     let agent_id = hdk_extensions::agent_id()?;
     let entry = WasmEntry::new( input.wasm_type, input.mere_memory_addr )?;
 
-    let action_hash = create_entry( entry.to_input() )?;
+    let entry_hash = hash_entry( entry.clone() )?;
+    create_entry( entry.to_input() )?;
 
-    create_link( agent_id, action_hash.clone(), LinkTypes::Wasm, () )?;
+    create_link( agent_id, entry_hash.clone(), LinkTypes::Wasm, () )?;
 
-    Ok( action_hash )
+    Ok( entry_hash )
 }
 
 #[hdk_extern]
-fn get_wasm_entry(addr: ActionHash) -> ExternResult<WasmEntry> {
+fn get_wasm_entry(addr: EntryHash) -> ExternResult<WasmEntry> {
     let record = must_get( &addr )?;
 
     Ok( WasmEntry::try_from_record( &record )? )
@@ -73,12 +74,10 @@ fn get_wasm_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResu
     };
     let wasms = get_links( agent_id, LinkTypes::Wasm, None )?.into_iter()
         .filter_map(|link| {
-            link.target.into_action_hash()
+            let addr = link.target.into_entry_hash()?;
+            get_wasm_entry( addr ).ok()
         })
-        .map(|wasm_addr| {
-            get_wasm_entry( wasm_addr )
-        })
-        .collect::<ExternResult<Vec<WasmEntry>>>()?;
+        .collect();
 
     Ok( wasms )
 }

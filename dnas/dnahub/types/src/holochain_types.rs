@@ -10,7 +10,7 @@ use holochain_integrity_types::ZomeName;
 use holochain_zome_types::properties::YamlProperties;
 
 
-pub type ResourceMap = BTreeMap<PathBuf, ActionHash>;
+pub type ResourceMap = BTreeMap<PathBuf, EntryHash>;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

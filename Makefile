@@ -3,7 +3,7 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.90.0
+MERE_MEMORY_VERSION	= 0.91.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
@@ -104,8 +104,8 @@ reset-mere-memory:
 	rm zomes/mere_memory*.wasm
 	make $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
 
-PRE_MM_VERSION = mere_memory_types = "0.89.1"
-NEW_MM_VERSION = mere_memory_types = "0.90.0"
+PRE_MM_VERSION = mere_memory_types = "0.90.0"
+NEW_MM_VERSION = mere_memory_types = "0.91.0"
 
 PRE_CRUD_VERSION = hc_crud_caps = "=0.10.1"
 NEW_CRUD_VERSION = hc_crud_caps = "0.10.2"
@@ -217,17 +217,27 @@ test-integration-debug:
 	make test-apphub-debug
 	make test-webapp-upload-debug
 
-test-%hub:				test-setup dnas/%hub.dna
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_$*hub.js
-test-%hub-debug:			test-setup dnas/%hub.dna
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_$*hub.js
+test-zomehub:				test-setup $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_zomehub.js
+test-zomehub-debug:			test-setup $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_zomehub.js
+
+test-dnahub:				test-setup $(DNAHUB_DNA) $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_dnahub.js
+test-dnahub-debug:			test-setup $(DNAHUB_DNA) $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_dnahub.js
+
+test-apphub:				test-setup $(APPHUB_DNA) $(DNAHUB_DNA) $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_apphub.js
+test-apphub-debug:			test-setup $(APPHUB_DNA) $(DNAHUB_DNA) $(ZOMEHUB_DNA)
+	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_apphub.js
 
 test-webapp-upload:			test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
 	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_webapp_upload.js
 test-webapp-upload-debug:		test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
 	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_webapp_upload.js
 
-# Real long-running tests
+# Real-input tests
 test-real-uploads:
 	make test-real-zome-upload
 	make test-real-dna-upload

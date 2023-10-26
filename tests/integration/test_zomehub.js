@@ -75,6 +75,8 @@ describe("ZomeHub", function () {
     });
 });
 
+const wasm1_bytes			= crypto.randomBytes( 1_000 );
+
 
 function basic_tests () {
     let client;
@@ -105,11 +107,9 @@ function basic_tests () {
     it("should create wasm entry", async function () {
 	this.timeout( 10_000 );
 
-	const wasm_bytes		= crypto.randomBytes( 1_000 );
+	wasm1_addr			= await zomehub_csr.save_integrity( wasm1_bytes );
 
-	wasm1_addr			= await zomehub_csr.save_integrity( wasm_bytes );
-
-	expect( wasm1_addr		).to.be.a("ActionHash");
+	expect( wasm1_addr		).to.be.a("EntryHash");
     });
 
     it("should get wasm entry", async function () {
@@ -124,6 +124,12 @@ function basic_tests () {
 	log.trace("%s", json.debug(wasm_entries) );
 
 	expect( wasm_entries		).to.have.length( 1 );
+    });
+
+    it("should upload the same wasm", async function () {
+	const addr			= await zomehub_csr.save_integrity( wasm1_bytes );
+
+	expect( addr			).to.deep.equal( wasm1_addr );
     });
 
     after(async function () {

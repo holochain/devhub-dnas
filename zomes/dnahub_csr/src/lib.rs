@@ -46,22 +46,23 @@ pub struct CreateDnaEntryInput {
 }
 
 #[hdk_extern]
-fn create_dna_entry(input: CreateDnaEntryInput) -> ExternResult<ActionHash> {
+fn create_dna_entry(input: CreateDnaEntryInput) -> ExternResult<EntryHash> {
     let agent_id = hdk_extensions::agent_id()?;
     let entry = DnaEntry {
         manifest: input.manifest,
         resources: input.resources,
     };
 
-    let action_hash = create_entry( entry.to_input() )?;
+    let entry_hash = hash_entry( entry.clone() )?;
+    create_entry( entry.to_input() )?;
 
-    create_link( agent_id, action_hash.clone(), LinkTypes::Dna, () )?;
+    create_link( agent_id, entry_hash.clone(), LinkTypes::Dna, () )?;
 
-    Ok( action_hash )
+    Ok( entry_hash )
 }
 
 #[hdk_extern]
-fn get_dna_entry(addr: ActionHash) -> ExternResult<DnaEntry> {
+fn get_dna_entry(addr: EntryHash) -> ExternResult<DnaEntry> {
     let record = must_get( &addr )?;
 
     Ok( DnaEntry::try_from_record( &record )? )
@@ -75,12 +76,10 @@ fn get_dna_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResul
     };
     let dnas = get_links( agent_id, LinkTypes::Dna, None )?.into_iter()
         .filter_map(|link| {
-            link.target.into_action_hash()
+            let addr = link.target.into_entry_hash()?;
+            get_dna_entry( addr ).ok()
         })
-        .map(|dna_addr| {
-            get_dna_entry( dna_addr )
-        })
-        .collect::<ExternResult<Vec<DnaEntry>>>()?;
+        .collect();
 
     Ok( dnas )
 }

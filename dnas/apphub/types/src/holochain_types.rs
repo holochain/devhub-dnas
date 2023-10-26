@@ -13,7 +13,7 @@ use holochain_zome_types::{
 
 
 pub type RoleName = String;
-pub type ResourceMap = BTreeMap<PathBuf, ActionHash>;
+pub type ResourceMap = BTreeMap<PathBuf, EntryHash>;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -45,6 +45,8 @@ pub struct AppRoleDnaManifest {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "strategy")]
 pub enum CellProvisioning {
     Create { deferred: bool },
     CloneOnly,

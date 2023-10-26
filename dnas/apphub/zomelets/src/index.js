@@ -62,10 +62,10 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    "resources": resources,
 	});
 
-	return new ActionHash( result );
+	return new EntryHash( result );
     },
     async get_app_entry ( input ) {
-	const result			= await this.call( new ActionHash( input ) );
+	const result			= await this.call( new EntryHash( input ) );
 
 	return AppEntry( result );
     },
@@ -83,10 +83,10 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    "mere_memory_addr": new EntryHash( input.mere_memory_addr ),
 	});
 
-	return new ActionHash( result );
+	return new EntryHash( result );
     },
     async get_ui_entry ( input ) {
-	const result			= await this.call( new ActionHash( input ) );
+	const result			= await this.call( new EntryHash( input ) );
 
 	return UiEntry( result );
     },
@@ -106,10 +106,10 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    "resources": resources,
 	});
 
-	return new ActionHash( result );
+	return new EntryHash( result );
     },
     async get_webapp_entry ( input ) {
-	const result			= await this.call( new ActionHash( input ) );
+	const result			= await this.call( new EntryHash( input ) );
 
 	return WebAppEntry( result );
     },
@@ -207,9 +207,6 @@ export const AppHubCSRZomelet		= new Zomelet({
     async save_webapp ( bytes ) {
 	const bundle			= new Bundle( bytes, "webhapp" );
 	const resources			= {};
-
-	// const happ_bundle		= bundle.happ();
-	// const ui_bytes			= bundle.ui();
 
 	{
 	    const rpath			= bundle.manifest.happ_manifest.bundled;

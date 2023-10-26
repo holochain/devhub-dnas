@@ -678,7 +678,6 @@ name = "dnahub_types"
 version = "0.0.0"
 dependencies = [
  "getrandom 0.2.7",
- "holo_hash",
  "holochain_integrity_types",
  "holochain_zome_types",
  "serde",

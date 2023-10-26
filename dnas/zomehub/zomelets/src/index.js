@@ -44,10 +44,10 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	const result			= await this.call( input );
 
-	return new ActionHash( result );
+	return new EntryHash( result );
     },
     async get_wasm_entry ( input ) {
-	const result			= await this.call( new ActionHash( input ) );
+	const result			= await this.call( new EntryHash( input ) );
 
 	return WasmEntry( result );
     },
@@ -61,9 +61,7 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     // Virtual functions
     //
     async save_integrity ( bytes ) {
-	const addr			= await this.zomes.mere_memory_api.save( bytes, {
-	    "compress": true,
-	});
+	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
 	return await this.functions.create_wasm_entry({
 	    "wasm_type": WASM_TYPES.INTEGRITY,
@@ -71,9 +69,7 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	});
     },
     async save_coordinator ( bytes ) {
-	const addr			= await this.zomes.mere_memory_api.save( bytes, {
-	    "compress": true,
-	});
+	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
 	return await this.functions.create_wasm_entry({
 	    "wasm_type": WASM_TYPES.COORDINATOR,
