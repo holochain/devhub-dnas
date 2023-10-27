@@ -1,6 +1,6 @@
 [package]
 name = "web_assets_core"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
@@ -10,8 +10,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 devhub_types = {path = "../../devhub_types"}
-hc_crud_ceps = { git = "https://github.com/mjbrisebois/rust-hc-crud-ceps.git", rev = "91438a2e167b5bfea3c6673fe2f1da827c7da2c9" }
-hdi = "0.2.4"
+hc_crud_ceps = { git = "https://github.com/mjbrisebois/rust-hc-crud-ceps.git", rev = "9493f320af8e5889d07993a259df646c99f163f6" }
+hdi = "0.2.5"
 hex = "0"
 serde = "1"
 serde_yaml = "0.8.17"

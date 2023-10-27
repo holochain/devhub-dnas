@@ -488,7 +488,7 @@ dependencies = [
 
 [[package]]
 name = "devhub_types"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "essence_payloads",
  "flate2",
@@ -523,7 +523,7 @@ dependencies = [
 
 [[package]]
 name = "dna_library"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "devhub_types",
  "dnarepo_core",
@@ -539,7 +539,7 @@ dependencies = [
 
 [[package]]
 name = "dnarepo_core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "devhub_types",
  "hc_crud_ceps",
@@ -787,7 +787,7 @@ dependencies = [
 
 [[package]]
 name = "happ_library"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "devhub_types",
  "happs_core",
@@ -803,7 +803,7 @@ dependencies = [
 
 [[package]]
 name = "happs_core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "devhub_types",
  "hc_crud_ceps",
@@ -836,7 +836,7 @@ dependencies = [
 [[package]]
 name = "hc_crud_ceps"
 version = "0.77.0"
-source = "git+https://github.com/mjbrisebois/rust-hc-crud-ceps.git?rev=91438a2e167b5bfea3c6673fe2f1da827c7da2c9#91438a2e167b5bfea3c6673fe2f1da827c7da2c9"
+source = "git+https://github.com/mjbrisebois/rust-hc-crud-ceps.git?rev=9493f320af8e5889d07993a259df646c99f163f6#9493f320af8e5889d07993a259df646c99f163f6"
 dependencies = [
  "hdk",
  "holo_hash",
@@ -846,9 +846,9 @@ dependencies = [
 
 [[package]]
 name = "hdi"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "827278f012619c217651eeb18ad3744949d63785cc22ee206d89cc200712b37a"
+checksum = "d8b7ea004473857dc449cdfa8174a5db7dcba73be421653bc4dd96a75593f289"
 dependencies = [
  "hdk_derive",
  "holo_hash",
@@ -863,9 +863,9 @@ dependencies = [
 
 [[package]]
 name = "hdk"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3219fdb85fe2e16800c89e5a6555f3849279b8ecef902cb81f3b57ac6c1ed6da"
+checksum = "f81f1ccff961885b02d6445a8a5f50431370b91d97afc9f139747db2d6bc8259"
 dependencies = [
  "getrandom",
  "hdi",
@@ -883,9 +883,9 @@ dependencies = [
 
 [[package]]
 name = "hdk_derive"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8da5340b0b193bd3630f5ba0324264876cbb65994b494b445660d401fca37d7"
+checksum = "228f4a236817be5a543e4b9ebad4b58ff61f0e8513d55763701a571270efbeaa"
 dependencies = [
  "darling 0.14.1",
  "heck",
@@ -920,9 +920,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "holo_hash"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f9e35b124c78454bb311a660fc0ea1f330534b2960868fe65a9eb6e0c813057"
+checksum = "37434df44163b5c9d86fb754cbb6110ff82c4069bd6688c197e0c3cdbbb76550"
 dependencies = [
  "base64",
  "blake2b_simd",
@@ -938,9 +938,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_integrity_types"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98f2a705ddf33a9cba6336ad1f40e662ea04e88023b8b9bed78a82e564b7000d"
+checksum = "e405f25c3bda23ea248e2df807c2eef3066977a652b75b37dac1a27d64a42031"
 dependencies = [
  "holo_hash",
  "holochain_serialized_bytes",
@@ -1008,9 +1008,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_zome_types"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8f8b6797950868e2d919fd78a1677bfcc6325fbcb9399eb4a3b1eae35ed8f0c"
+checksum = "502a17678b7950f908c0fd25687a3e8e3517b791f2003467c14e15f701d97803"
 dependencies = [
  "holo_hash",
  "holochain_integrity_types",
@@ -1109,9 +1109,9 @@ dependencies = [
 
 [[package]]
 name = "kitsune_p2p_dht_arc"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b915373da861a9e582e7faef29ff51bee0e410e105756e9f41fc5920c2590287"
+checksum = "70d577e4d25d47985ecbc841203bf248f15587c3c30944e7aad3462d9f55cbdd"
 dependencies = [
  "derive_more",
  "gcollections",
@@ -1122,9 +1122,9 @@ dependencies = [
 
 [[package]]
 name = "kitsune_p2p_timestamp"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a4b591a6e0b5f3474b90978c795b07be7ca55576a83e49bc9d0888de8b3d155"
+checksum = "f71d5170f4d74e142ca6643cb186c72681450ad27d68ec4827016e3621c46fa9"
 dependencies = [
  "chrono",
  "derive_more",
@@ -1617,7 +1617,7 @@ dependencies = [
 
 [[package]]
 name = "reviews"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "devhub_types",
  "dnarepo_core",
@@ -2453,7 +2453,7 @@ dependencies = [
 
 [[package]]
 name = "web_assets"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "devhub_types",
  "hc_crud_ceps",
@@ -2468,7 +2468,7 @@ dependencies = [
 
 [[package]]
 name = "web_assets_core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "devhub_types",
  "hc_crud_ceps",
