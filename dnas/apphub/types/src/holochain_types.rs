@@ -1,9 +1,5 @@
 use crate::hdi;
 
-use std::{
-    collections::BTreeMap,
-    path::PathBuf,
-};
 use hdi::prelude::*;
 use holo_hash::DnaHashB64;
 use holochain_zome_types::{
@@ -12,8 +8,9 @@ use holochain_zome_types::{
 };
 
 
+
 pub type RoleName = String;
-pub type ResourceMap = BTreeMap<PathBuf, EntryHash>;
+
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -35,7 +32,7 @@ pub struct AppRoleManifest {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppRoleDnaManifest {
-    pub bundled: String,
+    pub dna_entry: EntryHash,
     #[serde(default)]
     pub modifiers: DnaModifiersOpt<YamlProperties>,
     #[serde(default)]
@@ -69,10 +66,10 @@ pub struct WebAppManifestV1 {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebUI {
-    pub bundled: String,
+    pub ui_entry: EntryHash,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppManifestLocation {
-    pub bundled: String,
+    pub app_entry: EntryHash,
 }

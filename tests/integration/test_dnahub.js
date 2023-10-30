@@ -48,7 +48,7 @@ const ZOMEHUB_DNA_NAME			= "zomehub";
 describe("DnaHub", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
@@ -114,6 +114,12 @@ function basic_tests () {
 	dna1_addr			= await dnahub_csr.save_dna( bundle_bytes );
 
 	expect( dna1_addr		).to.be.a("EntryHash");
+    });
+
+    it("should get DNA entry", async function () {
+	const dna1			= await dnahub_csr.get_dna_entry( dna1_addr );
+
+	log.normal("%s", json.debug(dna1) );
     });
 
     it("should upload the same DNA bundle", async function () {

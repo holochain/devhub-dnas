@@ -1,20 +1,51 @@
 
+import { Bytes }			from '@whi/bytes-class';
 import { AgentPubKey, HoloHash,
 	 ActionHash, EntryHash }	from '@spartan-hc/holo-hash';
 import {
+    DnaTokenStruct,
+}					from '@holochain/dnahub-zomelets';
+import {
     ScopedEntity,
     intoStruct,
-    OptionType, VecType, MapType,
+    AnyType, OptionType,
+    VecType, MapType,
 }					from '@spartan-hc/caps-entities';
-
 
 
 //
 // AppEntry Handling
 //
 export const AppStruct = {
-    "manifest":			Object,
-    "resources":		Object,
+    "manifest": {
+	"name":			String,
+	"description":		String,
+	"roles": VecType({
+	    "name":		String,
+	    "provisioning":	OptionType( Object ),
+	    "dna": {
+		"dna_entry":		EntryHash,
+		"modifiers": {
+		    "network_seed":	OptionType( AnyType ),
+		    "properties":	OptionType( AnyType ),
+		    "origin_time":	OptionType( AnyType ),
+		    "quantum_time":	OptionType( AnyType ),
+		},
+		"installed_hash":	OptionType( AnyType ),
+		"clone_limit":		Number,
+	    }
+	}),
+    },
+    "app_token": {
+	"integrity_hash":	Bytes,
+	"roles_token_hash":	Bytes,
+    },
+    "roles_token": VecType([
+	String,
+	Object.assign( {}, DnaTokenStruct, {
+	    "modifiers_hash":	Bytes,
+	}),
+    ]),
 };
 
 export function AppEntry ( entry ) {
@@ -36,11 +67,28 @@ export function UiEntry ( entry ) {
 
 
 //
+// WebAppToken Struct
+//
+export const WebAppToken = {
+    "integrity_hash":		Bytes,
+    "assets_token_hash":	Bytes,
+};
+
+
+//
 // WebAppEntry Handling
 //
 export const WebAppStruct = {
-    "manifest":			Object,
-    "resources":		Object,
+    "manifest": {
+	"name":			String,
+	"ui": {
+	    "ui_entry":		EntryHash,
+	},
+	"happ_manifest": {
+	    "app_entry":	EntryHash,
+	},
+    },
+    "webapp_token":		WebAppToken,
 };
 
 export function WebAppEntry ( entry ) {
@@ -88,7 +136,8 @@ export const WebAppPackageVersionStruct = {
 
     "for_package":		ActionHash,
     "webapp":			EntryHash,
-    "source_code_url":		OptionType( String ),
+    "webapp_token":		WebAppToken,
+    "source_code_revision_url":	OptionType( String ),
     "maintainer": {
 	"group":		OptionType([ ActionHash, ActionHash ]),
 	"agent":		OptionType( AgentPubKey ),

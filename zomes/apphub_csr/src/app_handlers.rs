@@ -12,23 +12,28 @@ use hdi_extensions::{
 use apphub::{
     LinkTypes,
     AppEntry, AppManifestV1,
-    ResourceMap,
 };
+use apphub_sdk::{
+    RolesDnaTokensInput,
+};
+
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateAppEntryInput {
     pub manifest: AppManifestV1,
-    pub resources: ResourceMap,
+    pub roles_dna_tokens: RolesDnaTokensInput,
 }
 
 #[hdk_extern]
 fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<EntryHash> {
     let agent_id = hdk_extensions::agent_id()?;
-    let entry = AppEntry {
-        manifest: input.manifest,
-        resources: input.resources,
-    };
+    let entry = AppEntry::new(
+        input.manifest,
+        input.roles_dna_tokens.into_iter()
+            .map( |(role_name, dna_token_input)| (role_name, dna_token_input.into()) )
+            .collect()
+    )?;
 
     let entry_hash = hash_entry( entry.clone() )?;
     create_entry( entry.to_input() )?;

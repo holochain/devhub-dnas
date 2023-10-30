@@ -11,7 +11,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 holochain_integrity_types = "0.2.2"
 holochain_zome_types = { version = "0.2.2", features = [ "properties" ] }
+rmp-serde = "1.1"
 serde = "1"
+sha2 = "0.10"
 whi_hdi_extensions = "0.4"
 
 # temporary fix for compile error in

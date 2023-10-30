@@ -74,6 +74,7 @@ name = "apphub_sdk"
 version = "0.0.0"
 dependencies = [
  "apphub_types",
+ "dnahub_sdk",
  "hc_devhub_sdk",
  "serde",
 ]
@@ -82,10 +83,13 @@ dependencies = [
 name = "apphub_types"
 version = "0.0.0"
 dependencies = [
+ "dnahub_types",
  "holochain_zome_types",
  "mere_memory_types",
+ "rmp-serde 1.1.2",
  "rmpv",
  "serde",
+ "sha2",
  "whi_hdi_extensions",
 ]
 
@@ -685,6 +689,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "dnahub_sdk"
+version = "0.0.0"
+dependencies = [
+ "dnahub_types",
+ "hc_devhub_sdk",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "dnahub_types"
+version = "0.0.0"
+dependencies = [
+ "getrandom 0.2.7",
+ "holochain_integrity_types",
+ "holochain_zome_types",
+ "rmp-serde 1.1.2",
+ "serde",
+ "sha2",
+ "whi_hdi_extensions",
+]
+
+[[package]]
 name = "dunce"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -995,9 +1022,9 @@ dependencies = [
 
 [[package]]
 name = "hc_crud_caps"
-version = "0.10.2"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8088bed51bbe6a12ab727bbe41541991b838599f319679455e3cfbe01da58172"
+checksum = "8b5666b156a68060f876d18b25b6dae0f999e651b27ee9f9568b7053bce3dfcb"
 dependencies = [
  "serde",
  "whi_hdk_extensions",
@@ -1143,7 +1170,7 @@ checksum = "9805b3e01e7b5c144782a0823db4dc895fec18a9ccd45a492ce7c7bf157a9e38"
 dependencies = [
  "arbitrary",
  "holochain_serialized_bytes_derive",
- "rmp-serde",
+ "rmp-serde 0.15.5",
  "serde",
  "serde-transcode",
  "serde_bytes",
@@ -2279,6 +2306,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rmp-serde"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bffea85eea980d8a74453e5d02a8d93028f3c34725de143085a844ebe953258a"
+dependencies = [
+ "byteorder",
+ "rmp",
+ "serde",
+]
+
+[[package]]
 name = "rmpv"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2466,6 +2504,17 @@ name = "sha-1"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5058ada175748e33390e40e872bd0fe59a19f265d0158daa551c5a88a76009c"
+dependencies = [
+ "cfg-if 1.0.0",
+ "cpufeatures",
+ "digest",
+]
+
+[[package]]
+name = "sha2"
+version = "0.10.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "793db75ad2bcafc3ffa7c68b215fee268f537982cd901d132f89c6343f3a3dc8"
 dependencies = [
  "cfg-if 1.0.0",
  "cpufeatures",

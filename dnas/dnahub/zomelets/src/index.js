@@ -37,12 +37,9 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    };
 	},
     },
-    async create_dna_entry ({ manifest, resources }) {
-	this.log.info("DNA entry input (%s resources):", Object.keys(resources).length, manifest );
-	const result			= await this.call({
-	    "manifest": manifest,
-	    "resources": resources,
-	});
+    async create_dna_entry ( input ) {
+	this.log.trace("DNA entry manifest input:", input.manifest );
+	const result			= await this.call( input );
 
 	return new EntryHash( result );
     },
@@ -62,24 +59,33 @@ export const DnaHubCSRZomelet		= new Zomelet({
     //
     async save_dna ( bytes ) {
 	const bundle			= new Bundle( bytes, "dna" );
-	const zomes			= bundle.zomes();
-	const resources			= {};
 
-	for ( let wasm of zomes.integrity ) {
-	    const rpath			= wasm.bundled;
-	    this.log.info("Save integrity resource '%s' (%s bytes)", wasm.name, wasm.bytes.length );
-	    resources[ rpath ]		= await this.cells.zomehub.zomehub_csr.save_integrity( wasm.bytes );
+	for ( let zome_manifest of bundle.manifest.integrity.zomes ) {
+	    const rpath			= zome_manifest.bundled;
+	    const wasm_bytes		= bundle.resources[ rpath ];
+
+	    this.log.debug("Save integrity resource '%s' (%s bytes)", zome_manifest.name, wasm_bytes.length );
+	    const wasm_addr		= await this.cells.zomehub.zomehub_csr.save_integrity( wasm_bytes );
+	    this.log.info("Created new (integrity) Wasm entry: %s", wasm_addr );
+
+	    zome_manifest.wasm_entry	= wasm_addr;
+	    delete zome_manifest.bundled;
 	}
 
-	for ( let wasm of zomes.coordinator ) {
-	    const rpath			= wasm.bundled;
-	    this.log.info("Save coordinator resource '%s' (%s bytes)", wasm.name, wasm.bytes.length );
-	    resources[ rpath ]		= await this.cells.zomehub.zomehub_csr.save_coordinator( wasm.bytes );
+	for ( let zome_manifest of bundle.manifest.coordinator.zomes ) {
+	    const rpath			= zome_manifest.bundled;
+	    const wasm_bytes		= bundle.resources[ rpath ];
+
+	    this.log.debug("Save coordinator resource '%s' (%s bytes)", zome_manifest.name, wasm_bytes.length );
+	    const wasm_entry		= await this.cells.zomehub.zomehub_csr.save_coordinator( wasm_bytes );
+	    this.log.info("Created new (coordinator) Wasm entry: %s", wasm_entry );
+
+	    zome_manifest.wasm_entry	= wasm_entry;
+	    delete zome_manifest.bundled;
 	}
 
 	return await this.functions.create_dna_entry({
 	    "manifest": bundle.manifest,
-	    resources,
 	});
     },
 }, {
@@ -99,6 +105,7 @@ export  {
     MereMemoryZomelet,
     ZomeHubCell,
 }					from '@holochain/zomehub-zomelets';
+export *				from './types.js';
 
 export default {
     DnaHubCSRZomelet,

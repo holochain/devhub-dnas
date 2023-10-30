@@ -90,6 +90,7 @@ export const ZomeHubCell		= new CellZomelets({
 
 
 export { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
+export *				from './types.js';
 
 export default {
     WASM_TYPES,

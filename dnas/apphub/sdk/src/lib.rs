@@ -12,6 +12,9 @@ use apphub_types::{
     WebAppPackageEntry,
     WebAppPackageVersionEntry,
 };
+use dnahub_sdk::{
+    DnaTokenInput,
+};
 use hc_crud::{
     Entity, EntityId,
 };
@@ -24,3 +27,5 @@ pub type EntityPointerMap = BTreeMap<String, EntityId>;
 pub type WebAppMap = EntityMap<WebAppEntry>;
 pub type WebAppPackageMap = EntityMap<WebAppPackageEntry>;
 pub type WebAppPackageVersionMap = EntityMap<WebAppPackageVersionEntry>;
+
+pub type RolesDnaTokensInput = BTreeMap<String, DnaTokenInput>;

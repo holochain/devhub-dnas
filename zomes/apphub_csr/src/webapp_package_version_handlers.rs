@@ -1,9 +1,17 @@
 use crate::hdk;
 use crate::hdk_extensions;
+use crate::hdi_extensions;
 
 use hdk::prelude::*;
+use hdk_extensions::{
+    must_get,
+};
+use hdi_extensions::{
+    ScopedTypeConnector,
+};
 use apphub::{
     LinkTypes,
+    WebAppEntry,
     WebAppPackageVersionEntry,
     Authority,
     BundleAddr,
@@ -22,17 +30,21 @@ pub struct CreateWebAppPackageVersionEntryInput {
 
     // Optional
     pub maintainer: Option<Authority>,
-    pub source_code_url: Option<String>,
+    pub source_code_revision_url: Option<String>,
 }
 
 #[hdk_extern]
 fn create_webapp_package_version_entry(input: CreateWebAppPackageVersionEntryInput) -> ExternResult<Entity<WebAppPackageVersionEntry>> {
     let agent_id = hdk_extensions::agent_id()?;
+    let webapp_entry = WebAppEntry::try_from_record( &must_get( &input.webapp )? )?;
+
+    // Get webapp entry info to construct the integrity entry info
     let entry = WebAppPackageVersionEntry {
         for_package: input.for_package,
         webapp: input.webapp,
+        webapp_token: webapp_entry.webapp_token,
         maintainer: agent_id.clone().into(),
-        source_code_url: input.source_code_url,
+        source_code_revision_url: input.source_code_revision_url,
     };
 
     let entity = create_entity( &entry )?;

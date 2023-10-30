@@ -55,7 +55,7 @@ const ZOMEHUB_DNA_NAME			= "zomehub";
 describe("AppHub", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
@@ -83,10 +83,6 @@ describe("AppHub", function () {
 const TEST_DNA_CONFIG			= dnaConfig();
 const TEST_HAPP_CONFIG			= happConfig([{
     "name": "fake-role-1",
-    "provision": {
-	"strategy": "create",
-	"deferred": false,
-    },
     "dna": {
 	"bytes": Bundle.createDna( TEST_DNA_CONFIG ).toBytes(),
     },
@@ -144,6 +140,12 @@ function basic_tests () {
 	expect( app1_addr		).to.be.a("EntryHash");
     });
 
+    it("should get App entry", async function () {
+	const app1			= await apphub_csr.get_app_entry( app1_addr );
+
+	log.normal("%s", json.debug(app1) );
+    });
+
     it("should upload the same App bundle", async function () {
 	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
@@ -160,6 +162,12 @@ function basic_tests () {
 	webapp1_addr			= await apphub_csr.save_webapp( bundle_bytes );
 
 	expect( app1_addr		).to.be.a("EntryHash");
+    });
+
+    it("should get WebApp entry", async function () {
+	const webapp1			= await apphub_csr.get_webapp_entry( webapp1_addr );
+
+	log.normal("%s", json.debug(webapp1) );
     });
 
     it("should upload the same WebApp bundle", async function () {

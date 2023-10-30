@@ -9,5 +9,5 @@ name = "devhub_sdk"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_crud_caps = "0.10.2"
+hc_crud_caps = "0.10.3"
 whi_hdk_extensions = "0.4"

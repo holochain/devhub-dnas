@@ -44,7 +44,7 @@ const ZOMEHUB_DNA_NAME			= "zomehub";
 describe("DnaHub - Real", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
@@ -112,7 +112,7 @@ function real_tests () {
 
     it("should get DNA entry", async function () {
 	dna_entry			= await dnahub_csr.get_dna_entry( dna1_addr );
-	log.trace("%s", json.debug(dna_entry) );
+	log.normal("%s", json.debug(dna_entry) );
 
 	// expect( dna_entry		).to.have.any.keys( "mere_memory_addr" );
     });

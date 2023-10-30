@@ -41,24 +41,33 @@ make happ/devhub.happ
 
 To run all tests with logging
 ```
-make test-debug
+make test
 ```
 
-- `make test-unit-debug` - **Rust tests only**
-- `make test-integration-debug` - **Integration tests only**
+- `make test-unit` - **Rust tests only**
+- `make test-integration` - **Integration tests only**
 
 ### Faux data tests
 
-- `make test-webapp-upload-debug` - Upload faux webhapp
+- `make test-zomehub` - Upload faux zomes
+- `make test-dnahub` - Upload faux DNAs
+- `make test-apphub` - Upload faux Apps & WebApps
+- `make test-webapp-upload` - Upload real App with faux GUI
 
-### Real long-running tests
+### Real-input tests
 
-- `make test-real-zome-upload-debug` - Upload `devhub.happ` to DevHub
-- `make test-real-dna-upload-debug` - Upload `devhub.happ` to DevHub
-- `make test-real-app-upload-debug` - Upload `devhub.happ` to DevHub
+- `make test-real-zome-upload` - Upload `devhub.happ` to DevHub
+- `make test-real-dna-upload` - Upload `devhub.happ` to DevHub
+- `make test-real-app-upload` - Upload `devhub.happ` to DevHub
 
 
-> **NOTE:** remove `-debug` to run tests without logging
+> **NOTE:** set DEBUG_LEVEL environment variable to run tests with logging (options: fatal, error,
+> warn, normal, info, debug, trace)
+>
+> Example
+> ```
+> DEBUG_LEVEL=trace make test
+> ```
 
 
 ## Dependencies

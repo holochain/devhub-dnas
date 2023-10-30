@@ -9,8 +9,11 @@ name = "apphub_types"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+dnahub_types = { path = "../../dnahub/types" }
 holochain_zome_types = { version = "0.2.2", features = [ "properties" ] }
 mere_memory_types = "0.91.0"
+rmp-serde = "1.1"
 rmpv = { version = "1.0.0", features = ["with-serde"] }
 serde = "1"
+sha2 = "0.10"
 whi_hdi_extensions = "0.4"

@@ -1,11 +1,15 @@
-use crate::hdi;
-
-use hdi::prelude::*;
-pub use crate::holochain_types::{
-    DnaManifestV1,
-    ResourceMap,
+pub use crate::{
+    hdi,
+    hdi_extensions,
+    DnaToken,
+    IntegritiesToken,
+    CoordinatorsToken,
+    holochain_types::{
+        DnaManifestV1,
+    },
 };
 
+use hdi::prelude::*;
 
 
 //
@@ -15,5 +19,24 @@ pub use crate::holochain_types::{
 #[derive(Clone)]
 pub struct DnaEntry {
     pub manifest: DnaManifestV1,
-    pub resources: ResourceMap,
+    pub dna_token: DnaToken,
+    pub integrities_token: IntegritiesToken,
+    pub coordinators_token: CoordinatorsToken,
+}
+
+impl DnaEntry {
+    pub fn new(manifest: DnaManifestV1) -> ExternResult<Self> {
+        let dna_token = manifest.dna_token()?;
+        let integrities_token = manifest.integrities_token()?;
+        let coordinators_token = manifest.coordinators_token()?;
+
+        Ok(
+            Self {
+                manifest,
+                dna_token,
+                integrities_token,
+                coordinators_token,
+            }
+        )
+    }
 }

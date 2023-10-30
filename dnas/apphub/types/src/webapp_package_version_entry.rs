@@ -1,10 +1,11 @@
-use crate::hdi;
-
-use hdi::prelude::*;
 use crate::{
+    hdi,
     EntityId, BundleAddr,
     Authority,
+    WebAppToken,
 };
+
+use hdi::prelude::*;
 
 
 
@@ -21,7 +22,9 @@ pub struct WebAppPackageVersionEntry {
     // Properties
     /// Pointer to the uploaded bundle WebAppEntry
     pub webapp: BundleAddr,
+    /// Copy of [`WebAppToken`] from the [`WebAppEntry`]
+    pub webapp_token: WebAppToken,
 
     // Optional
-    pub source_code_url: Option<String>,
+    pub source_code_revision_url: Option<String>,
 }

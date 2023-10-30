@@ -107,8 +107,8 @@ reset-mere-memory:
 PRE_MM_VERSION = mere_memory_types = "0.90.0"
 NEW_MM_VERSION = mere_memory_types = "0.91.0"
 
-PRE_CRUD_VERSION = hc_crud_caps = "=0.10.1"
-NEW_CRUD_VERSION = hc_crud_caps = "0.10.2"
+PRE_CRUD_VERSION = hc_crud_caps = "0.10.2"
+NEW_CRUD_VERSION = hc_crud_caps = "0.10.3"
 
 PRE_HDIE_VERSION = whi_hdi_extensions = "=0.3.0"
 NEW_HDIE_VERSION = whi_hdi_extensions = "0.4"
@@ -172,38 +172,25 @@ test-setup:		tests/node_modules \
 test:
 	make test-unit
 	make test-integration
-	make test-real-uploads
-test-debug:
-	make test-unit-debug
-	make test-integration-debug
-	make test-real-uploads-debug
 
 # Unit tests
+CRATE_DEBUG_LEVELS	= normal info debug trace
 test-crate:
-	cd $(SRC); CARGO_TARGET_DIR=../target cargo test --quiet --tests
-test-crate-debug:
-	cd $(SRC); RUST_BACKTRACE=1 CARGO_TARGET_DIR=../target cargo test -- --nocapture --show-output
+	@if [[ "$(CRATE_DEBUG_LEVELS)" == *"$(DEBUG_LEVEL)"* ]]; then \
+		cd $(SRC); RUST_BACKTRACE=1 CARGO_TARGET_DIR=../target cargo test -- --nocapture --show-output; \
+	else \
+		cd $(SRC); CARGO_TARGET_DIR=../target cargo test --quiet --tests; \
+	fi
 test-unit:
 	SRC=zomes make test-crate
 	make test-zomehub-unit
 	make test-dnahub-unit
 	make test-apphub-unit
-# ISSUE: for some reason these break after wasm has been built (fix 'rm -r target')
-test-unit-debug:
-	SRC=zomes make test-crate-debug
-	make test-zomehub-unit-debug
-	make test-dnahub-unit-debug
-	make test-apphub-unit-debug
 
 test-%hub-unit:
 	SRC=dnas/$*hub make test-crate
-test-%hub-unit-debug:
-	SRC=dnas/$*hub make test-crate-debug
-
 test-zome-unit-%:
 	cd zomes; cargo test -p $* --quiet
-test-zome-unit-%-debug:
-	cd zomes; RUST_BACKTRACE=1 cargo test -p $* -- --nocapture --show-output
 
 # Integration tests
 test-integration:
@@ -211,56 +198,32 @@ test-integration:
 	make test-dnahub
 	make test-apphub
 	make test-webapp-upload
-test-integration-debug:
-	make test-zomehub-debug
-	make test-dnahub-debug
-	make test-apphub-debug
-	make test-webapp-upload-debug
+	make test-real-uploads
+
+DEBUG_LEVEL	       ?= warn
+TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)
 
 test-zomehub:				test-setup $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_zomehub.js
-test-zomehub-debug:			test-setup $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_zomehub.js
-
-test-dnahub:				test-setup $(DNAHUB_DNA) $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_dnahub.js
-test-dnahub-debug:			test-setup $(DNAHUB_DNA) $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_dnahub.js
-
-test-apphub:				test-setup $(APPHUB_DNA) $(DNAHUB_DNA) $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_apphub.js
-test-apphub-debug:			test-setup $(APPHUB_DNA) $(DNAHUB_DNA) $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_apphub.js
-
+	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_zomehub.js
+test-dnahub:				test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA)
+	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_dnahub.js
+test-apphub:				test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA)
+	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_apphub.js
 test-webapp-upload:			test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_webapp_upload.js
-test-webapp-upload-debug:		test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_webapp_upload.js
+	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_webapp_upload.js
 
 # Real-input tests
 test-real-uploads:
 	make test-real-zome-upload
 	make test-real-dna-upload
 	make test-real-app-upload
-test-real-uploads-debug:
-	make test-real-zome-upload-debug
-	make test-real-dna-upload-debug
-	make test-real-app-upload-debug
 
 test-real-zome-upload:			test-setup $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_real_zome_upload.js
-test-real-zome-upload-debug:		test-setup $(ZOMEHUB_DNA)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_real_zome_upload.js
-
+	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_real_zome_upload.js
 test-real-dna-upload:			test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_real_dna_upload.js
-test-real-dna-upload-debug:		test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_real_dna_upload.js
-
+	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_real_dna_upload.js
 test-real-app-upload:			test-setup $(DEVHUB_HAPP)
-	cd tests; LOG_LEVEL=warn npx mocha ./integration/test_real_app_upload.js
-test-real-app-upload-debug:		test-setup $(DEVHUB_HAPP)
-	cd tests; LOG_LEVEL=trace npx mocha ./integration/test_real_app_upload.js
+	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_real_app_upload.js
 
 
 

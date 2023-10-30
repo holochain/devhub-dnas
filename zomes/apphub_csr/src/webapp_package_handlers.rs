@@ -73,7 +73,7 @@ pub struct LinkWebAppPackageVersionInput {
 }
 
 #[hdk_extern]
-fn link_webapp_package_version(input: LinkWebAppPackageVersionInput) -> ExternResult<ActionHash> {
+fn create_webapp_package_link_to_version(input: LinkWebAppPackageVersionInput) -> ExternResult<ActionHash> {
     create_link(
         input.webapp_package_id,
         input.webapp_package_version_id,

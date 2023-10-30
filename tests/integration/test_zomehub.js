@@ -53,7 +53,7 @@ let agents				= {};
 describe("ZomeHub", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {

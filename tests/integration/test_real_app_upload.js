@@ -49,7 +49,7 @@ const ZOMEHUB_DNA_NAME			= "zomehub";
 describe("AppHub - Real", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
@@ -124,7 +124,8 @@ function real_tests () {
 
     it("should get App entry", async function () {
 	app_entry			= await apphub_csr.get_app_entry( app1_addr );
-	log.trace("%s", json.debug(app_entry) );
+
+	log.normal("%s", json.debug(app_entry) );
     });
 
     after(async function () {

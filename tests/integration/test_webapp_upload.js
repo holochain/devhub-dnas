@@ -51,7 +51,7 @@ const ZOMEHUB_DNA_NAME			= "zomehub";
 describe("AppHub: WebApp", function () {
     const holochain			= new Holochain({
 	"timeout": 60_000,
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
@@ -129,7 +129,8 @@ function basic_tests () {
 
     it("should get App entry", async function () {
 	const webapp_entry		= await apphub_csr.get_webapp_entry( webapp1_addr );
-	log.trace("App entry: %s", json.debug(webapp_entry) );
+
+	log.normal("WebApp entry: %s", json.debug(webapp_entry) );
     });
 
     it("should create WebApp Package entry", async function () {
