@@ -26,6 +26,7 @@ use apphub::{
     },
 };
 use apphub_sdk::{
+    EntityPointerMap,
     WebAppPackageVersionMap,
 };
 
@@ -99,6 +100,16 @@ fn create_webapp_package_link_to_version(input: LinkWebAppPackageVersionInput) -
 
 
 #[hdk_extern]
+fn get_webapp_package_version_links(webapp_package_id: EntityId) ->
+    ExternResult<EntityPointerMap>
+{
+    let anchor = WebAppPackageAnchor::new( &webapp_package_id );
+
+    Ok( anchor.version_links()? )
+}
+
+
+#[hdk_extern]
 fn get_webapp_package_versions(webapp_package_id: EntityId) ->
     ExternResult<WebAppPackageVersionMap>
 {
@@ -122,36 +133,38 @@ fn get_all_webapp_packages(_: ()) -> ExternResult<Vec<Entity<WebAppPackageEntry>
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct UpdateWebAppPackageEntryInput {
+pub struct UpdateWebAppPackageInput {
     pub title: Option<String>,
     pub subtitle: Option<String>,
     pub description: Option<String>,
     pub icon: Option<MemoryAddr>,
-    pub metadata: Option<BTreeMap<String, rmpv::Value>>,
     pub maintainer: Option<Authority>,
     pub source_code_url: Option<String>,
+    pub metadata: Option<BTreeMap<String, rmpv::Value>>,
 }
 
 #[hdk_extern]
-fn update_webapp_package_entry(input: UpdateEntityInput<UpdateWebAppPackageEntryInput>) -> ExternResult<Entity<WebAppPackageEntry>> {
+fn update_webapp_package(input: UpdateEntityInput<UpdateWebAppPackageInput>) ->
+    ExternResult<Entity<WebAppPackageEntry>>
+{
     let changes = input.properties;
-    let entity = update_entity( &input.base, |webapp_package: WebAppPackageEntry, _| {
+    let entity = update_entity( &input.base, |package: WebAppPackageEntry, _| {
         let entry = WebAppPackageEntry {
             title: changes.title
-                .unwrap_or( webapp_package.title ),
+                .unwrap_or( package.title ),
             subtitle: changes.subtitle
-                .unwrap_or( webapp_package.subtitle ),
+                .unwrap_or( package.subtitle ),
             description: changes.description
-                .unwrap_or( webapp_package.description ),
+                .unwrap_or( package.description ),
             maintainer: changes.maintainer
-                .unwrap_or( webapp_package.maintainer ).into(),
+                .unwrap_or( package.maintainer ).into(),
             icon: changes.icon
-                .unwrap_or( webapp_package.icon ),
+                .unwrap_or( package.icon ),
             source_code_url: changes.source_code_url
-                .or( webapp_package.source_code_url ),
+                .or( package.source_code_url ),
             deprecation: None,
             metadata: changes.metadata
-                .unwrap_or( webapp_package.metadata ),
+                .unwrap_or( package.metadata ),
         };
 
 	Ok( entry )

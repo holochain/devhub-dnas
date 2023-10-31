@@ -135,6 +135,7 @@ export const WebAppPackageVersionStruct = {
     "version":			OptionType( String ),
 
     "for_package":		ActionHash,
+    "changelog":		OptionType( String ),
     "webapp":			EntryHash,
     "webapp_token":		WebAppToken,
     "source_code_revision_url":	OptionType( String ),
@@ -142,6 +143,7 @@ export const WebAppPackageVersionStruct = {
 	"group":		OptionType([ ActionHash, ActionHash ]),
 	"agent":		OptionType( AgentPubKey ),
     },
+    "metadata":			Object,
 };
 
 export function WebAppPackageVersionEntry ( entry ) {

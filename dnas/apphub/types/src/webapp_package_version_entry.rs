@@ -5,6 +5,7 @@ use crate::{
     WebAppToken,
 };
 
+use std::collections::BTreeMap;
 use hdi::prelude::*;
 
 
@@ -26,5 +27,9 @@ pub struct WebAppPackageVersionEntry {
     pub webapp_token: WebAppToken,
 
     // Optional
+    pub changelog: Option<String>,
     pub source_code_revision_url: Option<String>,
+
+    // Common fields
+    pub metadata: BTreeMap<String, rmpv::Value>,
 }

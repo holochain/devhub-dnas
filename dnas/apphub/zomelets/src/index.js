@@ -135,16 +135,25 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new WebAppPackage( result, this );
     },
-    async update_webapp_package_entry ( input ) {
+    async update_webapp_package ( input ) {
 	if ( input.icon && input.icon.length > 39 )
 	    input.icon			= await this.zomes.mere_memory_api.save( input.icon );
 
-	this.log.trace("Update WebApp package entry input:", input );
+	this.log.trace("Update WebApp package input:", input );
 	const result			= await this.call( input );
 
 	return new WebAppPackage( result, this );
     },
     "create_webapp_package_link_to_version":	true,
+    async get_webapp_package_version_links ( input ) {
+	const link_map			= await this.call( input );
+
+	for ( let [key, value] of Object.entries( link_map ) ) {
+	    link_map[ key ]		= new ActionHash( value );
+	}
+
+	return link_map;
+    },
     async get_webapp_package_versions ( input ) {
 	const version_map		= await this.call( input );
 
@@ -262,6 +271,11 @@ export const AppHubCSRZomelet		= new Zomelet({
 	if ( typeof input.version !== "string" )
 	    throw new TypeError(`Missing 'version' input`);
 
+	const version_link_map		= await this.functions.get_webapp_package_version_links( input.for_package );
+
+	if ( input.version in version_link_map )
+	    throw new Error(`Version '${input.version}' already exists for package ${input.for_package}`);
+
 	const entity			= await this.functions.create_webapp_package_version_entry( input );
 
 	await this.functions.create_webapp_package_link_to_version({
@@ -271,6 +285,12 @@ export const AppHubCSRZomelet		= new Zomelet({
 	});
 
 	return entity;
+    },
+    async update_webapp_package_version ( input ) {
+	this.log.trace("Update WebApp package versioninput:", input );
+	const result			= await this.call( input );
+
+	return new WebAppPackageVersion( result, this );
     },
 }, {
     "zomes": {

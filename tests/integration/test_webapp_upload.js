@@ -142,13 +142,12 @@ function basic_tests () {
 	    "source_code_url": faker.internet.url(),
 	});
 
-	log.normal("Create WebApp package result:", pack1 );
-	log.normal("Create WebApp package JSON: %s", json.debug(pack1) );
+	log.normal("Create WebApp package: %s", json.debug(pack1) );
 
 	expect( pack1			).to.be.a("WebAppPackage");
     });
 
-    it("should create WebApp Package Version entry", async function () {
+    it("should create WebApp Package Version", async function () {
 	pack1_v1			= await apphub_csr.create_webapp_package_version({
 	    "version": "0.1.0",
 	    "for_package": pack1.$id,
@@ -156,10 +155,65 @@ function basic_tests () {
 	    "source_code_url": faker.internet.url(),
 	});
 
-	log.normal("Create WebApp package version result:", pack1_v1 );
-	log.normal("Create WebApp package version JSON: %s", json.debug(pack1_v1) );
+	log.normal("Create WebApp package version: %s", json.debug(pack1_v1) );
 
 	expect( pack1_v1		).to.be.a("WebAppPackageVersion");
+    });
+
+    it("should get all WebApp Packages", async function () {
+	const result			= await apphub_csr.get_all_webapp_packages();
+
+	expect( result			).to.have.length( 1 );
+    });
+
+    it("should update WebApp Package", async function () {
+	const updated_pack1		= await apphub_csr.update_webapp_package({
+	    "base": pack1.$action,
+	    "properties": {
+		"description": faker.lorem.paragraphs( 2 ),
+		"source_code_url": faker.internet.url(),
+	    },
+	});
+
+	log.normal("Updated WebApp package: %s", json.debug(updated_pack1) );
+
+	expect( updated_pack1		).to.be.a("WebAppPackage");
+    });
+
+    it("should get the updated WebApp Package", async function () {
+	const pack1b			= await apphub_csr.get_webapp_package( pack1.$id );
+
+	expect( pack1b.description	).to.not.equal( pack1.description );
+	expect( pack1b.source_code_url	).to.not.equal( pack1.source_code_url );
+
+	pack1				= pack1b;
+    });
+
+    it("should get WebApp Package using EntryHash", async function () {
+	const pack1b			= await apphub_csr.get_webapp_package_entry( pack1.$addr );
+
+	expect( pack1b			).to.deep.equal( pack1.toJSON() );
+    });
+
+    it("should update WebApp Package Version", async function () {
+	const updated_pack1_v1		= await apphub_csr.update_webapp_package_version({
+	    "base": pack1_v1.$action,
+	    "properties": {
+		"changelog": faker.lorem.paragraphs( 5 ),
+	    },
+	});
+
+	log.normal("Updated WebApp package version: %s", json.debug(updated_pack1_v1) );
+
+	expect( updated_pack1_v1	).to.be.a("WebAppPackageVersion");
+    });
+
+    it("should get the updated WebApp Package Version", async function () {
+	const pack1_v1b			= await apphub_csr.get_webapp_package_version( pack1_v1.$id );
+
+	expect( pack1_v1b.changelog	).to.not.equal( pack1_v1.changelog );
+
+	pack1_v1			= pack1_v1b;
     });
 
     it("should get Version's WebApp Package", async function () {
@@ -168,16 +222,16 @@ function basic_tests () {
 	expect( result			).to.deep.equal( pack1 );
     });
 
+    async function create_version ( vtag ) {
+	return await apphub_csr.create_webapp_package_version({
+	    "version": vtag,
+	    "for_package": pack1.$id,
+	    "webapp": webapp1_addr,
+	    "source_code_url": faker.internet.url(),
+	});
+    }
+
     it("should get WebApp Package versions (sorted with semver)", async function () {
-	async function create_version ( vtag ) {
-	    return await apphub_csr.create_webapp_package_version({
-		"version": vtag,
-		"for_package": pack1.$id,
-		"webapp": webapp1_addr,
-		"source_code_url": faker.internet.url(),
-	    });
-	}
-	await create_version("0.1.0");
 	await create_version("0.1.0-beta-rc.0");
 	await create_version("0.1.0-beta-rc.1");
 	await create_version("0.1.0-beta-rc.2");
@@ -194,40 +248,16 @@ function basic_tests () {
 	expect( versions[4].version	).to.equal("0.1.0-beta-rc.0");
     });
 
-    it("should get all WebApp Packages", async function () {
-	const result			= await apphub_csr.get_all_webapp_packages();
+    it("should update a WebApp Package's parent package");
 
-	expect( result			).to.have.length( 1 );
-    });
+    linearSuite("Errors", function () {
 
-    it("should update WebApp Package entry", async function () {
-	const updated_pack1		= await apphub_csr.update_webapp_package_entry({
-	    "base": pack1.$action,
-	    "properties": {
-		"description": faker.lorem.paragraphs( 2 ),
-		"source_code_url": faker.internet.url(),
-	    },
+	it("should fail to create a version that already exists", async function () {
+	    await expect_reject( async () => {
+		await create_version("0.1.0");
+	    }, "already exists for package" );
 	});
 
-	log.normal("Create WebApp package result:", updated_pack1 );
-	log.normal("Create WebApp package JSON: %s", json.debug(updated_pack1) );
-
-	expect( updated_pack1		).to.be.a("WebAppPackage");
-    });
-
-    it("should get the updated WebApp Package", async function () {
-	const pack1b			= await apphub_csr.get_webapp_package( pack1.$id )
-
-	expect( pack1b.description	).to.not.equal( pack1.description );
-	expect( pack1b.source_code_url	).to.not.equal( pack1.source_code_url );
-
-	pack1				= pack1b;
-    });
-
-    it("should get WebApp Package using EntryHash", async function () {
-	const pack1b			= await apphub_csr.get_webapp_package_entry( pack1.$addr );
-
-	expect( pack1b			).to.deep.equal( pack1.toJSON() );
     });
 
     after(async function () {
