@@ -27,7 +27,7 @@ pub struct WebAppPackageEntry {
     /// Mere Memory address of image bytes
     pub icon: MemoryAddr,
     /// Link to project code repository
-    pub source_code_url: Option<String>,
+    pub source_code_uri: Option<String>,
 
     // State
     /// Set when this package has been deprecated

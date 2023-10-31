@@ -104,7 +104,7 @@ export const WebAppPackageStruct = {
     "subtitle":			String,
     "description":		String,
     "icon":			EntryHash,
-    "source_code_url":		OptionType( String ),
+    "source_code_uri":		OptionType( String ),
     "maintainer": {
 	"group":		OptionType([ ActionHash, ActionHash ]),
 	"agent":		OptionType( AgentPubKey ),
@@ -138,7 +138,7 @@ export const WebAppPackageVersionStruct = {
     "changelog":		OptionType( String ),
     "webapp":			EntryHash,
     "webapp_token":		WebAppToken,
-    "source_code_revision_url":	OptionType( String ),
+    "source_code_revision_uri":	OptionType( String ),
     "maintainer": {
 	"group":		OptionType([ ActionHash, ActionHash ]),
 	"agent":		OptionType( AgentPubKey ),

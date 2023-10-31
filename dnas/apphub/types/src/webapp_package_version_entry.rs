@@ -28,7 +28,7 @@ pub struct WebAppPackageVersionEntry {
 
     // Optional
     pub changelog: Option<String>,
-    pub source_code_revision_url: Option<String>,
+    pub source_code_revision_uri: Option<String>,
 
     // Common fields
     pub metadata: BTreeMap<String, rmpv::Value>,

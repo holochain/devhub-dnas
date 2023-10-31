@@ -139,7 +139,7 @@ function basic_tests () {
 	    "subtitle": faker.lorem.sentence(),
 	    "description": faker.lorem.paragraphs( 2 ),
 	    "icon": crypto.randomBytes( 1_000 ),
-	    "source_code_url": faker.internet.url(),
+	    "source_code_uri": faker.internet.url(),
 	});
 
 	log.normal("Create WebApp package: %s", json.debug(pack1) );
@@ -152,7 +152,7 @@ function basic_tests () {
 	    "version": "0.1.0",
 	    "for_package": pack1.$id,
 	    "webapp": webapp1_addr,
-	    "source_code_url": faker.internet.url(),
+	    "source_code_uri": faker.internet.url(),
 	});
 
 	log.normal("Create WebApp package version: %s", json.debug(pack1_v1) );
@@ -171,7 +171,7 @@ function basic_tests () {
 	    "base": pack1.$action,
 	    "properties": {
 		"description": faker.lorem.paragraphs( 2 ),
-		"source_code_url": faker.internet.url(),
+		"source_code_uri": faker.internet.url(),
 	    },
 	});
 
@@ -184,7 +184,7 @@ function basic_tests () {
 	const pack1b			= await apphub_csr.get_webapp_package( pack1.$id );
 
 	expect( pack1b.description	).to.not.equal( pack1.description );
-	expect( pack1b.source_code_url	).to.not.equal( pack1.source_code_url );
+	expect( pack1b.source_code_uri	).to.not.equal( pack1.source_code_uri );
 
 	pack1				= pack1b;
     });
@@ -227,7 +227,7 @@ function basic_tests () {
 	    "version": vtag,
 	    "for_package": pack1.$id,
 	    "webapp": webapp1_addr,
-	    "source_code_url": faker.internet.url(),
+	    "source_code_uri": faker.internet.url(),
 	});
     }
 

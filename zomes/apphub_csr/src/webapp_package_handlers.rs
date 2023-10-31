@@ -43,7 +43,7 @@ pub struct CreateWebAppPackageEntryInput {
 
     // Optional
     pub maintainer: Option<Authority>,
-    pub source_code_url: Option<String>,
+    pub source_code_uri: Option<String>,
 }
 
 #[hdk_extern]
@@ -55,7 +55,7 @@ fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) -> ExternRe
         description: input.description,
         maintainer: agent_id.clone().into(),
         icon: input.icon,
-        source_code_url: input.source_code_url,
+        source_code_uri: input.source_code_uri,
         deprecation: None,
         metadata: input.metadata,
     };
@@ -139,7 +139,7 @@ pub struct UpdateWebAppPackageInput {
     pub description: Option<String>,
     pub icon: Option<MemoryAddr>,
     pub maintainer: Option<Authority>,
-    pub source_code_url: Option<String>,
+    pub source_code_uri: Option<String>,
     pub metadata: Option<BTreeMap<String, rmpv::Value>>,
 }
 
@@ -160,8 +160,8 @@ fn update_webapp_package(input: UpdateEntityInput<UpdateWebAppPackageInput>) ->
                 .unwrap_or( package.maintainer ).into(),
             icon: changes.icon
                 .unwrap_or( package.icon ),
-            source_code_url: changes.source_code_url
-                .or( package.source_code_url ),
+            source_code_uri: changes.source_code_uri
+                .or( package.source_code_uri ),
             deprecation: None,
             metadata: changes.metadata
                 .unwrap_or( package.metadata ),

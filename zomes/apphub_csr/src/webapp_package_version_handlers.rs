@@ -35,7 +35,7 @@ pub struct CreateWebAppPackageVersionEntryInput {
     // Optional
     pub changelog: Option<String>,
     pub maintainer: Option<Authority>,
-    pub source_code_revision_url: Option<String>,
+    pub source_code_revision_uri: Option<String>,
 }
 
 #[hdk_extern]
@@ -50,7 +50,7 @@ fn create_webapp_package_version_entry(input: CreateWebAppPackageVersionEntryInp
         webapp_token: webapp_entry.webapp_token,
         changelog: input.changelog,
         maintainer: agent_id.clone().into(),
-        source_code_revision_url: input.source_code_revision_url,
+        source_code_revision_uri: input.source_code_revision_uri,
         metadata: input.metadata,
     };
 
@@ -83,7 +83,7 @@ pub struct UpdateWebAppPackageVersionInput {
     pub for_package: Option<EntityId>,
     pub changelog: Option<String>,
     pub maintainer: Option<Authority>,
-    pub source_code_revision_url: Option<String>,
+    pub source_code_revision_uri: Option<String>,
     pub metadata: Option<BTreeMap<String, rmpv::Value>>,
 }
 
@@ -102,8 +102,8 @@ fn update_webapp_package_version(input: UpdateEntityInput<UpdateWebAppPackageVer
                 .or( version.changelog ),
             maintainer: changes.maintainer
                 .unwrap_or( version.maintainer ).into(),
-            source_code_revision_url: changes.source_code_revision_url
-                .or( version.source_code_revision_url ),
+            source_code_revision_uri: changes.source_code_revision_uri
+                .or( version.source_code_revision_uri ),
             metadata: changes.metadata
                 .unwrap_or( version.metadata ),
         };
