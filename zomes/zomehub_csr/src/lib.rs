@@ -7,7 +7,6 @@ use hdk_extensions::{
 };
 use zomehub::hdi_extensions::{
     ScopedTypeConnector,
-    // AnyLinkableHashTransformer,
 };
 use zomehub::{
     WasmEntry,
@@ -60,7 +59,7 @@ fn create_wasm_entry(input: CreateWasmEntryInput) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-fn get_wasm_entry(addr: EntryHash) -> ExternResult<WasmEntry> {
+fn get_wasm_entry(addr: AnyDhtHash) -> ExternResult<WasmEntry> {
     let record = must_get( &addr )?;
 
     Ok( WasmEntry::try_from_record( &record )? )
@@ -75,7 +74,7 @@ fn get_wasm_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResu
     let wasms = get_links( agent_id, LinkTypes::Wasm, None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
-            get_wasm_entry( addr ).ok()
+            get_wasm_entry( addr.into() ).ok()
         })
         .collect();
 

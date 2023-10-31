@@ -195,9 +195,39 @@ function basic_tests () {
     });
 
     it("should get all WebApp Packages", async function () {
-	const result			= await apphub_csr.get_all_webapp_package_entries();
+	const result			= await apphub_csr.get_all_webapp_packages();
 
 	expect( result			).to.have.length( 1 );
+    });
+
+    it("should update WebApp Package entry", async function () {
+	const updated_pack1		= await apphub_csr.update_webapp_package_entry({
+	    "base": pack1.$action,
+	    "properties": {
+		"description": faker.lorem.paragraphs( 2 ),
+		"source_code_url": faker.internet.url(),
+	    },
+	});
+
+	log.normal("Create WebApp package result:", updated_pack1 );
+	log.normal("Create WebApp package JSON: %s", json.debug(updated_pack1) );
+
+	expect( updated_pack1		).to.be.a("WebAppPackage");
+    });
+
+    it("should get the updated WebApp Package", async function () {
+	const pack1b			= await apphub_csr.get_webapp_package( pack1.$id )
+
+	expect( pack1b.description	).to.not.equal( pack1.description );
+	expect( pack1b.source_code_url	).to.not.equal( pack1.source_code_url );
+
+	pack1				= pack1b;
+    });
+
+    it("should get WebApp Package using EntryHash", async function () {
+	const pack1b			= await apphub_csr.get_webapp_package_entry( pack1.$addr );
+
+	expect( pack1b			).to.deep.equal( pack1.toJSON() );
     });
 
     after(async function () {

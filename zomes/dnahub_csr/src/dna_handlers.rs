@@ -35,7 +35,7 @@ fn create_dna_entry(input: CreateDnaEntryInput) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-fn get_dna_entry(addr: EntryHash) -> ExternResult<DnaEntry> {
+fn get_dna_entry(addr: AnyDhtHash) -> ExternResult<DnaEntry> {
     let record = must_get( &addr )?;
 
     Ok( DnaEntry::try_from_record( &record )? )
@@ -50,7 +50,7 @@ fn get_dna_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResul
     let dnas = get_links( agent_id, LinkTypes::Dna, None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
-            get_dna_entry( addr ).ok()
+            get_dna_entry( addr.into() ).ok()
         })
         .collect();
 

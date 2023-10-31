@@ -35,7 +35,7 @@ fn create_webapp_entry(input: CreateWebAppEntryInput) -> ExternResult<EntryHash>
 }
 
 #[hdk_extern]
-fn get_webapp_entry(addr: EntryHash) -> ExternResult<WebAppEntry> {
+fn get_webapp_entry(addr: AnyDhtHash) -> ExternResult<WebAppEntry> {
     let record = must_get( &addr )?;
 
     Ok( WebAppEntry::try_from_record( &record )? )
@@ -50,7 +50,7 @@ fn get_webapp_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternRe
     let webapps = get_links( agent_id, LinkTypes::WebApp, None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
-            get_webapp_entry( addr ).ok()
+            get_webapp_entry( addr.into() ).ok()
         })
         .collect();
 

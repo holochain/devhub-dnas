@@ -1,5 +1,6 @@
 // 217kb = (-57kb duplicates) 43 + 120 (dnahub) + this
 import {
+    AnyDhtHash,
     AgentPubKey,
     ActionHash, EntryHash,
 }					from '@spartan-hc/holo-hash'; // approx. 11kb
@@ -24,8 +25,8 @@ import {
     AppEntry,
     UiEntry,
     WebAppEntry,
-    // WebAppPackageEntry,
-    // WebAppPackageVersionEntry,
+    WebAppPackageEntry,
+    WebAppPackageVersionEntry,
 
     // Entity Classes
     WebAppPackage,
@@ -103,7 +104,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return new EntryHash( result );
     },
     async get_webapp_entry ( input ) {
-	const result			= await this.call( new EntryHash( input ) );
+	const result			= await this.call( new AnyDhtHash( input ) );
 
 	return WebAppEntry( result );
     },
@@ -125,7 +126,21 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return new WebAppPackage( result, this );
     },
     async get_webapp_package_entry ( input ) {
+	const result			= await this.call( new AnyDhtHash( input ) );
+
+	return WebAppPackageEntry( result );
+    },
+    async get_webapp_package ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
+
+	return new WebAppPackage( result, this );
+    },
+    async update_webapp_package_entry ( input ) {
+	if ( input.icon && input.icon.length > 39 )
+	    input.icon			= await this.zomes.mere_memory_api.save( input.icon );
+
+	this.log.trace("Update WebApp package entry input:", input );
+	const result			= await this.call( input );
 
 	return new WebAppPackage( result, this );
     },
@@ -153,7 +168,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return versions;
     },
-    async get_all_webapp_package_entries ( input ) {
+    async get_all_webapp_packages ( input ) {
 	const entries			= await this.call(); // new AgentPubKey( input )
 
 	return entries.map( entity => new WebAppPackage( entity, this ) );
@@ -168,6 +183,11 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return new WebAppPackageVersion( result, this );
     },
     async get_webapp_package_version_entry ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return WebAppPackageVersionEntry( result );
+    },
+    async get_webapp_package_version ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
 
 	return new WebAppPackageVersion( result, this );

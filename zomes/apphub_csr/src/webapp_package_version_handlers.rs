@@ -56,6 +56,15 @@ fn create_webapp_package_version_entry(input: CreateWebAppPackageVersionEntryInp
 
 #[hdk_extern]
 fn get_webapp_package_version_entry(addr: ActionHash) ->
+    ExternResult<WebAppPackageVersionEntry>
+{
+    let record = must_get( &addr )?;
+
+    Ok( WebAppPackageVersionEntry::try_from_record( &record )? )
+}
+
+#[hdk_extern]
+fn get_webapp_package_version(addr: ActionHash) ->
     ExternResult<Entity<WebAppPackageVersionEntry>>
 {
     Ok( get_entity( &addr )? )

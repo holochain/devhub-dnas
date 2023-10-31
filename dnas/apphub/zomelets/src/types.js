@@ -152,7 +152,7 @@ export class WebAppPackageVersion extends ScopedEntity {
     static STRUCT		= WebAppPackageVersionStruct;
 
     async getWebAppPackage () {
-	return await this.zome.get_webapp_package_entry( this.for_package );
+	return await this.zome.get_webapp_package( this.for_package );
     }
 }
 

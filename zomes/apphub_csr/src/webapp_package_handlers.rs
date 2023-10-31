@@ -1,12 +1,19 @@
 use crate::{
     hdk,
     hdk_extensions,
+    hdi_extensions,
     WebAppPackageAnchor,
     ALL_APPS_ANCHOR,
 };
 
 use std::collections::BTreeMap;
 use hdk::prelude::*;
+use hdk_extensions::{
+    must_get,
+};
+use hdi_extensions::{
+    ScopedTypeConnector,
+};
 use apphub::{
     LinkTypes,
     WebAppPackageEntry,
@@ -14,7 +21,8 @@ use apphub::{
     MemoryAddr,
     hc_crud::{
         Entity, EntityId,
-        create_entity, get_entity,
+        UpdateEntityInput,
+        create_entity, get_entity, update_entity,
     },
 };
 use apphub_sdk::{
@@ -60,7 +68,14 @@ fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) -> ExternRe
 }
 
 #[hdk_extern]
-fn get_webapp_package_entry(addr: ActionHash) -> ExternResult<Entity<WebAppPackageEntry>> {
+fn get_webapp_package_entry(addr: AnyDhtHash) -> ExternResult<WebAppPackageEntry> {
+    let record = must_get( &addr )?;
+
+    Ok( WebAppPackageEntry::try_from_record( &record )? )
+}
+
+#[hdk_extern]
+fn get_webapp_package(addr: ActionHash) -> ExternResult<Entity<WebAppPackageEntry>> {
     Ok( get_entity( &addr )? )
 }
 
@@ -94,13 +109,53 @@ fn get_webapp_package_versions(webapp_package_id: EntityId) ->
 
 
 #[hdk_extern]
-fn get_all_webapp_package_entries(_: ()) -> ExternResult<Vec<Entity<WebAppPackageEntry>>> {
+fn get_all_webapp_packages(_: ()) -> ExternResult<Vec<Entity<WebAppPackageEntry>>> {
     let webapps = get_links( ALL_APPS_ANCHOR.clone(), LinkTypes::WebAppPackage, None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_action_hash()?;
-            get_webapp_package_entry( addr ).ok()
+            get_webapp_package( addr ).ok()
         })
         .collect();
 
     Ok( webapps )
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UpdateWebAppPackageEntryInput {
+    pub title: Option<String>,
+    pub subtitle: Option<String>,
+    pub description: Option<String>,
+    pub icon: Option<MemoryAddr>,
+    pub metadata: Option<BTreeMap<String, rmpv::Value>>,
+    pub maintainer: Option<Authority>,
+    pub source_code_url: Option<String>,
+}
+
+#[hdk_extern]
+fn update_webapp_package_entry(input: UpdateEntityInput<UpdateWebAppPackageEntryInput>) -> ExternResult<Entity<WebAppPackageEntry>> {
+    let changes = input.properties;
+    let entity = update_entity( &input.base, |webapp_package: WebAppPackageEntry, _| {
+        let entry = WebAppPackageEntry {
+            title: changes.title
+                .unwrap_or( webapp_package.title ),
+            subtitle: changes.subtitle
+                .unwrap_or( webapp_package.subtitle ),
+            description: changes.description
+                .unwrap_or( webapp_package.description ),
+            maintainer: changes.maintainer
+                .unwrap_or( webapp_package.maintainer ).into(),
+            icon: changes.icon
+                .unwrap_or( webapp_package.icon ),
+            source_code_url: changes.source_code_url
+                .or( webapp_package.source_code_url ),
+            deprecation: None,
+            metadata: changes.metadata
+                .unwrap_or( webapp_package.metadata ),
+        };
+
+	Ok( entry )
+    })?;
+
+    Ok( entity )
 }

@@ -1,5 +1,6 @@
 // 118kb = 114kb + this
 import {
+    AnyDhtHash,
     AgentPubKey,
     ActionHash, EntryHash,
 }					from '@spartan-hc/holo-hash'; // approx. 11kb
@@ -44,7 +45,7 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	return new EntryHash( result );
     },
     async get_dna_entry ( input ) {
-	const result			= await this.call( new EntryHash( input ) );
+	const result			= await this.call( new AnyDhtHash( input ) );
 
 	return DnaEntry( result );
     },

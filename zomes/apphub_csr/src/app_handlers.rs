@@ -44,7 +44,7 @@ fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-fn get_app_entry(addr: EntryHash) -> ExternResult<AppEntry> {
+fn get_app_entry(addr: AnyDhtHash) -> ExternResult<AppEntry> {
     let record = must_get( &addr )?;
 
     Ok( AppEntry::try_from_record( &record )? )
@@ -59,7 +59,7 @@ fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResul
     let apps = get_links( agent_id, LinkTypes::App, None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
-            get_app_entry( addr ).ok()
+            get_app_entry( addr.into() ).ok()
         })
         .collect();
 
