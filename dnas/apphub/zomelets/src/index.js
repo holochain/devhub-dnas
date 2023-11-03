@@ -22,6 +22,7 @@ import {
     rsort as semverReverseSort
 }					from 'semver'; // approx. 32kb
 import {
+    Link,
     AppEntry,
     UiEntry,
     WebAppEntry,
@@ -68,7 +69,8 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return AppEntry( result );
     },
     async get_app_entries_for_agent ( input ) {
-	const entries			= await this.call(); // new AgentPubKey( input )
+	const agent_id			= input ? new AgentPubKey( input ) : input;
+	const entries			= await this.call( agent_id );
 
 	return entries.map( entry => AppEntry( entry ) );
     },
@@ -109,7 +111,8 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return WebAppEntry( result );
     },
     async get_webapp_entries_for_agent ( input ) {
-	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
+	const agent_id			= input ? new AgentPubKey( input ) : input;
+	const entries			= await this.call( agent_id );
 
 	return entries.map( entry => WebAppEntry( entry ) );
     },
@@ -117,6 +120,9 @@ export const AppHubCSRZomelet		= new Zomelet({
 
     // WebApp Package
 
+    async create_webapp_package ( input ) {
+	return await this.call( input );
+    },
     async create_webapp_package_entry ( input ) {
 	input.icon			= await this.zomes.mere_memory_api.save( input.icon );
 
@@ -134,25 +140,6 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const result			= await this.call( new ActionHash( input ) );
 
 	return new WebAppPackage( result, this );
-    },
-    async update_webapp_package ( input ) {
-	if ( input.icon && input.icon.length > 39 )
-	    input.icon			= await this.zomes.mere_memory_api.save( input.icon );
-
-	this.log.trace("Update WebApp package input:", input );
-	const result			= await this.call( input );
-
-	return new WebAppPackage( result, this );
-    },
-    "create_webapp_package_link_to_version":	true,
-    async get_webapp_package_version_links ( input ) {
-	const link_map			= await this.call( input );
-
-	for ( let [key, value] of Object.entries( link_map ) ) {
-	    link_map[ key ]		= new ActionHash( value );
-	}
-
-	return link_map;
     },
     async get_webapp_package_versions ( input ) {
 	const version_map		= await this.call( input );
@@ -182,11 +169,73 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return entries.map( entity => new WebAppPackage( entity, this ) );
     },
+    async update_webapp_package ( input ) {
+	if ( input.icon && input.icon.length > 39 )
+	    input.icon			= await this.zomes.mere_memory_api.save( input.icon );
+
+	this.log.trace("Update WebApp package input:", input );
+	const result			= await this.call( input );
+
+	return new WebAppPackage( result, this );
+    },
+    async deprecate_webapp_package ( input ) {
+	return await this.call( input );
+    },
+    // WebApp Package Links
+    async create_webapp_package_link_to_version ( input ) {
+	return new ActionHash( await this.call( input ) );
+    },
+    async delete_webapp_package_links_to_version ( input ) {
+	let deleted_links		= await this.call( input );
+
+	return deleted_links.map( addr => new ActionHash( addr ) );
+    },
+    async get_webapp_package_version_links ( input ) {
+	const link_map			= await this.call( input );
+
+	for ( let [key, value] of Object.entries( link_map ) ) {
+	    link_map[ key ]		= new Link( value );
+	}
+
+	return link_map;
+    },
+    async get_webapp_package_version_targets ( input ) {
+	const link_map			= await this.call( input );
+	const version_names		= Object.keys( link_map );
+
+	for ( let [key, value] of Object.entries( link_map ) ) {
+	    link_map[ key ]		= new ActionHash( value );
+	}
+
+	this.log.info("Found %s versions for WebApp Package (%s): %s", () => [
+	    version_names.length, input, version_names.join(", ") ]);
+
+	return link_map;
+    },
 
 
     // WebApp Package Version
 
+    async create_webapp_package_version ( input ) {
+	if ( typeof input.version !== "string" )
+	    throw new TypeError(`Missing 'version' input`);
+
+	const version_link_map		= await this.functions.get_webapp_package_version_targets( input.for_package );
+
+	if ( input.version in version_link_map )
+	    throw new Error(`Version '${input.version}' already exists for package ${input.for_package}`);
+
+	const result			= await this.call( input );
+
+	return new WebAppPackageVersion( result, this );
+    },
     async create_webapp_package_version_entry ( input ) {
+	const result			= await this.call( input );
+
+	return new WebAppPackageVersion( result, this );
+    },
+    async update_webapp_package_version ( input ) {
+	this.log.trace("Update WebApp package versioninput:", input );
 	const result			= await this.call( input );
 
 	return new WebAppPackageVersion( result, this );
@@ -198,6 +247,11 @@ export const AppHubCSRZomelet		= new Zomelet({
     },
     async get_webapp_package_version ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
+
+	return new WebAppPackageVersion( result, this );
+    },
+    async move_webapp_package_version ( input ) {
+	const result			= await this.call( input );
 
 	return new WebAppPackageVersion( result, this );
     },
@@ -266,31 +320,6 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return await this.functions.create_webapp_entry({
 	    "manifest": bundle.manifest,
 	});
-    },
-    async create_webapp_package_version ( input ) {
-	if ( typeof input.version !== "string" )
-	    throw new TypeError(`Missing 'version' input`);
-
-	const version_link_map		= await this.functions.get_webapp_package_version_links( input.for_package );
-
-	if ( input.version in version_link_map )
-	    throw new Error(`Version '${input.version}' already exists for package ${input.for_package}`);
-
-	const entity			= await this.functions.create_webapp_package_version_entry( input );
-
-	await this.functions.create_webapp_package_link_to_version({
-	    "version":				input.version,
-	    "webapp_package_id":		entity.for_package,
-	    "webapp_package_version_id":	entity.$id,
-	});
-
-	return entity;
-    },
-    async update_webapp_package_version ( input ) {
-	this.log.trace("Update WebApp package versioninput:", input );
-	const result			= await this.call( input );
-
-	return new WebAppPackageVersion( result, this );
     },
 }, {
     "zomes": {

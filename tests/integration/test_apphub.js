@@ -3,7 +3,6 @@ const log				= new Logger("test-dnahub-basic", process.env.LOG_LEVEL );
 
 import why				from 'why-is-node-running';
 
-import * as fs				from 'node:fs/promises';
 import path				from 'path';
 import crypto				from 'crypto';
 
@@ -38,6 +37,10 @@ import {
     happConfig,
     webhappConfig,
 }					from '../utils.js';
+import apps_suite			from './apphub/apps_suite.js';
+import webapps_suite			from './apphub/webapps_suite.js';
+import webapp_packages_suite		from './apphub/webapp_packages_suite.js';
+import webapp_package_versions_suite	from './apphub/webapp_package_versions_suite.js';
 
 
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
@@ -178,6 +181,29 @@ function basic_tests () {
 
 	expect( addr			).to.deep.equal( webapp1_addr );
     });
+
+    function common_args_plus( args ) {
+	return Object.assign({
+	    app_client,
+	    zomehub,
+	    dnahub,
+	    apphub,
+	    zomehub_csr,
+	    dnahub_csr,
+	    apphub_csr,
+	}, args );
+    }
+
+    linearSuite("Apps", apps_suite, () => common_args_plus() );
+    linearSuite("WebApps", webapps_suite, () => common_args_plus() );
+
+    linearSuite("WebApp Packages", webapp_packages_suite, () => common_args_plus({
+	webapp1_addr,
+    }));
+
+    linearSuite("WebApp Package Versions", webapp_package_versions_suite, () => common_args_plus({
+	webapp1_addr,
+    }));
 
     after(async function () {
 	await client.close();

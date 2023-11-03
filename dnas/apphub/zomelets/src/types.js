@@ -1,7 +1,10 @@
 
 import { Bytes }			from '@whi/bytes-class';
-import { AgentPubKey, HoloHash,
-	 ActionHash, EntryHash }	from '@spartan-hc/holo-hash';
+import {
+    AnyLinkableHash,
+    AgentPubKey, HoloHash,
+    ActionHash, EntryHash
+}					from '@spartan-hc/holo-hash';
 import {
     DnaTokenStruct,
 }					from '@holochain/dnahub-zomelets';
@@ -11,6 +14,42 @@ import {
     AnyType, OptionType,
     VecType, MapType,
 }					from '@spartan-hc/caps-entities';
+
+
+
+//
+// Common Structs
+//
+export const LinkStruct = {
+    "author":			AgentPubKey,
+    "target":			AnyLinkableHash,
+    "timestamp":		Number,
+    "zome_index":		Number,
+    "link_type":		Number,
+    "tag":			Uint8Array,
+    "create_link_hash":		ActionHash,
+}
+
+export class Link {
+    constructor ( data ) {
+	Object.assign( this, intoStruct( data, LinkStruct ) );
+    }
+
+    tagString () {
+	return this.tag;
+    }
+
+    toJSON () {
+	const decoder		= new TextDecoder();
+	const data		= Object.assign( {}, this );
+	try {
+	    data.tag		= decoder.decode( data.tag );
+	} catch (_) {
+	    // Tag doesn't need to be a string
+	}
+	return data;
+    }
+}
 
 
 //
@@ -120,8 +159,33 @@ export function WebAppPackageEntry ( entry ) {
 export class WebAppPackage extends ScopedEntity {
     static STRUCT		= WebAppPackageStruct;
 
-    async versions () {
+    async $versions () {
 	return await this.zome.get_webapp_package_versions_sorted( this.$id );
+    }
+
+    async $update ( changes ) {
+	const result		= await this.zome.update_webapp_package({
+	    "base": this.$action,
+	    "properties": changes,
+	});
+
+	super.$update( result );
+
+	return this;
+    }
+
+    async $deprecate ( message, recommended_alternatives = [] ) {
+	const result		= await this.zome.deprecate_webapp_package({
+	    "base": this.$action,
+	    "properties": {
+		message,
+		recommended_alternatives,
+	    },
+	});
+
+	super.$update( result );
+
+	return this;
     }
 }
 
@@ -153,7 +217,18 @@ export function WebAppPackageVersionEntry ( entry ) {
 export class WebAppPackageVersion extends ScopedEntity {
     static STRUCT		= WebAppPackageVersionStruct;
 
-    async getWebAppPackage () {
+    async $update ( changes ) {
+	const result		= await this.zome.update_webapp_package_version({
+	    "base": this.$action,
+	    "properties": changes,
+	});
+
+	super.$update( result );
+
+	return this;
+    }
+
+    async $getWebAppPackage () {
 	return await this.zome.get_webapp_package( this.for_package );
     }
 }
@@ -161,6 +236,9 @@ export class WebAppPackageVersion extends ScopedEntity {
 
 
 export default {
+    LinkStruct,
+    Link,
+
     AppStruct,
     AppEntry,
 

@@ -22,7 +22,7 @@ pub struct CreateUiEntryInput {
 }
 
 #[hdk_extern]
-fn create_ui_entry(input: CreateUiEntryInput) -> ExternResult<EntryHash> {
+pub fn create_ui_entry(input: CreateUiEntryInput) -> ExternResult<EntryHash> {
     let agent_id = hdk_extensions::agent_id()?;
     let entry = UiEntry::new( input.mere_memory_addr )?;
 
@@ -35,14 +35,14 @@ fn create_ui_entry(input: CreateUiEntryInput) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-fn get_ui_entry(addr: EntryHash) -> ExternResult<UiEntry> {
+pub fn get_ui_entry(addr: EntryHash) -> ExternResult<UiEntry> {
     let record = must_get( &addr )?;
 
     Ok( UiEntry::try_from_record( &record )? )
 }
 
 #[hdk_extern]
-fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<UiEntry>> {
+pub fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<UiEntry>> {
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,

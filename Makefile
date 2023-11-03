@@ -197,8 +197,8 @@ test-integration:
 	make test-zomehub
 	make test-dnahub
 	make test-apphub
-	make test-webapp-upload
 	make test-real-uploads
+	make test-webapp-upload
 
 DEBUG_LEVEL	       ?= warn
 TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)

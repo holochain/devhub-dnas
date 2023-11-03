@@ -1,6 +1,9 @@
-use crate::hdk;
-use crate::hdk_extensions;
-use crate::hdi_extensions;
+use crate::{
+    hdk,
+    hdk_extensions,
+    hdi_extensions,
+    MY_APPS_ANCHOR,
+};
 
 use hdk::prelude::*;
 use hdk_extensions::{
@@ -14,9 +17,9 @@ use apphub::{
     AppEntry, AppManifestV1,
 };
 use apphub_sdk::{
+    LinkBase,
     RolesDnaTokensInput,
 };
-
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -26,8 +29,7 @@ pub struct CreateAppEntryInput {
 }
 
 #[hdk_extern]
-fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<EntryHash> {
-    let agent_id = hdk_extensions::agent_id()?;
+pub fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<EntryHash> {
     let entry = AppEntry::new(
         input.manifest,
         input.roles_dna_tokens.into_iter()
@@ -38,25 +40,29 @@ fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<EntryHash> {
     let entry_hash = hash_entry( entry.clone() )?;
     create_entry( entry.to_input() )?;
 
-    create_link( agent_id, entry_hash.clone(), LinkTypes::App, () )?;
+    MY_APPS_ANCHOR.create_link_if_not_exists( &entry_hash, () )?;
 
     Ok( entry_hash )
 }
 
+
 #[hdk_extern]
-fn get_app_entry(addr: AnyDhtHash) -> ExternResult<AppEntry> {
+pub fn get_app_entry(addr: AnyDhtHash) -> ExternResult<AppEntry> {
     let record = must_get( &addr )?;
 
     Ok( AppEntry::try_from_record( &record )? )
 }
 
+
 #[hdk_extern]
-fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<AppEntry>> {
+pub fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<AppEntry>> {
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
     };
-    let apps = get_links( agent_id, LinkTypes::App, None )?.into_iter()
+    let agent_anchor = LinkBase::new( agent_id, LinkTypes::App );
+
+    let apps = agent_anchor.get_links( None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
             get_app_entry( addr.into() ).ok()

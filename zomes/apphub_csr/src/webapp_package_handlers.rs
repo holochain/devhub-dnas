@@ -2,8 +2,8 @@ use crate::{
     hdk,
     hdk_extensions,
     hdi_extensions,
-    WebAppPackageAnchor,
-    ALL_APPS_ANCHOR,
+    WebAppPackageBase,
+    ALL_WEBAPP_PACKS_ANCHOR,
 };
 
 use std::collections::BTreeMap;
@@ -19,6 +19,7 @@ use apphub::{
     WebAppPackageEntry,
     Authority,
     MemoryAddr,
+    DeprecationNotice,
     hc_crud::{
         Entity, EntityId,
         UpdateEntityInput,
@@ -29,7 +30,6 @@ use apphub_sdk::{
     EntityPointerMap,
     WebAppPackageVersionMap,
 };
-
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -47,7 +47,9 @@ pub struct CreateWebAppPackageEntryInput {
 }
 
 #[hdk_extern]
-fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) -> ExternResult<Entity<WebAppPackageEntry>> {
+pub fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) ->
+    ExternResult<Entity<WebAppPackageEntry>>
+{
     let agent_id = hdk_extensions::agent_id()?;
     let entry = WebAppPackageEntry {
         title: input.title,
@@ -63,33 +65,45 @@ fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) -> ExternRe
     let entity = create_entity( &entry )?;
 
     create_link( agent_id, entity.id.clone(), LinkTypes::WebAppPackage, () )?;
-    create_link( ALL_APPS_ANCHOR.clone(), entity.id.clone(), LinkTypes::WebAppPackage, () )?;
+
+    ALL_WEBAPP_PACKS_ANCHOR.create_link_if_not_exists( &entity.id, () )?;
 
     Ok( entity )
 }
 
+
 #[hdk_extern]
-fn get_webapp_package_entry(addr: AnyDhtHash) -> ExternResult<WebAppPackageEntry> {
+pub fn create_webapp_package(input: CreateWebAppPackageEntryInput) ->
+    ExternResult<Entity<WebAppPackageEntry>>
+{
+    create_webapp_package_entry( input )
+}
+
+
+#[hdk_extern]
+pub fn get_webapp_package_entry(addr: AnyDhtHash) -> ExternResult<WebAppPackageEntry> {
     let record = must_get( &addr )?;
 
     Ok( WebAppPackageEntry::try_from_record( &record )? )
 }
 
 #[hdk_extern]
-fn get_webapp_package(addr: ActionHash) -> ExternResult<Entity<WebAppPackageEntry>> {
+pub fn get_webapp_package(addr: ActionHash) -> ExternResult<Entity<WebAppPackageEntry>> {
     Ok( get_entity( &addr )? )
 }
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct LinkWebAppPackageVersionInput {
+pub struct CreateLinkWebAppPackageVersionInput {
     pub version: String,
     pub webapp_package_id: EntityId,
     pub webapp_package_version_id: EntityId,
 }
 
 #[hdk_extern]
-fn create_webapp_package_link_to_version(input: LinkWebAppPackageVersionInput) -> ExternResult<ActionHash> {
+pub fn create_webapp_package_link_to_version(input: CreateLinkWebAppPackageVersionInput) ->
+    ExternResult<ActionHash>
+{
     create_link(
         input.webapp_package_id,
         input.webapp_package_version_id,
@@ -99,29 +113,63 @@ fn create_webapp_package_link_to_version(input: LinkWebAppPackageVersionInput) -
 }
 
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DeleteLinkWebAppPackageVersionInput {
+    pub version: String,
+    pub webapp_package_id: EntityId,
+}
+
 #[hdk_extern]
-fn get_webapp_package_version_links(webapp_package_id: EntityId) ->
+pub fn delete_webapp_package_links_to_version(input: DeleteLinkWebAppPackageVersionInput) ->
+    ExternResult<Vec<ActionHash>>
+{
+    let base = WebAppPackageBase::new( &input.webapp_package_id );
+    let links = base.links_for_version( &input.version )?;
+
+    let mut deleted_links = Vec::new();
+
+    for link in links {
+        delete_link( link.create_link_hash.clone() )?;
+        deleted_links.push( link.create_link_hash );
+    }
+
+    Ok( deleted_links )
+}
+
+
+#[hdk_extern]
+pub fn get_webapp_package_version_links(webapp_package_id: EntityId) ->
+    ExternResult<Vec<Link>>
+{
+    let base = WebAppPackageBase::new( &webapp_package_id );
+
+    Ok( base.version_links()? )
+}
+
+
+#[hdk_extern]
+pub fn get_webapp_package_version_targets(webapp_package_id: EntityId) ->
     ExternResult<EntityPointerMap>
 {
-    let anchor = WebAppPackageAnchor::new( &webapp_package_id );
+    let base = WebAppPackageBase::new( &webapp_package_id );
 
-    Ok( anchor.version_links()? )
+    Ok( base.version_targets()? )
 }
 
 
 #[hdk_extern]
-fn get_webapp_package_versions(webapp_package_id: EntityId) ->
+pub fn get_webapp_package_versions(webapp_package_id: EntityId) ->
     ExternResult<WebAppPackageVersionMap>
 {
-    let anchor = WebAppPackageAnchor::new( &webapp_package_id );
+    let base = WebAppPackageBase::new( &webapp_package_id );
 
-    Ok( anchor.versions()? )
+    Ok( base.versions()? )
 }
 
 
 #[hdk_extern]
-fn get_all_webapp_packages(_: ()) -> ExternResult<Vec<Entity<WebAppPackageEntry>>> {
-    let webapps = get_links( ALL_APPS_ANCHOR.clone(), LinkTypes::WebAppPackage, None )?.into_iter()
+pub fn get_all_webapp_packages(_: ()) -> ExternResult<Vec<Entity<WebAppPackageEntry>>> {
+    let webapps = ALL_WEBAPP_PACKS_ANCHOR.get_links( None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_action_hash()?;
             get_webapp_package( addr ).ok()
@@ -140,11 +188,12 @@ pub struct UpdateWebAppPackageInput {
     pub icon: Option<MemoryAddr>,
     pub maintainer: Option<Authority>,
     pub source_code_uri: Option<String>,
+    pub deprecation: Option<DeprecationNotice>,
     pub metadata: Option<BTreeMap<String, rmpv::Value>>,
 }
 
 #[hdk_extern]
-fn update_webapp_package(input: UpdateEntityInput<UpdateWebAppPackageInput>) ->
+pub fn update_webapp_package(input: UpdateEntityInput<UpdateWebAppPackageInput>) ->
     ExternResult<Entity<WebAppPackageEntry>>
 {
     let changes = input.properties;
@@ -162,13 +211,30 @@ fn update_webapp_package(input: UpdateEntityInput<UpdateWebAppPackageInput>) ->
                 .unwrap_or( package.icon ),
             source_code_uri: changes.source_code_uri
                 .or( package.source_code_uri ),
-            deprecation: None,
+            deprecation: changes.deprecation
+                .or( package.deprecation ),
             metadata: changes.metadata
                 .unwrap_or( package.metadata ),
         };
 
 	Ok( entry )
     })?;
+
+    Ok( entity )
+}
+
+
+#[hdk_extern]
+pub fn deprecate_webapp_package(input: UpdateEntityInput<DeprecationNotice>) ->
+    ExternResult<Entity<WebAppPackageEntry>>
+{
+    let entity = update_entity( &input.base, |mut package: WebAppPackageEntry, _| {
+        package.deprecation = Some(input.properties.clone());
+
+	Ok( package )
+    })?;
+
+    ALL_WEBAPP_PACKS_ANCHOR.delete_all_my_links_to_target( &entity.id, None )?;
 
     Ok( entity )
 }

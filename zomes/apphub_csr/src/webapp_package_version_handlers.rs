@@ -1,6 +1,7 @@
 use crate::hdk;
 use crate::hdk_extensions;
 use crate::hdi_extensions;
+use crate::webapp_package_handlers;
 
 use std::collections::BTreeMap;
 use hdk::prelude::*;
@@ -22,7 +23,15 @@ use apphub::{
         create_entity, get_entity, update_entity,
     },
 };
-
+use apphub_sdk::{
+    MoveLinkInput,
+};
+use webapp_package_handlers::{
+    DeleteLinkWebAppPackageVersionInput,
+    CreateLinkWebAppPackageVersionInput,
+    delete_webapp_package_links_to_version,
+    create_webapp_package_link_to_version,
+};
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -39,7 +48,9 @@ pub struct CreateWebAppPackageVersionEntryInput {
 }
 
 #[hdk_extern]
-fn create_webapp_package_version_entry(input: CreateWebAppPackageVersionEntryInput) -> ExternResult<Entity<WebAppPackageVersionEntry>> {
+pub fn create_webapp_package_version_entry(input: CreateWebAppPackageVersionEntryInput) ->
+    ExternResult<Entity<WebAppPackageVersionEntry>>
+{
     let agent_id = hdk_extensions::agent_id()?;
     let webapp_entry = WebAppEntry::try_from_record( &must_get( &input.webapp )? )?;
 
@@ -61,8 +72,40 @@ fn create_webapp_package_version_entry(input: CreateWebAppPackageVersionEntryInp
     Ok( entity )
 }
 
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateWebAppPackageVersionInput {
+    pub version: String,
+    #[serde(flatten)]
+    webapp_package_version_input: CreateWebAppPackageVersionEntryInput,
+}
+
 #[hdk_extern]
-fn get_webapp_package_version_entry(addr: ActionHash) ->
+pub fn create_webapp_package_version(input: CreateWebAppPackageVersionInput) ->
+    ExternResult<Entity<WebAppPackageVersionEntry>>
+{
+    let version = input.webapp_package_version_input;
+    let entity = create_webapp_package_version_entry(CreateWebAppPackageVersionEntryInput {
+        for_package: version.for_package.clone(),
+        webapp: version.webapp,
+        metadata: version.metadata,
+        changelog: version.changelog,
+        maintainer: version.maintainer,
+        source_code_revision_uri: version.source_code_revision_uri,
+    })?;
+
+    create_webapp_package_link_to_version(CreateLinkWebAppPackageVersionInput {
+	version: input.version,
+	webapp_package_id: version.for_package,
+	webapp_package_version_id: entity.id.clone(),
+    })?;
+
+    Ok( entity )
+}
+
+
+#[hdk_extern]
+pub fn get_webapp_package_version_entry(addr: ActionHash) ->
     ExternResult<WebAppPackageVersionEntry>
 {
     let record = must_get( &addr )?;
@@ -70,8 +113,9 @@ fn get_webapp_package_version_entry(addr: ActionHash) ->
     Ok( WebAppPackageVersionEntry::try_from_record( &record )? )
 }
 
+
 #[hdk_extern]
-fn get_webapp_package_version(addr: ActionHash) ->
+pub fn get_webapp_package_version(addr: ActionHash) ->
     ExternResult<Entity<WebAppPackageVersionEntry>>
 {
     Ok( get_entity( &addr )? )
@@ -88,7 +132,7 @@ pub struct UpdateWebAppPackageVersionInput {
 }
 
 #[hdk_extern]
-fn update_webapp_package_version(input: UpdateEntityInput<UpdateWebAppPackageVersionInput>) ->
+pub fn update_webapp_package_version(input: UpdateEntityInput<UpdateWebAppPackageVersionInput>) ->
     ExternResult<Entity<WebAppPackageVersionEntry>>
 {
     let changes = input.properties;
@@ -109,6 +153,45 @@ fn update_webapp_package_version(input: UpdateEntityInput<UpdateWebAppPackageVer
         };
 
 	Ok( entry )
+    })?;
+
+    Ok( entity )
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MoveWebAppPackageVersionInput {
+    pub version: String,
+    pub webapp_package_version_id: ActionHash,
+    pub webapp_package_ids: MoveLinkInput<ActionHash>,
+}
+
+#[hdk_extern]
+pub fn move_webapp_package_version(input: MoveWebAppPackageVersionInput) ->
+    ExternResult<Entity<WebAppPackageVersionEntry>>
+{
+    let deleted_links = delete_webapp_package_links_to_version(DeleteLinkWebAppPackageVersionInput {
+	version: input.version.clone(),
+	webapp_package_id: input.webapp_package_ids.from,
+    })?;
+    debug!("Deleted links: {:?}", deleted_links.iter().map( |hash| format!("{}", hash) ).collect::<Vec<String>>() );
+
+    let version = get_webapp_package_version( input.webapp_package_version_id.clone() )?;
+    let entity = update_webapp_package_version(UpdateEntityInput {
+	base: version.action.clone(),
+	properties: UpdateWebAppPackageVersionInput {
+	    for_package: Some(input.webapp_package_ids.to.clone()),
+            changelog: None,
+            maintainer: None,
+            source_code_revision_uri: None,
+            metadata: None,
+        },
+    })?;
+
+    create_webapp_package_link_to_version(CreateLinkWebAppPackageVersionInput {
+	version: input.version,
+	webapp_package_id: input.webapp_package_ids.to,
+	webapp_package_version_id: input.webapp_package_version_id.clone(),
     })?;
 
     Ok( entity )

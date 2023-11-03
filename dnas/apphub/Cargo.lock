@@ -1035,6 +1035,7 @@ name = "hc_devhub_sdk"
 version = "0.0.0"
 dependencies = [
  "hc_crud_caps",
+ "serde",
  "whi_hdk_extensions",
 ]
 
