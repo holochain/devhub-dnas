@@ -81,7 +81,7 @@ function real_tests () {
     let app_client;
     let zomehub;
     let zomehub_csr;
-    let wasm1_addr, wasm_entry;
+    let wasm1_addr, wasm1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -108,16 +108,17 @@ function real_tests () {
 	const WASM_PATH			= path.join( __dirname, "../../zomes/zomehub.wasm" );
 	const wasm_bytes		= await fs.readFile( WASM_PATH );
 
-	wasm1_addr			= await zomehub_csr.save_integrity( wasm_bytes );
+	wasm1				= await zomehub_csr.save_integrity( wasm_bytes );
+	wasm1_addr			= wasm1.$addr;
 
 	expect( wasm1_addr		).to.be.a("EntryHash");
     });
 
     it("should get wasm entry", async function () {
-	wasm_entry			= await zomehub_csr.get_wasm_entry( wasm1_addr );
-	log.trace("%s", json.debug(wasm_entry) );
+	const wasm			= await zomehub_csr.get_wasm_entry( wasm1_addr );
+	log.trace("%s", json.debug(wasm) );
 
-	expect( wasm_entry		).to.have.any.keys( "mere_memory_addr" );
+	expect( wasm			).to.have.any.keys( "mere_memory_addr" );
     });
 
     after(async function () {

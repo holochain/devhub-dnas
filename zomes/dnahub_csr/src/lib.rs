@@ -2,11 +2,29 @@ mod dna_handlers;
 
 pub use dnahub::hdi;
 pub use dnahub::hdi_extensions;
-use devhub_sdk::hdk;
-use devhub_sdk::hdk_extensions;
+pub use devhub_sdk::hdk;
+pub use devhub_sdk::hdk_extensions;
 
+use lazy_static::lazy_static;
 use hdk::prelude::*;
+use hdk_extensions::{
+    agent_id,
+};
+use dnahub::{
+    LinkTypes,
+};
+use dnahub_sdk::{
+    LinkBase,
+};
 
+
+pub type TypedLinkBase = LinkBase<LinkTypes>;
+
+lazy_static! {
+    pub static ref AGENT_ID : AgentPubKey = agent_id().expect("Unable to obtain current Agent context");
+
+    pub static ref MY_DNAS_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::Dna );
+}
 
 
 #[hdk_extern]

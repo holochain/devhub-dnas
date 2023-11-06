@@ -26,6 +26,7 @@ use apphub_sdk::{
     LinkBase,
 };
 
+
 pub type TypedLinkBase = LinkBase<LinkTypes>;
 
 lazy_static! {

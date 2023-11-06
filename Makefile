@@ -35,7 +35,8 @@ TARGET_DIR		= target/wasm32-unknown-unknown/release
 COMMON_SOURCE_FILES	= Makefile zomes/Cargo.toml
 INT_SOURCE_FILES	= $(COMMON_SOURCE_FILES) \
 				dnas/%/types/Cargo.toml dnas/%/types/src/*.rs \
-				zomes/%/Cargo.toml zomes/%/src/*.rs
+				zomes/%/Cargo.toml zomes/%/src/*.rs \
+				zomes/%/src/**
 CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
 				zomes/%_csr/Cargo.toml zomes/%_csr/src/*.rs \
 				dnas/%/sdk/Cargo.toml dnas/%/sdk/src/*.rs \

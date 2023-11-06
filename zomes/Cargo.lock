@@ -715,6 +715,7 @@ name = "dnahub"
 version = "0.0.0"
 dependencies = [
  "dnahub_types",
+ "hc_crud_caps",
  "serde",
 ]
 
@@ -723,8 +724,10 @@ name = "dnahub_csr"
 version = "0.0.0"
 dependencies = [
  "dnahub",
+ "dnahub_sdk",
  "hc_devhub_sdk",
  "hc_portal_sdk",
+ "lazy_static",
  "serde",
 ]
 
@@ -3528,6 +3531,7 @@ checksum = "2a0956f1ba7c7909bfb66c2e9e4124ab6f6482560f6628b5aaeba39207c9aad9"
 name = "zomehub"
 version = "0.0.0"
 dependencies = [
+ "hc_crud_caps",
  "serde",
  "zomehub_types",
 ]
@@ -3538,8 +3542,19 @@ version = "0.0.0"
 dependencies = [
  "hc_devhub_sdk",
  "hc_portal_sdk",
+ "lazy_static",
  "serde",
  "zomehub",
+ "zomehub_sdk",
+]
+
+[[package]]
+name = "zomehub_sdk"
+version = "0.0.0"
+dependencies = [
+ "hc_devhub_sdk",
+ "serde",
+ "zomehub_types",
 ]
 
 [[package]]

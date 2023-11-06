@@ -52,7 +52,7 @@ scoped_type_connector!(
     EntryTypes::Ui( UiEntry )
 );
 
-// Entry Types with CRUD models
+// Entity implementations
 entry_model!( EntryTypes::WebAppPackage( WebAppPackageEntry ) );
 entry_model!( EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry ) );
 

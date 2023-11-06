@@ -1,10 +1,14 @@
 
-import { AgentPubKey, HoloHash,
-	 ActionHash, EntryHash }	from '@spartan-hc/holo-hash';
 import {
+    AgentPubKey, HoloHash,
+    ActionHash, EntryHash
+}					from '@spartan-hc/holo-hash';
+import {
+    ScopedEntity,
     intoStruct,
-    OptionType, VecType, MapType,
-}					from '@whi/into-struct';
+    AnyType, OptionType,
+    VecType, MapType,
+}					from '@spartan-hc/caps-entities';
 
 
 export const WasmStruct = {
@@ -17,8 +21,13 @@ export function WasmEntry ( entry ) {
     return intoStruct( entry, WasmStruct );
 }
 
+export class Wasm extends ScopedEntity {
+    static STRUCT		= WasmStruct;
+}
+
 
 export default {
     WasmStruct,
     WasmEntry,
+    Wasm,
 };

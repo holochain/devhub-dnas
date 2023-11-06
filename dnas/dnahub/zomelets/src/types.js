@@ -1,12 +1,15 @@
 
 import { Bytes }			from '@whi/bytes-class';
-import { AgentPubKey, HoloHash,
-	 ActionHash, EntryHash }	from '@spartan-hc/holo-hash';
 import {
+    AgentPubKey, HoloHash,
+    ActionHash, EntryHash
+}					from '@spartan-hc/holo-hash';
+import {
+    ScopedEntity,
     intoStruct,
     AnyType, OptionType,
     VecType, MapType,
-}					from '@whi/into-struct';
+}					from '@spartan-hc/caps-entities';
 
 
 export const DnaTokenStruct = {
@@ -54,9 +57,14 @@ export function DnaEntry ( entry ) {
     return intoStruct( entry, DnaStruct );
 }
 
+export class Dna extends ScopedEntity {
+    static STRUCT		= DnaStruct;
+}
+
 
 export default {
     DnaTokenStruct,
     DnaStruct,
     DnaEntry,
+    Dna,
 };

@@ -61,6 +61,7 @@ describe("DnaHub", function () {
 	    },
 	}, {
 	    "app_port": APP_PORT,
+	    "actors": [ "alice", "bobby" ],
 	});
     });
 
@@ -82,7 +83,7 @@ function basic_tests () {
     let zomehub_csr;
     let dnahub;
     let dnahub_csr;
-    let dna1_addr;
+    let dna1_addr, dna1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -111,24 +112,78 @@ function basic_tests () {
 	const bundle			= Bundle.createDna( TEST_DNA_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
-	dna1_addr			= await dnahub_csr.save_dna( bundle_bytes );
+	dna1				= await dnahub_csr.save_dna( bundle_bytes );
 
-	expect( dna1_addr		).to.be.a("EntryHash");
+	expect( dna1			).to.be.a("Dna");
+
+	dna1_addr			= dna1.$addr;
     });
 
     it("should get DNA entry", async function () {
-	const dna1			= await dnahub_csr.get_dna_entry( dna1_addr );
+	const dna			= await dnahub_csr.get_dna_entry( dna1_addr );
 
-	log.normal("%s", json.debug(dna1) );
+	log.normal("%s", json.debug(dna) );
     });
 
     it("should upload the same DNA bundle", async function () {
 	const bundle			= Bundle.createDna( TEST_DNA_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
-	const addr			= await dnahub_csr.save_dna( bundle_bytes );
+	const dna			= await dnahub_csr.save_dna( bundle_bytes );
 
-	expect( addr			).to.deep.equal( dna1_addr );
+	expect( dna.$addr		).to.deep.equal( dna1.$addr );
+    });
+
+    linearSuite("Errors", function () {
+
+	it("should fail to create DNA entry because of wrong invalid DNA token", async function () {
+	    await expect_reject(async () => {
+		const entry		= await dnahub_csr.get_dna_entry( dna1_addr );
+
+		entry.dna_token.integrity_hash = crypto.randomBytes( 32 );
+
+		await dnahub_csr.create_dna_entry( entry );
+	    }, "Invalid DNA Token" );
+	});
+
+	it("should fail to create DNA entry because of wrong invalid integrities token", async function () {
+	    await expect_reject(async () => {
+		const entry		= await dnahub_csr.get_dna_entry( dna1_addr );
+
+		entry.integrities_token[0][1] = crypto.randomBytes( 32 );
+
+		await dnahub_csr.create_dna_entry( entry );
+	    }, "Invalid Integrities Token" );
+	});
+
+	it("should fail to create DNA entry because of wrong invalid coordinators token", async function () {
+	    await expect_reject(async () => {
+		const entry		= await dnahub_csr.get_dna_entry( dna1_addr );
+
+		entry.coordinators_token[0][1] = crypto.randomBytes( 32 );
+
+		await dnahub_csr.create_dna_entry( entry );
+	    }, "Invalid Coordinators Token" );
+	});
+
+	it("should fail to update DNA entry");
+
+	it("should fail to delete DNA entry because author", async function () {
+	    const bundle		= Bundle.createDna( TEST_DNA_CONFIG );
+	    const dna_bytes		= bundle.toBytes();
+
+	    let dna			= await dnahub_csr.save_dna( dna_bytes );
+
+	    const bobby_client		= await client.app( "test-bobby" );
+	    const bobby_dnahub_csr	= bobby_client
+		  .createCellInterface( DNAHUB_DNA_NAME, DnaHubCell )
+		  .zomes.dnahub_csr.functions;
+
+	    await expect_reject(async () => {
+		await bobby_dnahub_csr.delete_dna( dna.$id );
+	    }, "Not authorized to delete entry created by author" );
+	});
+
     });
 
     after(async function () {

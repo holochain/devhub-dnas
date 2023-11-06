@@ -81,7 +81,8 @@ impl WasmEntry {
         let entry = WasmEntry {
             wasm_type: wtype,
             mere_memory_addr: addr,
-            file_size: memory.memory_size,
+            file_size: memory.uncompressed_size
+                .unwrap_or( memory.memory_size ),
         };
 
         Ok( entry )

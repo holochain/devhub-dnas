@@ -19,14 +19,11 @@ import HolochainBackdrop		from '@spartan-hc/holochain-backdrop';
 const { Holochain }			= HolochainBackdrop;
 
 import {
-    ZomeHubCSRZomelet,
-    MereMemoryZomelet,
+    ZomeHubCell,
+    WASM_TYPES,
 }					from '@holochain/zomehub-zomelets';
 import {
     AppInterfaceClient,
-    CellZomelets,
-    Zomelet,
-    Transformer,
 }					from '@spartan-hc/app-interface-client';
 
 import {
@@ -43,12 +40,6 @@ const ZOMEHUB_DNA_NAME			= "zomehub";
 const MAIN_ZOME				= "zomehub_csr";
 const MERE_ZOME				= "mere_memory_api";
 
-const zomehub_spec			= new CellZomelets({
-    [MAIN_ZOME]: ZomeHubCSRZomelet,
-    [MERE_ZOME]: MereMemoryZomelet,
-});
-
-let agents				= {};
 
 describe("ZomeHub", function () {
     const holochain			= new Holochain({
@@ -59,12 +50,13 @@ describe("ZomeHub", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	const actors			= await holochain.backdrop({
+	await holochain.backdrop({
 	    "test": {
 		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
 	    },
 	}, {
 	    "app_port": APP_PORT,
+	    "actors": [ "alice", "bobby" ],
 	});
     });
 
@@ -83,7 +75,7 @@ function basic_tests () {
     let app_client;
     let zomehub;
     let zomehub_csr;
-    let wasm1_addr, wasm_entry;
+    let wasm1_addr, wasm1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -96,7 +88,7 @@ function basic_tests () {
 	({
 	    zomehub,
 	}				= app_client.createInterface({
-	    [ZOMEHUB_DNA_NAME]:	zomehub_spec
+	    [ZOMEHUB_DNA_NAME]:	ZomeHubCell,
 	}));
 
 	zomehub_csr			= zomehub.zomes.zomehub_csr.functions;
@@ -104,19 +96,19 @@ function basic_tests () {
 	await zomehub_csr.whoami();
     });
 
-    it("should create wasm entry", async function () {
-	this.timeout( 10_000 );
+    it("should save integrity wasm", async function () {
+	wasm1				= await zomehub_csr.save_integrity( wasm1_bytes );
 
-	wasm1_addr			= await zomehub_csr.save_integrity( wasm1_bytes );
+	expect( wasm1			).to.be.a("Wasm");
 
-	expect( wasm1_addr		).to.be.a("EntryHash");
+	wasm1_addr			= wasm1.$addr;
     });
 
     it("should get wasm entry", async function () {
-	wasm_entry			= await zomehub_csr.get_wasm_entry( wasm1_addr );
-	log.trace("%s", json.debug(wasm_entry) );
+	const wasm			= await zomehub_csr.get_wasm_entry( wasm1_addr );
+	log.trace("%s", json.debug(wasm) );
 
-	expect( wasm_entry		).to.have.any.keys( "mere_memory_addr" );
+	expect( wasm			).to.have.any.keys( "mere_memory_addr" );
     });
 
     it("should get all wasm entries for agent", async function () {
@@ -127,9 +119,44 @@ function basic_tests () {
     });
 
     it("should upload the same wasm", async function () {
-	const addr			= await zomehub_csr.save_integrity( wasm1_bytes );
+	const wasm			= await zomehub_csr.save_integrity( wasm1_bytes );
 
-	expect( addr			).to.deep.equal( wasm1_addr );
+	expect( wasm.$addr		).to.deep.equal( wasm1_addr );
+    });
+
+    it("should delete wasm", async function () {
+	const result			= await zomehub_csr.delete_wasm( wasm1.$id );
+
+	expect( result			).to.be.a("ActionHash");
+    });
+
+    linearSuite("Errors", function () {
+
+	it("should fail to create wasm entry because of wrong file size", async function () {
+	    await expect_reject(async () => {
+		await zomehub_csr.create_wasm_entry({
+		    "wasm_type": WASM_TYPES.INTEGRITY,
+		    "mere_memory_addr": wasm1.mere_memory_addr,
+		    "file_size": 0,
+		});
+	    }, "File size does not match memory address" );
+	});
+
+	it("should fail to update wasm entry");
+
+	it("should fail to delete wasm entry because author", async function () {
+	    let wasm			= await zomehub_csr.save_integrity( wasm1_bytes );
+
+	    const bobby_client		= await client.app( "test-bobby" );
+	    const bobby_zomehub_csr	= bobby_client
+		  .createCellInterface( ZOMEHUB_DNA_NAME, ZomeHubCell )
+		  .zomes.zomehub_csr.functions;
+
+	    await expect_reject(async () => {
+		await bobby_zomehub_csr.delete_wasm( wasm.$id );
+	    }, "Not authorized to delete entry created by author" );
+	});
+
     });
 
     after(async function () {

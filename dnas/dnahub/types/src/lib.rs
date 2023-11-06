@@ -21,7 +21,7 @@ pub type CoordinatorsToken = Vec<(String, Vec<u8>)>;
 
 
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct DnaToken {
     pub integrity_hash: Vec<u8>,
     pub integrities_token_hash: Vec<u8>,

@@ -1,8 +1,8 @@
 mod validation;
 
-// pub use hc_crud;
 pub use zomehub_types;
 pub use zomehub_types::*;
+pub use hc_crud;
 
 use serde::{
     Deserialize, Deserializer,
@@ -13,9 +13,9 @@ use hdi_extensions::{
     scoped_type_connector,
     ScopedTypeConnector,
 };
-// use hc_crud::{
-//     entry_model,
-// };
+use hc_crud::{
+    entry_model,
+};
 
 
 
@@ -31,6 +31,9 @@ scoped_type_connector!(
     EntryTypesUnit::Wasm,
     EntryTypes::Wasm( WasmEntry )
 );
+
+// Entity implementations
+entry_model!( EntryTypes::Wasm( WasmEntry ) );
 
 
 

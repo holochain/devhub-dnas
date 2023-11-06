@@ -10,6 +10,7 @@ import {
 import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets'; // approx. 33kb
 import {
     WasmEntry,
+    Wasm,
 }					from './types.js';
 
 
@@ -38,6 +39,11 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	},
     },
     async create_wasm_entry ( input ) {
+	const result			= await this.call( input );
+
+	return new Wasm( result, this );
+    },
+    async create_wasm ( input ) {
 	if ( !WASM_TYPE_NAMES.includes( input.wasm_type ) )
 	    throw new TypeError(`Invalid 'wasm_type' input '${input.wasm_type}'; expected ${WASM_TYPE_NAMES.join(", ")}`);
 
@@ -45,18 +51,22 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	const result			= await this.call( input );
 
-	return new EntryHash( result );
+	return new Wasm( result, this );
     },
     async get_wasm_entry ( input ) {
 	const result			= await this.call( new AnyDhtHash( input ) );
 
-	return WasmEntry( result );
+	return new Wasm( result, this );
     },
     async get_wasm_entries_for_agent ( input ) {
 	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
 
-	return entries.map( entry => WasmEntry( entry ) );
+	return entries.map( entry => new Wasm( entry, this ) );
     },
+    async delete_wasm ( input ) {
+	return new ActionHash( await this.call( new ActionHash( input ) ) );
+    },
+
 
     //
     // Virtual functions
@@ -64,7 +74,7 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     async save_integrity ( bytes ) {
 	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
-	return await this.functions.create_wasm_entry({
+	return await this.functions.create_wasm({
 	    "wasm_type": WASM_TYPES.INTEGRITY,
 	    "mere_memory_addr": addr,
 	});
@@ -72,7 +82,7 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     async save_coordinator ( bytes ) {
 	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
-	return await this.functions.create_wasm_entry({
+	return await this.functions.create_wasm({
 	    "wasm_type": WASM_TYPES.COORDINATOR,
 	    "mere_memory_addr": addr,
 	});

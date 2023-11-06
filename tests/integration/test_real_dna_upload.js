@@ -75,7 +75,7 @@ function real_tests () {
     let zomehub_csr;
     let dnahub;
     let dnahub_csr;
-    let dna1_addr, dna_entry;
+    let dna1_addr, dna1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -105,16 +105,22 @@ function real_tests () {
 
 	const dna_bytes			= await fs.readFile( ZOMEHUB_DNA_PATH );
 
-	dna1_addr			= await dnahub_csr.save_dna( dna_bytes );
+	dna1				= await dnahub_csr.save_dna( dna_bytes );
+	dna1_addr			= dna1.$addr;
 
 	expect( dna1_addr		).to.be.a("EntryHash");
     });
 
     it("should get DNA entry", async function () {
-	dna_entry			= await dnahub_csr.get_dna_entry( dna1_addr );
-	log.normal("%s", json.debug(dna_entry) );
+	const dna			= await dnahub_csr.get_dna_entry( dna1_addr );
+	log.normal("%s", json.debug(dna) );
 
-	// expect( dna_entry		).to.have.any.keys( "mere_memory_addr" );
+	expect( dna			).to.have.any.keys(
+	    "manifest",
+	    "dna_token",
+	    "integrities_token",
+	    "coordinators_token",
+	);
     });
 
     after(async function () {

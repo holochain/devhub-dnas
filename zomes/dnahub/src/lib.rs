@@ -2,6 +2,7 @@ mod validation;
 
 pub use dnahub_types;
 pub use dnahub_types::*;
+pub use hc_crud;
 
 use serde::{
     Deserialize, Deserializer,
@@ -12,9 +13,9 @@ use hdi_extensions::{
     scoped_type_connector,
     ScopedTypeConnector,
 };
-// use hc_crud::{
-//     entry_model,
-// };
+use hc_crud::{
+    entry_model,
+};
 
 
 
@@ -30,6 +31,9 @@ scoped_type_connector!(
     EntryTypesUnit::Dna,
     EntryTypes::Dna( DnaEntry )
 );
+
+// Entity implementations
+entry_model!( EntryTypes::Dna( DnaEntry ) );
 
 
 
