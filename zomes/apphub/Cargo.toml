@@ -12,4 +12,3 @@ crate-type = ["cdylib", "rlib"]
 apphub_types = { path = "../../dnas/apphub/types" }
 hc_crud_caps = "0.10.3"
 serde = "1"
-# whi_hdk_extensions = "0.4"

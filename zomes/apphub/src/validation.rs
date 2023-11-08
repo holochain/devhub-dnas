@@ -1,6 +1,6 @@
-// mod create_entry;
-// mod update_entry;
-// mod delete_entry;
+mod create_entry;
+mod update_entry;
+mod delete_entry;
 // mod create_link;
 // mod delete_link;
 
@@ -14,20 +14,20 @@ use crate::{
 use hdi::prelude::*;
 use hdi_extensions::{
     // Macros
-    valid, // invalid,
+    valid, invalid,
 };
 
 
 #[hdk_extern]
 fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
-    let _result = match op.flattened::<EntryTypes, LinkTypes>()? {
+    let result = match op.flattened::<EntryTypes, LinkTypes>()? {
         FlatOp::StoreRecord(op_record) => match op_record {
-            // OpRecord::CreateEntry { app_entry, action } =>
-            //     create_entry::validation( app_entry, action ),
-            // OpRecord::UpdateEntry { app_entry, action, original_action_hash, original_entry_hash } =>
-            //     update_entry::validation( app_entry, action, original_action_hash, original_entry_hash ),
-            // OpRecord::DeleteEntry { original_action_hash, original_entry_hash, action } =>
-            //     delete_entry::validation( original_action_hash, original_entry_hash, action ),
+            OpRecord::CreateEntry { app_entry, action } =>
+                create_entry::validation( app_entry, action ),
+            OpRecord::UpdateEntry { app_entry, action, original_action_hash, original_entry_hash } =>
+                update_entry::validation( app_entry, action, original_action_hash, original_entry_hash ),
+            OpRecord::DeleteEntry { original_action_hash, original_entry_hash, action } =>
+                delete_entry::validation( original_action_hash, original_entry_hash, action ),
             // OpRecord::CreateLink { base_address, target_address, tag, link_type, action } =>
             //     create_link::validation( base_address, target_address, link_type, tag, action ),
             // OpRecord::DeleteLink { original_action_hash, base_address, action } =>
@@ -56,8 +56,9 @@ fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
         _ => valid!(),
     };
 
-    // match result {
-    //     Err(WasmError{ error: WasmErrorInner::Guest(msg), .. }) => invalid!(msg),
-    //     rest => rest,
-    // }
+    if let Err(WasmError{ error: WasmErrorInner::Guest(msg), .. }) = result {
+        invalid!(msg)
+    }
+
+    result
 }

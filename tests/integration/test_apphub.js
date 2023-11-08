@@ -49,10 +49,6 @@ const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
 const APP_PORT				= 23_567;
 
-const APPHUB_DNA_NAME			= "apphub";
-const DNAHUB_DNA_NAME			= "dnahub";
-const ZOMEHUB_DNA_NAME			= "zomehub";
-
 
 
 describe("AppHub", function () {
@@ -64,14 +60,15 @@ describe("AppHub", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	const actors			= await holochain.backdrop({
+	await holochain.backdrop({
 	    "test": {
-		[APPHUB_DNA_NAME]:	APPHUB_DNA_PATH,
-		[DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
-		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
+		"apphub":	APPHUB_DNA_PATH,
+		"dnahub":	DNAHUB_DNA_PATH,
+		"zomehub":	ZOMEHUB_DNA_PATH,
 	    },
 	}, {
 	    "app_port": APP_PORT,
+	    "actors": [ "alice", "bobby" ],
 	});
     });
 
@@ -104,8 +101,8 @@ function basic_tests () {
     let dnahub_csr;
     let apphub;
     let apphub_csr;
-    let app1_addr;
-    let webapp1_addr;
+    let app1;
+    let webapp1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -120,9 +117,9 @@ function basic_tests () {
 	    dnahub,
 	    apphub
 	}				= app_client.createInterface({
-	    [ZOMEHUB_DNA_NAME]:		ZomeHubCell,
-	    [DNAHUB_DNA_NAME]:		DnaHubCell,
-	    [APPHUB_DNA_NAME]:		AppHubCell,
+	    "zomehub":		ZomeHubCell,
+	    "dnahub":		DnaHubCell,
+	    "apphub":		AppHubCell,
 	}));
 
 	zomehub_csr			= zomehub.zomes.zomehub_csr.functions;
@@ -138,52 +135,53 @@ function basic_tests () {
 	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
-	app1_addr			= await apphub_csr.save_app( bundle_bytes );
+	app1				= await apphub_csr.save_app( bundle_bytes );
 
-	expect( app1_addr		).to.be.a("EntryHash");
+	expect( app1.$addr		).to.be.a("EntryHash");
     });
 
     it("should get App entry", async function () {
-	const app1			= await apphub_csr.get_app_entry( app1_addr );
+	const app			= await apphub_csr.get_app_entry( app1.$addr );
 
-	log.normal("%s", json.debug(app1) );
+	log.normal("%s", json.debug(app) );
     });
 
     it("should upload the same App bundle", async function () {
 	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
-	const addr			= await apphub_csr.save_app( bundle_bytes );
+	const app			= await apphub_csr.save_app( bundle_bytes );
 
-	expect( addr			).to.deep.equal( app1_addr );
+	expect( app.$addr		).to.deep.equal( app1.$addr );
     });
 
     it("should upload WebApp bundle", async function () {
 	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
-	webapp1_addr			= await apphub_csr.save_webapp( bundle_bytes );
+	webapp1				= await apphub_csr.save_webapp( bundle_bytes );
 
-	expect( app1_addr		).to.be.a("EntryHash");
+	expect( webapp1.$addr		).to.be.a("EntryHash");
     });
 
     it("should get WebApp entry", async function () {
-	const webapp1			= await apphub_csr.get_webapp_entry( webapp1_addr );
+	const webapp			= await apphub_csr.get_webapp_entry( webapp1.$addr );
 
-	log.normal("%s", json.debug(webapp1) );
+	log.normal("%s", json.debug(webapp) );
     });
 
     it("should upload the same WebApp bundle", async function () {
 	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
-	const addr			= await apphub_csr.save_webapp( bundle_bytes );
+	const webapp			= await apphub_csr.save_webapp( bundle_bytes );
 
-	expect( addr			).to.deep.equal( webapp1_addr );
+	expect( webapp.$addr		).to.deep.equal( webapp1.$addr );
     });
 
     function common_args_plus( args ) {
 	return Object.assign({
+	    client,
 	    app_client,
 	    zomehub,
 	    dnahub,
@@ -198,11 +196,11 @@ function basic_tests () {
     linearSuite("WebApps", webapps_suite, () => common_args_plus() );
 
     linearSuite("WebApp Packages", webapp_packages_suite, () => common_args_plus({
-	webapp1_addr,
+	"webapp1_addr": webapp1.$addr,
     }));
 
     linearSuite("WebApp Package Versions", webapp_package_versions_suite, () => common_args_plus({
-	webapp1_addr,
+	"webapp1_addr": webapp1.$addr,
     }));
 
     after(async function () {

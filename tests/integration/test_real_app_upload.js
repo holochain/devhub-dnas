@@ -83,7 +83,7 @@ function real_tests () {
     let dnahub_csr;
     let apphub;
     let apphub_csr;
-    let app1_addr, app_entry;
+    let app1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -117,15 +117,15 @@ function real_tests () {
 
 	const app_bytes			= await fs.readFile( DEVHUB_APP_PATH );
 
-	app1_addr			= await apphub_csr.save_app( app_bytes );
+	app1				= await apphub_csr.save_app( app_bytes );
 
-	expect( app1_addr		).to.be.a("EntryHash");
+	expect( app1.$addr		).to.be.a("EntryHash");
     });
 
     it("should get App entry", async function () {
-	app_entry			= await apphub_csr.get_app_entry( app1_addr );
+	const app			= await apphub_csr.get_app_entry( app1.$addr );
 
-	log.normal("%s", json.debug(app_entry) );
+	log.normal("%s", json.debug(app) );
     });
 
     after(async function () {

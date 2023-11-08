@@ -54,7 +54,7 @@ describe("DnaHub", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	const actors			= await holochain.backdrop({
+	await holochain.backdrop({
 	    "test": {
 		[DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
 		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,

@@ -30,6 +30,9 @@ import {
     WebAppPackageVersionEntry,
 
     // Entity Classes
+    App,
+    Ui,
+    WebApp,
     WebAppPackage,
     WebAppPackageVersion,
 }					from './types.js';
@@ -58,63 +61,89 @@ export const AppHubCSRZomelet		= new Zomelet({
     // App
 
     async create_app_entry ( input ) {
-	this.log.trace("App entry manifest input:", input.manifest );
+	this.log.trace("Create App entry input (manifest):", input.manifest );
 	const result			= await this.call( input );
 
-	return new EntryHash( result );
+	return new App( result, this );
+    },
+    async create_app ( input ) {
+	this.log.trace("Create App input (manifest):", input.manifest );
+	const result			= await this.call( input );
+
+	return new App( result, this );
     },
     async get_app_entry ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
 
-	return AppEntry( result );
+	return new App( result, this );
     },
     async get_app_entries_for_agent ( input ) {
 	const agent_id			= input ? new AgentPubKey( input ) : input;
 	const entries			= await this.call( agent_id );
 
-	return entries.map( entry => AppEntry( entry ) );
+	return entries.map( entry => new App( entry, this ) );
+    },
+    async delete_app ( input ) {
+	return new ActionHash( await this.call( new ActionHash( input ) ) );
     },
 
 
     // UI
 
     async create_ui_entry ( input ) {
-	const result			= await this.call({
-	    "mere_memory_addr": new EntryHash( input.mere_memory_addr ),
-	});
+	const result			= await this.call( input );
 
-	return new EntryHash( result );
+	return new Ui( result, this );
+    },
+    async create_ui ( input ) {
+	input.mere_memory_addr		= new EntryHash( input.mere_memory_addr );
+
+	const result			= await this.call( input );
+
+	return new Ui( result, this );
     },
     async get_ui_entry ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
 
-	return UiEntry( result );
+	return new Ui( result, this );
     },
     async get_ui_entries_for_agent ( input ) {
 	const entries			= await this.call(); // new AgentPubKey( input )
 
-	return entries.map( entry => UiEntry( entry ) );
+	return entries.map( entry => new Ui( entry, this ) );
+    },
+    async delete_ui ( input ) {
+	return new ActionHash( await this.call( new ActionHash( input ) ) );
     },
 
 
     // WebApp
 
     async create_webapp_entry ( input ) {
-	this.log.trace("WebApp entry manifest input:", input.manifest );
+	this.log.trace("Create WebApp entry input (manifest):", input.manifest );
 	const result			= await this.call( input );
 
-	return new EntryHash( result );
+	return new WebApp( result, this );
+    },
+    async create_webapp ( input ) {
+	this.log.trace("Create WebApp input (manifest):", input.manifest );
+	const result			= await this.call( input );
+
+	return new WebApp( result, this );
     },
     async get_webapp_entry ( input ) {
 	const result			= await this.call( new AnyDhtHash( input ) );
 
-	return WebAppEntry( result );
+	return new WebApp( result, this );
     },
     async get_webapp_entries_for_agent ( input ) {
 	const agent_id			= input ? new AgentPubKey( input ) : input;
 	const entries			= await this.call( agent_id );
 
-	return entries.map( entry => WebAppEntry( entry ) );
+	return entries.map( entry => new WebApp( entry, this ) );
+    },
+    async delete_webapp ( input ) {
+	return new ActionHash( await this.call( new ActionHash( input ) ) );
     },
 
 
@@ -255,6 +284,9 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new WebAppPackageVersion( result, this );
     },
+    async delete_webapp_package_version ( input ) {
+	return new ActionHash( await this.call( new ActionHash( input ) ) );
+    },
 
 
     //
@@ -272,20 +304,18 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    this.log.debug("Save DNA resource '%s' (%s bytes) for role '%s'", () => [
 		rpath, dna_bytes.length, name,
 	    ]);
-	    let dna_addr		= await this.cells.dnahub.dnahub_csr.save_dna( dna_bytes )
+	    let dna			= await this.cells.dnahub.dnahub_csr.save_dna( dna_bytes )
 	    this.log.info("Created new DNA entry '%s' for role '%s'", () => [
-		dna_addr, name,
+		dna.$id, name,
 	    ]);
 
-	    let dna_entry		= await this.cells.dnahub.dnahub_csr.get_dna_entry( dna_addr );
-
-	    role.dna.dna_entry		= dna_addr;
+	    role.dna.dna_entry		= dna.$addr;
 	    delete role.dna.bundled;
 
-	    roles_dna_tokens[ name ]	= dna_entry.dna_token;
+	    roles_dna_tokens[ name ]	= dna.dna_token;
 	}
 
-	return await this.functions.create_app_entry({
+	return await this.functions.create_app({
 	    "manifest": bundle.manifest,
 	    roles_dna_tokens,
 	});
@@ -293,7 +323,7 @@ export const AppHubCSRZomelet		= new Zomelet({
     async save_ui ( bytes ) {
 	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
-	return await this.functions.create_ui_entry({
+	return await this.functions.create_ui({
 	    "mere_memory_addr": addr,
 	});
     },
@@ -305,7 +335,9 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    const happ_bytes		= bundle.resources[ happ_manifest.bundled ];
 	    this.log.debug("Save hApp resource '%s' (%s bytes)", happ_manifest.bundled, happ_bytes.length );
 
-	    happ_manifest.app_entry	= await this.functions.save_app( happ_bytes );
+	    let app			= await this.functions.save_app( happ_bytes );
+
+	    happ_manifest.app_entry	= app.$addr;
 	    delete happ_manifest.bundled;
 	}
 	{
@@ -313,11 +345,13 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    const ui_bytes		= bundle.resources[ ui_manifest.bundled ];
 	    this.log.debug("Save UI resource '%s' (%s bytes)", ui_manifest.bundled, ui_bytes.length );
 
-	    ui_manifest.ui_entry	= await this.functions.save_ui( ui_bytes );
+	    let ui			= await this.functions.save_ui( ui_bytes );
+
+	    ui_manifest.ui_entry	= ui.$addr;
 	    delete ui_manifest.bundled;
 	}
 
-	return await this.functions.create_webapp_entry({
+	return await this.functions.create_webapp({
 	    "manifest": bundle.manifest,
 	});
     },

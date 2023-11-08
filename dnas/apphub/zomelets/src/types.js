@@ -91,6 +91,10 @@ export function AppEntry ( entry ) {
     return intoStruct( entry, AppStruct );
 }
 
+export class App extends ScopedEntity {
+    static STRUCT		= AppStruct;
+}
+
 
 //
 // UiEntry Handling
@@ -102,6 +106,10 @@ export const UiStruct = {
 
 export function UiEntry ( entry ) {
     return intoStruct( entry, UiStruct );
+}
+
+export class Ui extends ScopedEntity {
+    static STRUCT		= UiStruct;
 }
 
 
@@ -132,6 +140,10 @@ export const WebAppStruct = {
 
 export function WebAppEntry ( entry ) {
     return intoStruct( entry, WebAppStruct );
+}
+
+export class WebApp extends ScopedEntity {
+    static STRUCT		= WebAppStruct;
 }
 
 

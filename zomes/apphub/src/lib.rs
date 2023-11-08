@@ -25,15 +25,19 @@ use hc_crud::{
 pub enum EntryTypes {
     #[entry_def]
     App(AppEntry),
+    Ui(UiEntry),
     WebApp(WebAppEntry),
     WebAppPackage(WebAppPackageEntry),
     WebAppPackageVersion(WebAppPackageVersionEntry),
-    Ui(UiEntry),
 }
 
 scoped_type_connector!(
     EntryTypesUnit::App,
     EntryTypes::App( AppEntry )
+);
+scoped_type_connector!(
+    EntryTypesUnit::Ui,
+    EntryTypes::Ui( UiEntry )
 );
 scoped_type_connector!(
     EntryTypesUnit::WebApp,
@@ -47,12 +51,11 @@ scoped_type_connector!(
     EntryTypesUnit::WebAppPackageVersion,
     EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry )
 );
-scoped_type_connector!(
-    EntryTypesUnit::Ui,
-    EntryTypes::Ui( UiEntry )
-);
 
 // Entity implementations
+entry_model!( EntryTypes::App( AppEntry ) );
+entry_model!( EntryTypes::Ui( UiEntry ) );
+entry_model!( EntryTypes::WebApp( WebAppEntry ) );
 entry_model!( EntryTypes::WebAppPackage( WebAppPackageEntry ) );
 entry_model!( EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry ) );
 
@@ -62,10 +65,10 @@ entry_model!( EntryTypes::WebAppPackageVersion( WebAppPackageVersionEntry ) );
 #[hdk_link_types]
 pub enum LinkTypes {
     App,
+    Ui,
     WebApp,
     WebAppPackage,
     WebAppPackageVersion,
-    Ui,
 }
 
 impl TryFrom<String> for LinkTypes {
@@ -75,10 +78,10 @@ impl TryFrom<String> for LinkTypes {
         Ok(
             match name.as_str() {
                 "App" => LinkTypes::App,
+                "Ui" => LinkTypes::Ui,
                 "WebApp" => LinkTypes::WebApp,
                 "WebAppPackage" => LinkTypes::WebAppPackage,
                 "WebAppPackageVersion" => LinkTypes::WebAppPackageVersion,
-                "Ui" => LinkTypes::Ui,
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }
         )

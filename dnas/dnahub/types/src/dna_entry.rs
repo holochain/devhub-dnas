@@ -25,7 +25,19 @@ pub struct DnaEntry {
 }
 
 impl DnaEntry {
-    pub fn new(manifest: DnaManifestV1) -> ExternResult<Self> {
+    pub fn integrity_hash(&self) -> Vec<u8> {
+        self.dna_token.integrity_hash.clone()
+    }
+
+    pub fn calculate_integrity_hash(&self) -> ExternResult<Vec<u8>> {
+        self.manifest.integrity_hash()
+    }
+}
+
+impl TryFrom<DnaManifestV1> for DnaEntry {
+    type Error = WasmError;
+
+    fn try_from(manifest: DnaManifestV1) -> ExternResult<Self> {
         let dna_token = manifest.dna_token()?;
         let integrities_token = manifest.integrities_token()?;
         let coordinators_token = manifest.coordinators_token()?;

@@ -14,6 +14,7 @@ import {
 
 
 export default function ( args_fn ) {
+    let client;
     let app_client;
     let zomehub;
     let zomehub_csr;
@@ -24,6 +25,7 @@ export default function ( args_fn ) {
 
     before(async function () {
 	({
+	    client,
 	    app_client,
 	    zomehub,
 	    dnahub,

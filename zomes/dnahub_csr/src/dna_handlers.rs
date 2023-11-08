@@ -15,7 +15,7 @@ use hdi_extensions::{
 use dnahub::{
     EntryTypes,
     LinkTypes,
-    DnaEntry, DnaManifestV1,
+    DnaEntry,
     DnaToken,
     IntegritiesToken,
     CoordinatorsToken,
@@ -28,6 +28,7 @@ use dnahub::{
 use dnahub_sdk::{
     LinkBase,
     DnaEntryInput,
+    CreateDnaInput,
 };
 
 
@@ -47,33 +48,26 @@ fn create_dna_entry(input: DnaEntryInput) -> ExternResult<Entity<DnaEntry>> {
 }
 
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CreateDnaEntryInput {
-    pub manifest: DnaManifestV1,
-}
-
 #[hdk_extern]
-fn create_dna(input: CreateDnaEntryInput) -> ExternResult<Entity<DnaEntry>> {
-    let entry = DnaEntry::new( input.manifest )?;
-
-    create_dna_entry_handler( entry )
+fn create_dna(input: CreateDnaInput) -> ExternResult<Entity<DnaEntry>> {
+    create_dna_entry_handler( input.try_into()? )
 }
 
 
 #[hdk_extern]
-fn derive_dna_token(input: CreateDnaEntryInput) -> ExternResult<DnaToken> {
+fn derive_dna_token(input: CreateDnaInput) -> ExternResult<DnaToken> {
     input.manifest.dna_token()
 }
 
 
 #[hdk_extern]
-fn derive_integrities_token(input: CreateDnaEntryInput) -> ExternResult<IntegritiesToken> {
+fn derive_integrities_token(input: CreateDnaInput) -> ExternResult<IntegritiesToken> {
     input.manifest.integrities_token()
 }
 
 
 #[hdk_extern]
-fn derive_coordinators_token(input: CreateDnaEntryInput) -> ExternResult<CoordinatorsToken> {
+fn derive_coordinators_token(input: CreateDnaInput) -> ExternResult<CoordinatorsToken> {
     input.manifest.coordinators_token()
 }
 

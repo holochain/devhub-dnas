@@ -99,6 +99,7 @@ dependencies = [
  "dnahub_sdk",
  "hc_devhub_sdk",
  "serde",
+ "serde_bytes",
 ]
 
 [[package]]

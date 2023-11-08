@@ -85,7 +85,7 @@ function basic_tests () {
     let dnahub_csr;
     let apphub;
     let apphub_csr;
-    let webapp1_addr;
+    let webapp1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -119,16 +119,16 @@ function basic_tests () {
 
 	const webapp_bytes		= await fs.readFile( TEST_WEBAPP_PATH );
 
-	webapp1_addr			= await apphub_csr.save_webapp( webapp_bytes );
+	webapp1				= await apphub_csr.save_webapp( webapp_bytes );
 	// apphub.zomes.apphub_csr.prevCall().printTree();
 
-	expect( webapp1_addr		).to.be.a("EntryHash");
+	expect( webapp1.$addr		).to.be.a("EntryHash");
     });
 
     it("should get WebApp entry", async function () {
-	const webapp_entry		= await apphub_csr.get_webapp_entry( webapp1_addr );
+	const webapp			= await apphub_csr.get_webapp_entry( webapp1.$addr );
 
-	log.normal("WebApp entry: %s", json.debug(webapp_entry) );
+	log.normal("WebApp entry: %s", json.debug(webapp) );
     });
 
     after(async function () {

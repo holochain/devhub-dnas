@@ -1,6 +1,9 @@
-use crate::hdk;
-use crate::hdk_extensions;
-use crate::hdi_extensions;
+use crate::{
+    hdk,
+    hdk_extensions,
+    hdi_extensions,
+    MY_UIS_ANCHOR,
+};
 
 use hdk::prelude::*;
 use hdk_extensions::{
@@ -10,10 +13,30 @@ use hdi_extensions::{
     ScopedTypeConnector,
 };
 use apphub::{
+    EntryTypes,
     LinkTypes,
     UiEntry,
+    hc_crud::{
+        Entity,
+        EntryModel,
+        create_entity, delete_entity,
+    },
 };
 
+
+fn create_ui_entry_handler(entry: UiEntry) -> ExternResult<Entity<UiEntry>> {
+    let entity = create_entity( &entry )?;
+
+    MY_UIS_ANCHOR.create_link_if_not_exists( &entity.address, () )?;
+
+    Ok( entity )
+}
+
+
+#[hdk_extern]
+fn create_ui_entry(input: UiEntry) -> ExternResult<Entity<UiEntry>> {
+    create_ui_entry_handler( input )
+}
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -22,27 +45,34 @@ pub struct CreateUiEntryInput {
 }
 
 #[hdk_extern]
-pub fn create_ui_entry(input: CreateUiEntryInput) -> ExternResult<EntryHash> {
-    let agent_id = hdk_extensions::agent_id()?;
+pub fn create_ui(input: CreateUiEntryInput) -> ExternResult<Entity<UiEntry>> {
     let entry = UiEntry::new( input.mere_memory_addr )?;
 
-    let entry_hash = hash_entry( entry.clone() )?;
-    create_entry( entry.to_input() )?;
-
-    create_link( agent_id, entry_hash.clone(), LinkTypes::Ui, () )?;
-
-    Ok( entry_hash )
+    create_ui_entry_handler( entry )
 }
 
+
 #[hdk_extern]
-pub fn get_ui_entry(addr: EntryHash) -> ExternResult<UiEntry> {
+pub fn get_ui_entry(addr: EntryHash) -> ExternResult<Entity<UiEntry>> {
     let record = must_get( &addr )?;
+    let content = UiEntry::try_from_record( &record )?;
+    let id = record.action_address().to_owned();
+    let addr = hash_entry( content.clone() )?;
 
-    Ok( UiEntry::try_from_record( &record )? )
+    Ok(
+        Entity {
+            id: id.clone(),
+            action: id,
+	    address: addr,
+	    ctype: content.get_type(),
+	    content: content,
+        }
+    )
 }
 
+
 #[hdk_extern]
-pub fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<UiEntry>> {
+pub fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<Entity<UiEntry>>> {
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
@@ -55,4 +85,10 @@ pub fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternRe
         .collect();
 
     Ok( uis )
+}
+
+
+#[hdk_extern]
+fn delete_ui(addr: ActionHash) -> ExternResult<ActionHash> {
+    Ok( delete_entity::<UiEntry,EntryTypes>( &addr )? )
 }

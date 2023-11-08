@@ -13,3 +13,4 @@ apphub_types = { path = "../types" }
 dnahub_sdk = { path = "../../dnahub/sdk" }
 hc_devhub_sdk = { path = "../../../devhub_sdk" }
 serde = "1"
+serde_bytes = "0.11"

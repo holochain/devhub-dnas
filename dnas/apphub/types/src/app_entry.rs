@@ -1,55 +1,15 @@
 use crate::{
     hdi,
-    hdi_extensions,
     hash,
     AppToken,
+    RolesToken,
+    RolesDnaTokens,
     holochain_types::{
         AppManifestV1,
     },
 };
 
-use std::collections::{
-    BTreeMap,
-};
 use hdi::prelude::*;
-use hdi_extensions::{
-    guest_error,
-};
-use holochain_zome_types::{
-    DnaModifiersOpt,
-    YamlProperties,
-};
-use dnahub_types::{
-    DnaToken,
-};
-
-
-
-pub type RolesToken = Vec<(String, RoleToken)>;
-pub type RolesDnaTokens = BTreeMap<String, DnaToken>;
-
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialOrd, PartialEq, Ord, Eq)]
-pub struct RoleToken {
-    pub integrity_hash: Vec<u8>,
-    pub integrities_token_hash: Vec<u8>,
-    pub coordinators_token_hash: Vec<u8>,
-    pub modifiers_hash: Vec<u8>,
-}
-
-impl RoleToken {
-    pub fn new(dna_token: &DnaToken, modifiers: &DnaModifiersOpt<YamlProperties>) -> ExternResult<Self> {
-        Ok(
-            Self {
-                integrity_hash: dna_token.integrity_hash.to_owned(),
-                integrities_token_hash: dna_token.integrities_token_hash.to_owned(),
-                coordinators_token_hash: dna_token.coordinators_token_hash.to_owned(),
-                modifiers_hash: hash( modifiers )?,
-            }
-        )
-    }
-}
-
 
 
 //
@@ -67,40 +27,13 @@ pub struct AppEntry {
 }
 
 impl AppEntry {
-    pub fn new(
-        manifest: AppManifestV1,
-        roles_dna_tokens: RolesDnaTokens,
-    ) -> ExternResult<Self> {
-        if manifest.roles.len() != roles_dna_tokens.len() {
-            return Err(guest_error!(format!(
-                "Wrong number of DNA Tokens provided ({}); must match manifest roles length ({})",
-                roles_dna_tokens.len(),
-                manifest.roles.len(),
-            )));
-        }
-        let mut roles_token = Vec::new();
+    pub fn new(manifest: AppManifestV1, roles_dna_tokens: RolesDnaTokens) -> ExternResult<Self> {
+        let integrity_hash = roles_dna_tokens.integrity_hash()?;
 
-        // Calculate integrity hash by sorting and hashing the DNA token integrity hashes
-        let mut dnas_integrity_hashes = manifest.roles.iter()
-            .map( |role_manifest| {
-                let dna_token = roles_dna_tokens.get( &role_manifest.name )
-                    .ok_or(guest_error!(format!(
-                        "Missing DNA Token for role name '{}'", role_manifest.name,
-                    )))?;
-
-                roles_token.push((
-                    role_manifest.name.clone(),
-                    RoleToken::new( &dna_token, &role_manifest.dna.modifiers )?
-                ));
-
-                Ok( dna_token.integrity_hash.to_vec() )
-            })
-            .collect::<ExternResult<Vec<Vec<u8>>>>()?;
-        dnas_integrity_hashes.sort();
-        roles_token.sort();
-
-        let integrity_hash = hash( &dnas_integrity_hashes )?;
+        // This manifest method will ensure all DNA tokens are present
+        let roles_token = manifest.roles_token( roles_dna_tokens )?;
         let roles_token_hash = hash( &roles_token )?;
+
         let app_token = AppToken {
             integrity_hash,
             roles_token_hash,
@@ -113,5 +46,34 @@ impl AppEntry {
                 roles_token,
             }
         )
+    }
+
+    pub fn integrity_hash(&self) -> Vec<u8> {
+        self.app_token.integrity_hash.clone()
+    }
+
+    pub fn roles_token_hash(&self) -> Vec<u8> {
+        self.app_token.roles_token_hash.clone()
+    }
+
+    pub fn calculate_integrity_hash(&self) -> ExternResult<Vec<u8>> {
+        self.roles_token.integrity_hash()
+    }
+
+    pub fn calculate_roles_token_hash(&self) -> ExternResult<Vec<u8>> {
+        hash( &self.roles_token )
+    }
+
+    pub fn calculate_app_token(&self) -> ExternResult<AppToken> {
+        Ok(
+            AppToken {
+                integrity_hash: self.calculate_integrity_hash()?,
+                roles_token_hash: self.calculate_roles_token_hash()?,
+            }
+        )
+    }
+
+    pub fn validate_roles_token(&self) -> ExternResult<()> {
+        self.manifest.validate_roles_token( &self.roles_token )
     }
 }

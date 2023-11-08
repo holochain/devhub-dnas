@@ -15,7 +15,7 @@ use hdi_extensions::{
 use sha2::{ Digest, Sha256 };
 
 
-
+// TODO: this might be redundant because the zome name is already included in the integrity hash
 pub type IntegritiesToken = Vec<(String, Vec<u8>)>;
 pub type CoordinatorsToken = Vec<(String, Vec<u8>)>;
 

@@ -13,49 +13,66 @@ use hdi_extensions::{
     ScopedTypeConnector,
 };
 use apphub::{
+    EntryTypes,
     LinkTypes,
-    AppEntry, AppManifestV1,
+    AppEntry,
+    hc_crud::{
+        Entity,
+        EntryModel,
+        create_entity, delete_entity,
+    },
 };
 use apphub_sdk::{
     LinkBase,
-    RolesDnaTokensInput,
+    AppEntryInput,
+    CreateAppInput,
 };
 
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CreateAppEntryInput {
-    pub manifest: AppManifestV1,
-    pub roles_dna_tokens: RolesDnaTokensInput,
-}
+fn create_app_entry_handler(entry: AppEntry) -> ExternResult<Entity<AppEntry>> {
+    let entity = create_entity( &entry )?;
 
-#[hdk_extern]
-pub fn create_app_entry(input: CreateAppEntryInput) -> ExternResult<EntryHash> {
-    let entry = AppEntry::new(
-        input.manifest,
-        input.roles_dna_tokens.into_iter()
-            .map( |(role_name, dna_token_input)| (role_name, dna_token_input.into()) )
-            .collect()
-    )?;
+    MY_APPS_ANCHOR.create_link_if_not_exists( &entity.address, () )?;
 
-    let entry_hash = hash_entry( entry.clone() )?;
-    create_entry( entry.to_input() )?;
-
-    MY_APPS_ANCHOR.create_link_if_not_exists( &entry_hash, () )?;
-
-    Ok( entry_hash )
+    Ok( entity )
 }
 
 
 #[hdk_extern]
-pub fn get_app_entry(addr: AnyDhtHash) -> ExternResult<AppEntry> {
+fn create_app_entry(input: AppEntryInput) -> ExternResult<Entity<AppEntry>> {
+    create_app_entry_handler( input.into() )
+}
+
+
+#[hdk_extern]
+pub fn create_app(input: CreateAppInput) -> ExternResult<Entity<AppEntry>> {
+    create_app_entry_handler( input.try_into()? )
+}
+
+
+#[hdk_extern]
+pub fn get_app_entry(addr: AnyDhtHash) -> ExternResult<Entity<AppEntry>> {
     let record = must_get( &addr )?;
+    let content = AppEntry::try_from_record( &record )?;
+    let id = record.action_address().to_owned();
+    let addr = hash_entry( content.clone() )?;
 
-    Ok( AppEntry::try_from_record( &record )? )
+    Ok(
+        Entity {
+            id: id.clone(),
+            action: id,
+	    address: addr,
+	    ctype: content.get_type(),
+	    content: content,
+        }
+    )
 }
 
 
 #[hdk_extern]
-pub fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<AppEntry>> {
+pub fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
+    ExternResult<Vec<Entity<AppEntry>>>
+{
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
@@ -70,4 +87,10 @@ pub fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternR
         .collect();
 
     Ok( apps )
+}
+
+
+#[hdk_extern]
+fn delete_app(addr: ActionHash) -> ExternResult<ActionHash> {
+    Ok( delete_entity::<AppEntry,EntryTypes>( &addr )? )
 }
