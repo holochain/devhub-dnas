@@ -27,7 +27,7 @@ pub fn validation(
 
             if wasm_entry.file_size != file_size {
                 invalid!(format!(
-                    "File size does not match memory address: {} != {}",
+                    "WasmEntry file size does not match memory address: {} != {}",
                     wasm_entry.file_size, file_size
                 ))
             }

@@ -1,5 +1,5 @@
 import { Logger }			from '@whi/weblogger';
-const log				= new Logger("test-webapp-upload", process.env.LOG_LEVEL );
+const log				= new Logger("apps-suite", process.env.LOG_LEVEL );
 
 import crypto				from 'crypto';
 import { expect }			from 'chai';

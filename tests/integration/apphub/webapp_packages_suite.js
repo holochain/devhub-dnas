@@ -1,5 +1,5 @@
 import { Logger }			from '@whi/weblogger';
-const log				= new Logger("test-webapp-upload", process.env.LOG_LEVEL );
+const log				= new Logger("webapp-packages-suite", process.env.LOG_LEVEL );
 
 import crypto				from 'crypto';
 import { expect }			from 'chai';
@@ -41,7 +41,7 @@ export default function ( args_fn ) {
     });
 
     it("should create WebApp Package entry", async function () {
-	pack1				= await apphub_csr.create_webapp_package_entry({
+	pack1				= await apphub_csr.create_webapp_package({
 	    "title": faker.commerce.productName(),
 	    "subtitle": faker.lorem.sentence(),
 	    "description": faker.lorem.paragraphs( 2 ),
@@ -77,7 +77,7 @@ export default function ( args_fn ) {
     it("should get WebApp Package using EntryHash", async function () {
 	const pack1b			= await apphub_csr.get_webapp_package_entry( pack1.$addr );
 
-	expect( pack1b			).to.deep.equal( pack1.toJSON() );
+	expect( pack1b			).to.deep.equal( pack1 );
     });
 
     it("should deprecate WebApp Package", async function () {

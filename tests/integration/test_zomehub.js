@@ -139,7 +139,7 @@ function basic_tests () {
 		    "mere_memory_addr": wasm1.mere_memory_addr,
 		    "file_size": 0,
 		});
-	    }, "File size does not match memory address" );
+	    }, "file size does not match memory address" );
 	});
 
 	it("should fail to update wasm entry");

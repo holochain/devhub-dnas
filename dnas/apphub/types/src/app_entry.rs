@@ -28,22 +28,31 @@ pub struct AppEntry {
 
 impl AppEntry {
     pub fn new(manifest: AppManifestV1, roles_dna_tokens: RolesDnaTokens) -> ExternResult<Self> {
-        let integrity_hash = roles_dna_tokens.integrity_hash()?;
-
         // This manifest method will ensure all DNA tokens are present
         let roles_token = manifest.roles_token( roles_dna_tokens )?;
-        let roles_token_hash = hash( &roles_token )?;
-
-        let app_token = AppToken {
-            integrity_hash,
-            roles_token_hash,
-        };
 
         Ok(
             Self {
                 manifest,
-                app_token,
+                app_token: AppEntry::create_app_token( &roles_token )?,
                 roles_token,
+            }
+        )
+    }
+
+    pub fn create_integrity_hash(roles_token: &RolesToken) -> ExternResult<Vec<u8>> {
+        roles_token.integrity_hash()
+    }
+
+    pub fn create_roles_token_hash(roles_token: &RolesToken) -> ExternResult<Vec<u8>> {
+        hash( roles_token )
+    }
+
+    pub fn create_app_token(roles_token: &RolesToken) -> ExternResult<AppToken> {
+        Ok(
+            AppToken {
+                integrity_hash: AppEntry::create_integrity_hash( roles_token )?,
+                roles_token_hash: AppEntry::create_roles_token_hash( roles_token )?,
             }
         )
     }
@@ -57,20 +66,15 @@ impl AppEntry {
     }
 
     pub fn calculate_integrity_hash(&self) -> ExternResult<Vec<u8>> {
-        self.roles_token.integrity_hash()
+        AppEntry::create_integrity_hash( &self.roles_token )
     }
 
     pub fn calculate_roles_token_hash(&self) -> ExternResult<Vec<u8>> {
-        hash( &self.roles_token )
+        AppEntry::create_roles_token_hash( &self.roles_token )
     }
 
     pub fn calculate_app_token(&self) -> ExternResult<AppToken> {
-        Ok(
-            AppToken {
-                integrity_hash: self.calculate_integrity_hash()?,
-                roles_token_hash: self.calculate_roles_token_hash()?,
-            }
-        )
+        AppEntry::create_app_token( &self.roles_token )
     }
 
     pub fn validate_roles_token(&self) -> ExternResult<()> {

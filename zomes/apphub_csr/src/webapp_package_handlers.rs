@@ -3,6 +3,7 @@ use crate::{
     hdk_extensions,
     hdi_extensions,
     WebAppPackageBase,
+    MY_WEBAPP_PACKS_ANCHOR,
     ALL_WEBAPP_PACKS_ANCHOR,
 };
 
@@ -12,6 +13,7 @@ use hdk_extensions::{
     must_get,
 };
 use hdi_extensions::{
+    trace_origin_root,
     ScopedTypeConnector,
 };
 use apphub::{
@@ -23,49 +25,24 @@ use apphub::{
     hc_crud::{
         Entity, EntityId,
         UpdateEntityInput,
+        EntryModel,
         create_entity, get_entity, update_entity,
     },
 };
 use apphub_sdk::{
     EntityPointerMap,
+    WebAppPackageEntryInput,
+    CreateWebAppPackageInput,
     WebAppPackageVersionMap,
 };
 
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CreateWebAppPackageEntryInput {
-    pub title: String,
-    pub subtitle: String,
-    pub description: String,
-    pub icon: MemoryAddr,
-    #[serde(default)]
-    pub metadata: BTreeMap<String, rmpv::Value>,
-
-    // Optional
-    pub maintainer: Option<Authority>,
-    pub source_code_uri: Option<String>,
-}
-
-#[hdk_extern]
-pub fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) ->
+fn create_webapp_package_entry_handler(entry: WebAppPackageEntry) ->
     ExternResult<Entity<WebAppPackageEntry>>
 {
-    let agent_id = hdk_extensions::agent_id()?;
-    let entry = WebAppPackageEntry {
-        title: input.title,
-        subtitle: input.subtitle,
-        description: input.description,
-        maintainer: agent_id.clone().into(),
-        icon: input.icon,
-        source_code_uri: input.source_code_uri,
-        deprecation: None,
-        metadata: input.metadata,
-    };
-
     let entity = create_entity( &entry )?;
 
-    create_link( agent_id, entity.id.clone(), LinkTypes::WebAppPackage, () )?;
-
+    MY_WEBAPP_PACKS_ANCHOR.create_link_if_not_exists( &entity.id, () )?;
     ALL_WEBAPP_PACKS_ANCHOR.create_link_if_not_exists( &entity.id, () )?;
 
     Ok( entity )
@@ -73,22 +50,41 @@ pub fn create_webapp_package_entry(input: CreateWebAppPackageEntryInput) ->
 
 
 #[hdk_extern]
-pub fn create_webapp_package(input: CreateWebAppPackageEntryInput) ->
+pub fn create_webapp_package_entry(input: WebAppPackageEntryInput) ->
     ExternResult<Entity<WebAppPackageEntry>>
 {
-    create_webapp_package_entry( input )
+    create_webapp_package_entry_handler( input.into() )
 }
 
 
 #[hdk_extern]
-pub fn get_webapp_package_entry(addr: AnyDhtHash) -> ExternResult<WebAppPackageEntry> {
+pub fn create_webapp_package(input: CreateWebAppPackageInput) ->
+    ExternResult<Entity<WebAppPackageEntry>>
+{
+    create_webapp_package_entry_handler( input.try_into()? )
+}
+
+
+#[hdk_extern]
+pub fn get_webapp_package_entry(addr: AnyDhtHash) -> ExternResult<Entity<WebAppPackageEntry>> {
     let record = must_get( &addr )?;
+    let content = WebAppPackageEntry::try_from_record( &record )?;
+    let id = trace_origin_root( record.action_address() )?.0;
+    let addr = hash_entry( content.clone() )?;
 
-    Ok( WebAppPackageEntry::try_from_record( &record )? )
+    Ok(
+        Entity {
+            id: id.clone(),
+            action: id,
+	    address: addr,
+	    ctype: content.get_type(),
+	    content: content,
+        }
+    )
 }
 
 #[hdk_extern]
-pub fn get_webapp_package(addr: ActionHash) -> ExternResult<Entity<WebAppPackageEntry>> {
+pub fn get_webapp_package(addr: EntityId) -> ExternResult<Entity<WebAppPackageEntry>> {
     Ok( get_entity( &addr )? )
 }
 

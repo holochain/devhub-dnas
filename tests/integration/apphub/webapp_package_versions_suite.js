@@ -1,5 +1,5 @@
 import { Logger }			from '@whi/weblogger';
-const log				= new Logger("test-webapp-upload", process.env.LOG_LEVEL );
+const log				= new Logger("webapp-package-versions-suite", process.env.LOG_LEVEL );
 
 import crypto				from 'crypto';
 import { expect }			from 'chai';
@@ -41,7 +41,7 @@ export default function ( args_fn ) {
 	    webapp1_addr,
 	}				= args_fn());
 
-	pack1				= await apphub_csr.create_webapp_package_entry({
+	pack1				= await apphub_csr.create_webapp_package({
 	    "title": faker.commerce.productName(),
 	    "subtitle": faker.lorem.sentence(),
 	    "description": faker.lorem.paragraphs( 2 ),
@@ -120,7 +120,7 @@ export default function ( args_fn ) {
     });
 
     it("should update a WebApp Package Version's parent package", async function () {
-	const pack			= await apphub_csr.create_webapp_package_entry({
+	const pack			= await apphub_csr.create_webapp_package({
 	    "title": faker.commerce.productName(),
 	    "subtitle": faker.lorem.sentence(),
 	    "description": faker.lorem.paragraphs( 2 ),

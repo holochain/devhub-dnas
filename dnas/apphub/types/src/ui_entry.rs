@@ -20,7 +20,8 @@ impl UiEntry {
         let memory : MemoryEntry = must_get_entry( addr.clone() )?.content.try_into()?;
         let entry = UiEntry {
             mere_memory_addr: addr,
-            file_size: memory.memory_size,
+            file_size: memory.uncompressed_size
+                .unwrap_or( memory.memory_size ),
         };
 
         Ok( entry )

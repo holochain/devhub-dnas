@@ -4,8 +4,15 @@ pub use devhub_sdk::*;
 
 use std::collections::BTreeMap;
 use hdk::prelude::*;
+use hdk_extensions::{
+    agent_id,
+};
 use apphub_types::{
-    hash,
+    Authority,
+    MemoryAddr,
+    DeprecationNotice,
+    RmpvValue,
+
     RoleToken,
     AppManifestV1,
     AppToken,
@@ -76,7 +83,7 @@ pub struct RoleTokenInput {
 
 impl From<RoleTokenInput> for RoleToken {
     fn from(role_token_input: RoleTokenInput) -> Self {
-        RoleToken {
+        Self {
             integrity_hash: role_token_input.integrity_hash.to_vec(),
             integrities_token_hash: role_token_input.integrities_token_hash.to_vec(),
             coordinators_token_hash: role_token_input.coordinators_token_hash.to_vec(),
@@ -94,7 +101,7 @@ pub struct AppTokenInput {
 
 impl From<AppTokenInput> for AppToken {
     fn from(app_token_input: AppTokenInput) -> Self {
-        AppToken {
+        Self {
             integrity_hash: app_token_input.integrity_hash.to_vec(),
             roles_token_hash: app_token_input.roles_token_hash.to_vec(),
         }
@@ -111,7 +118,7 @@ pub struct AppEntryInput {
 
 impl From<AppEntryInput> for AppEntry {
     fn from(app_entry_input: AppEntryInput) -> Self {
-        AppEntry {
+        Self {
             manifest: app_entry_input.manifest,
             app_token: app_entry_input.app_token.into(),
             roles_token: app_entry_input.roles_token.into(),
@@ -143,7 +150,7 @@ pub struct WebAppAssetsTokenInput {
 
 impl From<WebAppAssetsTokenInput> for WebAppAssetsToken {
     fn from(webapp_assets_token_input: WebAppAssetsTokenInput) -> Self {
-        WebAppAssetsToken {
+        Self {
             ui_hash: webapp_assets_token_input.ui_hash.to_vec(),
             roles_token_hash: webapp_assets_token_input.roles_token_hash.to_vec(),
         }
@@ -159,7 +166,7 @@ pub struct WebAppTokenInput {
 
 impl From<WebAppTokenInput> for WebAppToken {
     fn from(webapp_token_input: WebAppTokenInput) -> Self {
-        WebAppToken {
+        Self {
             integrity_hash: webapp_token_input.integrity_hash.to_vec(),
             assets_token_hash: webapp_token_input.assets_token_hash.to_vec(),
         }
@@ -176,7 +183,7 @@ pub struct WebAppEntryInput {
 
 impl From<WebAppEntryInput> for WebAppEntry {
     fn from(webapp_entry_input: WebAppEntryInput) -> Self {
-        WebAppEntry {
+        Self {
             manifest: webapp_entry_input.manifest,
             webapp_token: webapp_entry_input.webapp_token.into(),
         }
@@ -193,25 +200,67 @@ impl TryFrom<CreateWebAppInput> for WebAppEntry {
     type Error = WasmError;
 
     fn try_from(create_webapp_input: CreateWebAppInput) -> ExternResult<Self> {
-        let manifest = create_webapp_input.manifest;
-        let ui_entry_addr = manifest.ui.ui_entry.clone();
-        let app_entry_addr = manifest.happ_manifest.app_entry.clone();
+        Self::new( create_webapp_input.manifest )
+    }
+}
 
-        let app_entry : AppEntry = must_get_entry( app_entry_addr )?.try_into()?;
 
-        let webapp_assets_token = WebAppAssetsToken {
-            ui_hash: hash( &ui_entry_addr )?,
-            roles_token_hash: app_entry.app_token.roles_token_hash,
-        };
-        let webapp_token = WebAppToken {
-            integrity_hash:  app_entry.app_token.integrity_hash,
-            assets_token_hash: hash( &webapp_assets_token )?,
-        };
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WebAppPackageEntryInput {
+    pub title: String,
+    pub subtitle: String,
+    pub description: String,
+    pub maintainer: Authority,
+    pub icon: MemoryAddr,
+    pub source_code_uri: Option<String>,
+    #[serde(default)]
+    pub deprecation: Option<DeprecationNotice>,
+    pub metadata: BTreeMap<String, RmpvValue>,
+}
 
+impl From<WebAppPackageEntryInput> for WebAppPackageEntry {
+    fn from(webapp_package_entry_input: WebAppPackageEntryInput) -> Self {
+        Self {
+            title: webapp_package_entry_input.title,
+            subtitle: webapp_package_entry_input.subtitle,
+            description: webapp_package_entry_input.description,
+            maintainer: webapp_package_entry_input.maintainer,
+            icon: webapp_package_entry_input.icon,
+            source_code_uri: webapp_package_entry_input.source_code_uri,
+            deprecation: webapp_package_entry_input.deprecation,
+            metadata: webapp_package_entry_input.metadata,
+        }
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CreateWebAppPackageInput {
+    pub title: String,
+    pub subtitle: String,
+    pub description: String,
+    pub icon: MemoryAddr,
+    #[serde(default)]
+    pub metadata: BTreeMap<String, RmpvValue>,
+    pub maintainer: Option<Authority>,
+    pub source_code_uri: Option<String>,
+}
+
+impl TryFrom<CreateWebAppPackageInput> for WebAppPackageEntry {
+    type Error = WasmError;
+
+    fn try_from(webapp_package_input: CreateWebAppPackageInput) -> ExternResult<Self> {
         Ok(
             Self {
-                manifest,
-                webapp_token,
+                title: webapp_package_input.title,
+                subtitle: webapp_package_input.subtitle,
+                description: webapp_package_input.description,
+                maintainer: webapp_package_input.maintainer
+                    .unwrap_or( agent_id()?.into() ),
+                icon: webapp_package_input.icon,
+                source_code_uri: webapp_package_input.source_code_uri,
+                deprecation: None,
+                metadata: webapp_package_input.metadata,
             }
         )
     }

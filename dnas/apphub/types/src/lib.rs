@@ -8,6 +8,7 @@ mod webapp_package_version_entry;
 pub use hdi_extensions;
 pub use hdi_extensions::hdi;
 pub use holochain_types::*;
+pub use mere_memory_types;
 
 pub use app_entry::*;
 pub use ui_entry::*;
@@ -43,6 +44,7 @@ use dnahub_types::{
 pub type EntityId = ActionHash;
 pub type BundleAddr = EntryHash;
 pub type MemoryAddr = EntryHash;
+pub type RmpvValue = rmpv::Value;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

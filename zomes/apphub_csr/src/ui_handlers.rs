@@ -53,7 +53,7 @@ pub fn create_ui(input: CreateUiEntryInput) -> ExternResult<Entity<UiEntry>> {
 
 
 #[hdk_extern]
-pub fn get_ui_entry(addr: EntryHash) -> ExternResult<Entity<UiEntry>> {
+pub fn get_ui_entry(addr: AnyDhtHash) -> ExternResult<Entity<UiEntry>> {
     let record = must_get( &addr )?;
     let content = UiEntry::try_from_record( &record )?;
     let id = record.action_address().to_owned();
@@ -80,7 +80,7 @@ pub fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternRe
     let uis = get_links( agent_id, LinkTypes::Ui, None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
-            get_ui_entry( addr ).ok()
+            get_ui_entry( addr.into() ).ok()
         })
         .collect();
 

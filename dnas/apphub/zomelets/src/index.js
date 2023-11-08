@@ -23,10 +23,6 @@ import {
 }					from 'semver'; // approx. 32kb
 import {
     Link,
-    AppEntry,
-    UiEntry,
-    WebAppEntry,
-    WebAppPackageEntry,
     WebAppPackageVersionEntry,
 
     // Entity Classes
@@ -150,23 +146,26 @@ export const AppHubCSRZomelet		= new Zomelet({
     // WebApp Package
 
     async create_webapp_package ( input ) {
-	return await this.call( input );
-    },
-    async create_webapp_package_entry ( input ) {
+	this.log.trace("Create WebApp package input:", input );
 	input.icon			= await this.zomes.mere_memory_api.save( input.icon );
 
-	this.log.trace("WebApp package entry input:", input );
 	const result			= await this.call( input );
+
+	return new WebAppPackage( result, this );
+    },
+    async create_webapp_package_entry ( input ) {
+	this.log.trace("Create WebApp package entry input:", input );
+	const result			= await this.call( input );
+
+	return new WebAppPackage( result, this );
+    },
+    async get_webapp_package ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
 
 	return new WebAppPackage( result, this );
     },
     async get_webapp_package_entry ( input ) {
 	const result			= await this.call( new AnyDhtHash( input ) );
-
-	return WebAppPackageEntry( result );
-    },
-    async get_webapp_package ( input ) {
-	const result			= await this.call( new ActionHash( input ) );
 
 	return new WebAppPackage( result, this );
     },
