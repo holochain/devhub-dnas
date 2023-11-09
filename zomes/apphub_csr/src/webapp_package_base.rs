@@ -31,7 +31,7 @@ impl WebAppPackageBase {
     }
 
     pub fn version_link_base(&self) -> LinkBase<LinkTypes> {
-        LinkBase::new( self.id(), LinkTypes::WebAppPackageVersion )
+        LinkBase::new( self.id(), LinkTypes::WebAppPackageToWebAppPackageVersion )
     }
 
     // pub fn package(&self) -> ExternResult<Entity<WebAppPackageEntry>> {
@@ -55,7 +55,7 @@ impl WebAppPackageBase {
     pub fn version_links(&self) -> ExternResult<Vec<Link>> {
         get_links(
             self.id(),
-	    LinkTypes::WebAppPackageVersion,
+	    LinkTypes::WebAppPackageToWebAppPackageVersion,
 	    None
         )
     }

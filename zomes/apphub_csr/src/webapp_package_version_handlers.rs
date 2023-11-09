@@ -16,6 +16,7 @@ use hdi_extensions::{
 };
 use apphub::{
     EntryTypes,
+    LinkTypes,
     WebAppPackageVersionEntry,
     Authority,
     hc_crud::{
@@ -25,6 +26,7 @@ use apphub::{
     },
 };
 use apphub_sdk::{
+    LinkBase,
     MoveLinkInput,
     WebAppPackageVersionEntryInput,
     CreateWebAppPackageVersionInput,
@@ -65,7 +67,7 @@ pub fn create_webapp_package_version(input: CreateWebAppPackageVersionInput) ->
     create_webapp_package_link_to_version(CreateLinkWebAppPackageVersionInput {
 	version: input.version,
 	webapp_package_id: input.for_package,
-	webapp_package_version_id: entity.id.clone(),
+	webapp_package_version_addr: entity.id.clone(),
     })?;
 
     Ok( entity )
@@ -87,6 +89,26 @@ pub fn get_webapp_package_version(addr: ActionHash) ->
     ExternResult<Entity<WebAppPackageVersionEntry>>
 {
     Ok( get_entity( &addr )? )
+}
+
+
+#[hdk_extern]
+pub fn get_webapp_package_version_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
+    ExternResult<Vec<Entity<WebAppPackageVersionEntry>>>
+{
+    let agent_id = match maybe_agent_id {
+        Some(agent_id) => agent_id,
+        None => hdk_extensions::agent_id()?,
+    };
+    let agent_anchor = LinkBase::new( agent_id, LinkTypes::AgentToWebAppPackageVersion );
+    let versions = agent_anchor.get_links( None )?.into_iter()
+        .filter_map(|link| {
+            let addr = link.target.into_action_hash()?;
+            get_webapp_package_version( addr ).ok()
+        })
+        .collect();
+
+    Ok( versions )
 }
 
 
@@ -159,7 +181,7 @@ pub fn move_webapp_package_version(input: MoveWebAppPackageVersionInput) ->
     create_webapp_package_link_to_version(CreateLinkWebAppPackageVersionInput {
 	version: input.version,
 	webapp_package_id: input.webapp_package_ids.to,
-	webapp_package_version_id: input.webapp_package_version_id.clone(),
+	webapp_package_version_addr: entity.action.clone(),
     })?;
 
     Ok( entity )

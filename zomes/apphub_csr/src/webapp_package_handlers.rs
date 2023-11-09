@@ -18,6 +18,7 @@ use hdi_extensions::{
 };
 use apphub::{
     EntryTypes,
+    LinkTypes,
     WebAppPackageEntry,
     Authority,
     MemoryAddr,
@@ -30,6 +31,7 @@ use apphub::{
     },
 };
 use apphub_sdk::{
+    LinkBase,
     EntityPointerMap,
     WebAppPackageEntryInput,
     CreateWebAppPackageInput,
@@ -93,7 +95,7 @@ pub fn get_webapp_package(addr: EntityId) -> ExternResult<Entity<WebAppPackageEn
 pub struct CreateLinkWebAppPackageVersionInput {
     pub version: String,
     pub webapp_package_id: EntityId,
-    pub webapp_package_version_id: EntityId,
+    pub webapp_package_version_addr: ActionHash,
 }
 
 #[hdk_extern]
@@ -102,7 +104,7 @@ pub fn create_webapp_package_link_to_version(input: CreateLinkWebAppPackageVersi
 {
     let webapp_base = WebAppPackageBase::new( &input.webapp_package_id );
 
-    webapp_base.create_version_link( &input.webapp_package_version_id, input.version.as_str() )
+    webapp_base.create_version_link( &input.webapp_package_version_addr, input.version.as_str() )
 }
 
 
@@ -157,6 +159,26 @@ pub fn get_webapp_package_versions(webapp_package_id: EntityId) ->
     let base = WebAppPackageBase::new( &webapp_package_id );
 
     Ok( base.versions()? )
+}
+
+
+#[hdk_extern]
+pub fn get_webapp_package_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
+    ExternResult<Vec<Entity<WebAppPackageEntry>>>
+{
+    let agent_id = match maybe_agent_id {
+        Some(agent_id) => agent_id,
+        None => hdk_extensions::agent_id()?,
+    };
+    let agent_anchor = LinkBase::new( agent_id, LinkTypes::AgentToWebAppPackage );
+    let webapp_packages = agent_anchor.get_links( None )?.into_iter()
+        .filter_map(|link| {
+            let addr = link.target.into_action_hash()?;
+            get_webapp_package( addr ).ok()
+        })
+        .collect();
+
+    Ok( webapp_packages )
 }
 
 

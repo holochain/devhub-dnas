@@ -49,6 +49,7 @@ pub fn create_webapp(input: CreateWebAppInput) -> ExternResult<Entity<WebAppEntr
     create_webapp_entry_handler( input.try_into()? )
 }
 
+
 #[hdk_extern]
 pub fn get_webapp_entry(addr: AnyDhtHash) -> ExternResult<Entity<WebAppEntry>> {
     let record = must_get( &addr )?;
@@ -67,6 +68,7 @@ pub fn get_webapp_entry(addr: AnyDhtHash) -> ExternResult<Entity<WebAppEntry>> {
     )
 }
 
+
 #[hdk_extern]
 pub fn get_webapp_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
     ExternResult<Vec<Entity<WebAppEntry>>>
@@ -75,7 +77,7 @@ pub fn get_webapp_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
     };
-    let agent_anchor = LinkBase::new( agent_id, LinkTypes::WebApp );
+    let agent_anchor = LinkBase::new( agent_id, LinkTypes::AgentToWebApp );
     let webapps = agent_anchor.get_links( None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;

@@ -36,11 +36,11 @@ lazy_static! {
         ( PathInput::from("all.webapp_packages"), LinkTypes::WebAppPackage )
     ).unwrap();
 
-    pub static ref MY_APPS_ANCHOR			: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::App );
-    pub static ref MY_UIS_ANCHOR			: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::Ui );
-    pub static ref MY_WEBAPPS_ANCHOR			: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::WebApp );
-    pub static ref MY_WEBAPP_PACKS_ANCHOR		: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::WebAppPackage );
-    pub static ref MY_WEBAPP_PACK_VERSIONS_ANCHOR	: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::WebAppPackageVersion );
+    pub static ref MY_APPS_ANCHOR			: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToApp );
+    pub static ref MY_UIS_ANCHOR			: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToUi );
+    pub static ref MY_WEBAPPS_ANCHOR			: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToWebApp );
+    pub static ref MY_WEBAPP_PACKS_ANCHOR		: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToWebAppPackage );
+    pub static ref MY_WEBAPP_PACK_VERSIONS_ANCHOR	: TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToWebAppPackageVersion );
 }
 
 

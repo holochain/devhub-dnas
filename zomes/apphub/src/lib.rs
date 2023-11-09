@@ -69,6 +69,14 @@ pub enum LinkTypes {
     WebApp,
     WebAppPackage,
     WebAppPackageVersion,
+
+    AgentToApp,
+    AgentToUi,
+    AgentToWebApp,
+    AgentToWebAppPackage,
+    AgentToWebAppPackageVersion,
+
+    WebAppPackageToWebAppPackageVersion,
 }
 
 impl TryFrom<String> for LinkTypes {
@@ -82,6 +90,15 @@ impl TryFrom<String> for LinkTypes {
                 "WebApp" => LinkTypes::WebApp,
                 "WebAppPackage" => LinkTypes::WebAppPackage,
                 "WebAppPackageVersion" => LinkTypes::WebAppPackageVersion,
+
+                "AgentToApp" => LinkTypes::AgentToApp,
+                "AgentToUi" => LinkTypes::AgentToUi,
+                "AgentToWebApp" => LinkTypes::AgentToWebApp,
+                "AgentToWebAppPackage" => LinkTypes::AgentToWebAppPackage,
+                "AgentToWebAppPackageVersion" => LinkTypes::AgentToWebAppPackageVersion,
+
+                "WebAppPackageToWebAppPackageVersion" => LinkTypes::WebAppPackageToWebAppPackageVersion,
+
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }
         )

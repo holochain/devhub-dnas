@@ -77,7 +77,7 @@ pub fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
     };
-    let agent_anchor = LinkBase::new( agent_id, LinkTypes::App );
+    let agent_anchor = LinkBase::new( agent_id, LinkTypes::AgentToApp );
 
     let apps = agent_anchor.get_links( None )?.into_iter()
         .filter_map(|link| {
