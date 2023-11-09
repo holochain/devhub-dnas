@@ -17,6 +17,7 @@ use hdi_extensions::{
     ScopedTypeConnector,
 };
 use apphub::{
+    EntryTypes,
     LinkTypes,
     WebAppPackageEntry,
     Authority,
@@ -26,7 +27,7 @@ use apphub::{
         Entity, EntityId,
         UpdateEntityInput,
         EntryModel,
-        create_entity, get_entity, update_entity,
+        create_entity, get_entity, update_entity, delete_entity,
     },
 };
 use apphub_sdk::{
@@ -233,4 +234,10 @@ pub fn deprecate_webapp_package(input: UpdateEntityInput<DeprecationNotice>) ->
     ALL_WEBAPP_PACKS_ANCHOR.delete_all_my_links_to_target( &entity.id, None )?;
 
     Ok( entity )
+}
+
+
+#[hdk_extern]
+fn delete_webapp_package(addr: ActionHash) -> ExternResult<ActionHash> {
+    Ok( delete_entity::<WebAppPackageEntry,EntryTypes>( &addr )? )
 }

@@ -157,8 +157,8 @@ export const WebAppPackageStruct = {
     "icon":			EntryHash,
     "source_code_uri":		OptionType( String ),
     "maintainer": {
-	"group":		OptionType([ ActionHash, ActionHash ]),
-	"agent":		OptionType( AgentPubKey ),
+	"type":			String,
+	"content":		AgentPubKey, // [ ActionHash, ActionHash ]
     },
     "deprecation":		OptionType( Object ),
     "metadata":			Object,
@@ -216,8 +216,8 @@ export const WebAppPackageVersionStruct = {
     "webapp_token":		WebAppToken,
     "source_code_revision_uri":	OptionType( String ),
     "maintainer": {
-	"group":		OptionType([ ActionHash, ActionHash ]),
-	"agent":		OptionType( AgentPubKey ),
+	"type":			String,
+	"content":		AgentPubKey, // [ ActionHash, ActionHash ]
     },
     "metadata":			Object,
 };

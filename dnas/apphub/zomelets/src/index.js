@@ -209,6 +209,10 @@ export const AppHubCSRZomelet		= new Zomelet({
     async deprecate_webapp_package ( input ) {
 	return await this.call( input );
     },
+    async delete_webapp_package ( input ) {
+	return new ActionHash( await this.call( new ActionHash( input ) ) );
+    },
+
     // WebApp Package Links
     async create_webapp_package_link_to_version ( input ) {
 	return new ActionHash( await this.call( input ) );

@@ -185,6 +185,7 @@ pub struct WebAppToken {
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type", content = "content")]
 #[serde(rename_all = "snake_case")]
 pub enum Authority {
     // Group(ActionHash, ActionHash),

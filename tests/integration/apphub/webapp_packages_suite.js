@@ -6,6 +6,9 @@ import { expect }			from 'chai';
 import { faker }			from '@faker-js/faker';
 
 import json				from '@whi/json';
+import {
+    AppHubCell,
+}					from '@holochain/apphub-zomelets';
 
 import {
     expect_reject,
@@ -25,6 +28,7 @@ export default function ( args_fn ) {
     let webapp1_addr;
 
     let pack1;
+    let bobby_client, bobby_apphub_csr;
 
     before(async function () {
 	({
@@ -38,6 +42,11 @@ export default function ( args_fn ) {
 	    apphub_csr,
 	    webapp1_addr,
 	}				= args_fn());
+
+	bobby_client			= await client.app( "test-bobby" );
+	bobby_apphub_csr		= bobby_client
+	      .createCellInterface( "apphub", AppHubCell )
+	      .zomes.apphub_csr.functions;
     });
 
     it("should create WebApp Package entry", async function () {
@@ -93,5 +102,50 @@ export default function ( args_fn ) {
     });
 
     linearSuite("Errors", function () {
+
+	it("should fail to create WebApp Package entry because maintainer doesn't match create author", async function () {
+	    await expect_reject(async () => {
+		const entry		= await apphub_csr.get_webapp_package_entry( pack1.$id );
+
+		entry.maintainer.content = bobby_client.agent_id;
+
+		await apphub_csr.create_webapp_package_entry( entry );
+	    }, "Invalid maintainer" );
+	});
+
+	it("should fail to update WebApp Package because invalid maintainer", async function () {
+	    await expect_reject(async () => {
+		await bobby_apphub_csr.update_webapp_package({
+		    "base": pack1.$action,
+		    "properties": {
+			"description": faker.lorem.paragraphs( 2 ),
+		    },
+		});
+	    }, "Not authorized to update entry" );
+	});
+
+	it("should fail to update deprecated WebApp Package", async function () {
+	    await expect_reject(async () => {
+		await pack1.$update({
+		    "description": faker.lorem.paragraphs( 2 ),
+		});
+	    }, "Cannot update deprecated entity" );
+	});
+
+	it("should fail to delete WebApp entry because author", async function () {
+	    const pack			= await apphub_csr.create_webapp_package({
+		"title": faker.commerce.productName(),
+		"subtitle": faker.lorem.sentence(),
+		"description": faker.lorem.paragraphs( 2 ),
+		"icon": crypto.randomBytes( 1_000 ),
+		"source_code_uri": faker.internet.url(),
+	    });
+
+	    await expect_reject(async () => {
+		await bobby_apphub_csr.delete_webapp_package( pack.$id );
+	    }, "Not authorized to delete entry created by author" );
+	});
+
     });
+
 }
