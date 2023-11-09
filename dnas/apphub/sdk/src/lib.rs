@@ -6,10 +6,12 @@ use std::collections::BTreeMap;
 use hdk::prelude::*;
 use hdk_extensions::{
     agent_id,
+    must_get,
 };
 use apphub_types::{
     Authority,
     MemoryAddr,
+    BundleAddr,
     DeprecationNotice,
     RmpvValue,
 
@@ -49,9 +51,9 @@ pub type WebAppPackageVersionMap = EntityMap<WebAppPackageVersionEntry>;
 pub struct RolesTokenInput(pub Vec<(String, RoleTokenInput)>);
 
 impl From<RolesTokenInput> for RolesToken {
-    fn from(roles_token_input: RolesTokenInput) -> Self {
+    fn from(input: RolesTokenInput) -> Self {
         Self(
-            roles_token_input.0.into_iter()
+            input.0.into_iter()
                 .map( |(role_name, role_token_input)| (role_name, role_token_input.into()) )
                 .collect()
         )
@@ -63,9 +65,9 @@ impl From<RolesTokenInput> for RolesToken {
 pub struct RolesDnaTokensInput(pub BTreeMap<String, DnaTokenInput>);
 
 impl From<RolesDnaTokensInput> for RolesDnaTokens {
-    fn from(roles_dna_tokens_input: RolesDnaTokensInput) -> Self {
+    fn from(input: RolesDnaTokensInput) -> Self {
         Self(
-            roles_dna_tokens_input.0.into_iter()
+            input.0.into_iter()
                 .map( |(role_name, dna_token_input)| (role_name, dna_token_input.into()) )
                 .collect()
         )
@@ -82,12 +84,12 @@ pub struct RoleTokenInput {
 }
 
 impl From<RoleTokenInput> for RoleToken {
-    fn from(role_token_input: RoleTokenInput) -> Self {
+    fn from(input: RoleTokenInput) -> Self {
         Self {
-            integrity_hash: role_token_input.integrity_hash.to_vec(),
-            integrities_token_hash: role_token_input.integrities_token_hash.to_vec(),
-            coordinators_token_hash: role_token_input.coordinators_token_hash.to_vec(),
-            modifiers_hash: role_token_input.modifiers_hash.to_vec(),
+            integrity_hash: input.integrity_hash.to_vec(),
+            integrities_token_hash: input.integrities_token_hash.to_vec(),
+            coordinators_token_hash: input.coordinators_token_hash.to_vec(),
+            modifiers_hash: input.modifiers_hash.to_vec(),
         }
     }
 }
@@ -100,10 +102,10 @@ pub struct AppTokenInput {
 }
 
 impl From<AppTokenInput> for AppToken {
-    fn from(app_token_input: AppTokenInput) -> Self {
+    fn from(input: AppTokenInput) -> Self {
         Self {
-            integrity_hash: app_token_input.integrity_hash.to_vec(),
-            roles_token_hash: app_token_input.roles_token_hash.to_vec(),
+            integrity_hash: input.integrity_hash.to_vec(),
+            roles_token_hash: input.roles_token_hash.to_vec(),
         }
     }
 }
@@ -117,11 +119,11 @@ pub struct AppEntryInput {
 }
 
 impl From<AppEntryInput> for AppEntry {
-    fn from(app_entry_input: AppEntryInput) -> Self {
+    fn from(input: AppEntryInput) -> Self {
         Self {
-            manifest: app_entry_input.manifest,
-            app_token: app_entry_input.app_token.into(),
-            roles_token: app_entry_input.roles_token.into(),
+            manifest: input.manifest,
+            app_token: input.app_token.into(),
+            roles_token: input.roles_token.into(),
         }
     }
 }
@@ -136,8 +138,8 @@ pub struct CreateAppInput {
 impl TryFrom<CreateAppInput> for AppEntry {
     type Error = WasmError;
 
-    fn try_from(create_app_input: CreateAppInput) -> ExternResult<Self> {
-        Self::new( create_app_input.manifest, create_app_input.roles_dna_tokens.into() )
+    fn try_from(input: CreateAppInput) -> ExternResult<Self> {
+        Self::new( input.manifest, input.roles_dna_tokens.into() )
     }
 }
 
@@ -149,10 +151,10 @@ pub struct WebAppAssetsTokenInput {
 }
 
 impl From<WebAppAssetsTokenInput> for WebAppAssetsToken {
-    fn from(webapp_assets_token_input: WebAppAssetsTokenInput) -> Self {
+    fn from(input: WebAppAssetsTokenInput) -> Self {
         Self {
-            ui_hash: webapp_assets_token_input.ui_hash.to_vec(),
-            roles_token_hash: webapp_assets_token_input.roles_token_hash.to_vec(),
+            ui_hash: input.ui_hash.to_vec(),
+            roles_token_hash: input.roles_token_hash.to_vec(),
         }
     }
 }
@@ -165,10 +167,10 @@ pub struct WebAppTokenInput {
 }
 
 impl From<WebAppTokenInput> for WebAppToken {
-    fn from(webapp_token_input: WebAppTokenInput) -> Self {
+    fn from(input: WebAppTokenInput) -> Self {
         Self {
-            integrity_hash: webapp_token_input.integrity_hash.to_vec(),
-            assets_token_hash: webapp_token_input.assets_token_hash.to_vec(),
+            integrity_hash: input.integrity_hash.to_vec(),
+            assets_token_hash: input.assets_token_hash.to_vec(),
         }
     }
 }
@@ -182,10 +184,10 @@ pub struct WebAppEntryInput {
 }
 
 impl From<WebAppEntryInput> for WebAppEntry {
-    fn from(webapp_entry_input: WebAppEntryInput) -> Self {
+    fn from(input: WebAppEntryInput) -> Self {
         Self {
-            manifest: webapp_entry_input.manifest,
-            webapp_token: webapp_entry_input.webapp_token.into(),
+            manifest: input.manifest,
+            webapp_token: input.webapp_token.into(),
         }
     }
 }
@@ -199,13 +201,13 @@ pub struct CreateWebAppInput {
 impl TryFrom<CreateWebAppInput> for WebAppEntry {
     type Error = WasmError;
 
-    fn try_from(create_webapp_input: CreateWebAppInput) -> ExternResult<Self> {
-        Self::new( create_webapp_input.manifest )
+    fn try_from(input: CreateWebAppInput) -> ExternResult<Self> {
+        Self::new( input.manifest )
     }
 }
 
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebAppPackageEntryInput {
     pub title: String,
     pub subtitle: String,
@@ -219,22 +221,22 @@ pub struct WebAppPackageEntryInput {
 }
 
 impl From<WebAppPackageEntryInput> for WebAppPackageEntry {
-    fn from(webapp_package_entry_input: WebAppPackageEntryInput) -> Self {
+    fn from(input: WebAppPackageEntryInput) -> Self {
         Self {
-            title: webapp_package_entry_input.title,
-            subtitle: webapp_package_entry_input.subtitle,
-            description: webapp_package_entry_input.description,
-            maintainer: webapp_package_entry_input.maintainer,
-            icon: webapp_package_entry_input.icon,
-            source_code_uri: webapp_package_entry_input.source_code_uri,
-            deprecation: webapp_package_entry_input.deprecation,
-            metadata: webapp_package_entry_input.metadata,
+            title: input.title,
+            subtitle: input.subtitle,
+            description: input.description,
+            maintainer: input.maintainer,
+            icon: input.icon,
+            source_code_uri: input.source_code_uri,
+            deprecation: input.deprecation,
+            metadata: input.metadata,
         }
     }
 }
 
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateWebAppPackageInput {
     pub title: String,
     pub subtitle: String,
@@ -249,18 +251,81 @@ pub struct CreateWebAppPackageInput {
 impl TryFrom<CreateWebAppPackageInput> for WebAppPackageEntry {
     type Error = WasmError;
 
-    fn try_from(webapp_package_input: CreateWebAppPackageInput) -> ExternResult<Self> {
+    fn try_from(input: CreateWebAppPackageInput) -> ExternResult<Self> {
         Ok(
             Self {
-                title: webapp_package_input.title,
-                subtitle: webapp_package_input.subtitle,
-                description: webapp_package_input.description,
-                maintainer: webapp_package_input.maintainer
+                title: input.title,
+                subtitle: input.subtitle,
+                description: input.description,
+                maintainer: input.maintainer
                     .unwrap_or( agent_id()?.into() ),
-                icon: webapp_package_input.icon,
-                source_code_uri: webapp_package_input.source_code_uri,
+                icon: input.icon,
+                source_code_uri: input.source_code_uri,
                 deprecation: None,
-                metadata: webapp_package_input.metadata,
+                metadata: input.metadata,
+            }
+        )
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WebAppPackageVersionEntryInput {
+    pub for_package: EntityId,
+    pub maintainer: Authority,
+    pub webapp: BundleAddr,
+    pub webapp_token: WebAppTokenInput,
+    pub changelog: Option<String>,
+    pub source_code_revision_uri: Option<String>,
+    #[serde(default)]
+    pub metadata: BTreeMap<String, RmpvValue>,
+}
+
+impl From<WebAppPackageVersionEntryInput> for WebAppPackageVersionEntry {
+    fn from(input: WebAppPackageVersionEntryInput) -> Self {
+        Self {
+            for_package: input.for_package,
+            webapp: input.webapp,
+            webapp_token: input.webapp_token.into(),
+            changelog: input.changelog,
+            maintainer: input.maintainer,
+            source_code_revision_uri: input.source_code_revision_uri,
+            metadata: input.metadata,
+        }
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CreateWebAppPackageVersionInput {
+    pub for_package: EntityId,
+    pub version: String,
+    pub webapp: BundleAddr,
+    #[serde(default)]
+    pub metadata: BTreeMap<String, RmpvValue>,
+
+    // Optional
+    pub changelog: Option<String>,
+    pub maintainer: Option<Authority>,
+    pub source_code_revision_uri: Option<String>,
+}
+
+impl TryFrom<CreateWebAppPackageVersionInput> for WebAppPackageVersionEntry {
+    type Error = WasmError;
+
+    fn try_from(input: CreateWebAppPackageVersionInput) -> ExternResult<Self> {
+        let webapp_entry : WebAppEntry = must_get( &input.webapp )?.try_into()?;
+
+        Ok(
+            Self {
+                for_package: input.for_package,
+                webapp: input.webapp,
+                webapp_token: webapp_entry.webapp_token,
+                changelog: input.changelog,
+                maintainer: input.maintainer
+                    .unwrap_or( agent_id()?.into() ),
+                source_code_revision_uri: input.source_code_revision_uri,
+                metadata: input.metadata,
             }
         )
     }

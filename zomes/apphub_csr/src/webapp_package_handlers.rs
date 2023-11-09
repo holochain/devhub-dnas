@@ -18,7 +18,6 @@ use hdi_extensions::{
 };
 use apphub::{
     EntryTypes,
-    LinkTypes,
     WebAppPackageEntry,
     Authority,
     MemoryAddr,
@@ -101,12 +100,9 @@ pub struct CreateLinkWebAppPackageVersionInput {
 pub fn create_webapp_package_link_to_version(input: CreateLinkWebAppPackageVersionInput) ->
     ExternResult<ActionHash>
 {
-    create_link(
-        input.webapp_package_id,
-        input.webapp_package_version_id,
-        LinkTypes::WebAppPackageVersion,
-        input.version.as_bytes().to_vec()
-    )
+    let webapp_base = WebAppPackageBase::new( &input.webapp_package_id );
+
+    webapp_base.create_version_link( &input.webapp_package_version_id, input.version.as_str() )
 }
 
 

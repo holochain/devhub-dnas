@@ -132,7 +132,7 @@ export default function ( args_fn ) {
 	    }, "Cannot update deprecated entity" );
 	});
 
-	it("should fail to delete WebApp entry because author", async function () {
+	it("should fail to delete WebApp Package entry because author", async function () {
 	    const pack			= await apphub_csr.create_webapp_package({
 		"title": faker.commerce.productName(),
 		"subtitle": faker.lorem.sentence(),

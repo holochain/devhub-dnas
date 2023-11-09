@@ -4,6 +4,7 @@ use crate::{
     EntryTypes,
     Authority,
     WebAppPackageEntry,
+    WebAppPackageVersionEntry,
 };
 
 use hdi::prelude::*;
@@ -55,7 +56,34 @@ pub fn validation(
 
             valid!()
         },
-        EntryTypes::WebAppPackageVersion(_) => {
+        EntryTypes::WebAppPackageVersion(webapp_package_version_entry) => {
+            // Check that the update is made by a maintainer
+            match webapp_package_version_entry.maintainer {
+                Authority::Agent(agent_id) => {
+                    if agent_id != update.author {
+                        invalid!(format!(
+                            "Not authorized to update entry; Only maintainer ({}) can make updates",
+                            agent_id,
+                        ))
+                    }
+                },
+            }
+
+            let previous_entry : WebAppPackageVersionEntry = must_get_entry( original_entry_hash )?
+                .try_into()?;
+
+            if webapp_package_version_entry.webapp != previous_entry.webapp {
+                invalid!(format!(
+                    "WebApp reference cannot be changed; Create a new WebApp Package Version instead",
+                ))
+            }
+
+            if webapp_package_version_entry.webapp_token != previous_entry.webapp_token {
+                invalid!(format!(
+                    "WebApp Token cannot be changed because it is a representation of the WebApp reference",
+                ))
+            }
+
             valid!()
         },
         // _ => invalid!(format!("Update validation not implemented for entry type: {:#?}", update.entry_type )),

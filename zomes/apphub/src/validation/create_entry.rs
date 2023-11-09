@@ -69,7 +69,18 @@ pub fn validation(
 
             valid!()
         },
-        EntryTypes::WebAppPackageVersion(_webapp_package_version_entry) => {
+        EntryTypes::WebAppPackageVersion(webapp_package_version_entry) => {
+            match webapp_package_version_entry.maintainer {
+                Authority::Agent(agent_id) => {
+                    if agent_id != create.author {
+                        invalid!(format!(
+                            "Invalid maintainer '{}'; must match the creating agent ({})",
+                            agent_id, create.author
+                        ))
+                    }
+                },
+            }
+
             valid!()
         },
         // _ => invalid!(format!("Create validation not implemented for entry type: {:#?}", create.entry_type )),

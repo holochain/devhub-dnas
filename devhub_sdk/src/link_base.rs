@@ -58,10 +58,31 @@ where
         get_links( self.hash(), self.link_type(), tag )
     }
 
-    pub fn create_link(&self, target: impl Into<AnyLinkableHash>, tag: impl Into<LinkTag>) ->
-        ExternResult<ActionHash>
+    pub fn create_link<T>(
+        &self,
+        target: &T,
+        tag: impl Into<LinkTag>
+    ) -> ExternResult<ActionHash>
+    where
+        T: Into<AnyLinkableHash> + Clone,
     {
-        create_link( self.hash(), target, self.link_type(), tag )
+        create_link( self.hash(), target.to_owned(), self.link_type(), tag )
+    }
+
+    pub fn links_exist<T>(&self, target: &T, tag: impl Into<LinkTag>) ->
+        ExternResult<Option<Link>>
+    where
+        T: Into<AnyLinkableHash> + Clone,
+    {
+        let tag : LinkTag = tag.into();
+
+        Ok(
+            self.get_links( Some(tag.clone()) )?.into_iter()
+                .find( |link| {
+                    link.target == target.to_owned().into()
+                        && link.tag == tag
+                })
+        )
     }
 
     pub fn create_link_if_not_exists<T>(
@@ -76,6 +97,8 @@ where
         let tag : LinkTag = tag.into();
 
         for link in self.get_links( Some(tag.clone()) )? {
+            // We still have to check the tag because we only consider it to exist when the tags are
+            // an exact match
             if link.target == target
                 && link.tag == tag
             {
@@ -84,7 +107,7 @@ where
             }
         }
 
-        Ok( Some( create_link( self.hash(), target, self.link_type(), tag )? ) )
+        Ok( Some( self.create_link( &target, tag )? ) )
     }
 
     pub fn delete_all_my_links_to_target<T>(

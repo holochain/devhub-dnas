@@ -13,6 +13,7 @@ use apphub::{
     },
 };
 use apphub_sdk::{
+    LinkBase,
     EntityPointerMap,
     WebAppPackageVersionMap,
 };
@@ -29,9 +30,27 @@ impl WebAppPackageBase {
         self.0.to_owned()
     }
 
+    pub fn version_link_base(&self) -> LinkBase<LinkTypes> {
+        LinkBase::new( self.id(), LinkTypes::WebAppPackageVersion )
+    }
+
     // pub fn package(&self) -> ExternResult<Entity<WebAppPackageEntry>> {
     //     Ok( get_entity( &self.id() )? )
     // }
+
+    pub fn create_version_link(&self, version_id: &ActionHash, version_name: &str ) -> ExternResult<ActionHash> {
+        let tag = version_name.as_bytes().to_vec();
+        let versions_base = self.version_link_base();
+
+        Ok(
+            match versions_base.links_exist( version_id, tag )? {
+                Some(link) => link.create_link_hash,
+                None => versions_base.create_link(
+                    version_id, version_name.as_bytes().to_vec()
+                )?,
+            }
+        )
+    }
 
     pub fn version_links(&self) -> ExternResult<Vec<Link>> {
         get_links(

@@ -24,7 +24,8 @@ pub fn validation(
         EntryTypesUnit::App |
         EntryTypesUnit::Ui |
         EntryTypesUnit::WebApp |
-        EntryTypesUnit::WebAppPackage => {
+        EntryTypesUnit::WebAppPackage |
+        EntryTypesUnit::WebAppPackageVersion => {
             let create = summon_create_action( &original_action_hash )?;
 
             if delete.author != create.author {
@@ -36,6 +37,6 @@ pub fn validation(
 
             valid!()
         },
-        entry_type_unit => invalid!(format!("Delete validation not implemented for entry type: {:?}", entry_type_unit )),
+        // entry_type_unit => invalid!(format!("Delete validation not implemented for entry type: {:?}", entry_type_unit )),
     }
 }
