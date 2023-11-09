@@ -53,6 +53,21 @@ export class Link {
 
 
 //
+// AppToken Struct
+//
+export const AppTokenStruct = {
+    "integrity_hash":		Bytes,
+    "roles_token_hash":		Bytes,
+    "roles_token": VecType([
+	String,
+	Object.assign( {}, DnaTokenStruct, {
+	    "modifiers_hash":	Bytes,
+	}),
+    ]),
+};
+
+
+//
 // AppEntry Handling
 //
 export const AppStruct = {
@@ -75,16 +90,7 @@ export const AppStruct = {
 	    }
 	}),
     },
-    "app_token": {
-	"integrity_hash":	Bytes,
-	"roles_token_hash":	Bytes,
-    },
-    "roles_token": VecType([
-	String,
-	Object.assign( {}, DnaTokenStruct, {
-	    "modifiers_hash":	Bytes,
-	}),
-    ]),
+    "app_token":		AppTokenStruct,
 };
 
 export function AppEntry ( entry ) {
@@ -116,9 +122,9 @@ export class Ui extends ScopedEntity {
 //
 // WebAppToken Struct
 //
-export const WebAppToken = {
-    "integrity_hash":		Bytes,
-    "assets_token_hash":	Bytes,
+export const WebAppTokenStruct = {
+    "ui_hash":			Bytes,
+    "app_token":		AppTokenStruct,
 };
 
 
@@ -135,7 +141,7 @@ export const WebAppStruct = {
 	    "app_entry":	EntryHash,
 	},
     },
-    "webapp_token":		WebAppToken,
+    "webapp_token":		WebAppTokenStruct,
 };
 
 export function WebAppEntry ( entry ) {
@@ -213,7 +219,7 @@ export const WebAppPackageVersionStruct = {
     "for_package":		ActionHash,
     "changelog":		OptionType( String ),
     "webapp":			EntryHash,
-    "webapp_token":		WebAppToken,
+    "webapp_token":		WebAppTokenStruct,
     "source_code_revision_uri":	OptionType( String ),
     "maintainer": {
 	"type":			String,

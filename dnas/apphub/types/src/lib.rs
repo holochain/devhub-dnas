@@ -47,7 +47,7 @@ pub type MemoryAddr = EntryHash;
 pub type RmpvValue = rmpv::Value;
 
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct RolesDnaTokens(pub BTreeMap<String, DnaToken>);
 
 impl RolesDnaTokens {
@@ -115,7 +115,7 @@ impl RoleToken {
 }
 
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct RolesToken(pub Vec<(String, RoleToken)>);
 
 impl RolesToken {
@@ -166,25 +166,19 @@ impl FromIterator<(String, RoleToken)> for RolesToken {
 pub struct AppToken {
     pub integrity_hash: Vec<u8>,
     pub roles_token_hash: Vec<u8>,
-}
-
-
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
-pub struct WebAppAssetsToken {
-    pub ui_hash: Vec<u8>,
-    pub roles_token_hash: Vec<u8>,
+    pub roles_token: RolesToken,
 }
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct WebAppToken {
-    pub integrity_hash: Vec<u8>,
-    pub assets_token_hash: Vec<u8>,
+    pub ui_hash: Vec<u8>,
+    pub app_token: AppToken,
 }
 
 
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 #[serde(tag = "type", content = "content")]
 #[serde(rename_all = "snake_case")]
 pub enum Authority {

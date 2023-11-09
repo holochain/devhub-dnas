@@ -81,7 +81,7 @@ export default function ( args_fn ) {
 	    await expect_reject(async () => {
 		const entry		= await apphub_csr.get_webapp_entry( webapp1.$addr );
 
-		entry.webapp_token.integrity_hash = crypto.randomBytes( 32 );
+		entry.webapp_token.app_token.integrity_hash = crypto.randomBytes( 32 );
 
 		await apphub_csr.create_webapp_entry( entry );
 	    }, "Invalid WebApp Token" );

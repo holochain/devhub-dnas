@@ -64,7 +64,7 @@ export default function ( args_fn ) {
 	    "version": "0.1.0",
 	    "for_package": pack1.$id,
 	    "webapp": webapp1_addr,
-	    "source_code_uri": faker.internet.url(),
+	    "source_code_revision_uri": faker.internet.url(),
 	});
 
 	log.normal("Create WebApp package version: %s", json.debug(pack1_v1) );
@@ -96,7 +96,7 @@ export default function ( args_fn ) {
 	    "version": vtag,
 	    "for_package": pack1.$id,
 	    "webapp": webapp1_addr,
-	    "source_code_uri": faker.internet.url(),
+	    "source_code_revision_uri": faker.internet.url(),
 	});
     }
 
@@ -134,7 +134,7 @@ export default function ( args_fn ) {
 	    "subtitle": faker.lorem.sentence(),
 	    "description": faker.lorem.paragraphs( 2 ),
 	    "icon": crypto.randomBytes( 1_000 ),
-	    "source_code_uri": faker.internet.url(),
+	    "source_code_revision_uri": faker.internet.url(),
 	});
 
 	const version			= await apphub_csr.move_webapp_package_version({
@@ -195,7 +195,7 @@ export default function ( args_fn ) {
 		"version": "1.0.0",
 		"for_package": pack1.$id,
 		"webapp": webapp1_addr,
-		"source_code_uri": faker.internet.url(),
+		"source_code_revision_uri": faker.internet.url(),
 	    });
 
 	    await expect_reject(async () => {

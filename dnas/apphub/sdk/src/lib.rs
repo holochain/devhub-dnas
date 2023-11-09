@@ -24,7 +24,6 @@ use apphub_types::{
     RolesDnaTokens,
     WebAppManifestV1,
     WebAppToken,
-    WebAppAssetsToken,
     WebAppEntry,
 
     WebAppPackageEntry,
@@ -99,6 +98,7 @@ impl From<RoleTokenInput> for RoleToken {
 pub struct AppTokenInput {
     pub integrity_hash: ByteBuf,
     pub roles_token_hash: ByteBuf,
+    pub roles_token: RolesTokenInput,
 }
 
 impl From<AppTokenInput> for AppToken {
@@ -106,6 +106,7 @@ impl From<AppTokenInput> for AppToken {
         Self {
             integrity_hash: input.integrity_hash.to_vec(),
             roles_token_hash: input.roles_token_hash.to_vec(),
+            roles_token: input.roles_token.into(),
         }
     }
 }
@@ -115,7 +116,6 @@ impl From<AppTokenInput> for AppToken {
 pub struct AppEntryInput {
     pub manifest: AppManifestV1,
     pub app_token: AppTokenInput,
-    pub roles_token: RolesTokenInput,
 }
 
 impl From<AppEntryInput> for AppEntry {
@@ -123,7 +123,6 @@ impl From<AppEntryInput> for AppEntry {
         Self {
             manifest: input.manifest,
             app_token: input.app_token.into(),
-            roles_token: input.roles_token.into(),
         }
     }
 }
@@ -145,32 +144,16 @@ impl TryFrom<CreateAppInput> for AppEntry {
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct WebAppAssetsTokenInput {
-    pub ui_hash: ByteBuf,
-    pub roles_token_hash: ByteBuf,
-}
-
-impl From<WebAppAssetsTokenInput> for WebAppAssetsToken {
-    fn from(input: WebAppAssetsTokenInput) -> Self {
-        Self {
-            ui_hash: input.ui_hash.to_vec(),
-            roles_token_hash: input.roles_token_hash.to_vec(),
-        }
-    }
-}
-
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebAppTokenInput {
-    pub integrity_hash: ByteBuf,
-    pub assets_token_hash: ByteBuf,
+    pub ui_hash: ByteBuf,
+    pub app_token: AppTokenInput,
 }
 
 impl From<WebAppTokenInput> for WebAppToken {
     fn from(input: WebAppTokenInput) -> Self {
         Self {
-            integrity_hash: input.integrity_hash.to_vec(),
-            assets_token_hash: input.assets_token_hash.to_vec(),
+            ui_hash: input.ui_hash.to_vec(),
+            app_token: input.app_token.into(),
         }
     }
 }

@@ -83,13 +83,21 @@ export default function ( args_fn ) {
 
 		await apphub_csr.create_app_entry( entry );
 	    }, "Invalid App Token" );
-	});
 
-	it("should fail to create App entry because of wrong invalid App token", async function () {
+	    // Invalid roles token hash
 	    await expect_reject(async () => {
 		const entry		= await apphub_csr.get_app_entry( app1.$addr );
 
-		entry.roles_token[0][0] = "invalid_role_name";
+		entry.app_token.roles_token_hash = crypto.randomBytes( 32 );
+
+		await apphub_csr.create_app_entry( entry );
+	    }, "Invalid App Token" );
+
+	    // Invalid roles token
+	    await expect_reject(async () => {
+		const entry		= await apphub_csr.get_app_entry( app1.$addr );
+
+		entry.app_token.roles_token[0][0] = "invalid_role_name";
 
 		await apphub_csr.create_app_entry( entry );
 	    }, "Missing RoleToken for role" );

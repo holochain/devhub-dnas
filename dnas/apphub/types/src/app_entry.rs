@@ -23,7 +23,6 @@ pub struct AppEntry {
     // This cannot be used for validation as it is solely provided by the client-side and cannot be
     // proven to belong to the corresponding `DnaEntry`
     pub app_token: AppToken,
-    pub roles_token: RolesToken,
 }
 
 impl AppEntry {
@@ -35,7 +34,6 @@ impl AppEntry {
             Self {
                 manifest,
                 app_token: AppEntry::create_app_token( &roles_token )?,
-                roles_token,
             }
         )
     }
@@ -53,6 +51,7 @@ impl AppEntry {
             AppToken {
                 integrity_hash: AppEntry::create_integrity_hash( roles_token )?,
                 roles_token_hash: AppEntry::create_roles_token_hash( roles_token )?,
+                roles_token: roles_token.to_owned(),
             }
         )
     }
@@ -66,18 +65,18 @@ impl AppEntry {
     }
 
     pub fn calculate_integrity_hash(&self) -> ExternResult<Vec<u8>> {
-        AppEntry::create_integrity_hash( &self.roles_token )
+        AppEntry::create_integrity_hash( &self.app_token.roles_token )
     }
 
     pub fn calculate_roles_token_hash(&self) -> ExternResult<Vec<u8>> {
-        AppEntry::create_roles_token_hash( &self.roles_token )
+        AppEntry::create_roles_token_hash( &self.app_token.roles_token )
     }
 
     pub fn calculate_app_token(&self) -> ExternResult<AppToken> {
-        AppEntry::create_app_token( &self.roles_token )
+        AppEntry::create_app_token( &self.app_token.roles_token )
     }
 
     pub fn validate_roles_token(&self) -> ExternResult<()> {
-        self.manifest.validate_roles_token( &self.roles_token )
+        self.manifest.validate_roles_token( &self.app_token.roles_token )
     }
 }
