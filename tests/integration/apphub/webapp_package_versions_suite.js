@@ -168,6 +168,16 @@ export default function ( args_fn ) {
 	    }, "Invalid maintainer" );
 	});
 
+	it("should fail to update WebApp Package Version because invalid WebApp token", async function () {
+	    await expect_reject(async () => {
+		const entry		= await apphub_csr.get_webapp_package_version_entry( pack1_v1.$id );
+
+		entry.webapp_token.ui_hash = crypto.randomBytes( 32 );
+
+		await apphub_csr.create_webapp_package_version_entry( entry );
+	    }, "Invalid WebApp Token" );
+	});
+
 	it("should fail to update WebApp Package Version because invalid maintainer", async function () {
 	    await expect_reject(async () => {
 		await bobby_apphub_csr.update_webapp_package_version({

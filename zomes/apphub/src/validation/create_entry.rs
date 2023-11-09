@@ -4,6 +4,7 @@ use crate::{
     mere_memory_types,
     EntryTypes,
     Authority,
+    WebAppEntry,
 };
 
 use hdi::prelude::*;
@@ -79,6 +80,14 @@ pub fn validation(
                         ))
                     }
                 },
+            }
+
+            let webapp_entry : WebAppEntry = must_get_entry( webapp_package_version_entry.webapp )?
+                .try_into()?;
+            let webapp_token = webapp_entry.calculate_webapp_token()?;
+
+            if webapp_package_version_entry.webapp_token != webapp_token {
+                invalid!(format!("Invalid WebApp Token; expected {:?}", webapp_token ))
             }
 
             valid!()
