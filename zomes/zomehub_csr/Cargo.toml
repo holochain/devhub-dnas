@@ -9,7 +9,6 @@ name = "zomehub_csr"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_devhub_sdk = { path = "../../devhub_sdk" }
 hc_portal_sdk = "0.1.3"
 hc_zomehub_sdk = { path = "../../dnas/zomehub/sdk" }
 lazy_static = "1.4"

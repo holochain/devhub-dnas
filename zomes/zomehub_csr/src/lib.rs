@@ -1,5 +1,5 @@
-use devhub_sdk::hdk;
-use devhub_sdk::hdk_extensions;
+use zomehub_sdk::hdk;
+use zomehub_sdk::hdk_extensions;
 
 use lazy_static::lazy_static;
 use hdk::prelude::*;

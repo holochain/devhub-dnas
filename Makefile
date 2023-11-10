@@ -249,12 +249,93 @@ clean-files-all-force:	clean-remove-chaff
 #
 .cargo/credentials:
 	cp ~/$@ $@
-fix-rust-dry-run-issue: # Force rebuild to fix rust issue after dry run
+fix-rust-compile-issue: # Force rebuild to fix rust issue (typically after dry-run)
 	touch devhub_sdk/src/lib.rs
 	touch dnas/*/types/src/lib.rs
 	touch zomes/*/src/lib.rs
 preview-sdk-crate:		test .cargo/credentials
 	cd devhub_sdk; cargo publish --dry-run --allow-dirty
-	make fix-rust-dry-run-issue
+	make fix-rust-compile-issue
 publish-sdk-crate:		test .cargo/credentials
 	cd devhub_sdk; cargo publish
+
+
+
+#
+# Previewing DNA Packages
+#
+preview-%-packages: 		preview-%-types-crate \
+				preview-%-sdk-crate \
+				preview-%-zomelets-package
+	@echo -e "\x1b[37mFinished previewing packages for '$*'\x1b[0m";
+
+preview-zomehub-packages:
+preview-dnahub-packages:
+preview-apphub-packages:
+
+
+
+#
+# Publishing Types Packages
+#
+preview-%-types-crate:		 test-%-unit test-% .cargo/credentials
+	cd dnas/$*; make preview-types-crate
+publish-%-types-crate:		 test-%-unit test-% .cargo/credentials
+	cd dnas/$*; make publish-types-crate
+
+preview-zomehub-types-crate:
+publish-zomehub-types-crate:
+
+preview-dnahub-types-crate:
+publish-dnahub-types-crate:
+
+preview-apphub-types-crate:
+publish-apphub-types-crate:
+
+
+
+#
+# Publishing SDK Packages
+#
+preview-%-sdk-crate:		 test-%-unit test-% .cargo/credentials
+	cd dnas/$*; make preview-sdk-crate
+publish-%-sdk-crate:		 test-%-unit test-% .cargo/credentials
+	cd dnas/$*; make publish-sdk-crate
+
+preview-zomehub-sdk-crate:
+publish-zomehub-sdk-crate:
+
+preview-dnahub-sdk-crate:
+publish-dnahub-sdk-crate:
+
+preview-apphub-sdk-crate:
+publish-apphub-sdk-crate:
+
+
+
+#
+# Publishing Zomelets Packages
+#
+prepare-%-zomelets-package:	zomelets/node_modules
+	cd dnas/$*; make prepare-zomelets-package
+preview-%-zomelets-package:	clean-files test-%-unit test-%
+	cd dnas/$*; make preview-zomelets-package
+create-%-zomelets-package:	clean-files test-%-unit test-%
+	cd dnas/$*; make create-zomelets-package
+publish-%-zomelets-package:	clean-files test-%-unit test-%
+	cd dnas/$*; make publish-zomelets-package
+
+prepare-zomehub-zomelets-package:
+preview-zomehub-zomelets-package:
+create-zomehub-zomelets-package:
+publish-zomehub-zomelets-package:
+
+prepare-dnahub-zomelets-package:
+preview-dnahub-zomelets-package:
+create-dnahub-zomelets-package:
+publish-dnahub-zomelets-package:
+
+prepare-apphub-zomelets-package:
+preview-apphub-zomelets-package:
+create-apphub-zomelets-package:
+publish-apphub-zomelets-package:

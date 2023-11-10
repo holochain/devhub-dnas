@@ -3,6 +3,10 @@ name = "hc_zomehub_types"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas"
+description = "Definitions used by the ZomeHub DNA Zomes"
+readme = "README.md"
 
 [lib]
 name = "zomehub_types"

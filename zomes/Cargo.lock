@@ -73,7 +73,7 @@ dependencies = [
 name = "apphub"
 version = "0.0.0"
 dependencies = [
- "apphub_types",
+ "hc_apphub_types",
  "hc_crud_caps",
  "serde",
 ]
@@ -83,36 +83,12 @@ name = "apphub_csr"
 version = "0.0.0"
 dependencies = [
  "apphub",
- "apphub_sdk",
- "dnahub_types",
+ "hc_apphub_sdk",
+ "hc_dnahub_types",
  "hc_portal_sdk",
  "lazy_static",
  "rmpv",
  "serde",
-]
-
-[[package]]
-name = "apphub_sdk"
-version = "0.0.0"
-dependencies = [
- "apphub_types",
- "dnahub_sdk",
- "hc_devhub_sdk",
- "serde",
-]
-
-[[package]]
-name = "apphub_types"
-version = "0.0.0"
-dependencies = [
- "dnahub_types",
- "holochain_zome_types",
- "mere_memory_types",
- "rmp-serde 1.1.2",
- "rmpv",
- "serde",
- "sha2",
- "whi_hdi_extensions",
 ]
 
 [[package]]
@@ -714,8 +690,8 @@ dependencies = [
 name = "dnahub"
 version = "0.0.0"
 dependencies = [
- "dnahub_types",
  "hc_crud_caps",
+ "hc_dnahub_types",
  "serde",
 ]
 
@@ -724,33 +700,11 @@ name = "dnahub_csr"
 version = "0.0.0"
 dependencies = [
  "dnahub",
- "dnahub_sdk",
- "hc_devhub_sdk",
+ "hc_devhub_sdk 0.1.0",
+ "hc_dnahub_sdk",
  "hc_portal_sdk",
  "lazy_static",
  "serde",
-]
-
-[[package]]
-name = "dnahub_sdk"
-version = "0.0.0"
-dependencies = [
- "dnahub_types",
- "hc_devhub_sdk",
- "serde",
-]
-
-[[package]]
-name = "dnahub_types"
-version = "0.0.0"
-dependencies = [
- "getrandom 0.2.7",
- "holochain_integrity_types",
- "holochain_zome_types",
- "rmp-serde 1.1.2",
- "serde",
- "sha2",
- "whi_hdi_extensions",
 ]
 
 [[package]]
@@ -1063,6 +1017,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "hc_apphub_sdk"
+version = "0.0.0"
+dependencies = [
+ "hc_apphub_types",
+ "hc_devhub_sdk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hc_dnahub_sdk",
+ "serde",
+]
+
+[[package]]
+name = "hc_apphub_types"
+version = "0.0.0"
+dependencies = [
+ "hc_dnahub_types",
+ "holochain_zome_types",
+ "mere_memory_types",
+ "rmp-serde 1.1.2",
+ "rmpv",
+ "serde",
+ "sha2",
+ "whi_hdi_extensions",
+]
+
+[[package]]
 name = "hc_crud_caps"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1079,6 +1057,39 @@ dependencies = [
  "hc_crud_caps",
  "serde",
  "whi_hdk_extensions",
+]
+
+[[package]]
+name = "hc_devhub_sdk"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c8875ac58fd8bed2c66923c4cb8187c364cd2c812a9fb54b59612c4c2ed0f4d"
+dependencies = [
+ "hc_crud_caps",
+ "serde",
+ "whi_hdk_extensions",
+]
+
+[[package]]
+name = "hc_dnahub_sdk"
+version = "0.0.0"
+dependencies = [
+ "hc_devhub_sdk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hc_dnahub_types",
+ "serde",
+]
+
+[[package]]
+name = "hc_dnahub_types"
+version = "0.0.0"
+dependencies = [
+ "getrandom 0.2.7",
+ "holochain_integrity_types",
+ "holochain_zome_types",
+ "rmp-serde 1.1.2",
+ "serde",
+ "sha2",
+ "whi_hdi_extensions",
 ]
 
 [[package]]
@@ -1109,7 +1120,7 @@ dependencies = [
 name = "hc_zomehub_sdk"
 version = "0.1.0"
 dependencies = [
- "hc_devhub_sdk",
+ "hc_devhub_sdk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hc_zomehub_types",
  "serde",
 ]
@@ -3557,7 +3568,6 @@ dependencies = [
 name = "zomehub_csr"
 version = "0.0.0"
 dependencies = [
- "hc_devhub_sdk",
  "hc_portal_sdk",
  "hc_zomehub_sdk",
  "lazy_static",

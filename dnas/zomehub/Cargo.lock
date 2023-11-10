@@ -802,6 +802,8 @@ dependencies = [
 [[package]]
 name = "hc_devhub_sdk"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c8875ac58fd8bed2c66923c4cb8187c364cd2c812a9fb54b59612c4c2ed0f4d"
 dependencies = [
  "hc_crud_caps",
  "serde",

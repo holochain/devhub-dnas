@@ -1,8 +1,12 @@
 [package]
-name = "dnahub_types"
+name = "hc_dnahub_types"
 version = "0.0.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas"
+description = "Definitions used by the DnaHub DNA Zomes"
+readme = "README.md"
 
 [lib]
 name = "dnahub_types"
