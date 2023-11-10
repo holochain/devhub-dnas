@@ -12,4 +12,3 @@ crate-type = ["cdylib", "rlib"]
 dnahub_types = { path = "../types" }
 hc_devhub_sdk = { path = "../../../devhub_sdk" }
 serde = "1"
-serde_bytes = "0.11"

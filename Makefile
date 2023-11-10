@@ -1,4 +1,4 @@
-
+.PHONY:			FORCE
 SHELL			= bash
 NAME			= devhub
 
@@ -8,7 +8,7 @@ MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.9.1
+PORTAL_VERSION		= 0.9.2
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -49,7 +49,7 @@ CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
 clean:
 	rm -rf \
 	    tests/node_modules \
-	    .cargo target zomes/target \
+	    .cargo target dnas/target \
 	    $(DEVHUB_HAPP) \
 	    $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) \
 	    $(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) \
@@ -117,8 +117,8 @@ NEW_HDIE_VERSION = whi_hdi_extensions = "0.4"
 PRE_HDKE_VERSION = whi_hdk_extensions = "=0.3.0"
 NEW_HDKE_VERSION = whi_hdk_extensions = "0.4"
 
-PRE_PSDK_VERSION = hc_portal_sdk = "0.1.1"
-NEW_PSDK_VERSION = hc_portal_sdk = "0.1.2"
+PRE_PSDK_VERSION = hc_portal_sdk = "0.1.2"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.1.3"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
@@ -154,10 +154,10 @@ TEST_WEBHAPP		= tests/test.webhapp
 $(TEST_UI):
 	dd if=/dev/zero of=$@ bs=1M count=1
 $(TEST_HAPP):		$(ZOMEHUB_DNA)
-	@echo "Packaging '$*': $@"
+	@echo "Packaging: $@"
 	@hc app pack -o $@ tests/test_happ/
 $(TEST_WEBHAPP):	$(TEST_HAPP) $(TEST_UI)
-	@echo "Packaging '$*': $@"
+	@echo "Packaging: $@"
 	@hc web-app pack -o $@ tests/test_webhapp/
 
 %/package-lock.json:	%/package.json
@@ -241,3 +241,18 @@ clean-files-all:	clean-remove-chaff
 	git clean -ndx
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
+
+
+
+#
+# DevHub SDK package
+#
+fix-rust-dry-run-issue: # Force rebuild to fix rust issue after dry run
+	touch devhub_sdk/src/lib.rs
+	touch dnas/*/types/src/lib.rs
+	touch zomes/*/src/lib.rs
+preview-sdk-crate:		test
+	cd devhub_sdk; cargo publish --dry-run --allow-dirty
+	make fix-rust-dry-run-issue
+publish-sdk-crate:		test
+	cd devhub_sdk; cargo publish

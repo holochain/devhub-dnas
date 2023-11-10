@@ -1,6 +1,6 @@
 [package]
-name = "zomehub_types"
-version = "0.0.0"
+name = "hc_zomehub_types"
+version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
@@ -11,4 +11,4 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 mere_memory_types = "0.91.0"
 serde = "1"
-whi_hdi_extensions = "0.4"
+whi_hdi_extensions = "0.4.2"

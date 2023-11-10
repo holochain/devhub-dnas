@@ -77,7 +77,6 @@ dependencies = [
  "dnahub_sdk",
  "hc_devhub_sdk",
  "serde",
- "serde_bytes",
 ]
 
 [[package]]
@@ -696,7 +695,6 @@ dependencies = [
  "dnahub_types",
  "hc_devhub_sdk",
  "serde",
- "serde_bytes",
 ]
 
 [[package]]
@@ -1033,7 +1031,7 @@ dependencies = [
 
 [[package]]
 name = "hc_devhub_sdk"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "hc_crud_caps",
  "serde",
@@ -3264,9 +3262,9 @@ dependencies = [
 
 [[package]]
 name = "whi_hdi_extensions"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b060ba264774dc0f5ee03a83d9a7b935c22dde0eb5853be192e309e6f01599d2"
+checksum = "759fdbf113055050bfc2b947fa7466d191caf53905f556c7447ad399343cedfb"
 dependencies = [
  "hdi",
  "holo_hash",

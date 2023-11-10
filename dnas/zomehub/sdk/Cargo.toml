@@ -1,6 +1,6 @@
 [package]
-name = "zomehub_sdk"
-version = "0.0.0"
+name = "hc_zomehub_sdk"
+version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 
@@ -10,5 +10,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_devhub_sdk = { path = "../../../devhub_sdk" }
+hc_zomehub_types = { path = "../types" }
 serde = "1"
-zomehub_types = { path = "../types" }

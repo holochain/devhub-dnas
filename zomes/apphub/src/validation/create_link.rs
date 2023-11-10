@@ -55,7 +55,8 @@ pub fn validation(
             let agent_pubkey = match base_address.clone().into_agent_pub_key() {
                 Some(hash) => hash,
                 None => invalid!(format!(
-                    "AgentApp link base address must be an agent pubkey; not '{}'", base_address
+                    "{:?} link base address must be an agent pubkey; not '{}'",
+                    link_type, base_address
                 )),
             };
 
@@ -70,7 +71,10 @@ pub fn validation(
         LinkTypes::AgentToUi => {
             let agent_pubkey = match base_address.clone().into_agent_pub_key() {
                 Some(hash) => hash,
-                None => invalid!(format!("AgentUi link base address must be an agent pubkey; not '{}'", base_address )),
+                None => invalid!(format!(
+                    "{:?} link base address must be an agent pubkey; not '{}'",
+                    link_type, base_address
+                )),
             };
 
             if agent_pubkey != create.author {
@@ -84,7 +88,10 @@ pub fn validation(
         LinkTypes::AgentToWebApp => {
             let agent_pubkey = match base_address.clone().into_agent_pub_key() {
                 Some(hash) => hash,
-                None => invalid!(format!("AgentWebApp link base address must be an agent pubkey; not '{}'", base_address )),
+                None => invalid!(format!(
+                    "{:?} link base address must be an agent pubkey; not '{}'",
+                    link_type, base_address
+                )),
             };
 
             if agent_pubkey != create.author {
@@ -98,7 +105,10 @@ pub fn validation(
         LinkTypes::AgentToWebAppPackage => {
             let agent_pubkey = match base_address.clone().into_agent_pub_key() {
                 Some(hash) => hash,
-                None => invalid!(format!("AgentWebAppPackage link base address must be an agent pubkey; not '{}'", base_address )),
+                None => invalid!(format!(
+                    "{:?} link base address must be an agent pubkey; not '{}'",
+                    link_type, base_address
+                )),
             };
 
             if agent_pubkey != create.author {
@@ -112,7 +122,10 @@ pub fn validation(
         LinkTypes::AgentToWebAppPackageVersion => {
             let agent_pubkey = match base_address.clone().into_agent_pub_key() {
                 Some(hash) => hash,
-                None => invalid!(format!("AgentWebAppPackageVersion link base address must be an agent pubkey; not '{}'", base_address )),
+                None => invalid!(format!(
+                    "{:?} link base address must be an agent pubkey; not '{}'",
+                    link_type, base_address
+                )),
             };
 
             if agent_pubkey != create.author {

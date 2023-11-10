@@ -8,6 +8,7 @@ use hdk_extensions::{
     agent_id,
     must_get,
 };
+use serde_bytes::ByteBuf;
 use apphub_types::{
     Authority,
     MemoryAddr,
@@ -35,7 +36,6 @@ use dnahub_sdk::{
 use hc_crud::{
     Entity, EntityId,
 };
-use serde_bytes::ByteBuf;
 
 
 pub type EntityMap<T> = BTreeMap<String, Entity<T>>;

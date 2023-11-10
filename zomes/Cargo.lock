@@ -99,7 +99,6 @@ dependencies = [
  "dnahub_sdk",
  "hc_devhub_sdk",
  "serde",
- "serde_bytes",
 ]
 
 [[package]]
@@ -739,7 +738,6 @@ dependencies = [
  "dnahub_types",
  "hc_devhub_sdk",
  "serde",
- "serde_bytes",
 ]
 
 [[package]]
@@ -1076,7 +1074,7 @@ dependencies = [
 
 [[package]]
 name = "hc_devhub_sdk"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "hc_crud_caps",
  "serde",
@@ -1085,9 +1083,9 @@ dependencies = [
 
 [[package]]
 name = "hc_portal_sdk"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "624a9b444164fbe474d2494230b0fae1a933619369e7696de0585e8e4fccc4db"
+checksum = "a28fff974d2879e231e561e5930e08cb00751cc81659c883072cb2d4841fdd05"
 dependencies = [
  "hc_crud_caps",
  "hc_portal_types",
@@ -1103,6 +1101,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d85152162c3eb4ab63c1b8c89959b12b782a66d0a299ac436d97f7b9737fefc"
 dependencies = [
  "rmpv",
+ "serde",
+ "whi_hdi_extensions",
+]
+
+[[package]]
+name = "hc_zomehub_sdk"
+version = "0.1.0"
+dependencies = [
+ "hc_devhub_sdk",
+ "hc_zomehub_types",
+ "serde",
+]
+
+[[package]]
+name = "hc_zomehub_types"
+version = "0.1.0"
+dependencies = [
+ "mere_memory_types",
  "serde",
  "whi_hdi_extensions",
 ]
@@ -3331,9 +3347,9 @@ dependencies = [
 
 [[package]]
 name = "whi_hdi_extensions"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b060ba264774dc0f5ee03a83d9a7b935c22dde0eb5853be192e309e6f01599d2"
+checksum = "759fdbf113055050bfc2b947fa7466d191caf53905f556c7447ad399343cedfb"
 dependencies = [
  "hdi",
  "holo_hash",
@@ -3533,8 +3549,8 @@ name = "zomehub"
 version = "0.0.0"
 dependencies = [
  "hc_crud_caps",
+ "hc_zomehub_types",
  "serde",
- "zomehub_types",
 ]
 
 [[package]]
@@ -3543,26 +3559,8 @@ version = "0.0.0"
 dependencies = [
  "hc_devhub_sdk",
  "hc_portal_sdk",
+ "hc_zomehub_sdk",
  "lazy_static",
  "serde",
  "zomehub",
- "zomehub_sdk",
-]
-
-[[package]]
-name = "zomehub_sdk"
-version = "0.0.0"
-dependencies = [
- "hc_devhub_sdk",
- "serde",
- "zomehub_types",
-]
-
-[[package]]
-name = "zomehub_types"
-version = "0.0.0"
-dependencies = [
- "mere_memory_types",
- "serde",
- "whi_hdi_extensions",
 ]
