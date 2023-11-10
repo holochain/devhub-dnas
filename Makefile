@@ -247,12 +247,14 @@ clean-files-all-force:	clean-remove-chaff
 #
 # DevHub SDK package
 #
+.cargo/credentials:
+	cp ~/$@ $@
 fix-rust-dry-run-issue: # Force rebuild to fix rust issue after dry run
 	touch devhub_sdk/src/lib.rs
 	touch dnas/*/types/src/lib.rs
 	touch zomes/*/src/lib.rs
-preview-sdk-crate:		test
+preview-sdk-crate:		test .cargo/credentials
 	cd devhub_sdk; cargo publish --dry-run --allow-dirty
 	make fix-rust-dry-run-issue
-publish-sdk-crate:		test
+publish-sdk-crate:		test .cargo/credentials
 	cd devhub_sdk; cargo publish

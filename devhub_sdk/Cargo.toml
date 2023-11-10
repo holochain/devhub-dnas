@@ -3,6 +3,10 @@ name = "hc_devhub_sdk"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas"
+description = "Base SDK used by the DevHub DNA's SDKs"
+readme = "README.md"
 
 [lib]
 name = "devhub_sdk"
