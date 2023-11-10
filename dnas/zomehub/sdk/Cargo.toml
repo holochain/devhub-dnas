@@ -15,5 +15,6 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 hc_devhub_sdk = "0.1"
 # hc_devhub_sdk = { path = "../../../devhub_sdk" }
-hc_zomehub_types = { path = "../types" }
+hc_zomehub_types = "0.1"
+# hc_zomehub_types = { path = "../types" }
 serde = "1"

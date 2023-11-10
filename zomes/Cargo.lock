@@ -1121,13 +1121,24 @@ name = "hc_zomehub_sdk"
 version = "0.1.0"
 dependencies = [
  "hc_devhub_sdk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "hc_zomehub_types",
+ "hc_zomehub_types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
 ]
 
 [[package]]
 name = "hc_zomehub_types"
 version = "0.1.0"
+dependencies = [
+ "mere_memory_types",
+ "serde",
+ "whi_hdi_extensions",
+]
+
+[[package]]
+name = "hc_zomehub_types"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38689fe081fc10de147134688c5941ac5289a1edbefdb3f4d2034c568b011df8"
 dependencies = [
  "mere_memory_types",
  "serde",
@@ -3560,7 +3571,7 @@ name = "zomehub"
 version = "0.0.0"
 dependencies = [
  "hc_crud_caps",
- "hc_zomehub_types",
+ "hc_zomehub_types 0.1.0",
  "serde",
 ]
 
