@@ -1,6 +1,6 @@
 [package]
 name = "hc_apphub_sdk"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 license = "CAL-1.0"
@@ -13,8 +13,10 @@ name = "apphub_sdk"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_apphub_types = { path = "../types" }
+hc_apphub_types = "0.1"
+# hc_apphub_types = { path = "../types" }
 hc_devhub_sdk = "0.1"
-hc_dnahub_sdk = { path = "../../dnahub/sdk" }
 # hc_devhub_sdk = { path = "../../../devhub_sdk" }
+hc_dnahub_sdk = "0.1"
+# hc_dnahub_sdk = { path = "../../dnahub/sdk" }
 serde = "1"
