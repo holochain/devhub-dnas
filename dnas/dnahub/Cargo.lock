@@ -996,16 +996,31 @@ dependencies = [
 
 [[package]]
 name = "hc_dnahub_sdk"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "hc_devhub_sdk",
- "hc_dnahub_types",
+ "hc_dnahub_types 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
 ]
 
 [[package]]
 name = "hc_dnahub_types"
 version = "0.1.0"
+dependencies = [
+ "getrandom 0.2.7",
+ "holochain_integrity_types",
+ "holochain_zome_types",
+ "rmp-serde 1.1.2",
+ "serde",
+ "sha2",
+ "whi_hdi_extensions",
+]
+
+[[package]]
+name = "hc_dnahub_types"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "18a4ef65f682598d096bd2eb8be82623e4432989a9e069308d0f00ea245e605c"
 dependencies = [
  "getrandom 0.2.7",
  "holochain_integrity_types",

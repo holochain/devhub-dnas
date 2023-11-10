@@ -9,6 +9,7 @@ name = "dnahub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_dnahub_types = { path = "../../dnas/dnahub/types" }
+hc_dnahub_types = "0.1"
+# hc_dnahub_types = { path = "../../dnas/dnahub/types" }
 hc_crud_caps = "0.10.3"
 serde = "1"
