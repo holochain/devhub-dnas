@@ -10,7 +10,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 apphub = { path = "../apphub" }
-hc_apphub_sdk = { path = "../../dnas/apphub/sdk" }
+hc_apphub_sdk = "0.1"
+# hc_apphub_sdk = { path = "../../dnas/apphub/sdk" }
 hc_dnahub_types = "0.1"
 # hc_dnahub_types = { path = "../../dnas/dnahub/types" }
 hc_portal_sdk = "0.1.3"
