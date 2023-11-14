@@ -38,7 +38,7 @@ publish-sdk-crate:
 # Zomelets package
 #
 update-npm-package:
-	cd zomelets; npm i --save $(NAME)@
+	cd zomelets; npm i --save $(PACKAGE)@
 update-npm-all: \
 	update-npm-bundles \
 	update-npm-entities \
@@ -46,15 +46,15 @@ update-npm-all: \
 	update-npm-mere-memory-zomelets \
 	update-npm-zomelets
 update-npm-bundles:
-	NAME=@spartan-hc/bundles make update-npm-package
+	PACKAGE=@spartan-hc/bundles make update-npm-package
 update-npm-entities:
-	NAME=@spartan-hc/caps-entities make update-npm-package
+	PACKAGE=@spartan-hc/caps-entities make update-npm-package
 update-npm-holo-hash:
-	NAME=@spartan-hc/holo-hash make update-npm-package
+	PACKAGE=@spartan-hc/holo-hash make update-npm-package
 update-npm-mere-memory-zomelets:
-	NAME=@spartan-hc/mere-memory-zomelets make update-npm-package
+	PACKAGE=@spartan-hc/mere-memory-zomelets make update-npm-package
 update-npm-zomelets:
-	NAME=@spartan-hc/zomelets make update-npm-package
+	PACKAGE=@spartan-hc/zomelets make update-npm-package
 
 prepare-zomelets-package:	zomelets/node_modules
 	cd zomelets; rm -f dist/*

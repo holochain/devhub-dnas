@@ -22,8 +22,8 @@
     "url": "https://github.com/holochain/devhub-dnas/"
   },
   "dependencies": {
-    "@holochain/zomehub-zomelets": "file:../../zomehub/zomelets",
-    "@spartan-hc/bundles": "^0.2.1",
+    "@holochain/zomehub-zomelets": "^0.1.0",
+    "@spartan-hc/bundles": "^0.2.2",
     "@spartan-hc/caps-entities": "^0.3.1",
     "@spartan-hc/holo-hash": "^0.6.1",
     "@spartan-hc/zomelets": "^0.1.2",

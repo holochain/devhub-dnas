@@ -38,7 +38,7 @@ publish-sdk-crate:
 # Zomelets package
 #
 update-npm-package:
-	cd zomelets; npm i --save $(NAME)@
+	cd zomelets; npm i --save $(PACKAGE)@
 update-npm-all: \
 	update-npm-dnahub-zomelets \
 	update-npm-bundles \
@@ -49,21 +49,21 @@ update-npm-all: \
 	update-npm-semver \
 	update-npm-semver-sort
 update-npm-dnahub-zomelets:
-	NAME=@holochain/dnahub-zomelets make update-npm-package
+	PACKAGE=@holochain/dnahub-zomelets make update-npm-package
 update-npm-bundles:
-	NAME=@spartan-hc/bundles make update-npm-package
+	PACKAGE=@spartan-hc/bundles make update-npm-package
 update-npm-entities:
-	NAME=@spartan-hc/caps-entities make update-npm-package
+	PACKAGE=@spartan-hc/caps-entities make update-npm-package
 update-npm-holo-hash:
-	NAME=@spartan-hc/holo-hash make update-npm-package
+	PACKAGE=@spartan-hc/holo-hash make update-npm-package
 update-npm-zomelets:
-	NAME=@spartan-hc/zomelets make update-npm-package
+	PACKAGE=@spartan-hc/zomelets make update-npm-package
 update-npm-bytes-class:
-	NAME=@whi/bytes-class make update-npm-package
+	PACKAGE=@whi/bytes-class make update-npm-package
 update-npm-semver:
-	NAME=semver make update-npm-package
+	PACKAGE=semver make update-npm-package
 update-npm-semver-sort:
-	NAME=semver-sort make update-npm-package
+	PACKAGE=semver-sort make update-npm-package
 
 prepare-zomelets-package:	zomelets/node_modules
 	cd zomelets; rm -f dist/*
