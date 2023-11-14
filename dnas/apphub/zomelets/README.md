@@ -1,7 +1,7 @@
 [![](https://img.shields.io/npm/v/@holochain/apphub-zomelets/latest?style=flat-square)](http://npmjs.com/package/@holochain/apphub-zomelets)
 
 # AppHub Zomelets
-Zomelet implementations for the [AppHub APP](https://github.com/holochain/devhub-dnas).
+Zomelet implementations for the [AppHub DNA](https://github.com/holochain/devhub-dnas).
 
 [![](https://img.shields.io/github/issues-raw/holochain/devhub-dnas?style=flat-square)](https://github.com/holochain/devhub-dnas/issues)
 [![](https://img.shields.io/github/issues-closed-raw/holochain/devhub-dnas?style=flat-square)](https://github.com/holochain/devhub-dnas/issues?q=is%3Aissue+is%3Aclosed)
