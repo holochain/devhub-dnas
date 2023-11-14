@@ -1,6 +1,6 @@
 {
   "name": "@holochain/apphub-zomelets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zomelets for DevHub's AppHub DNA",
   "type": "module",
   "main": "src/index.js",
