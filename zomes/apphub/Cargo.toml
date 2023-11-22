@@ -9,7 +9,7 @@ name = "apphub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# hc_apphub_types = "0.1"
-hc_apphub_types = { path = "../../dnas/apphub/types" }
+hc_apphub_types = "0.2"
+# hc_apphub_types = { path = "../../dnas/apphub/types" }
 hc_crud_caps = "0.10.3"
 serde = "1"
