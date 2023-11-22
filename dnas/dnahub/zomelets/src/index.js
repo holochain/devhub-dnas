@@ -11,7 +11,7 @@ import {
 import {
     Bundle,
 }					from '@spartan-hc/bundles'; // approx. 39kb
-import { // Relative import is causing duplicates (holo-hash, zomelets)
+import {
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
 
@@ -83,7 +83,11 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    const wasm			= await this.cells.zomehub.zomehub_csr.save_integrity( wasm_bytes );
 	    this.log.info("Created new (integrity) Wasm entry: %s", wasm.$addr );
 
-	    zome_manifest.wasm_entry	= wasm.$addr;
+	    zome_manifest.wasm_hrl	= {
+		"dna": this.zome.cells.zomehub.dna,
+		"target": wasm.$addr,
+	    };
+
 	    delete zome_manifest.bundled;
 	}
 
@@ -95,7 +99,11 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    const wasm			= await this.cells.zomehub.zomehub_csr.save_coordinator( wasm_bytes );
 	    this.log.info("Created new (coordinator) Wasm entry: %s", wasm.$addr );
 
-	    zome_manifest.wasm_entry	= wasm.$addr;
+	    zome_manifest.wasm_hrl	= {
+		"dna": this.zome.cells.zomehub.dna,
+		"target": wasm.$addr,
+	    };
+
 	    delete zome_manifest.bundled;
 	}
 
@@ -103,9 +111,73 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    "manifest": bundle.manifest,
 	});
     },
+
+    // Might require virtual cell dependency
+    async get_integrity_wasm ( input ) {
+	const dna_entry			= await this.functions.get_dna_entry( input.dna_entry );
+	const zome_manifest		= dna_entry.manifest.integrity.zomes.find(
+	    zome_manifest => zome_manifest.name === input.name
+	);
+
+	if ( !zome_manifest )
+	    throw new Error(`DNA entry (${input.dna_entry}) does not have an integrity zome named '${input.name}'`);
+
+	const wasm_hrl			= zome_manifest.wasm_hrl;
+	const zomehub			= this.getCellInterface( "zomehub", wasm_hrl.dna );
+
+	return await zomehub.zomehub_csr.get_wasm( wasm_hrl.target );
+    },
+    async get_coordinator_wasm ( input ) {
+	const dna_entry			= await this.functions.get_dna_entry( input.dna_entry );
+	const zome_manifest		= dna_entry.manifest.coordinator.zomes.find(
+	    zome_manifest => zome_manifest.name === input.name
+	);
+
+	if ( !zome_manifest )
+	    throw new Error(`DNA entry (${input.dna_entry}) does not have an coordinator zome named '${input.name}'`);
+
+	const wasm_hrl			= zome_manifest.wasm_hrl;
+	const zomehub			= this.getCellInterface( "zomehub", wasm_hrl.dna );
+
+	return await zomehub.zomehub_csr.get_wasm( wasm_hrl.target );
+    },
+    async get_dna_bundle ( input ) {
+	const dna_entry			= await this.functions.get_dna_entry( input );
+
+	this.log.normal("Fetch assests for DNA manifest:", dna_entry.manifest );
+	for ( let zome_manifest of dna_entry.manifest.integrity.zomes ) {
+	    const wasm_hrl		= zome_manifest.wasm_hrl;
+	    const zomehub		= this.getCellInterface( "zomehub", wasm_hrl.dna );
+
+	    const wasm			= await zomehub.zomehub_csr.get_wasm( wasm_hrl.target );
+	    zome_manifest.bytes		= wasm.bytes;
+
+	    delete zome_manifest.wasm_hrl;
+	}
+
+	for ( let zome_manifest of dna_entry.manifest.coordinator.zomes ) {
+	    const wasm_hrl		= zome_manifest.wasm_hrl;
+	    const zomehub		= this.getCellInterface( "zomehub", wasm_hrl.dna );
+
+	    const wasm			= await zomehub.zomehub_csr.get_wasm( wasm_hrl.target );
+	    zome_manifest.bytes		= wasm.bytes;
+
+	    delete zome_manifest.wasm_hrl;
+	}
+
+	const bundle			= Bundle.createDna( dna_entry.manifest );
+
+	return bundle.toBytes();
+    },
 }, {
     "cells": {
 	"zomehub": ZomeHubCell,
+    },
+    // Virtual cells don't require ?
+    "virtual": {
+	"cells": {
+	    "zomehub": ZomeHubCell,
+	},
     },
 });
 

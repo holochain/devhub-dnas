@@ -1,7 +1,9 @@
 
 import { Bytes }			from '@whi/bytes-class';
 import {
-    AgentPubKey, HoloHash,
+    HoloHash,
+    AnyLinkableHash, AnyDhtHash,
+    AgentPubKey, DnaHash,
     ActionHash, EntryHash
 }					from '@spartan-hc/holo-hash';
 import {
@@ -10,6 +12,17 @@ import {
     AnyType, OptionType,
     VecType, MapType,
 }					from '@spartan-hc/caps-entities';
+
+
+
+//
+// Common Structs
+//
+export const HRLStruct = {
+    "dna":			DnaHash,
+    "target":			AnyDhtHash,
+}
+
 
 
 export const DnaTokenStruct = {
@@ -28,7 +41,7 @@ export const DnaStruct = {
 	    "zomes": VecType({
 		"name":		String,
 		"hash":		OptionType( AnyType ),
-		"wasm_entry":	EntryHash,
+		"wasm_hrl":	HRLStruct,
 		"dylib":	OptionType( AnyType ),
 	    }),
 	},
@@ -36,7 +49,7 @@ export const DnaStruct = {
 	    "zomes": VecType({
 		"name":		String,
 		"hash":		OptionType( AnyType ),
-		"wasm_entry":	EntryHash,
+		"wasm_hrl":	HRLStruct,
 		"dependencies": VecType({
 		    "name":	String,
 		}),

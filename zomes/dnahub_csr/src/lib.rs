@@ -29,15 +29,20 @@ lazy_static! {
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let zome_name = zome_info()?.name;
+    let zome_settings = zome_info()?;
+    let zome_name = zome_settings.name;
     debug!("'{}' init", zome_name );
+
+    let granted_functions = zome_settings.extern_fns.into_iter()
+        .filter_map(|fn_name| match fn_name.as_ref().starts_with("get_") {
+            true => Some(( zome_name.0.as_ref(), fn_name.0 )),
+            false => None,
+        })
+        .collect();
 
     portal_sdk::register_if_exists!({
         dna: dna_info()?.hash,
-        granted_functions: vec![
-            ( zome_name.0.as_ref(), "get_dna_entry" ),
-            ( zome_name.0.as_ref(), "get_dna_entries_for_agent" ),
-        ],
+        granted_functions,
     })?;
 
     Ok(InitCallbackResult::Pass)

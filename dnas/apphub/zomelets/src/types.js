@@ -1,8 +1,9 @@
 
 import { Bytes }			from '@whi/bytes-class';
 import {
-    AnyLinkableHash,
-    AgentPubKey, HoloHash,
+    HoloHash,
+    AnyLinkableHash, AnyDhtHash,
+    AgentPubKey, DnaHash,
     ActionHash, EntryHash
 }					from '@spartan-hc/holo-hash';
 import {
@@ -20,6 +21,11 @@ import {
 //
 // Common Structs
 //
+export const HRLStruct = {
+    "dna":			DnaHash,
+    "target":			AnyDhtHash,
+}
+
 export const LinkStruct = {
     "author":			AgentPubKey,
     "target":			AnyLinkableHash,
@@ -78,7 +84,7 @@ export const AppStruct = {
 	    "name":		String,
 	    "provisioning":	OptionType( Object ),
 	    "dna": {
-		"dna_entry":		EntryHash,
+		"dna_hrl":		HRLStruct,
 		"modifiers": {
 		    "network_seed":	OptionType( AnyType ),
 		    "properties":	OptionType( AnyType ),

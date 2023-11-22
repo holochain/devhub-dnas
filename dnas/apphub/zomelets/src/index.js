@@ -103,6 +103,20 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new Ui( result, this );
     },
+    async get_ui ( input ) {
+	const ui_entry			= await this.functions.get_ui_entry( input );
+
+	ui_entry.bytes			= await this.zomes.mere_memory_api.remember(
+	    ui_entry.mere_memory_addr
+	);
+
+	return ui_entry;
+    },
+    async get_ui_entry_memory ( input ) {
+	const ui_entry			= await this.functions.get_ui_entry( input );
+
+	return await this.zomes.mere_memory_api.remember( ui_entry.mere_memory_addr );
+    },
     async get_ui_entries_for_agent ( input ) {
 	const entries			= await this.call(); // new AgentPubKey( input )
 
@@ -177,20 +191,6 @@ export const AppHubCSRZomelet		= new Zomelet({
 	}
 
 	return version_map;
-    },
-    async get_webapp_package_versions_sorted ( input ) {
-	const version_map		= await this.functions.get_webapp_package_versions( input );
-	const versions			= [];
-
-	semverReverseSort(
-	    Object.keys( version_map )
-	).forEach( vtag => {
-	    const webapp_pv		= version_map[ vtag ];
-	    webapp_pv.version		= vtag;
-	    versions.push( webapp_pv );
-	});
-
-	return versions;
     },
     async get_all_webapp_packages ( input ) {
 	const entries			= await this.call(); // new AgentPubKey( input )
@@ -312,7 +312,11 @@ export const AppHubCSRZomelet		= new Zomelet({
 		dna.$id, name,
 	    ]);
 
-	    role.dna.dna_entry		= dna.$addr;
+	    role.dna.dna_hrl		= {
+		"dna": this.zome.cells.dnahub.dna,
+		"target": dna.$addr,
+	    };
+
 	    delete role.dna.bundled;
 
 	    roles_dna_tokens[ name ]	= dna.dna_token;
@@ -358,12 +362,86 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    "manifest": bundle.manifest,
 	});
     },
+    async get_webapp_package_versions_sorted ( input ) {
+	const version_map		= await this.functions.get_webapp_package_versions( input );
+	const versions			= [];
+
+	semverReverseSort(
+	    Object.keys( version_map )
+	).forEach( vtag => {
+	    const webapp_pv		= version_map[ vtag ];
+	    webapp_pv.version		= vtag;
+	    versions.push( webapp_pv );
+	});
+
+	return versions;
+    },
+
+    // Might require virtual cell dependency
+    async get_app_dna_entry ( input ) {
+	const app_entry			= await this.functions.get_app_entry( input.app_entry );
+	const role_manifest		= app_entry.manifest.roles.find(
+	    role_manifest => role_manifest.name === input.name
+	);
+
+	if ( !role_manifest )
+	    throw new Error(`App entry (${input.app_entry}) does not have a role named '${input.name}'`);
+
+	const dna_hrl			= role_manifest.dna.dna_hrl;
+	const dnahub			= this.getCellInterface( "dnahub", dna_hrl.dna );
+
+	return await dnahub.dnahub_csr.get_dna_entry( dna_hrl.target );
+    },
+    // "get_app_bundle":			"get_happ_bundle",
+    async get_happ_bundle ( input ) {
+	const app_entry			= await this.functions.get_app_entry( input );
+	const manifest			= app_entry.manifest;
+
+	this.log.normal("Fetch assests for App manifest:", manifest );
+	for ( let role_manifest of manifest.roles ) {
+	    const dna_hrl		= role_manifest.dna.dna_hrl;
+	    const dnahub		= this.getCellInterface( "dnahub", dna_hrl.dna );
+
+	    role_manifest.dna.bytes	= await dnahub.dnahub_csr.get_dna_bundle( dna_hrl.target );
+
+	    delete role_manifest.dna.dna_hrl;
+	}
+
+	const bundle			= Bundle.createHapp( manifest );
+
+	return bundle.toBytes();
+    },
+    // "get_webapp_bundle":		"get_webhapp_bundle",
+    async get_webhapp_bundle ( input ) {
+	const webapp_entry		= await this.functions.get_webapp_entry( input );
+	const manifest			= webapp_entry.manifest;
+	this.log.normal("Fetch assests for WebApp manifest:", manifest );
+
+	manifest.ui.bytes		= await this.functions.get_ui_entry_memory(
+	    manifest.ui.ui_entry
+	);
+	delete manifest.ui.ui_entry;
+
+	manifest.happ_manifest.bytes	= await this.functions.get_happ_bundle(
+	    manifest.happ_manifest.app_entry
+	);
+	delete manifest.happ_manifest.app_entry;
+
+	const bundle			= Bundle.createWebhapp( manifest );
+
+	return bundle.toBytes();
+    },
 }, {
     "zomes": {
 	"mere_memory_api": MereMemoryZomelet,
     },
     "cells": {
 	"dnahub": DnaHubCell,
+    },
+    "virtual": {
+	"cells": {
+	    "dnahub": DnaHubCell,
+	},
     },
 });
 

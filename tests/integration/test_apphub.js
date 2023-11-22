@@ -146,6 +146,22 @@ function basic_tests () {
 	log.normal("%s", json.debug(app) );
     });
 
+    it("should get some DNA", async function () {
+	const dna_entry			= await apphub_csr.get_app_dna_entry({
+	    "app_entry": app1.$addr,
+	    "name": "fake-role-1",
+	});
+
+	log.normal("%s", json.debug(dna_entry) );
+    });
+
+    it("should get hApp bundle", async function () {
+	const bundle_bytes		= await apphub_csr.get_happ_bundle( app1.$addr );
+	const bundle			= new Bundle( bundle_bytes, "happ" );
+
+	log.normal("hApp bundle: %s", json.debug(bundle) );
+    });
+
     it("should upload the same App bundle", async function () {
 	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
@@ -168,6 +184,13 @@ function basic_tests () {
 	const webapp			= await apphub_csr.get_webapp_entry( webapp1.$addr );
 
 	log.normal("%s", json.debug(webapp) );
+    });
+
+    it("should get Webhapp bundle", async function () {
+	const bundle_bytes		= await apphub_csr.get_webhapp_bundle( webapp1.$addr );
+	const bundle			= new Bundle( bundle_bytes, "webhapp" );
+
+	log.normal("Webhapp bundle: %s", json.debug(bundle) );
     });
 
     it("should upload the same WebApp bundle", async function () {

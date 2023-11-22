@@ -87,6 +87,20 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	    "mere_memory_addr": addr,
 	});
     },
+    async get_wasm ( input ) {
+	const wasm_entry		= await this.functions.get_wasm_entry( input );
+
+	wasm_entry.bytes		= await this.zomes.mere_memory_api.remember(
+	    wasm_entry.mere_memory_addr
+	);
+
+	return wasm_entry;
+    },
+    async get_wasm_entry_memory ( input ) {
+	const wasm_entry		= await this.functions.get_wasm_entry( input );
+
+	return await this.zomes.mere_memory_api.remember( wasm_entry.mere_memory_addr );
+    },
 }, {
     "zomes": {
 	"mere_memory_api": MereMemoryZomelet,

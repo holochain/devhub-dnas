@@ -41,9 +41,6 @@ const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
 const APP_PORT				= 23_567;
 
-const DNAHUB_DNA_NAME			= "dnahub";
-const ZOMEHUB_DNA_NAME			= "zomehub";
-
 
 describe("DnaHub", function () {
     const holochain			= new Holochain({
@@ -56,8 +53,8 @@ describe("DnaHub", function () {
 
 	await holochain.backdrop({
 	    "test": {
-		[DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
-		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
+		"dnahub":	DNAHUB_DNA_PATH,
+		"zomehub":	ZOMEHUB_DNA_PATH,
 	    },
 	}, {
 	    "app_port": APP_PORT,
@@ -83,7 +80,7 @@ function basic_tests () {
     let zomehub_csr;
     let dnahub;
     let dnahub_csr;
-    let dna1_addr, dna1;
+    let dna1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -97,8 +94,8 @@ function basic_tests () {
 	    zomehub,
 	    dnahub,
 	}				= app_client.createInterface({
-	    [ZOMEHUB_DNA_NAME]:		ZomeHubCell,
-	    [DNAHUB_DNA_NAME]:		DnaHubCell,
+	    "zomehub":		ZomeHubCell,
+	    "dnahub":		DnaHubCell,
 	}));
 
 	zomehub_csr			= zomehub.zomes.zomehub_csr.functions;
@@ -115,14 +112,28 @@ function basic_tests () {
 	dna1				= await dnahub_csr.save_dna( bundle_bytes );
 
 	expect( dna1			).to.be.a("Dna");
-
-	dna1_addr			= dna1.$addr;
     });
 
     it("should get DNA entry", async function () {
-	const dna			= await dnahub_csr.get_dna_entry( dna1_addr );
+	const dna			= await dnahub_csr.get_dna_entry( dna1.$addr );
 
-	log.normal("%s", json.debug(dna) );
+	log.normal("DNA entry: %s", json.debug(dna) );
+    });
+
+    it("should get some wasm (with bytes)", async function () {
+	const wasm			= await dnahub_csr.get_integrity_wasm({
+	    "dna_entry": dna1.$addr,
+	    "name": "fake-wasm-1",
+	});
+
+	log.normal("WASM [fake-wasm-1]: %s", json.debug(wasm) );
+    });
+
+    it("should get DNA bundle", async function () {
+	const bundle_bytes		= await dnahub_csr.get_dna_bundle( dna1.$addr );
+	const bundle			= new Bundle( bundle_bytes, "dna" );
+
+	log.normal("DNA bundle: %s", json.debug(bundle) );
     });
 
     it("should upload the same DNA bundle", async function () {
@@ -138,7 +149,7 @@ function basic_tests () {
 
 	it("should fail to create DNA entry because of wrong invalid DNA token", async function () {
 	    await expect_reject(async () => {
-		const entry		= await dnahub_csr.get_dna_entry( dna1_addr );
+		const entry		= await dnahub_csr.get_dna_entry( dna1.$addr );
 
 		entry.dna_token.integrity_hash = crypto.randomBytes( 32 );
 
@@ -148,7 +159,7 @@ function basic_tests () {
 
 	it("should fail to create DNA entry because of wrong invalid integrities token", async function () {
 	    await expect_reject(async () => {
-		const entry		= await dnahub_csr.get_dna_entry( dna1_addr );
+		const entry		= await dnahub_csr.get_dna_entry( dna1.$addr );
 
 		entry.integrities_token[0][1] = crypto.randomBytes( 32 );
 
@@ -158,7 +169,7 @@ function basic_tests () {
 
 	it("should fail to create DNA entry because of wrong invalid coordinators token", async function () {
 	    await expect_reject(async () => {
-		const entry		= await dnahub_csr.get_dna_entry( dna1_addr );
+		const entry		= await dnahub_csr.get_dna_entry( dna1.$addr );
 
 		entry.coordinators_token[0][1] = crypto.randomBytes( 32 );
 
@@ -176,7 +187,7 @@ function basic_tests () {
 
 	    const bobby_client		= await client.app( "test-bobby" );
 	    const bobby_dnahub_csr	= bobby_client
-		  .createCellInterface( DNAHUB_DNA_NAME, DnaHubCell )
+		  .createCellInterface( "dnahub", DnaHubCell )
 		  .zomes.dnahub_csr.functions;
 
 	    await expect_reject(async () => {

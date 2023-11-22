@@ -46,27 +46,26 @@ lazy_static! {
 
 #[hdk_extern]
 fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let zome_name = zome_info()?.name;
+    let zome_settings = zome_info()?;
+    let zome_name = zome_settings.name;
     debug!("'{}' init", zome_name );
+
+    let main_functions : Vec<(&str, &str)> = zome_settings.extern_fns.iter()
+        .filter_map(|fn_name| match fn_name.as_ref().starts_with("get_") {
+            true => Some(( zome_name.0.as_ref(), fn_name.0.as_str() )),
+            false => None,
+        })
+        .collect();
+    let mere_memory_functions = vec![
+        ( "mere_memory_api", "get_memory_entry" ),
+        ( "mere_memory_api", "get_memory_block_entry" ),
+        ( "mere_memory_api", "memory_exists" ),
+    ];
 
     portal_sdk::register_if_exists!({
         dna: dna_info()?.hash,
-        granted_functions: vec![
-            ( zome_name.0.as_ref(), "get_app_entry" ),
-            ( zome_name.0.as_ref(), "get_app_entries_for_agent" ),
-
-            ( zome_name.0.as_ref(), "get_ui_entry" ),
-            ( zome_name.0.as_ref(), "get_ui_entries_for_agent" ),
-
-            ( zome_name.0.as_ref(), "get_webapp_entry" ),
-            ( zome_name.0.as_ref(), "get_webapp_entries_for_agent" ),
-
-            ( zome_name.0.as_ref(), "get_webapp_package_entry" ),
-            ( zome_name.0.as_ref(), "get_webapp_package_versions" ),
-            ( zome_name.0.as_ref(), "get_all_webapp_package_entries" ),
-
-            ( zome_name.0.as_ref(), "get_webapp_package_version_entry" ),
-        ],
+        granted_functions: vec![ main_functions, mere_memory_functions ]
+            .into_iter().flatten().collect(),
     })?;
 
     Ok(InitCallbackResult::Pass)

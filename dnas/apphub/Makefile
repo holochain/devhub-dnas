@@ -38,7 +38,7 @@ publish-sdk-crate:
 # Zomelets package
 #
 update-npm-package:
-	cd zomelets; npm i --save $(PACKAGE)@
+	cd zomelets; npm uninstall $(PACKAGE); npm i --save $(PACKAGE)
 update-npm-all: \
 	update-npm-dnahub-zomelets \
 	update-npm-bundles \
