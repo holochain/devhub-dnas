@@ -13,8 +13,8 @@ name = "dnahub_sdk"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_dnahub_types = "0.1"
-# hc_dnahub_types = { path = "../types" }
+# hc_dnahub_types = "0.1"
+hc_dnahub_types = { path = "../types" }
 hc_devhub_sdk = "0.1"
 # hc_devhub_sdk = { path = "../../../devhub_sdk" }
 serde = "1"
