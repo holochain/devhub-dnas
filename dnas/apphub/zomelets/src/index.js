@@ -186,8 +186,9 @@ export const AppHubCSRZomelet		= new Zomelet({
     async get_webapp_package_versions ( input ) {
 	const version_map		= await this.call( input );
 
-	for ( let key in version_map ) {
-	    version_map[ key ]		= new WebAppPackageVersion( version_map[ key ], this );
+	for ( let [vtag, pack_version] of Object.entries(version_map) ) {
+	    version_map[ vtag ]		= new WebAppPackageVersion( pack_version, this );
+	    version_map[ vtag ].version	= vtag;
 	}
 
 	return version_map;
@@ -258,6 +259,8 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    throw new Error(`Version '${input.version}' already exists for package ${input.for_package}`);
 
 	const result			= await this.call( input );
+
+	result.version			= input.version;
 
 	return new WebAppPackageVersion( result, this );
     },
@@ -369,9 +372,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	semverReverseSort(
 	    Object.keys( version_map )
 	).forEach( vtag => {
-	    const webapp_pv		= version_map[ vtag ];
-	    webapp_pv.version		= vtag;
-	    versions.push( webapp_pv );
+	    versions.push( version_map[ vtag ] );
 	});
 
 	return versions;
@@ -397,7 +398,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const app_entry			= await this.functions.get_app_entry( input );
 	const manifest			= app_entry.manifest;
 
-	this.log.normal("Fetch assests for App manifest:", manifest );
+	this.log.info("Fetch assets for App manifest:", manifest );
 	for ( let role_manifest of manifest.roles ) {
 	    const dna_hrl		= role_manifest.dna.dna_hrl;
 	    const dnahub		= this.getCellInterface( "dnahub", dna_hrl.dna );
@@ -415,7 +416,7 @@ export const AppHubCSRZomelet		= new Zomelet({
     async get_webhapp_bundle ( input ) {
 	const webapp_entry		= await this.functions.get_webapp_entry( input );
 	const manifest			= webapp_entry.manifest;
-	this.log.normal("Fetch assests for WebApp manifest:", manifest );
+	this.log.info("Fetch assets for WebApp manifest:", manifest );
 
 	manifest.ui.bytes		= await this.functions.get_ui_entry_memory(
 	    manifest.ui.ui_entry
