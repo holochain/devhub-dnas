@@ -20,10 +20,10 @@ use hc_crud::{
 
 
 /// The entry types defined for this integrity app
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(EntryTypesUnit)]
 pub enum EntryTypes {
-    #[entry_def]
+    #[entry_type]
     App(AppEntry),
     Ui(UiEntry),
     WebApp(WebAppEntry),

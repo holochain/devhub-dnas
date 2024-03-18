@@ -3,12 +3,12 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.91.0
+MERE_MEMORY_VERSION	= 0.93.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.9.2
+PORTAL_VERSION		= 0.11.0
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -105,20 +105,26 @@ reset-mere-memory:
 	rm zomes/mere_memory*.wasm
 	make $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
 
-PRE_MM_VERSION = mere_memory_types = "0.90.0"
-NEW_MM_VERSION = mere_memory_types = "0.91.0"
+PRE_MM_VERSION = mere_memory_types = "0.91.0"
+NEW_MM_VERSION = mere_memory_types = "0.93.0"
 
-PRE_CRUD_VERSION = hc_crud_caps = "0.10.2"
-NEW_CRUD_VERSION = hc_crud_caps = "0.10.3"
+PRE_CRUD_VERSION = hc_crud_caps = "0.10.3"
+NEW_CRUD_VERSION = hc_crud_caps = "0.12"
 
-PRE_HDIE_VERSION = whi_hdi_extensions = "=0.3.0"
-NEW_HDIE_VERSION = whi_hdi_extensions = "0.4"
+PRE_HDIE_VERSION = whi_hdi_extensions = "0.4.2"
+NEW_HDIE_VERSION = whi_hdi_extensions = "0.6"
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "=0.3.0"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.4"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.4"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.6"
 
-PRE_PSDK_VERSION = hc_portal_sdk = "0.1.2"
-NEW_PSDK_VERSION = hc_portal_sdk = "0.1.3"
+PRE_PSDK_VERSION = hc_portal_sdk = "0.1.3"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.3"
+
+PRE_HIT_VERSION = holochain_integrity_types = "0.2.2"
+NEW_HIT_VERSION = holochain_integrity_types = "0.3.0-beta-dev.28"
+
+PRE_HZT_VERSION = holochain_zome_types = { version = "0.2.2"
+NEW_HZT_VERSION = holochain_zome_types = { version = "0.3.0-beta-dev.30"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
@@ -132,6 +138,10 @@ update-hdi-extensions-version:
 	git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIE_VERSION)|$(NEW_HDIE_VERSION)|g'
 update-portal-sdk-version:
 	git grep -l '$(PRE_PSDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_PSDK_VERSION)|$(NEW_PSDK_VERSION)|g'
+update-integrity-types-version:
+	git grep -l '$(PRE_HIT_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HIT_VERSION)|$(NEW_HIT_VERSION)|g'
+update-zome-types-version:
+	git grep -l '$(PRE_HZT_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HZT_VERSION)|$(NEW_HZT_VERSION)|g'
 
 npm-reinstall-local:
 	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)
@@ -194,6 +204,10 @@ test-zome-unit-%:
 	cd zomes; cargo test -p $* --quiet
 
 # Integration tests
+DEBUG_LEVEL	       ?= warn
+TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)
+MOCHA_OPTS		= -n enable-source-maps
+
 test-integration:
 	make test-zomehub
 	make test-dnahub
@@ -201,17 +215,14 @@ test-integration:
 	make test-real-uploads
 	make test-webapp-upload
 
-DEBUG_LEVEL	       ?= warn
-TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)
-
 test-zomehub:				test-setup $(ZOMEHUB_DNA)
-	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_zomehub.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_zomehub.js
 test-dnahub:				test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA)
-	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_dnahub.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_dnahub.js
 test-apphub:				test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA)
-	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_apphub.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_apphub.js
 test-webapp-upload:			test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
-	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_webapp_upload.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_webapp_upload.js
 
 # Real-input tests
 test-real-uploads:
@@ -220,11 +231,11 @@ test-real-uploads:
 	make test-real-app-upload
 
 test-real-zome-upload:			test-setup $(ZOMEHUB_DNA)
-	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_real_zome_upload.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_real_zome_upload.js
 test-real-dna-upload:			test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA)
-	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_real_dna_upload.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_real_dna_upload.js
 test-real-app-upload:			test-setup $(DEVHUB_HAPP)
-	cd tests; $(TEST_ENV_VARS) npx mocha ./integration/test_real_app_upload.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_real_app_upload.js
 
 
 

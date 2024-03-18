@@ -77,7 +77,10 @@ pub struct WasmEntry {
 
 impl WasmEntry {
     pub fn new( wtype: WasmType, addr: EntryHash ) -> ExternResult<Self> {
-        let memory : MemoryEntry = must_get_entry( addr.clone() )?.content.try_into()?;
+        debug!("Get mere memory entry: {}", addr );
+        let content = must_get_entry( addr.clone() )?.content;
+        debug!("TryInto MemoryEntry: {:#?}", content );
+        let memory : MemoryEntry = content.try_into()?;
         let entry = WasmEntry {
             wasm_type: wtype,
             mere_memory_addr: addr,

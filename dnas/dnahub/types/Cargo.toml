@@ -13,12 +13,9 @@ name = "dnahub_types"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-holochain_integrity_types = "0.2.2"
-holochain_zome_types = { version = "0.2.2", features = [ "properties" ] }
+holochain_integrity_types = "0.3.0-beta-dev.28"
+holochain_zome_types = { version = "0.3.0-beta-dev.30", features = [ "properties" ] }
 rmp-serde = "1.1"
 serde = "1"
 sha2 = "0.10"
-whi_hdi_extensions = "0.4.2"
-
-# temporary fix for compile error in
-getrandom = { version = "=0.2.7", features = ["custom"] }
+whi_hdi_extensions = "0.6"

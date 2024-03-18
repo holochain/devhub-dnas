@@ -17,6 +17,9 @@ use apphub_sdk::{
     EntityPointerMap,
     WebAppPackageVersionMap,
 };
+use apphub_sdk::{
+    create_link_input,
+};
 
 
 pub struct WebAppPackageBase(pub EntityId);
@@ -54,9 +57,11 @@ impl WebAppPackageBase {
 
     pub fn version_links(&self) -> ExternResult<Vec<Link>> {
         get_links(
-            self.id(),
-	    LinkTypes::WebAppPackageToWebAppPackageVersion,
-	    None
+            create_link_input(
+                &self.id(),
+                &LinkTypes::WebAppPackageToWebAppPackageVersion,
+                &None::<()>,
+            )?
         )
     }
 

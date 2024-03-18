@@ -13,6 +13,6 @@ name = "zomehub_types"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mere_memory_types = "0.91.0"
+mere_memory_types = "0.93.0"
 serde = "1"
-whi_hdi_extensions = "0.4.2"
+whi_hdi_extensions = "0.6"

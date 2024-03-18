@@ -14,8 +14,8 @@ use hdi_extensions::{
 };
 use holo_hash::DnaHashB64;
 use holochain_zome_types::{
-    DnaModifiersOpt,
-    YamlProperties,
+    prelude::DnaModifiersOpt,
+    properties::YamlProperties,
 };
 
 
