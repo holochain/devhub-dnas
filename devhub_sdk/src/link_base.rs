@@ -55,7 +55,13 @@ where
     pub fn get_links(&self, tag: Option<LinkTag>) ->
         ExternResult<Vec<Link>>
     {
-        get_links( self.hash(), self.link_type(), tag )
+        get_links(
+            create_link_input(
+                &self.hash(),
+                &self.link_type(),
+                &tag,
+            )?
+        )
     }
 
     pub fn create_link<T>(
@@ -136,4 +142,27 @@ where
 
         Ok( deleted_links )
     }
+}
+
+
+pub fn create_link_input<B,LT,T>(
+    base: &B,
+    link_type: &LT,
+    tag_input: &Option<T>
+) -> ExternResult<GetLinksInput>
+where
+    B: Into<AnyLinkableHash> + Clone,
+    LT: LinkTypeFilterExt + Clone,
+    T: Into<LinkTag> + Clone,
+{
+    let mut link_input_builder = GetLinksInputBuilder::try_new(
+        base.to_owned(),
+        link_type.to_owned(),
+    )?;
+
+    if let Some(tag_prefix) = tag_input.to_owned() {
+        link_input_builder = link_input_builder.tag_prefix( tag_prefix.into() );
+    }
+
+    Ok( link_input_builder.build() )
 }

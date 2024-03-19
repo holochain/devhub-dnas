@@ -9,9 +9,6 @@ pub use hc_crud;
 pub use link_base::*;
 
 use hdk::prelude::*;
-use hdk::hash_path::path::{
-    Path, Component,
-};
 
 
 

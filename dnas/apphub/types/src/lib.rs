@@ -30,8 +30,8 @@ use hdi_extensions::{
     guest_error,
 };
 use holochain_zome_types::{
-    DnaModifiersOpt,
-    YamlProperties,
+    prelude::DnaModifiersOpt,
+    properties::YamlProperties,
 };
 use rmp_serde;
 use sha2::{ Digest, Sha256 };

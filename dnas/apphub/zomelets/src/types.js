@@ -162,6 +162,8 @@ export class WebApp extends ScopedEntity {
 //
 // WebAppPackageEntry Handling
 //
+export const MaintainerType	= Object;
+
 export const WebAppPackageStruct = {
     "title":			String,
     "subtitle":			String,
@@ -169,7 +171,7 @@ export const WebAppPackageStruct = {
     "icon":			EntryHash,
     "source_code_uri":		OptionType( String ),
     "maintainer": {
-	"type":			String,
+	"type":			MaintainerType,
 	"content":		AgentPubKey, // [ ActionHash, ActionHash ]
     },
     "deprecation":		OptionType( Object ),
@@ -177,6 +179,7 @@ export const WebAppPackageStruct = {
 };
 
 export function WebAppPackageEntry ( entry ) {
+    // entry.maintainer.type	= Object.keys( entry.maintainer.type )[0];
     return intoStruct( entry, WebAppPackageStruct );
 }
 
@@ -228,7 +231,7 @@ export const WebAppPackageVersionStruct = {
     "webapp_token":		WebAppTokenStruct,
     "source_code_revision_uri":	OptionType( String ),
     "maintainer": {
-	"type":			String,
+	"type":			MaintainerType,
 	"content":		AgentPubKey, // [ ActionHash, ActionHash ]
     },
     "metadata":			Object,

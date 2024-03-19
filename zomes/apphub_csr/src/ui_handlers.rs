@@ -22,6 +22,9 @@ use apphub::{
         create_entity, delete_entity,
     },
 };
+use apphub_sdk::{
+    create_link_input,
+};
 
 
 fn create_ui_entry_handler(entry: UiEntry) -> ExternResult<Entity<UiEntry>> {
@@ -77,7 +80,13 @@ pub fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternRe
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
     };
-    let uis = get_links( agent_id, LinkTypes::Ui, None )?.into_iter()
+    let uis = get_links(
+        create_link_input(
+            &agent_id,
+            &LinkTypes::Ui,
+            &None::<()>,
+        )?
+    )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
             get_ui_entry( addr.into() ).ok()
