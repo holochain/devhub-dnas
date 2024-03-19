@@ -41,7 +41,7 @@ pub struct AppManifestV1 {
 
 impl AppManifestV1 {
     pub fn roles_token(&self, roles_dna_tokens: RolesDnaTokens) -> ExternResult<RolesToken> {
-        let mut roles_token = self.roles.iter()
+        let roles_token = self.roles.iter()
             .map( |role_manifest| {
                 let dna_token = roles_dna_tokens.dna_token( &role_manifest.name )?;
 
@@ -51,8 +51,6 @@ impl AppManifestV1 {
                 ))
             })
             .collect::<ExternResult<RolesToken>>()?;
-
-        roles_token.0.sort();
 
         Ok( roles_token )
     }

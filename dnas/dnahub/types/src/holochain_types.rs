@@ -43,7 +43,7 @@ impl DnaManifestV1 {
     }
 
     pub fn integrities_token(&self) -> ExternResult<IntegritiesToken> {
-        let mut integrities_token = self.integrity.zomes.iter()
+        let integrities_token = self.integrity.zomes.iter()
             .map( |zome_manifest| {
                 Ok((
                     zome_manifest.name.0.clone().into(),
@@ -51,8 +51,6 @@ impl DnaManifestV1 {
                 ))
             })
             .collect::<ExternResult<IntegritiesToken>>()?;
-
-        integrities_token.sort();
 
         Ok( integrities_token )
     }
@@ -62,7 +60,7 @@ impl DnaManifestV1 {
     }
 
     pub fn coordinators_token(&self) -> ExternResult<CoordinatorsToken> {
-        let mut coordinators_token = self.coordinator.zomes.iter()
+        let coordinators_token = self.coordinator.zomes.iter()
             .map( |zome_manifest| {
                 Ok((
                     zome_manifest.name.0.clone().into(),
@@ -70,8 +68,6 @@ impl DnaManifestV1 {
                 ))
             })
             .collect::<ExternResult<CoordinatorsToken>>()?;
-
-        coordinators_token.sort();
 
         Ok( coordinators_token )
     }
