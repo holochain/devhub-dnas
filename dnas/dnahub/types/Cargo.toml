@@ -1,0 +1,21 @@
+[package]
+name = "hc_dnahub_types"
+version = "0.2.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas"
+description = "Definitions used by the DnaHub DNA Zomes"
+readme = "README.md"
+
+[lib]
+name = "dnahub_types"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+holochain_integrity_types = "0.3.0-beta-dev.28"
+holochain_zome_types = { version = "0.3.0-beta-dev.30", features = [ "properties" ] }
+rmp-serde = "1.1"
+serde = "1"
+sha2 = "0.10"
+whi_hdi_extensions = "0.6"
