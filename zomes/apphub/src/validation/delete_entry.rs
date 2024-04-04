@@ -26,8 +26,6 @@ pub fn validation(
         EntryTypesUnit::WebApp |
         EntryTypesUnit::WebAppPackage |
         EntryTypesUnit::WebAppPackageVersion => {
-            let create = summon_create_action( &original_action_hash )?;
-
             if delete.author != create.author {
                 invalid!(format!(
                     "Not authorized to delete entry created by author {}",

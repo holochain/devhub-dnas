@@ -260,7 +260,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	const result			= await this.call( input );
 
-	result.version			= input.version;
+	result.content.version		= input.version;
 
 	return new WebAppPackageVersion( result, this );
     },
@@ -461,7 +461,16 @@ export  {
 }					from '@holochain/dnahub-zomelets';
 export *				from './types.js';
 
+export {
+    Bundle,
+    semverReverseSort,
+};
+
 export default {
+    Bundle,
+    semverReverseSort,
+
+    // Zomelets
     AppHubCSRZomelet,
     DnaHubCSRZomelet,
     ZomeHubCSRZomelet,

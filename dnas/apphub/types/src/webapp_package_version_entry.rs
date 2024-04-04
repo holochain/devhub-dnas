@@ -4,6 +4,8 @@ use crate::{
     Authority,
     WebAppToken,
 };
+#[allow(unused)]
+use crate::WebAppEntry;
 
 use std::collections::BTreeMap;
 use hdi::prelude::*;

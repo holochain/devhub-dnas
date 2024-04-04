@@ -22,8 +22,6 @@ pub fn validation(
 
     match detect_app_entry_unit( &create )? {
         EntryTypesUnit::Dna => {
-            let create = summon_create_action( &original_action_hash )?;
-
             if delete.author != create.author {
                 invalid!(format!(
                     "Not authorized to delete entry created by author {}",
