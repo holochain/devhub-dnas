@@ -7,29 +7,12 @@
 
 
 ### (high-level) Entity Relationship Diagram
-![](https://drive.google.com/a/webheroes.ca/thumbnail?id=1bS9_PpZiwE5pA8mFTlRGvOYaWFwgzHPD&sz=w1000)
+TODO
 
-- DevHub
-  - `dnarepo` DNA
-    - DNA Repository Core
-    - DNA Repository API
-    - Reviews API
-    - Mere Memory Core
-    - Mere Memory API
-  - `happs` DNA
-    - hApps Core
-    - hApps API
-  - `web_assets` DNA
-    - Web Assets Core
-    - Web Assets API
-    - Mere Memory Core
-    - Mere Memory API
 
 ### Entity Relationship Pattern
-This project implements the CAPS pattern *(pattern documentation is in process)*.
-
-- [github.com/mjbrisebois/rust-hc-crud-caps/](https://github.com/mjbrisebois/rust-hc-crud-caps/)
-- [docs.rs/hc_crud_caps/](https://docs.rs/hc_crud_caps/) - Rust library that implements th CAPS pattern
+This project implements the [CAPS
+pattern](https://github.com/spartan-holochain-counsel/hc-4-pattern-vectors)
 
 
 
@@ -47,31 +30,10 @@ This project implements the CAPS pattern *(pattern documentation is in process)*
 
 ### Building
 
-#### WASM Targets
-
-```bash
-make zomes/dna_library.wasm
-make zomes/happ_library.wasm
-make zomes/web_assets.wasm
-```
-
-Mere Memory WASM is not in this repo.  It must be build from
-https://github.com/mjbrisebois/hc-zome-mere-memory and copied to `zomes/mere_memory.wasm`
-
-
-#### DNA Targets
-
-```bash
-make bundled/dnarepo.dna
-make bundled/happs.dna
-make bundled/web_assets.dna
-```
-
-
 #### hApp Bundle
 
 ```bash
-make DevHub.happ
+make happ/devhub.happ
 ```
 
 
@@ -79,76 +41,77 @@ make DevHub.happ
 
 To run all tests with logging
 ```
-make test-all-debug
+make test
 ```
 
 - `make test-unit` - **Rust tests only**
-- `make test-dnas-debug` - **DNA tests using Javascript**
+- `make test-integration` - **Integration tests only**
+
+### Faux data tests
+
+- `make test-zomehub` - Upload faux zomes
+- `make test-dnahub` - Upload faux DNAs
+- `make test-apphub` - Upload faux Apps & WebApps
+- `make test-webapp-upload` - Upload real App with faux GUI
+
+### Real-input tests
+
+- `make test-real-zome-upload` - Upload `devhub.happ` to DevHub
+- `make test-real-dna-upload` - Upload `devhub.happ` to DevHub
+- `make test-real-app-upload` - Upload `devhub.happ` to DevHub
 
 
-> **NOTE:** remove `-debug` to run tests without logging
+> **NOTE:** set DEBUG_LEVEL environment variable to run tests with logging (options: fatal, error,
+> warn, normal, info, debug, trace)
+>
+> Example
+> ```
+> DEBUG_LEVEL=trace make test
+> ```
 
 
 ## Dependencies
 
-- DevHub
-  - CRUD (`hc_crud_caps`)
-  - Mere Memory
-  - dev / testing
-    - `@whi/holochain-client`
-      - Holochain Conductor API
-    - `@whi/holochain-backdrop`
-      - Holochain Conductor API
+### Rust Dependency Tree
+
+![](https://drive.google.com/a/webheroes.ca/thumbnail?sz=w1000&id=1enNPOoTurGJBodYg6Yb_Ld2_jbOLQm2d)
+
+- types - define structs that are not scoped to a zome
+- integrity - adds `LinkTypes` and `EntryTypes` scopes
+  - implementations related to newly defined scopes
+- sdk - implementations related to the coordinator interface
+- coordinator - exposes controlled access points
 
 
-#### [CRUD](https://crates.io/crates/hc_crud_caps)
+### External Depependencies
 
-This library handles the underlying CRUD patter for all DevHub's entry types.  If there is a new HDK
-for Holochain, the CRUD library will need to be bumped and possibly updated to handle any API
-changes.
+- CRUD ([`hc_crud_caps`](https://docs.rs/hc_crud_caps))
+- Mere Memory ([`mere_memory_types`](https://docs.rs/mere_memory_types))
 
+#### Dev / Testing Dependencies
 
-#### [Mere Memory](https://github.com/mjbrisebois/hc-zome-mere-memory)
-
-Mere memory is a set of zomes used for simple byte storage.  Since it has an integrity and
-coordinator zome, its version will change whenever the HDI or HDK are updated.
+- [`@spartan-hc/app-interface-client`](https://github.com/spartan-holochain-counsel/app-interface-client-js)
+- [`@spartan-hc/holochain-backdrop`](https://github.com/spartan-holochain-counsel/node-holochain-backdrop)
 
 
-#### [`@whi/holochain-client`](https://github.com/mjbrisebois/js-holochain-client)
+#### CRUD ([github.com/spartan-holochain-counsel/rust-hc-crud-caps](https://github.com/spartan-holochain-counsel/rust-hc-crud-caps))
 
-DevHub uses this for development and testing.  If the Conductor API has changed, this library will
-most likely need to be updated.
+This library handles the underlying patterns for types that require CRUD.
 
 
-#### [`@whi/holochain-backdrop`](https://github.com/mjbrisebois/node-holochain-backdrop)
+#### Mere Memory ([github.com/spartan-holochain-counsel/zome-mere-memory](https://github.com/spartan-holochain-counsel/zome-mere-memory))
+
+Mere memory is a set of zomes used for simple byte storage.
+
+
+#### `@spartan-hc/app-interface-client`
+
+DevHub uses this for development and testing.  This library changes as the Conductor's App Interface
+API evolves.
+
+
+#### `@spartan-hc/holochain-backdrop`
 
 DevHub uses this for development and testing.  This library is used to programmatically run the
-Holochain binary, install hApps, creates agents, and make capability grants.  If the client
-(`@whi/holochain-client`) API or Holochain manifests have changed, this library might need to be
-updated.
-
-
-### Upgrading for a new Holochain release
-
-When there is a new Holochain release, we ony have to update affected parts.  This Causal Tree lists
-the downstream DevHub components for parts of the Holochain engine.
-
-#### Causal Tree
-
-- HDI
-  - DNA Repository Core
-  - hApps Core
-  - Web Assets Core
-  - Mere Memory Core
-- HDK
-  - CRUD
-  - DNA Repository API
-  - Reviews API
-  - hApps API
-  - Web Assets API
-  - Mere Memory API
-- Conductor API
-  - `@whi/holochain-client`
-  - `@whi/holochain-backdrop`
-- WebApp / App / DNA Manifest
-  - `@whi/holochain-backdrop`
+Holochain binary, install hApps, creates agents, and make capability grants.  This library changes
+as the Conductor's API evolves.

@@ -1,0 +1,18 @@
+[package]
+name = "hc_zomehub_types"
+version = "0.1.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2018"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas"
+description = "Definitions used by the ZomeHub DNA Zomes"
+readme = "README.md"
+
+[lib]
+name = "zomehub_types"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mere_memory_types = "0.93.0"
+serde = "1"
+whi_hdi_extensions = "0.6"

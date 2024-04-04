@@ -1,0 +1,6 @@
+manifest_version: "1"
+name: test-webhapp
+ui:
+  bundled: "../test.zip"
+happ_manifest:
+  bundled: "../test.happ"
