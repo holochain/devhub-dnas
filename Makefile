@@ -3,7 +3,7 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.94.0
+MERE_MEMORY_VERSION	= 0.95.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
