@@ -13,6 +13,9 @@ import {
 }					from '@spartan-hc/entities';
 
 
+//
+// ZomeEntry Handling
+//
 export const ZomeStruct = {
     "zome_type":		String,
     "mere_memory_addr":		EntryHash,
@@ -29,6 +32,9 @@ export class Zome extends ScopedEntity {
 }
 
 
+//
+// ZomeAsset Handling
+//
 export const ZomeAssetStruct = {
     "zome_entry":		ZomeStruct,
     "memory_entry":		MemoryStruct,
@@ -40,10 +46,61 @@ export function ZomeAsset ( entry ) {
 }
 
 
+//
+// ZomePackageEntry Handling
+//
+export const MaintainerType	= String;
+
+export const ZomePackageStruct = {
+    "name":			String,
+    "description":		String,
+    "zome_type":		String,
+    "maintainer": {
+	"type":			MaintainerType,
+	"content":		AgentPubKey,
+    },
+    "tags":			OptionType( VecType( String ) ),
+    "metadata":			Object,
+};
+
+export function ZomePackageEntry ( entry ) {
+    return intoStruct( entry, ZomePackageStruct );
+}
+
+export class ZomePackage extends ScopedEntity {
+    static STRUCT		= ZomePackageStruct;
+}
+
+
+//
+// ZomePackageVersionEntry Handling
+//
+export const ZomePackageVersionStruct = {
+    "for_package":		ActionHash,
+    "zome_entry":		EntryHash,
+};
+
+export function ZomePackageVersionEntry ( entry ) {
+    return intoStruct( entry, ZomePackageVersionStruct );
+}
+
+export class ZomePackageVersion extends ScopedEntity {
+    static STRUCT		= ZomePackageVersionStruct;
+}
+
+
 export default {
     ZomeStruct,
     ZomeEntry,
     Zome,
+
+    ZomePackageStruct,
+    ZomePackageEntry,
+    ZomePackage,
+
+    ZomePackageVersionStruct,
+    ZomePackageVersionEntry,
+    ZomePackageVersion,
 
     ZomeAssetStruct,
     ZomeAsset,

@@ -915,6 +915,7 @@ name = "hc_zomehub_types"
 version = "0.1.0"
 dependencies = [
  "mere_memory_types",
+ "rmpv",
  "serde",
  "whi_hdi_extensions",
 ]

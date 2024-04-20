@@ -29,6 +29,7 @@ import {
     expect_reject,
     linearSuite,
 }					from '../utils.js';
+import zome_packages_suite		from './zomehub/zome_packages_suite.js';
 
 
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
@@ -175,6 +176,20 @@ function basic_tests () {
 	});
 
     });
+
+    function common_args_plus( args ) {
+	return Object.assign({
+	    installations,
+	    client,
+	    app_client,
+	    zomehub,
+	    zomehub_csr,
+	    zome1_addr,
+	    zome1,
+	}, args );
+    }
+
+    linearSuite("Zome Packages", zome_packages_suite, () => common_args_plus() );
 
     after(async function () {
 	await client.close();

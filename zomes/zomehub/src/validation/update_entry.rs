@@ -7,7 +7,7 @@ use crate::{
 use hdi::prelude::*;
 use hdi_extensions::{
     // Macros
-    invalid,
+    valid, invalid,
 };
 
 
@@ -20,6 +20,12 @@ pub fn validation(
     match app_entry {
         EntryTypes::Zome(_) => {
             invalid!(format!("ZomeEntry are not intended to be updated"))
+        },
+        EntryTypes::ZomePackage(_entry) => {
+            valid!()
+        },
+        EntryTypes::ZomePackageVersion(_entry) => {
+            valid!()
         },
         // _ => invalid!(format!("Update validation not implemented for entry type: {:#?}", update.entry_type )),
     }

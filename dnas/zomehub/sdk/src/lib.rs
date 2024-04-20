@@ -2,18 +2,26 @@ pub use zomehub_types;
 pub use devhub_sdk;
 pub use devhub_sdk::*;
 
+use std::collections::BTreeMap;
 use hdk::prelude::*;
 use hdk_extensions::{
+    agent_id,
     must_get,
 };
 use zomehub_types::{
+    Authority,
+    RmpvValue,
+
+    ZomeType,
     ZomeEntry,
+    ZomePackageEntry,
+    // ZomePackageVersionEntry,
+
     mere_memory_types,
 };
 use mere_memory_types::{
     MemoryEntry,
 };
-
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -47,6 +55,43 @@ impl TryInto<ZomeAsset> for EntryHash {
                 zome_entry: zome_entry,
                 memory_entry: memory_with_bytes.0,
                 bytes: memory_with_bytes.1.to_vec(),
+
+            }
+        )
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CreateZomePackageInput {
+    pub name: String,
+    pub description: String,
+    pub zome_type: ZomeType,
+
+    // optional
+    pub maintainer: Option<Authority>,
+    pub tags: Option<Vec<String>>,
+
+    // Common fields
+    #[serde(default)]
+    pub metadata: BTreeMap<String, RmpvValue>,
+}
+
+impl TryFrom<CreateZomePackageInput> for ZomePackageEntry {
+    type Error = WasmError;
+
+    fn try_from(input: CreateZomePackageInput) -> ExternResult<Self> {
+        Ok(
+            Self {
+                name: input.name,
+                description: input.description,
+                zome_type: input.zome_type,
+                maintainer: input.maintainer
+                    .unwrap_or( agent_id()?.into() ),
+                metadata: input.metadata,
+
+                // optional
+                tags: input.tags,
             }
         )
     }

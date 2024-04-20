@@ -25,22 +25,37 @@ use hc_crud::{
 pub enum EntryTypes {
     #[entry_type]
     Zome(ZomeEntry),
+    #[entry_type]
+    ZomePackage(ZomePackageEntry),
+    #[entry_type]
+    ZomePackageVersion(ZomePackageVersionEntry),
 }
 
 scoped_type_connector!(
     EntryTypesUnit::Zome,
     EntryTypes::Zome( ZomeEntry )
 );
+scoped_type_connector!(
+    EntryTypesUnit::ZomePackage,
+    EntryTypes::ZomePackage(ZomePackageEntry)
+);
+scoped_type_connector!(
+    EntryTypesUnit::ZomePackageVersion,
+    EntryTypes::ZomePackageVersion(ZomePackageVersionEntry)
+);
 
 // Entity implementations
 entry_model!( EntryTypes::Zome( ZomeEntry ) );
+entry_model!( EntryTypes::ZomePackage( ZomePackageEntry ) );
+entry_model!( EntryTypes::ZomePackageVersion( ZomePackageVersionEntry ) );
 
 
 
 /// The link types defined for this integrity zome
 #[hdk_link_types]
 pub enum LinkTypes {
-    Zome,
+    AgentToZome,
+    AgentToZomePackage,
 }
 
 impl TryFrom<String> for LinkTypes {
@@ -49,7 +64,8 @@ impl TryFrom<String> for LinkTypes {
     fn try_from(name: String) -> Result<Self, Self::Error> {
         Ok(
             match name.as_str() {
-                "Zome" => LinkTypes::Zome,
+                "AgentToZome" => LinkTypes::AgentToZome,
+                "AgentToZomePackage" => LinkTypes::AgentToZomePackage,
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }
         )

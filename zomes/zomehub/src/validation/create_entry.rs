@@ -41,6 +41,12 @@ pub fn validation(
 
             valid!()
         },
+        EntryTypes::ZomePackage(_entry) => {
+            valid!()
+        },
+        EntryTypes::ZomePackageVersion(_entry) => {
+            valid!()
+        },
         // _ => invalid!(format!("Create validation not implemented for entry type: {:#?}", create.entry_type )),
     }
 }

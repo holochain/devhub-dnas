@@ -11,6 +11,8 @@ import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets'; // approx
 import {
     Zome,
     ZomeAsset,
+    ZomePackage,
+    ZomePackageVersion,
 }					from './types.js';
 
 
@@ -38,6 +40,10 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	    };
 	},
     },
+
+    //
+    // Zome entry
+    //
     async create_zome_entry ( input ) {
 	const result			= await this.call( input );
 
@@ -76,6 +82,21 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     },
     async delete_zome ( input ) {
 	return new ActionHash( await this.call( new ActionHash( input ) ) );
+    },
+
+
+    //
+    // Zome package entry
+    //
+    async create_zome_package_entry ( input ) {
+	const result			= await this.call( input );
+
+	return new ZomePackage( result, this );
+    },
+    async create_zome_package ( input ) {
+	const result			= await this.call( input );
+
+	return new ZomePackage( result, this );
     },
 
 
