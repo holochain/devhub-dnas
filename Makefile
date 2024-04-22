@@ -3,12 +3,12 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.95.0
+MERE_MEMORY_VERSION	= 0.96.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.11.0
+PORTAL_VERSION		= 0.12.0
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -102,29 +102,29 @@ $(MERE_MEMORY_API_WASM):
 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory_api.wasm" --output $@
 
 reset-mere-memory:
-	rm zomes/mere_memory*.wasm
+	rm -f zomes/mere_memory*.wasm
 	make $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
 
 PRE_MM_VERSION = mere_memory_types = "0.91.0"
 NEW_MM_VERSION = mere_memory_types = "0.93.0"
 
-PRE_CRUD_VERSION = hc_crud_caps = "0.10.3"
-NEW_CRUD_VERSION = hc_crud_caps = "0.12"
+PRE_CRUD_VERSION = hc_crud_caps = "0.12"
+NEW_CRUD_VERSION = hc_crud_caps = "0.13"
 
-PRE_HDIE_VERSION = whi_hdi_extensions = "0.4.2"
-NEW_HDIE_VERSION = whi_hdi_extensions = "0.6"
+PRE_HDIE_VERSION = whi_hdi_extensions = "0.6"
+NEW_HDIE_VERSION = whi_hdi_extensions = "0.7"
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.4"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.6"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.6"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.7"
 
-PRE_PSDK_VERSION = hc_portal_sdk = "0.1.3"
-NEW_PSDK_VERSION = hc_portal_sdk = "0.3"
+PRE_PSDK_VERSION = hc_portal_sdk = "0.3"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.4"
 
-PRE_HIT_VERSION = holochain_integrity_types = "0.2.2"
-NEW_HIT_VERSION = holochain_integrity_types = "0.3.0-beta-dev.28"
+PRE_HIT_VERSION = holochain_integrity_types = "0.3.0-beta-dev.28"
+NEW_HIT_VERSION = holochain_integrity_types = "0.3.0-beta-dev.31"
 
-PRE_HZT_VERSION = holochain_zome_types = { version = "0.2.2"
-NEW_HZT_VERSION = holochain_zome_types = { version = "0.3.0-beta-dev.30"
+PRE_HZT_VERSION = holochain_zome_types = { version = "0.3.0-beta-dev.30"
+NEW_HZT_VERSION = holochain_zome_types = { version = "0.3.0-beta-dev.33"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
@@ -147,10 +147,16 @@ npm-reinstall-local:
 	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)
 npm-reinstall-public:
 	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(NPM_PACKAGE)
+
 npm-use-app-interface-client-public:
 npm-use-app-interface-client-local:
 npm-use-app-interface-client-%:
 	NPM_PACKAGE=@spartan-hc/app-interface-client LOCAL_PATH=../../app-interface-client-js make npm-reinstall-$*
+
+npm-use-backdrop-public:
+npm-use-backdrop-local:
+npm-use-backdrop-%:
+	NPM_PACKAGE=@spartan-hc/holochain-backdrop LOCAL_PATH=../../node-holochain-backdrop make npm-reinstall-$*
 
 
 

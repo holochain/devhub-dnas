@@ -35,10 +35,11 @@ import {
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
 const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
-const APP_PORT				= 23_567;
 
 const DNAHUB_DNA_NAME			= "dnahub";
 const ZOMEHUB_DNA_NAME			= "zomehub";
+
+let app_port;
 
 
 describe("DnaHub - Real", function () {
@@ -50,14 +51,19 @@ describe("DnaHub - Real", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	const actors			= await holochain.backdrop({
-	    "test": {
-		[DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
-		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
+	await holochain.install([
+	    "alice",
+	], [
+	    {
+		"app_name": "test",
+		"bundle": {
+		    [DNAHUB_DNA_NAME]:	DNAHUB_DNA_PATH,
+		    [ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
+		},
 	    },
-	}, {
-	    "app_port": APP_PORT,
-	});
+	]);
+
+	app_port			= await holochain.ensureAppPort();
     });
 
     linearSuite("Upload", real_tests );
@@ -80,7 +86,7 @@ function real_tests () {
     before(async function () {
 	this.timeout( 30_000 );
 
-	client				= new AppInterfaceClient( APP_PORT, {
+	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
 	app_client			= await client.app( "test-alice" );

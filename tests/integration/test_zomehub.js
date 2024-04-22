@@ -34,11 +34,12 @@ import {
 
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
-const APP_PORT				= 23_567;
 
 const ZOMEHUB_DNA_NAME			= "zomehub";
 const MAIN_ZOME				= "zomehub_csr";
 const MERE_ZOME				= "mere_memory_api";
+
+let app_port;
 
 
 describe("ZomeHub", function () {
@@ -50,14 +51,19 @@ describe("ZomeHub", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	await holochain.backdrop({
-	    "test": {
-		[ZOMEHUB_DNA_NAME]:	ZOMEHUB_DNA_PATH,
+	await holochain.install([
+	    "alice",
+	    "bobby",
+	], [
+	    {
+		"app_name": "test",
+		"bundle": {
+		    [ZOMEHUB_DNA_NAME]: ZOMEHUB_DNA_PATH,
+		},
 	    },
-	}, {
-	    "app_port": APP_PORT,
-	    "actors": [ "alice", "bobby" ],
-	});
+	]);
+
+	app_port			= await holochain.ensureAppPort();
     });
 
     linearSuite("Basic", basic_tests );
@@ -80,7 +86,7 @@ function basic_tests () {
     before(async function () {
 	this.timeout( 30_000 );
 
-	client				= new AppInterfaceClient( APP_PORT, {
+	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
 	app_client			= await client.app( "test-alice" );
