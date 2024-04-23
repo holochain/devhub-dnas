@@ -16,8 +16,7 @@ import {
     DnaHash, AgentPubKey,
     ActionHash, EntryHash,
 }					from '@spartan-hc/holo-hash';
-import HolochainBackdrop		from '@spartan-hc/holochain-backdrop';
-const { Holochain }			= HolochainBackdrop;
+import { Holochain }			from '@spartan-hc/holochain-backdrop';
 
 import {
     AppHubCell,
