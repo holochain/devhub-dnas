@@ -194,3 +194,42 @@ where
             )))?
     )
 }
+
+pub fn call_cell<Z,F,I,O,T>(
+    dna_hash: DnaHash,
+    zome_name: Z,
+    func_name: F,
+    payload: I,
+    options: O,
+) -> ExternResult<T>
+where
+    Z: Into<ZomeName>,
+    F: Into<FunctionName>,
+    I: Serialize + std::fmt::Debug,
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+    O: Into<CallOptions>,
+{
+    let call_opts : CallOptions = options.into();
+
+    let response = call(
+        CallTargetCell::OtherCell(
+            CellId::new(
+                dna_hash,
+                agent_info()?.agent_latest_pubkey,
+            )
+        ),
+        zome_name.into(),
+        func_name.into(),
+        call_opts.cap_secret,
+        payload,
+    )?;
+
+    let extern_io = unwrap_response( response )?;
+
+    Ok(
+        extern_io.decode()
+            .map_err(|err| guest_error!(format!(
+                "{:?}", err,
+            )))?
+    )
+}

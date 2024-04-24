@@ -106,8 +106,8 @@ impl TryInto<DnaPackage> for EntryHash {
         let mut wasm_packages = BTreeMap::new();
 
         for zome_manifest in dna_entry.manifest.integrity.zomes.iter() {
-            let wasm_package : WasmPackage = call_role(
-                "zomehub",
+            let wasm_package : WasmPackage = call_cell(
+                zome_manifest.wasm_hrl.dna.clone(),
                 "zomehub_csr",
                 "get_wasm_package",
                 zome_manifest.wasm_hrl.target.clone(),
@@ -118,8 +118,8 @@ impl TryInto<DnaPackage> for EntryHash {
         }
 
         for zome_manifest in dna_entry.manifest.coordinator.zomes.iter() {
-            let wasm_package : WasmPackage = call_role(
-                "zomehub",
+            let wasm_package : WasmPackage = call_cell(
+                zome_manifest.wasm_hrl.dna.clone(),
                 "zomehub_csr",
                 "get_wasm_package",
                 zome_manifest.wasm_hrl.target.clone(),
