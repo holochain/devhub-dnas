@@ -60,6 +60,8 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         ( "mere_memory_api", "get_memory_entry" ),
         ( "mere_memory_api", "get_memory_block_entry" ),
         ( "mere_memory_api", "memory_exists" ),
+        ( "mere_memory_api", "get_memory_bytes" ),
+        ( "mere_memory_api", "get_memory_with_bytes" ),
     ];
 
     portal_sdk::register_if_exists!({
