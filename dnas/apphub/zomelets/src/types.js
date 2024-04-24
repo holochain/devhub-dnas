@@ -97,6 +97,7 @@ export const AppStruct = {
 	}),
     },
     "app_token":		AppTokenStruct,
+    "claimed_file_size":	Number,
 };
 
 export function AppEntry ( entry ) {

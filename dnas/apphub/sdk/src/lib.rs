@@ -123,6 +123,7 @@ impl From<AppTokenInput> for AppToken {
 pub struct AppEntryInput {
     pub manifest: AppManifestV1,
     pub app_token: AppTokenInput,
+    pub claimed_file_size: u64,
 }
 
 impl From<AppEntryInput> for AppEntry {
@@ -130,6 +131,7 @@ impl From<AppEntryInput> for AppEntry {
         Self {
             manifest: input.manifest,
             app_token: input.app_token.into(),
+            claimed_file_size: input.claimed_file_size,
         }
     }
 }
@@ -139,13 +141,14 @@ impl From<AppEntryInput> for AppEntry {
 pub struct CreateAppInput {
     pub manifest: AppManifestV1,
     pub roles_dna_tokens: RolesDnaTokensInput,
+    pub claimed_file_size: u64,
 }
 
 impl TryFrom<CreateAppInput> for AppEntry {
     type Error = WasmError;
 
     fn try_from(input: CreateAppInput) -> ExternResult<Self> {
-        Self::new( input.manifest, input.roles_dna_tokens.into() )
+        Self::new( input.manifest, input.roles_dna_tokens.into(), input.claimed_file_size )
     }
 }
 

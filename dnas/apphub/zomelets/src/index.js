@@ -314,6 +314,7 @@ export const AppHubCSRZomelet		= new Zomelet({
     // Virtual functions
     //
     async save_app ( bytes ) {
+	const claimed_file_size		= bytes.length;
 	const bundle			= new Bundle( bytes, "happ" );
 	const roles_dna_tokens		= {};
 
@@ -343,6 +344,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	return await this.functions.create_app({
 	    "manifest": bundle.manifest,
 	    roles_dna_tokens,
+	    claimed_file_size,
 	});
     },
     async save_ui ( bytes ) {
