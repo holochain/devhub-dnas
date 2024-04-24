@@ -41,7 +41,7 @@ export const DnaStruct = {
 	    "zomes": VecType({
 		"name":		String,
 		"hash":		OptionType( AnyType ),
-		"wasm_hrl":	HRLStruct,
+		"zome_hrl":	HRLStruct,
 		"dylib":	OptionType( AnyType ),
 	    }),
 	},
@@ -49,7 +49,7 @@ export const DnaStruct = {
 	    "zomes": VecType({
 		"name":		String,
 		"hash":		OptionType( AnyType ),
-		"wasm_hrl":	HRLStruct,
+		"zome_hrl":	HRLStruct,
 		"dependencies": VecType({
 		    "name":	String,
 		}),

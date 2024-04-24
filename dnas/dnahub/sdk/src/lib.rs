@@ -9,7 +9,7 @@ use hdk_extensions::{
 };
 use serde_bytes::*;
 use zomehub_sdk::{
-    WasmPackage,
+    ZomePackage,
 };
 use dnahub_types::{
     DnaEntry,
@@ -98,43 +98,43 @@ pub type ZomePackageMap = BTreeMap<ZomeName, Vec<u8>>;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DnaPackage {
     pub dna_entry: DnaEntry,
-    pub wasm_packages: ZomePackageMap,
+    pub zome_packages: ZomePackageMap,
 }
 
 impl TryInto<DnaPackage> for EntryHash {
     type Error = WasmError;
     fn try_into(self) -> ExternResult<DnaPackage> {
         let dna_entry : DnaEntry = must_get( &self )?.try_into()?;
-        let mut wasm_packages = BTreeMap::new();
+        let mut zome_packages = BTreeMap::new();
 
         for zome_manifest in dna_entry.manifest.integrity.zomes.iter() {
-            let wasm_package : WasmPackage = call_cell(
-                zome_manifest.wasm_hrl.dna.clone(),
+            let zome_package : ZomePackage = call_cell(
+                zome_manifest.zome_hrl.dna.clone(),
                 "zomehub_csr",
-                "get_wasm_package",
-                zome_manifest.wasm_hrl.target.clone(),
+                "get_zome_package",
+                zome_manifest.zome_hrl.target.clone(),
                 (),
             )?;
 
-            wasm_packages.insert( zome_manifest.name.clone(), wasm_package.bytes );
+            zome_packages.insert( zome_manifest.name.clone(), zome_package.bytes );
         }
 
         for zome_manifest in dna_entry.manifest.coordinator.zomes.iter() {
-            let wasm_package : WasmPackage = call_cell(
-                zome_manifest.wasm_hrl.dna.clone(),
+            let zome_package : ZomePackage = call_cell(
+                zome_manifest.zome_hrl.dna.clone(),
                 "zomehub_csr",
-                "get_wasm_package",
-                zome_manifest.wasm_hrl.target.clone(),
+                "get_zome_package",
+                zome_manifest.zome_hrl.target.clone(),
                 (),
             )?;
 
-            wasm_packages.insert( zome_manifest.name.clone(), wasm_package.bytes );
+            zome_packages.insert( zome_manifest.name.clone(), zome_package.bytes );
         }
 
         Ok(
             DnaPackage {
                 dna_entry,
-                wasm_packages,
+                zome_packages,
             }
         )
     }

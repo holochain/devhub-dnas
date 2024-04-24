@@ -66,7 +66,7 @@ export default function ( args_fn ) {
 
     linearSuite("Errors", function () {
 
-	it("should fail to create wasm entry because of wrong file size", async function () {
+	it("should fail to create zome entry because of wrong file size", async function () {
 	    await expect_reject(async () => {
 		await apphub_csr.create_ui_entry({
 		    "mere_memory_addr": ui1.mere_memory_addr,

@@ -14,8 +14,8 @@ use hdk_extensions::{
 use zomehub::{
     EntryTypes,
     LinkTypes,
-    WasmEntry,
-    WasmType,
+    ZomeEntry,
+    ZomeType,
     hc_crud::{
         Entity,
         EntryModel,
@@ -24,7 +24,7 @@ use zomehub::{
 };
 use zomehub_sdk::{
     LinkBase,
-    WasmPackage,
+    ZomePackage,
 };
 
 
@@ -33,7 +33,7 @@ pub type TypedLinkBase = LinkBase<LinkTypes>;
 lazy_static! {
     pub static ref AGENT_ID : AgentPubKey = agent_id().expect("Unable to obtain current Agent context");
 
-    pub static ref MY_ZOMES_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::Wasm );
+    pub static ref MY_ZOMES_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::Zome );
 }
 
 
@@ -74,7 +74,7 @@ fn whoami(_: ()) -> ExternResult<AgentInfo> {
 
 
 #[hdk_extern]
-fn create_wasm_entry(input: WasmEntry) -> ExternResult<Entity<WasmEntry>> {
+fn create_zome_entry(input: ZomeEntry) -> ExternResult<Entity<ZomeEntry>> {
     let entity = create_entity( &input )?;
 
     MY_ZOMES_ANCHOR.create_link_if_not_exists( &entity.address, () )?;
@@ -84,23 +84,23 @@ fn create_wasm_entry(input: WasmEntry) -> ExternResult<Entity<WasmEntry>> {
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CreateWasmEntryInput {
-    pub wasm_type: WasmType,
+pub struct CreateZomeEntryInput {
+    pub zome_type: ZomeType,
     pub mere_memory_addr: EntryHash,
 }
 
 #[hdk_extern]
-fn create_wasm(input: CreateWasmEntryInput) -> ExternResult<Entity<WasmEntry>> {
-    let entry = WasmEntry::new( input.wasm_type, input.mere_memory_addr )?;
+fn create_zome(input: CreateZomeEntryInput) -> ExternResult<Entity<ZomeEntry>> {
+    let entry = ZomeEntry::new( input.zome_type, input.mere_memory_addr )?;
 
-    create_wasm_entry( entry )
+    create_zome_entry( entry )
 }
 
 
 #[hdk_extern]
-fn get_wasm_entry(addr: AnyDhtHash) -> ExternResult<Entity<WasmEntry>> {
+fn get_zome_entry(addr: AnyDhtHash) -> ExternResult<Entity<ZomeEntry>> {
     let record = must_get( &addr )?;
-    let content = WasmEntry::try_from_record( &record )?;
+    let content = ZomeEntry::try_from_record( &record )?;
     let id = record.action_address().to_owned();
     let addr = hash_entry( content.clone() )?;
 
@@ -117,33 +117,33 @@ fn get_wasm_entry(addr: AnyDhtHash) -> ExternResult<Entity<WasmEntry>> {
 
 
 #[hdk_extern]
-fn get_wasm_package(addr: EntryHash) -> ExternResult<WasmPackage> {
+fn get_zome_package(addr: EntryHash) -> ExternResult<ZomePackage> {
     Ok( addr.try_into()? )
 }
 
 
 #[hdk_extern]
-fn get_wasm_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
-    ExternResult<Vec<Entity<WasmEntry>>>
+fn get_zome_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
+    ExternResult<Vec<Entity<ZomeEntry>>>
 {
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
     };
-    let agent_anchor = LinkBase::new( agent_id, LinkTypes::Wasm );
+    let agent_anchor = LinkBase::new( agent_id, LinkTypes::Zome );
 
-    let wasms = agent_anchor.get_links( None )?.into_iter()
+    let zomes = agent_anchor.get_links( None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
-            get_wasm_entry( addr.into() ).ok()
+            get_zome_entry( addr.into() ).ok()
         })
         .collect();
 
-    Ok( wasms )
+    Ok( zomes )
 }
 
 
 #[hdk_extern]
-fn delete_wasm(addr: ActionHash) -> ExternResult<ActionHash> {
-    Ok( delete_entity::<WasmEntry,EntryTypes>( &addr )? )
+fn delete_zome(addr: ActionHash) -> ExternResult<ActionHash> {
+    Ok( delete_entity::<ZomeEntry,EntryTypes>( &addr )? )
 }

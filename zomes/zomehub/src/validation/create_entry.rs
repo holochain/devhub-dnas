@@ -20,15 +20,15 @@ pub fn validation(
     _create: Create
 ) -> ExternResult<ValidateCallbackResult> {
     match app_entry {
-        EntryTypes::Wasm(wasm_entry) => {
-            let memory : MemoryEntry = must_get_entry( wasm_entry.mere_memory_addr )?.try_into()?;
+        EntryTypes::Zome(zome_entry) => {
+            let memory : MemoryEntry = must_get_entry( zome_entry.mere_memory_addr )?.try_into()?;
             let file_size = memory.uncompressed_size
                 .unwrap_or( memory.memory_size );
 
-            if wasm_entry.file_size != file_size {
+            if zome_entry.file_size != file_size {
                 invalid!(format!(
-                    "WasmEntry file size does not match memory address: {} != {}",
-                    wasm_entry.file_size, file_size
+                    "ZomeEntry file size does not match memory address: {} != {}",
+                    zome_entry.file_size, file_size
                 ))
             }
 

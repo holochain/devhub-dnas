@@ -11,23 +11,23 @@ import {
 }					from '@spartan-hc/caps-entities';
 
 
-export const WasmStruct = {
-    "wasm_type":		String,
+export const ZomeStruct = {
+    "zome_type":		String,
     "mere_memory_addr":		EntryHash,
     "file_size":		Number,
 };
 
-export function WasmEntry ( entry ) {
-    return intoStruct( entry, WasmStruct );
+export function ZomeEntry ( entry ) {
+    return intoStruct( entry, ZomeStruct );
 }
 
-export class Wasm extends ScopedEntity {
-    static STRUCT		= WasmStruct;
+export class Zome extends ScopedEntity {
+    static STRUCT		= ZomeStruct;
 }
 
 
 export default {
-    WasmStruct,
-    WasmEntry,
-    Wasm,
+    ZomeStruct,
+    ZomeEntry,
+    Zome,
 };

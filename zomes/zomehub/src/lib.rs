@@ -24,23 +24,23 @@ use hc_crud::{
 #[unit_enum(EntryTypesUnit)]
 pub enum EntryTypes {
     #[entry_type]
-    Wasm(WasmEntry),
+    Zome(ZomeEntry),
 }
 
 scoped_type_connector!(
-    EntryTypesUnit::Wasm,
-    EntryTypes::Wasm( WasmEntry )
+    EntryTypesUnit::Zome,
+    EntryTypes::Zome( ZomeEntry )
 );
 
 // Entity implementations
-entry_model!( EntryTypes::Wasm( WasmEntry ) );
+entry_model!( EntryTypes::Zome( ZomeEntry ) );
 
 
 
 /// The link types defined for this integrity zome
 #[hdk_link_types]
 pub enum LinkTypes {
-    Wasm,
+    Zome,
 }
 
 impl TryFrom<String> for LinkTypes {
@@ -49,7 +49,7 @@ impl TryFrom<String> for LinkTypes {
     fn try_from(name: String) -> Result<Self, Self::Error> {
         Ok(
             match name.as_str() {
-                "Wasm" => LinkTypes::Wasm,
+                "Zome" => LinkTypes::Zome,
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }
         )

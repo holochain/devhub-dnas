@@ -9,16 +9,16 @@ import {
 }					from '@spartan-hc/zomelets'; // approx. 7kb
 import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets'; // approx. 33kb
 import {
-    WasmEntry,
-    Wasm,
+    ZomeEntry,
+    Zome,
 }					from './types.js';
 
 
-export const WASM_TYPES			= {
+export const ZOME_TYPES			= {
     "INTEGRITY": "integrity",
     "COORDINATOR": "coordinator",
 };
-export const WASM_TYPE_NAMES		= Object.values( WASM_TYPES );
+export const ZOME_TYPE_NAMES		= Object.values( ZOME_TYPES );
 
 
 export const ZomeHubCSRZomelet		= new Zomelet({
@@ -38,37 +38,37 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	    };
 	},
     },
-    async create_wasm_entry ( input ) {
+    async create_zome_entry ( input ) {
 	const result			= await this.call( input );
 
-	return new Wasm( result, this );
+	return new Zome( result, this );
     },
-    async create_wasm ( input ) {
-	if ( !WASM_TYPE_NAMES.includes( input.wasm_type ) )
-	    throw new TypeError(`Invalid 'wasm_type' input '${input.wasm_type}'; expected ${WASM_TYPE_NAMES.join(", ")}`);
+    async create_zome ( input ) {
+	if ( !ZOME_TYPE_NAMES.includes( input.zome_type ) )
+	    throw new TypeError(`Invalid 'zome_type' input '${input.zome_type}'; expected ${ZOME_TYPE_NAMES.join(", ")}`);
 
 	input.mere_memory_addr		= new EntryHash( input.mere_memory_addr );
 
 	const result			= await this.call( input );
 
-	return new Wasm( result, this );
+	return new Zome( result, this );
     },
-    async get_wasm_entry ( input ) {
+    async get_zome_entry ( input ) {
 	const result			= await this.call( new AnyDhtHash( input ) );
 
-	return new Wasm( result, this );
+	return new Zome( result, this );
     },
-    async get_wasm_package ( input ) {
+    async get_zome_package ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
 
 	return result;
     },
-    async get_wasm_entries_for_agent ( input ) {
+    async get_zome_entries_for_agent ( input ) {
 	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
 
-	return entries.map( entry => new Wasm( entry, this ) );
+	return entries.map( entry => new Zome( entry, this ) );
     },
-    async delete_wasm ( input ) {
+    async delete_zome ( input ) {
 	return new ActionHash( await this.call( new ActionHash( input ) ) );
     },
 
@@ -79,32 +79,32 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     async save_integrity ( bytes ) {
 	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
-	return await this.functions.create_wasm({
-	    "wasm_type": WASM_TYPES.INTEGRITY,
+	return await this.functions.create_zome({
+	    "zome_type": ZOME_TYPES.INTEGRITY,
 	    "mere_memory_addr": addr,
 	});
     },
     async save_coordinator ( bytes ) {
 	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
-	return await this.functions.create_wasm({
-	    "wasm_type": WASM_TYPES.COORDINATOR,
+	return await this.functions.create_zome({
+	    "zome_type": ZOME_TYPES.COORDINATOR,
 	    "mere_memory_addr": addr,
 	});
     },
-    async get_wasm ( input ) {
-	const wasm_entry		= await this.functions.get_wasm_entry( input );
+    async get_zome ( input ) {
+	const zome_entry		= await this.functions.get_zome_entry( input );
 
-	wasm_entry.bytes		= await this.zomes.mere_memory_api.remember(
-	    wasm_entry.mere_memory_addr
+	zome_entry.bytes		= await this.zomes.mere_memory_api.remember(
+	    zome_entry.mere_memory_addr
 	);
 
-	return wasm_entry;
+	return zome_entry;
     },
-    async get_wasm_entry_memory ( input ) {
-	const wasm_entry		= await this.functions.get_wasm_entry( input );
+    async get_zome_entry_memory ( input ) {
+	const zome_entry		= await this.functions.get_zome_entry( input );
 
-	return await this.zomes.mere_memory_api.remember( wasm_entry.mere_memory_addr );
+	return await this.zomes.mere_memory_api.remember( zome_entry.mere_memory_addr );
     },
 }, {
     "zomes": {
@@ -123,8 +123,8 @@ export { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
 export *				from './types.js';
 
 export default {
-    WASM_TYPES,
-    WASM_TYPE_NAMES,
+    ZOME_TYPES,
+    ZOME_TYPE_NAMES,
 
     // Zomelets
     ZomeHubCSRZomelet,

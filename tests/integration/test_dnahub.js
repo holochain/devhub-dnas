@@ -126,13 +126,13 @@ function basic_tests () {
 	log.normal("DNA entry: %s", json.debug(dna) );
     });
 
-    it("should get some wasm (with bytes)", async function () {
-	const wasm			= await dnahub_csr.get_integrity_wasm({
+    it("should get some zome (with bytes)", async function () {
+	const zome			= await dnahub_csr.get_integrity_zome({
 	    "dna_entry": dna1.$addr,
-	    "name": "fake-wasm-1",
+	    "name": "fake-zome-1",
 	});
 
-	log.normal("WASM [fake-wasm-1]: %s", json.debug(wasm) );
+	log.normal("ZOME [fake-zome-1]: %s", json.debug(zome) );
     });
 
     it("should get DNA bundle", async function () {
@@ -150,11 +150,11 @@ function basic_tests () {
 	const manifest			= dna_package.dna_entry.manifest;
 
 	for ( let zome_manifest of manifest.integrity.zomes ) {
-	    delete zome_manifest.wasm_hrl;
+	    delete zome_manifest.zome_hrl;
 	    delete zome_manifest.dependencies;
 
 	    const compressed_bytes	= new Uint8Array(
-		dna_package.wasm_packages[ zome_manifest.name ]
+		dna_package.zome_packages[ zome_manifest.name ]
 	    );
 
 	    zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
@@ -163,10 +163,10 @@ function basic_tests () {
 	}
 
 	for ( let zome_manifest of manifest.coordinator.zomes ) {
-	    delete zome_manifest.wasm_hrl;
+	    delete zome_manifest.zome_hrl;
 
 	    const compressed_bytes	= new Uint8Array(
-		dna_package.wasm_packages[ zome_manifest.name ]
+		dna_package.zome_packages[ zome_manifest.name ]
 	    );
 
 	    zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(

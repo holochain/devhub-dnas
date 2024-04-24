@@ -18,8 +18,8 @@ pub fn validation(
     _original_entry_hash: EntryHash
 ) -> ExternResult<ValidateCallbackResult> {
     match app_entry {
-        EntryTypes::Wasm(_) => {
-            invalid!(format!("WasmEntry are not intended to be updated"))
+        EntryTypes::Zome(_) => {
+            invalid!(format!("ZomeEntry are not intended to be updated"))
         },
         // _ => invalid!(format!("Update validation not implemented for entry type: {:#?}", update.entry_type )),
     }

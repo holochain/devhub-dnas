@@ -182,11 +182,11 @@ function basic_tests () {
 	    const dna_manifest		= dna_package.dna_entry.manifest;
 
 	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
-		delete zome_manifest.wasm_hrl;
+		delete zome_manifest.zome_hrl;
 		delete zome_manifest.dependencies;
 
 		const compressed_bytes	= new Uint8Array(
-		    dna_package.wasm_packages[ zome_manifest.name ]
+		    dna_package.zome_packages[ zome_manifest.name ]
 		);
 
 		zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
@@ -195,10 +195,10 @@ function basic_tests () {
 	    }
 
 	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
-		delete zome_manifest.wasm_hrl;
+		delete zome_manifest.zome_hrl;
 
 		const compressed_bytes	= new Uint8Array(
-		    dna_package.wasm_packages[ zome_manifest.name ]
+		    dna_package.zome_packages[ zome_manifest.name ]
 		);
 
 		zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(

@@ -99,7 +99,7 @@ pub struct CoordinatorManifest {
 pub struct IntegrityZomeManifest {
     pub name: ZomeName,
     pub hash: Option<WasmHashB64>,
-    pub wasm_hrl: HRL,
+    pub zome_hrl: HRL,
     #[serde(default)]
     pub dylib: Option<PathBuf>,
 }
@@ -109,7 +109,7 @@ pub struct IntegrityZomeManifest {
 pub struct CoordinatorZomeManifest {
     pub name: ZomeName,
     pub hash: Option<WasmHashB64>,
-    pub wasm_hrl: HRL,
+    pub zome_hrl: HRL,
     pub dependencies: Option<Vec<ZomeDependency>>,
     #[serde(default)]
     pub dylib: Option<PathBuf>,
