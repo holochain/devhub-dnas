@@ -116,6 +116,13 @@ function basic_tests () {
 	expect( wasm			).to.have.any.keys( "mere_memory_addr" );
     });
 
+    it("should get wasm package", async function () {
+	const wasm_pack			= await zomehub_csr.get_wasm_package( wasm1_addr );
+	log.normal("%s", json.debug(wasm_pack) );
+
+	expect( wasm_pack		).to.have.any.keys( "bytes" );
+    });
+
     it("should get all wasm entries for agent", async function () {
 	const wasm_entries		= await zomehub_csr.get_wasm_entries_for_agent();
 	log.trace("%s", json.debug(wasm_entries) );

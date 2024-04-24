@@ -22,6 +22,7 @@ pub struct DnaEntry {
     pub dna_token: DnaToken,
     pub integrities_token: IntegritiesToken,
     pub coordinators_token: CoordinatorsToken,
+    pub claimed_file_size: u64,
 }
 
 impl DnaEntry {
@@ -31,24 +32,5 @@ impl DnaEntry {
 
     pub fn calculate_integrity_hash(&self) -> ExternResult<Vec<u8>> {
         self.manifest.integrity_hash()
-    }
-}
-
-impl TryFrom<DnaManifestV1> for DnaEntry {
-    type Error = WasmError;
-
-    fn try_from(manifest: DnaManifestV1) -> ExternResult<Self> {
-        let dna_token = manifest.dna_token()?;
-        let integrities_token = manifest.integrities_token()?;
-        let coordinators_token = manifest.coordinators_token()?;
-
-        Ok(
-            Self {
-                manifest,
-                dna_token,
-                integrities_token,
-                coordinators_token,
-            }
-        )
     }
 }

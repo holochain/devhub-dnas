@@ -2,8 +2,15 @@ pub use dnahub_types;
 pub use devhub_sdk;
 pub use devhub_sdk::*;
 
+use std::collections::BTreeMap;
 use hdk::prelude::*;
+use hdk_extensions::{
+    must_get,
+};
 use serde_bytes::*;
+use zomehub_sdk::{
+    WasmPackage,
+};
 use dnahub_types::{
     DnaEntry,
     DnaToken,
@@ -39,6 +46,7 @@ pub struct DnaEntryInput {
     pub dna_token: DnaTokenInput,
     pub integrities_token: IntegritiesTokenInput,
     pub coordinators_token: CoordinatorsTokenInput,
+    pub claimed_file_size: u64,
 }
 
 impl From<DnaEntryInput> for DnaEntry {
@@ -52,6 +60,7 @@ impl From<DnaEntryInput> for DnaEntry {
             coordinators_token: dna_entry_input.coordinators_token.into_iter()
                 .map( |(zome_name, bytes_input)| (zome_name, bytes_input.to_vec()) )
                 .collect(),
+            claimed_file_size: dna_entry_input.claimed_file_size,
         }
     }
 }
@@ -60,12 +69,71 @@ impl From<DnaEntryInput> for DnaEntry {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateDnaInput {
     pub manifest: DnaManifestV1,
+    pub claimed_file_size: u64,
 }
 
 impl TryFrom<CreateDnaInput> for DnaEntry {
     type Error = WasmError;
 
     fn try_from(create_dna_input: CreateDnaInput) -> ExternResult<Self> {
-        Self::try_from( create_dna_input.manifest )
+        let dna_token = create_dna_input.manifest.dna_token()?;
+        let integrities_token = create_dna_input.manifest.integrities_token()?;
+        let coordinators_token = create_dna_input.manifest.coordinators_token()?;
+
+        Ok(
+            Self {
+                manifest: create_dna_input.manifest,
+                dna_token,
+                integrities_token,
+                coordinators_token,
+                claimed_file_size: create_dna_input.claimed_file_size,
+            }
+        )
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DnaPackage {
+    pub dna_entry: DnaEntry,
+    pub wasm_packages: BTreeMap<ZomeName, Vec<u8>>,
+}
+
+impl TryInto<DnaPackage> for EntryHash {
+    type Error = WasmError;
+    fn try_into(self) -> ExternResult<DnaPackage> {
+        let dna_entry : DnaEntry = must_get( &self )?.try_into()?;
+        let mut wasm_packages = BTreeMap::new();
+
+        for zome_manifest in dna_entry.manifest.integrity.zomes.iter() {
+            let wasm_package : WasmPackage = call_role(
+                "zomehub",
+                "zomehub_csr",
+                "get_wasm_package",
+                zome_manifest.wasm_hrl.target.clone(),
+                (),
+            )?;
+
+            wasm_packages.insert( zome_manifest.name.clone(), wasm_package.bytes );
+        }
+
+        for zome_manifest in dna_entry.manifest.coordinator.zomes.iter() {
+            let wasm_package : WasmPackage = call_role(
+                "zomehub",
+                "zomehub_csr",
+                "get_wasm_package",
+                zome_manifest.wasm_hrl.target.clone(),
+                (),
+            )?;
+
+            wasm_packages.insert( zome_manifest.name.clone(), wasm_package.bytes );
+        }
+
+        Ok(
+            DnaPackage {
+                dna_entry,
+                wasm_packages,
+            }
+        )
     }
 }

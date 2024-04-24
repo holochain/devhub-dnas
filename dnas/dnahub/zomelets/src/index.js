@@ -59,6 +59,11 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	return new Dna( result, this );
     },
+    async get_dna_package ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+
+	return result;
+    },
     async get_dna_entries_for_agent ( input ) {
 	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
 
@@ -73,6 +78,7 @@ export const DnaHubCSRZomelet		= new Zomelet({
     // Virtual functions
     //
     async save_dna ( bytes ) {
+	const claimed_file_size		= bytes.length;
 	const bundle			= new Bundle( bytes, "dna" );
 
 	for ( let zome_manifest of bundle.manifest.integrity.zomes ) {
@@ -109,6 +115,7 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	return await this.functions.create_dna({
 	    "manifest": bundle.manifest,
+	    claimed_file_size,
 	});
     },
 

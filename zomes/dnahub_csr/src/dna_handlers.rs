@@ -29,6 +29,7 @@ use dnahub_sdk::{
     LinkBase,
     DnaEntryInput,
     CreateDnaInput,
+    DnaPackage,
 };
 
 
@@ -88,6 +89,12 @@ fn get_dna_entry(addr: AnyDhtHash) -> ExternResult<Entity<DnaEntry>> {
 	    content: content,
         }
     )
+}
+
+
+#[hdk_extern]
+fn get_dna_package(addr: EntryHash) -> ExternResult<DnaPackage> {
+    Ok( addr.try_into()? )
 }
 
 

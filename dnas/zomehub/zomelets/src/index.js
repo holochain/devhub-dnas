@@ -58,6 +58,11 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	return new Wasm( result, this );
     },
+    async get_wasm_package ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+
+	return result;
+    },
     async get_wasm_entries_for_agent ( input ) {
 	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
 

@@ -995,6 +995,7 @@ version = "0.2.0"
 dependencies = [
  "hc_devhub_sdk",
  "hc_dnahub_types",
+ "hc_zomehub_sdk",
  "serde",
 ]
 

@@ -1,4 +1,5 @@
 
+import crypto				from 'crypto';
 import { expect }			from 'chai';
 
 
@@ -70,6 +71,14 @@ export function webhappConfig ( happ_manifest ) {
     };
 }
 
+export function sha256 ( bytes ) {
+    const hash				= crypto.createHash("sha256");
+
+    hash.update( bytes );
+
+    return hash.digest("hex");
+}
+
 
 export default {
     expect_reject,
@@ -77,4 +86,5 @@ export default {
     dnaConfig,
     happConfig,
     webhappConfig,
+    sha256,
 };

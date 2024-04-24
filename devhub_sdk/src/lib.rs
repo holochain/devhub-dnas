@@ -8,6 +8,9 @@ pub use hdk_extensions;
 pub use hc_crud;
 pub use link_base::*;
 
+use hdi_extensions::{
+    guest_error,
+};
 use hdk::prelude::*;
 
 
@@ -93,4 +96,101 @@ where
 pub struct MoveLinkInput<T> {
     pub from: T,
     pub to: T,
+}
+
+
+pub fn unwrap_response(response: ZomeCallResponse) -> ExternResult<ExternIO> {
+    match response {
+        ZomeCallResponse::Ok(extern_io) => Ok( extern_io ),
+        ZomeCallResponse::Unauthorized(auth, cell_id, zome, func, agent) => Err(guest_error!(format!(
+            "Unauthorized: {:?} {:?}::{}->{}( ... ) [{}]",
+            auth, cell_id, zome, func, agent,
+        )))?,
+        ZomeCallResponse::NetworkError(msg) => Err(guest_error!(format!(
+            "NetworkError: {}", msg,
+        )))?,
+        ZomeCallResponse::CountersigningSession(msg) => Err(guest_error!(format!(
+            "CountersigningSession: {}", msg,
+        )))?,
+    }
+}
+
+
+#[derive(Clone, Debug, Default)]
+pub struct CallOptions {
+    pub cap_secret: Option<CapSecret>,
+}
+
+impl Into<CallOptions> for () {
+    fn into(self) -> CallOptions {
+        CallOptions::default()
+    }
+}
+
+pub fn call_zome<Z,F,I,O,T>(
+    zome_name: Z,
+    func_name: F,
+    payload: I,
+    options: O,
+) -> ExternResult<T>
+where
+    Z: Into<ZomeName>,
+    F: Into<FunctionName>,
+    I: Serialize + std::fmt::Debug,
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+    O: Into<CallOptions>,
+{
+    let call_opts : CallOptions = options.into();
+
+    let response = call(
+        CallTargetCell::Local,
+        zome_name.into(),
+        func_name.into(),
+        call_opts.cap_secret,
+        payload,
+    )?;
+
+    let extern_io = unwrap_response( response )?;
+
+    Ok(
+        extern_io.decode()
+            .map_err(|err| guest_error!(format!(
+                "{:?}", err,
+            )))?
+    )
+}
+
+pub fn call_role<R,Z,F,I,O,T>(
+    role_name: R,
+    zome_name: Z,
+    func_name: F,
+    payload: I,
+    options: O,
+) -> ExternResult<T>
+where
+    R: Into<String>,
+    Z: Into<ZomeName>,
+    F: Into<FunctionName>,
+    I: Serialize + std::fmt::Debug,
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+    O: Into<CallOptions>,
+{
+    let call_opts : CallOptions = options.into();
+
+    let response = call(
+        CallTargetCell::OtherRole(role_name.into()),
+        zome_name.into(),
+        func_name.into(),
+        call_opts.cap_secret,
+        payload,
+    )?;
+
+    let extern_io = unwrap_response( response )?;
+
+    Ok(
+        extern_io.decode()
+            .map_err(|err| guest_error!(format!(
+                "{:?}", err,
+            )))?
+    )
 }

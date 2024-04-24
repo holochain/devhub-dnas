@@ -24,6 +24,7 @@ use zomehub::{
 };
 use zomehub_sdk::{
     LinkBase,
+    WasmPackage,
 };
 
 
@@ -112,6 +113,12 @@ fn get_wasm_entry(addr: AnyDhtHash) -> ExternResult<Entity<WasmEntry>> {
 	    content: content,
         }
     )
+}
+
+
+#[hdk_extern]
+fn get_wasm_package(addr: EntryHash) -> ExternResult<WasmPackage> {
+    Ok( addr.try_into()? )
 }
 
 

@@ -64,6 +64,7 @@ export const DnaStruct = {
     "coordinators_token":	VecType([
 	String, Bytes,
     ]),
+    "claimed_file_size":	Number,
 };
 
 export function DnaEntry ( entry ) {

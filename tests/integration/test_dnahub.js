@@ -32,6 +32,7 @@ import {
     expect_reject,
     linearSuite,
     dnaConfig,
+    sha256,
 }					from '../utils.js';
 
 
@@ -139,6 +140,56 @@ function basic_tests () {
 	const bundle			= new Bundle( bundle_bytes, "dna" );
 
 	log.normal("DNA bundle: %s", json.debug(bundle) );
+    });
+
+    it("should get DNA package", async function () {
+	const dna_package		= await dnahub_csr.get_dna_package( dna1.$addr );
+
+	log.normal("DNA package: %s", json.debug(dna_package) );
+
+	const manifest			= dna_package.dna_entry.manifest;
+
+	for ( let zome_manifest of manifest.integrity.zomes ) {
+	    delete zome_manifest.wasm_hrl;
+	    delete zome_manifest.dependencies;
+
+	    const compressed_bytes	= new Uint8Array(
+		dna_package.wasm_packages[ zome_manifest.name ]
+	    );
+
+	    zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
+		compressed_bytes
+	    );
+	}
+
+	for ( let zome_manifest of manifest.coordinator.zomes ) {
+	    delete zome_manifest.wasm_hrl;
+
+	    const compressed_bytes	= new Uint8Array(
+		dna_package.wasm_packages[ zome_manifest.name ]
+	    );
+
+	    zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
+		compressed_bytes
+	    );
+	}
+
+	const bundle1			= Bundle.createDna( TEST_DNA_CONFIG );
+	const bundle1_bytes		= bundle1.toBytes();
+	const bundle2			= Bundle.createDna( manifest );
+	const bundle2_bytes		= bundle2.toBytes();
+
+	log.normal("Bundle original: %s", json.debug(bundle1) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2) );
+
+	log.normal("Bundle original: %s", json.debug(bundle1_bytes) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2_bytes) );
+
+	log.normal(
+	    "Bundle hashes: %s === %s",
+	    sha256(bundle1_bytes),
+	    sha256(bundle2_bytes),
+	);
     });
 
     it("should upload the same DNA bundle", async function () {
