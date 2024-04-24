@@ -35,6 +35,7 @@ import {
     dnaConfig,
     happConfig,
     webhappConfig,
+    sha256,
 }					from '../utils.js';
 import apps_suite			from './apphub/apps_suite.js';
 import webapps_suite			from './apphub/webapps_suite.js';
@@ -164,6 +165,68 @@ function basic_tests () {
 	const bundle			= new Bundle( bundle_bytes, "happ" );
 
 	log.normal("hApp bundle: %s", json.debug(bundle) );
+    });
+
+    it("should get hApp package", async function () {
+	const app_package		= await apphub_csr.get_app_package( app1.$addr );
+
+	log.normal("App package: %s", json.debug(app_package) );
+
+	const manifest			= app_package.app_entry.manifest;
+
+	for ( let role_manifest of manifest.roles ) {
+	    delete role_manifest.dna.dna_hrl;
+
+	    const dna_package		= app_package.dna_packages[ role_manifest.name ];
+	    const dna_manifest		= dna_package.dna_entry.manifest;
+
+	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
+		delete zome_manifest.wasm_hrl;
+		delete zome_manifest.dependencies;
+
+		const compressed_bytes	= new Uint8Array(
+		    dna_package.wasm_packages[ zome_manifest.name ]
+		);
+
+		zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
+		    compressed_bytes
+		);
+	    }
+
+	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
+		delete zome_manifest.wasm_hrl;
+
+		const compressed_bytes	= new Uint8Array(
+		    dna_package.wasm_packages[ zome_manifest.name ]
+		);
+
+		zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
+		    compressed_bytes
+		);
+	    }
+
+	    const dna_bundle		= Bundle.createDna( dna_manifest );
+	    const dna_bundle_bytes	= dna_bundle.toBytes();
+
+	    role_manifest.dna.bytes	= dna_bundle_bytes;
+	}
+
+	const bundle1			= Bundle.createHapp( TEST_HAPP_CONFIG );
+	const bundle1_bytes		= bundle1.toBytes();
+	const bundle2			= Bundle.createHapp( manifest );
+	const bundle2_bytes		= bundle2.toBytes();
+
+	log.normal("Bundle original: %s", json.debug(bundle1) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2) );
+
+	log.normal("Bundle original: %s", json.debug(bundle1_bytes) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2_bytes) );
+
+	log.normal(
+	    "Bundle hashes: %s === %s",
+	    sha256(bundle1_bytes),
+	    sha256(bundle2_bytes),
+	);
     });
 
     it("should upload the same App bundle", async function () {

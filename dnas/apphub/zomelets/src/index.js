@@ -73,6 +73,11 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new App( result, this );
     },
+    async get_app_package ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+
+	return result;
+    },
     async get_app_entries_for_agent ( input ) {
 	const agent_id			= input ? new AgentPubKey( input ) : input;
 	const entries			= await this.call( agent_id );

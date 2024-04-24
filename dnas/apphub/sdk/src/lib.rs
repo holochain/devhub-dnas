@@ -32,6 +32,7 @@ use apphub_types::{
 };
 use dnahub_sdk::{
     DnaTokenInput,
+    DnaPackage,
 };
 use hc_crud::{
     Entity, EntityId,
@@ -309,6 +310,40 @@ impl TryFrom<CreateWebAppPackageVersionInput> for WebAppPackageVersionEntry {
                     .unwrap_or( agent_id()?.into() ),
                 source_code_revision_uri: input.source_code_revision_uri,
                 metadata: input.metadata,
+            }
+        )
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AppPackage {
+    pub app_entry: AppEntry,
+    pub dna_packages: BTreeMap<RoleName, DnaPackage>,
+}
+
+impl TryInto<AppPackage> for EntryHash {
+    type Error = WasmError;
+    fn try_into(self) -> ExternResult<AppPackage> {
+        let app_entry : AppEntry = must_get( &self )?.try_into()?;
+        let mut dna_packages = BTreeMap::new();
+
+        for role_manifest in app_entry.manifest.roles.iter() {
+            let dna_package : DnaPackage = call_cell(
+                role_manifest.dna.dna_hrl.dna.clone(),
+                "dnahub_csr",
+                "get_dna_package",
+                role_manifest.dna.dna_hrl.target.clone(),
+                (),
+            )?;
+
+            dna_packages.insert( role_manifest.name.clone(), dna_package );
+        }
+
+        Ok(
+            AppPackage {
+                app_entry,
+                dna_packages,
             }
         )
     }

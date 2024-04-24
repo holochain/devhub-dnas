@@ -93,10 +93,12 @@ impl TryFrom<CreateDnaInput> for DnaEntry {
 }
 
 
+pub type ZomePackageMap = BTreeMap<ZomeName, Vec<u8>>;
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DnaPackage {
     pub dna_entry: DnaEntry,
-    pub wasm_packages: BTreeMap<ZomeName, Vec<u8>>,
+    pub wasm_packages: ZomePackageMap,
 }
 
 impl TryInto<DnaPackage> for EntryHash {
