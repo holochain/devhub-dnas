@@ -38,6 +38,7 @@ import {
     sha256,
 }					from '../utils.js';
 import apps_suite			from './apphub/apps_suite.js';
+import ui_suite				from './apphub/ui_suite.js';
 import webapps_suite			from './apphub/webapps_suite.js';
 import webapp_packages_suite		from './apphub/webapp_packages_suite.js';
 import webapp_package_versions_suite	from './apphub/webapp_package_versions_suite.js';
@@ -239,6 +240,8 @@ function basic_tests () {
     });
 
     it("should upload WebApp bundle", async function () {
+	this.timeout( 5_000 );
+
 	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
@@ -261,6 +264,8 @@ function basic_tests () {
     });
 
     it("should upload the same WebApp bundle", async function () {
+	this.timeout( 5_000 );
+
 	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
@@ -283,6 +288,7 @@ function basic_tests () {
     }
 
     linearSuite("Apps", apps_suite, () => common_args_plus() );
+    linearSuite("UIs", ui_suite, () => common_args_plus() );
     linearSuite("WebApps", webapps_suite, () => common_args_plus() );
 
     linearSuite("WebApp Packages", webapp_packages_suite, () => common_args_plus({

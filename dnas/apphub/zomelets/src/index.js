@@ -108,6 +108,16 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new Ui( result, this );
     },
+    async get_ui_package ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+
+	return result;
+    },
+    async get_app_package ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+
+	return result;
+    },
     async get_ui ( input ) {
 	const ui_entry			= await this.functions.get_ui_entry( input );
 

@@ -57,6 +57,13 @@ export default function ( args_fn ) {
 	expect( uis			).to.have.length( 1 );
     });
 
+    it("should get UI package", async function () {
+	const ui_pack			= await apphub_csr.get_ui_package( ui1.$addr );
+	log.normal("%s", json.debug(ui_pack) );
+
+	expect( ui_pack		).to.have.any.keys( "bytes" );
+    });
+
     linearSuite("Errors", function () {
 
 	it("should fail to create wasm entry because of wrong file size", async function () {

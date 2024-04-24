@@ -928,6 +928,7 @@ version = "0.2.0"
 dependencies = [
  "hc_devhub_sdk",
  "hc_dnahub_types",
+ "hc_zomehub_sdk",
  "serde",
 ]
 
@@ -940,6 +941,24 @@ dependencies = [
  "rmp-serde 1.1.2",
  "serde",
  "sha2",
+ "whi_hdi_extensions",
+]
+
+[[package]]
+name = "hc_zomehub_sdk"
+version = "0.1.0"
+dependencies = [
+ "hc_devhub_sdk",
+ "hc_zomehub_types",
+ "serde",
+]
+
+[[package]]
+name = "hc_zomehub_types"
+version = "0.1.0"
+dependencies = [
+ "mere_memory_types",
+ "serde",
  "whi_hdi_extensions",
 ]
 
@@ -1446,6 +1465,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a634b1c61a95585bd15607c6ab0c4e5b226e695ff2800ba0cdccddf208c406c"
 dependencies = [
  "autocfg 1.1.0",
+]
+
+[[package]]
+name = "mere_memory_types"
+version = "0.93.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd4ad39bdd9669a44efbdd4cecb8ebb9c2c6c608f1e3ca96183faf060d81d8eb"
+dependencies = [
+ "hdi",
+ "serde",
 ]
 
 [[package]]

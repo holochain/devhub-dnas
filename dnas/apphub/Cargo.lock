@@ -952,6 +952,7 @@ version = "0.2.0"
 dependencies = [
  "hc_devhub_sdk",
  "hc_dnahub_types",
+ "hc_zomehub_sdk",
  "serde",
 ]
 
@@ -964,6 +965,24 @@ dependencies = [
  "rmp-serde 1.1.2",
  "serde",
  "sha2",
+ "whi_hdi_extensions",
+]
+
+[[package]]
+name = "hc_zomehub_sdk"
+version = "0.1.0"
+dependencies = [
+ "hc_devhub_sdk",
+ "hc_zomehub_types",
+ "serde",
+]
+
+[[package]]
+name = "hc_zomehub_types"
+version = "0.1.0"
+dependencies = [
+ "mere_memory_types",
+ "serde",
  "whi_hdi_extensions",
 ]
 

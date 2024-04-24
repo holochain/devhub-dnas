@@ -77,9 +77,9 @@ fn get_app_package(addr: EntryHash) -> ExternResult<AppPackage> {
 
 
 #[hdk_extern]
-pub fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
-    ExternResult<Vec<Entity<AppEntry>>>
-{
+pub fn get_app_entries_for_agent(
+    maybe_agent_id: Option<AgentPubKey>
+) -> ExternResult<Vec<Entity<AppEntry>>> {
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,

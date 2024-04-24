@@ -29,6 +29,12 @@ use apphub_types::{
 
     WebAppPackageEntry,
     WebAppPackageVersionEntry,
+
+    UiEntry,
+    mere_memory_types,
+};
+use mere_memory_types::{
+    MemoryEntry,
 };
 use dnahub_sdk::{
     DnaTokenInput,
@@ -344,6 +350,40 @@ impl TryInto<AppPackage> for EntryHash {
             AppPackage {
                 app_entry,
                 dna_packages,
+            }
+        )
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MemoryWithBytes(
+    MemoryEntry,
+    Vec<u8>
+);
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UiPackage {
+    pub ui_entry: UiEntry,
+    pub bytes: Vec<u8>,
+}
+
+impl TryInto<UiPackage> for EntryHash {
+    type Error = WasmError;
+    fn try_into(self) -> ExternResult<UiPackage> {
+        let ui_entry : UiEntry = must_get( &self )?.try_into()?;
+
+        let memory_with_bytes : MemoryWithBytes = call_zome(
+            "mere_memory_api",
+            "get_memory_with_bytes",
+            ui_entry.mere_memory_addr.clone(),
+            (),
+        )?;
+
+        Ok(
+            UiPackage {
+                ui_entry: ui_entry,
+                bytes: memory_with_bytes.1.to_vec(),
             }
         )
     }
