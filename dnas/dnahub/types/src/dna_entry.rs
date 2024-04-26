@@ -4,12 +4,20 @@ pub use crate::{
     DnaToken,
     IntegritiesToken,
     CoordinatorsToken,
+    AssetHashes,
     holochain_types::{
         DnaManifestV1,
     },
 };
 
 use hdi::prelude::*;
+
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+pub struct DnaAssetHashes {
+    pub integrity: AssetHashes,
+    pub coordinator: AssetHashes,
+}
 
 
 //
@@ -23,6 +31,7 @@ pub struct DnaEntry {
     pub integrities_token: IntegritiesToken,
     pub coordinators_token: CoordinatorsToken,
     pub claimed_file_size: u64,
+    pub asset_hashes: DnaAssetHashes,
 }
 
 impl DnaEntry {

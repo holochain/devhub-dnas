@@ -24,7 +24,7 @@ use zomehub::{
 };
 use zomehub_sdk::{
     LinkBase,
-    ZomePackage,
+    ZomeAsset,
 };
 
 
@@ -117,7 +117,7 @@ fn get_zome_entry(addr: AnyDhtHash) -> ExternResult<Entity<ZomeEntry>> {
 
 
 #[hdk_extern]
-fn get_zome_package(addr: EntryHash) -> ExternResult<ZomePackage> {
+fn get_zome_asset(addr: EntryHash) -> ExternResult<ZomeAsset> {
     Ok( addr.try_into()? )
 }
 

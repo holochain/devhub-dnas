@@ -9,8 +9,8 @@ import {
 }					from '@spartan-hc/zomelets'; // approx. 7kb
 import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets'; // approx. 33kb
 import {
-    ZomeEntry,
     Zome,
+    ZomeAsset,
 }					from './types.js';
 
 
@@ -58,10 +58,10 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	return new Zome( result, this );
     },
-    async get_zome_package ( input ) {
+    async get_zome_asset ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
 
-	return result;
+	return ZomeAsset( result );
     },
     async get_zome_entries_for_agent ( input ) {
 	const entries			= await this.call( input ? new AgentPubKey( input ) : input );

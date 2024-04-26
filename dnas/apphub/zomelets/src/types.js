@@ -8,13 +8,14 @@ import {
 }					from '@spartan-hc/holo-hash';
 import {
     DnaTokenStruct,
+    DnaAssetStruct,
 }					from '@holochain/dnahub-zomelets';
 import {
     ScopedEntity,
     intoStruct,
     AnyType, OptionType,
     VecType, MapType,
-}					from '@spartan-hc/caps-entities';
+}					from '@spartan-hc/entities';
 
 
 
@@ -262,6 +263,26 @@ export class WebAppPackageVersion extends ScopedEntity {
 }
 
 
+export const AppAssetStruct = {
+    "app_entry":		AppStruct,
+    "dna_assets":		MapType( String, DnaAssetStruct ),
+};
+
+export function AppAsset ( entry ) {
+    return intoStruct( entry, AppAssetStruct );
+}
+
+
+export const UiAssetStruct = {
+    "ui_entry":			UiStruct,
+    "bytes":			Bytes,
+};
+
+export function UiAsset ( entry ) {
+    return intoStruct( entry, UiAssetStruct );
+}
+
+
 
 export default {
     LinkStruct,
@@ -280,4 +301,10 @@ export default {
     WebAppPackageVersionStruct,
     WebAppPackageVersionEntry,
     WebAppPackageVersion,
+
+    AppAssetStruct,
+    AppAsset,
+
+    UiAssetStruct,
+    UiAsset,
 };

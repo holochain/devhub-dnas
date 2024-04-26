@@ -20,6 +20,7 @@ import {
 import {
     DnaEntry,
     Dna,
+    DnaAsset,
 }					from './types.js';
 
 export const DnaHubCSRZomelet		= new Zomelet({
@@ -59,10 +60,50 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	return new Dna( result, this );
     },
-    async get_dna_package ( input ) {
+    async get_dna_asset ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
+	const dna_asset			= DnaAsset( result );
+	const manifest			= dna_asset.dna_entry.manifest;
 
-	return result;
+	for ( let zome_manifest of manifest.integrity.zomes ) {
+	    delete zome_manifest.zome_hrl;
+
+	    const compressed_bytes	= new Uint8Array(
+		dna_asset.zome_assets[ zome_manifest.name ].bytes
+	    );
+
+	    zome_manifest.bytes		= await this.cells.zomehub.mere_memory_api.gzip_uncompress(
+		compressed_bytes
+	    );
+
+	    // Verify asset hash
+	    const hash			= await this.cells.zomehub.mere_memory_api.calculate_hash( zome_manifest.bytes );
+	    const expected_hash		= dna_asset.dna_entry.asset_hashes.integrity[ zome_manifest.name ];
+
+	    if ( hash !== expected_hash )
+		throw new Error(`Asset hash for integrity zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	}
+
+	for ( let zome_manifest of manifest.coordinator.zomes ) {
+	    delete zome_manifest.zome_hrl;
+
+	    const compressed_bytes	= new Uint8Array(
+		dna_asset.zome_assets[ zome_manifest.name ].bytes
+	    );
+
+	    zome_manifest.bytes		= await this.cells.zomehub.mere_memory_api.gzip_uncompress(
+		compressed_bytes
+	    );
+
+	    // Verify asset hash
+	    const hash			= await this.cells.zomehub.mere_memory_api.calculate_hash( zome_manifest.bytes );
+	    const expected_hash		= dna_asset.dna_entry.asset_hashes.coordinator[ zome_manifest.name ];
+
+	    if ( hash !== expected_hash )
+		throw new Error(`Asset hash for coordinator zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	}
+
+	return dna_asset;
     },
     async get_dna_entries_for_agent ( input ) {
 	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
@@ -79,6 +120,10 @@ export const DnaHubCSRZomelet		= new Zomelet({
     //
     async save_dna ( bytes ) {
 	const claimed_file_size		= bytes.length;
+	const dna_asset_hashes		= {
+	    "integrity": {},
+	    "coordinator": {},
+	};
 	const bundle			= new Bundle( bytes, "dna" );
 
 	for ( let zome_manifest of bundle.manifest.integrity.zomes ) {
@@ -93,6 +138,8 @@ export const DnaHubCSRZomelet		= new Zomelet({
 		"dna": this.zome.cells.zomehub.dna,
 		"target": zome.$addr,
 	    };
+
+	    dna_asset_hashes.integrity[ zome_manifest.name ] = zome.hash;
 
 	    delete zome_manifest.bundled;
 	}
@@ -110,12 +157,15 @@ export const DnaHubCSRZomelet		= new Zomelet({
 		"target": zome.$addr,
 	    };
 
+	    dna_asset_hashes.coordinator[ zome_manifest.name ] = zome.hash;
+
 	    delete zome_manifest.bundled;
 	}
 
 	return await this.functions.create_dna({
 	    "manifest": bundle.manifest,
 	    claimed_file_size,
+	    "asset_hashes": dna_asset_hashes,
 	});
     },
 

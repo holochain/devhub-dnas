@@ -26,7 +26,7 @@ use apphub_sdk::{
     LinkBase,
     AppEntryInput,
     CreateAppInput,
-    AppPackage,
+    AppAsset,
 };
 
 
@@ -71,7 +71,7 @@ pub fn get_app_entry(addr: AnyDhtHash) -> ExternResult<Entity<AppEntry>> {
 
 
 #[hdk_extern]
-fn get_app_package(addr: EntryHash) -> ExternResult<AppPackage> {
+fn get_app_asset(addr: EntryHash) -> ExternResult<AppAsset> {
     Ok( addr.try_into()? )
 }
 

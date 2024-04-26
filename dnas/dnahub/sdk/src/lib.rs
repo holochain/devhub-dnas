@@ -9,12 +9,13 @@ use hdk_extensions::{
 };
 use serde_bytes::*;
 use zomehub_sdk::{
-    ZomePackage,
+    ZomeAsset,
 };
 use dnahub_types::{
     DnaEntry,
     DnaToken,
     DnaManifestV1,
+    DnaAssetHashes,
 };
 
 
@@ -47,6 +48,7 @@ pub struct DnaEntryInput {
     pub integrities_token: IntegritiesTokenInput,
     pub coordinators_token: CoordinatorsTokenInput,
     pub claimed_file_size: u64,
+    pub asset_hashes: DnaAssetHashes,
 }
 
 impl From<DnaEntryInput> for DnaEntry {
@@ -61,6 +63,7 @@ impl From<DnaEntryInput> for DnaEntry {
                 .map( |(zome_name, bytes_input)| (zome_name, bytes_input.to_vec()) )
                 .collect(),
             claimed_file_size: dna_entry_input.claimed_file_size,
+            asset_hashes: dna_entry_input.asset_hashes,
         }
     }
 }
@@ -70,6 +73,7 @@ impl From<DnaEntryInput> for DnaEntry {
 pub struct CreateDnaInput {
     pub manifest: DnaManifestV1,
     pub claimed_file_size: u64,
+    pub asset_hashes: DnaAssetHashes,
 }
 
 impl TryFrom<CreateDnaInput> for DnaEntry {
@@ -87,54 +91,55 @@ impl TryFrom<CreateDnaInput> for DnaEntry {
                 integrities_token,
                 coordinators_token,
                 claimed_file_size: create_dna_input.claimed_file_size,
+                asset_hashes: create_dna_input.asset_hashes,
             }
         )
     }
 }
 
 
-pub type ZomePackageMap = BTreeMap<ZomeName, Vec<u8>>;
+pub type ZomeAssetMap = BTreeMap<ZomeName, ZomeAsset>;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DnaPackage {
+pub struct DnaAsset {
     pub dna_entry: DnaEntry,
-    pub zome_packages: ZomePackageMap,
+    pub zome_assets: ZomeAssetMap,
 }
 
-impl TryInto<DnaPackage> for EntryHash {
+impl TryInto<DnaAsset> for EntryHash {
     type Error = WasmError;
-    fn try_into(self) -> ExternResult<DnaPackage> {
+    fn try_into(self) -> ExternResult<DnaAsset> {
         let dna_entry : DnaEntry = must_get( &self )?.try_into()?;
-        let mut zome_packages = BTreeMap::new();
+        let mut zome_assets = BTreeMap::new();
 
         for zome_manifest in dna_entry.manifest.integrity.zomes.iter() {
-            let zome_package : ZomePackage = call_cell(
+            let zome_asset : ZomeAsset = call_cell(
                 zome_manifest.zome_hrl.dna.clone(),
                 "zomehub_csr",
-                "get_zome_package",
+                "get_zome_asset",
                 zome_manifest.zome_hrl.target.clone(),
                 (),
             )?;
 
-            zome_packages.insert( zome_manifest.name.clone(), zome_package.bytes );
+            zome_assets.insert( zome_manifest.name.clone(), zome_asset );
         }
 
         for zome_manifest in dna_entry.manifest.coordinator.zomes.iter() {
-            let zome_package : ZomePackage = call_cell(
+            let zome_asset : ZomeAsset = call_cell(
                 zome_manifest.zome_hrl.dna.clone(),
                 "zomehub_csr",
-                "get_zome_package",
+                "get_zome_asset",
                 zome_manifest.zome_hrl.target.clone(),
                 (),
             )?;
 
-            zome_packages.insert( zome_manifest.name.clone(), zome_package.bytes );
+            zome_assets.insert( zome_manifest.name.clone(), zome_asset );
         }
 
         Ok(
-            DnaPackage {
+            DnaAsset {
                 dna_entry,
-                zome_packages,
+                zome_assets,
             }
         )
     }

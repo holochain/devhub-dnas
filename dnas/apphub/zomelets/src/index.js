@@ -9,7 +9,6 @@ import {
     CellZomelets,
 }					from '@spartan-hc/zomelets'; // approx. 7kb
 import { Bundle }			from '@spartan-hc/bundles'; // approx. 39kb
-import { Entity }			from '@spartan-hc/caps-entities'; // approx. 19kb
 import { // Relative import is causing duplicates (holo-hash, zomelets, bundles)
     DnaHubCSRZomelet,
     ZomeHubCSRZomelet,
@@ -31,6 +30,8 @@ import {
     WebApp,
     WebAppPackage,
     WebAppPackageVersion,
+    AppAsset,
+    UiAsset,
 }					from './types.js';
 
 
@@ -73,10 +74,62 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new App( result, this );
     },
-    async get_app_package ( input ) {
+    async get_app_asset ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
+	const app_asset			= AppAsset( result );
+	const manifest			= app_asset.app_entry.manifest;
 
-	return result;
+	for ( let role_manifest of manifest.roles ) {
+	    delete role_manifest.dna.dna_hrl;
+
+	    const dna_asset		= app_asset.dna_assets[ role_manifest.name ];
+	    const dna_manifest		= dna_asset.dna_entry.manifest;
+
+	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
+		delete zome_manifest.zome_hrl;
+
+		const compressed_bytes	= new Uint8Array(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+
+		zome_manifest.bytes		= await this.zomes.mere_memory_api.gzip_uncompress(
+		    compressed_bytes
+		);
+
+		// Verify asset hash
+		const hash			= await this.zomes.mere_memory_api.calculate_hash( zome_manifest.bytes );
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.integrity[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for integrity zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+
+	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
+		delete zome_manifest.zome_hrl;
+
+		const compressed_bytes	= new Uint8Array(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+
+		zome_manifest.bytes		= await this.zomes.mere_memory_api.gzip_uncompress(
+		    compressed_bytes
+		);
+
+		// Verify asset hash
+		const hash			= await this.zomes.mere_memory_api.calculate_hash( zome_manifest.bytes );
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.coordinator[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for coordinator zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+
+	    const dna_bundle		= Bundle.createDna( dna_manifest );
+	    const dna_bundle_bytes	= dna_bundle.toBytes();
+
+	    role_manifest.dna.bytes	= dna_bundle_bytes;
+	}
+
+	return app_asset;
     },
     async get_app_entries_for_agent ( input ) {
 	const agent_id			= input ? new AgentPubKey( input ) : input;
@@ -108,15 +161,10 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new Ui( result, this );
     },
-    async get_ui_package ( input ) {
+    async get_ui_asset ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
 
-	return result;
-    },
-    async get_app_package ( input ) {
-	const result			= await this.call( new EntryHash( input ) );
-
-	return result;
+	return UiAsset( result );
     },
     async get_ui ( input ) {
 	const ui_entry			= await this.functions.get_ui_entry( input );

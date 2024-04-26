@@ -24,7 +24,7 @@ use apphub::{
 };
 use apphub_sdk::{
     LinkBase,
-    UiPackage,
+    UiAsset,
 };
 
 
@@ -76,7 +76,7 @@ pub fn get_ui_entry(addr: AnyDhtHash) -> ExternResult<Entity<UiEntry>> {
 
 
 #[hdk_extern]
-fn get_ui_package(addr: EntryHash) -> ExternResult<UiPackage> {
+fn get_ui_asset(addr: EntryHash) -> ExternResult<UiAsset> {
     Ok( addr.try_into()? )
 }
 

@@ -38,7 +38,7 @@ use mere_memory_types::{
 };
 use dnahub_sdk::{
     DnaTokenInput,
-    DnaPackage,
+    DnaAsset,
 };
 use hc_crud::{
     Entity, EntityId,
@@ -326,33 +326,33 @@ impl TryFrom<CreateWebAppPackageVersionInput> for WebAppPackageVersionEntry {
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AppPackage {
+pub struct AppAsset {
     pub app_entry: AppEntry,
-    pub dna_packages: BTreeMap<RoleName, DnaPackage>,
+    pub dna_assets: BTreeMap<RoleName, DnaAsset>,
 }
 
-impl TryInto<AppPackage> for EntryHash {
+impl TryInto<AppAsset> for EntryHash {
     type Error = WasmError;
-    fn try_into(self) -> ExternResult<AppPackage> {
+    fn try_into(self) -> ExternResult<AppAsset> {
         let app_entry : AppEntry = must_get( &self )?.try_into()?;
-        let mut dna_packages = BTreeMap::new();
+        let mut dna_assets = BTreeMap::new();
 
         for role_manifest in app_entry.manifest.roles.iter() {
-            let dna_package : DnaPackage = call_cell(
+            let dna_asset : DnaAsset = call_cell(
                 role_manifest.dna.dna_hrl.dna.clone(),
                 "dnahub_csr",
-                "get_dna_package",
+                "get_dna_asset",
                 role_manifest.dna.dna_hrl.target.clone(),
                 (),
             )?;
 
-            dna_packages.insert( role_manifest.name.clone(), dna_package );
+            dna_assets.insert( role_manifest.name.clone(), dna_asset );
         }
 
         Ok(
-            AppPackage {
+            AppAsset {
                 app_entry,
-                dna_packages,
+                dna_assets,
             }
         )
     }
@@ -366,14 +366,14 @@ pub struct MemoryWithBytes(
 );
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct UiPackage {
+pub struct UiAsset {
     pub ui_entry: UiEntry,
     pub bytes: Vec<u8>,
 }
 
-impl TryInto<UiPackage> for EntryHash {
+impl TryInto<UiAsset> for EntryHash {
     type Error = WasmError;
-    fn try_into(self) -> ExternResult<UiPackage> {
+    fn try_into(self) -> ExternResult<UiAsset> {
         let ui_entry : UiEntry = must_get( &self )?.try_into()?;
 
         let memory_with_bytes : MemoryWithBytes = call_zome(
@@ -384,7 +384,7 @@ impl TryInto<UiPackage> for EntryHash {
         )?;
 
         Ok(
-            UiPackage {
+            UiAsset {
                 ui_entry: ui_entry,
                 bytes: memory_with_bytes.1.to_vec(),
             }

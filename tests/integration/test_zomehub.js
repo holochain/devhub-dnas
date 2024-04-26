@@ -116,11 +116,11 @@ function basic_tests () {
 	expect( zome			).to.have.any.keys( "mere_memory_addr" );
     });
 
-    it("should get zome package", async function () {
-	const zome_pack			= await zomehub_csr.get_zome_package( zome1_addr );
-	log.normal("%s", json.debug(zome_pack) );
+    it("should get zome asset", async function () {
+	const zome_asset		= await zomehub_csr.get_zome_asset( zome1_addr );
+	log.normal("%s", json.debug(zome_asset) );
 
-	expect( zome_pack		).to.have.any.keys( "bytes" );
+	expect( zome_asset		).to.have.any.keys( "bytes" );
     });
 
     it("should get all zome entries for agent", async function () {
@@ -150,6 +150,7 @@ function basic_tests () {
 		    "zome_type": ZOME_TYPES.INTEGRITY,
 		    "mere_memory_addr": zome1.mere_memory_addr,
 		    "file_size": 0,
+		    "hash": "a1a142877da15f0a46bfd9ec9450954dd8363846a8397413e342c91aef842b32",
 		});
 	    }, "file size does not match memory address" );
 	});

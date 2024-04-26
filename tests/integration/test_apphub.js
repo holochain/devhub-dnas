@@ -168,53 +168,14 @@ function basic_tests () {
 	log.normal("hApp bundle: %s", json.debug(bundle) );
     });
 
-    it("should get hApp package", async function () {
-	const app_package		= await apphub_csr.get_app_package( app1.$addr );
+    it("should get app asset", async function () {
+	const app_asset			= await apphub_csr.get_app_asset( app1.$addr );
 
-	log.normal("App package: %s", json.debug(app_package) );
-
-	const manifest			= app_package.app_entry.manifest;
-
-	for ( let role_manifest of manifest.roles ) {
-	    delete role_manifest.dna.dna_hrl;
-
-	    const dna_package		= app_package.dna_packages[ role_manifest.name ];
-	    const dna_manifest		= dna_package.dna_entry.manifest;
-
-	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
-		delete zome_manifest.zome_hrl;
-		delete zome_manifest.dependencies;
-
-		const compressed_bytes	= new Uint8Array(
-		    dna_package.zome_packages[ zome_manifest.name ]
-		);
-
-		zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
-		    compressed_bytes
-		);
-	    }
-
-	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
-		delete zome_manifest.zome_hrl;
-
-		const compressed_bytes	= new Uint8Array(
-		    dna_package.zome_packages[ zome_manifest.name ]
-		);
-
-		zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
-		    compressed_bytes
-		);
-	    }
-
-	    const dna_bundle		= Bundle.createDna( dna_manifest );
-	    const dna_bundle_bytes	= dna_bundle.toBytes();
-
-	    role_manifest.dna.bytes	= dna_bundle_bytes;
-	}
+	log.normal("App bundle package: %s", json.debug(app_asset) );
 
 	const bundle1			= Bundle.createHapp( TEST_HAPP_CONFIG );
 	const bundle1_bytes		= bundle1.toBytes();
-	const bundle2			= Bundle.createHapp( manifest );
+	const bundle2			= Bundle.createHapp( app_asset.app_entry.manifest );
 	const bundle2_bytes		= bundle2.toBytes();
 
 	log.normal("Bundle original: %s", json.debug(bundle1) );

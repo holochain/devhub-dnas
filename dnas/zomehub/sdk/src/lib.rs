@@ -24,14 +24,14 @@ pub struct MemoryWithBytes(
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ZomePackage {
+pub struct ZomeAsset {
     pub zome_entry: ZomeEntry,
     pub bytes: Vec<u8>,
 }
 
-impl TryInto<ZomePackage> for EntryHash {
+impl TryInto<ZomeAsset> for EntryHash {
     type Error = WasmError;
-    fn try_into(self) -> ExternResult<ZomePackage> {
+    fn try_into(self) -> ExternResult<ZomeAsset> {
         let zome_entry : ZomeEntry = must_get( &self )?.try_into()?;
 
         let memory_with_bytes : MemoryWithBytes = call_zome(
@@ -42,7 +42,7 @@ impl TryInto<ZomePackage> for EntryHash {
         )?;
 
         Ok(
-            ZomePackage {
+            ZomeAsset {
                 zome_entry: zome_entry,
                 bytes: memory_with_bytes.1.to_vec(),
             }

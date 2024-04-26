@@ -57,11 +57,11 @@ export default function ( args_fn ) {
 	expect( uis			).to.have.length( 1 );
     });
 
-    it("should get UI package", async function () {
-	const ui_pack			= await apphub_csr.get_ui_package( ui1.$addr );
-	log.normal("%s", json.debug(ui_pack) );
+    it("should get UI asset", async function () {
+	const ui_asset			= await apphub_csr.get_ui_asset( ui1.$addr );
+	log.normal("%s", json.debug(ui_asset) );
 
-	expect( ui_pack		).to.have.any.keys( "bytes" );
+	expect( ui_asset		).to.have.any.keys( "bytes" );
     });
 
     linearSuite("Errors", function () {

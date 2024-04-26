@@ -142,41 +142,14 @@ function basic_tests () {
 	log.normal("DNA bundle: %s", json.debug(bundle) );
     });
 
-    it("should get DNA package", async function () {
-	const dna_package		= await dnahub_csr.get_dna_package( dna1.$addr );
+    it("should get DNA asset", async function () {
+	const dna_asset			= await dnahub_csr.get_dna_asset( dna1.$addr );
 
-	log.normal("DNA package: %s", json.debug(dna_package) );
-
-	const manifest			= dna_package.dna_entry.manifest;
-
-	for ( let zome_manifest of manifest.integrity.zomes ) {
-	    delete zome_manifest.zome_hrl;
-	    delete zome_manifest.dependencies;
-
-	    const compressed_bytes	= new Uint8Array(
-		dna_package.zome_packages[ zome_manifest.name ]
-	    );
-
-	    zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
-		compressed_bytes
-	    );
-	}
-
-	for ( let zome_manifest of manifest.coordinator.zomes ) {
-	    delete zome_manifest.zome_hrl;
-
-	    const compressed_bytes	= new Uint8Array(
-		dna_package.zome_packages[ zome_manifest.name ]
-	    );
-
-	    zome_manifest.bytes		= await zomehub.zomes.mere_memory_api.functions.gzip_uncompress(
-		compressed_bytes
-	    );
-	}
+	log.normal("DNA asset: %s", json.debug(dna_asset) );
 
 	const bundle1			= Bundle.createDna( TEST_DNA_CONFIG );
 	const bundle1_bytes		= bundle1.toBytes();
-	const bundle2			= Bundle.createDna( manifest );
+	const bundle2			= Bundle.createDna( dna_asset.dna_entry.manifest );
 	const bundle2_bytes		= bundle2.toBytes();
 
 	log.normal("Bundle original: %s", json.debug(bundle1) );

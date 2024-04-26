@@ -73,6 +73,7 @@ pub struct ZomeEntry {
     pub zome_type: ZomeType,
     pub mere_memory_addr: EntryHash,
     pub file_size: u64,
+    pub hash: String,
 }
 
 impl ZomeEntry {
@@ -83,6 +84,7 @@ impl ZomeEntry {
             mere_memory_addr: addr,
             file_size: memory.uncompressed_size
                 .unwrap_or( memory.memory_size ),
+            hash: memory.hash,
         };
 
         Ok( entry )

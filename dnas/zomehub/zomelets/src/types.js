@@ -1,4 +1,5 @@
 
+import { Bytes }			from '@whi/bytes-class';
 import {
     AgentPubKey, HoloHash,
     ActionHash, EntryHash
@@ -8,13 +9,14 @@ import {
     intoStruct,
     AnyType, OptionType,
     VecType, MapType,
-}					from '@spartan-hc/caps-entities';
+}					from '@spartan-hc/entities';
 
 
 export const ZomeStruct = {
     "zome_type":		String,
     "mere_memory_addr":		EntryHash,
     "file_size":		Number,
+    "hash":			String,
 };
 
 export function ZomeEntry ( entry ) {
@@ -26,8 +28,21 @@ export class Zome extends ScopedEntity {
 }
 
 
+export const ZomeAssetStruct = {
+    "zome_entry":		ZomeStruct,
+    "bytes":			Bytes,
+};
+
+export function ZomeAsset ( entry ) {
+    return intoStruct( entry, ZomeAssetStruct );
+}
+
+
 export default {
     ZomeStruct,
     ZomeEntry,
     Zome,
+
+    ZomeAssetStruct,
+    ZomeAsset,
 };
