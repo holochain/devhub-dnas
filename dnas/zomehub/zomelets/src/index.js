@@ -61,6 +61,12 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     async get_zome_asset ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
 
+	// Run potential decompression
+	result.bytes			= await this.zomes.mere_memory_api.decompress_memory([
+	    result.memory_entry,
+	    new Uint8Array( result.bytes ),
+	]);
+
 	return ZomeAsset( result );
     },
     async get_zome_entries_for_agent ( input ) {
@@ -119,7 +125,7 @@ export const ZomeHubCell		= new CellZomelets({
 });
 
 
-export { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets';
+export *				from '@spartan-hc/mere-memory-zomelets';
 export *				from './types.js';
 
 export default {

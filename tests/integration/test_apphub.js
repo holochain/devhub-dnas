@@ -175,7 +175,7 @@ function basic_tests () {
 
 	const bundle1			= Bundle.createHapp( TEST_HAPP_CONFIG );
 	const bundle1_bytes		= bundle1.toBytes();
-	const bundle2			= Bundle.createHapp( app_asset.app_entry.manifest );
+	const bundle2			= await apphub_csr.bundle_from_app_asset( app_asset );
 	const bundle2_bytes		= bundle2.toBytes();
 
 	log.normal("Bundle original: %s", json.debug(bundle1) );
@@ -222,6 +222,29 @@ function basic_tests () {
 	const bundle			= new Bundle( bundle_bytes, "webhapp" );
 
 	log.normal("Webhapp bundle: %s", json.debug(bundle) );
+    });
+
+    it("should get webapp asset", async function () {
+	const webapp_asset			= await apphub_csr.get_webapp_asset( webapp1.$addr );
+
+	log.normal("WebApp bundle package: %s", json.debug(webapp_asset) );
+
+	const bundle1			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
+	const bundle1_bytes		= bundle1.toBytes();
+	const bundle2			= await apphub_csr.bundle_from_webapp_asset( webapp_asset );
+	const bundle2_bytes		= bundle2.toBytes();
+
+	log.normal("Bundle original: %s", json.debug(bundle1) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2) );
+
+	log.normal("Bundle original: %s", json.debug(bundle1_bytes) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2_bytes) );
+
+	log.normal(
+	    "Bundle hashes: %s === %s",
+	    sha256(bundle1_bytes),
+	    sha256(bundle2_bytes),
+	);
     });
 
     it("should upload the same WebApp bundle", async function () {

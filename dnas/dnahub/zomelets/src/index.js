@@ -65,19 +65,19 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	const dna_asset			= DnaAsset( result );
 	const manifest			= dna_asset.dna_entry.manifest;
 
-	for ( let zome_manifest of manifest.integrity.zomes ) {
-	    delete zome_manifest.zome_hrl;
+	// Run potential decompression
+	for ( let zome_asset of Object.values( dna_asset.zome_assets ) ) {
+	    zome_asset.bytes		= await this.cells.zomehub.mere_memory_api.decompress_memory([
+		zome_asset.memory_entry,
+		new Uint8Array( zome_asset.bytes ),
+	    ]);
+	}
 
-	    const compressed_bytes	= new Uint8Array(
+	// Verify asset hashes
+	for ( let zome_manifest of manifest.integrity.zomes ) {
+	    const hash			= await this.cells.zomehub.mere_memory_api.calculate_hash(
 		dna_asset.zome_assets[ zome_manifest.name ].bytes
 	    );
-
-	    zome_manifest.bytes		= await this.cells.zomehub.mere_memory_api.gzip_uncompress(
-		compressed_bytes
-	    );
-
-	    // Verify asset hash
-	    const hash			= await this.cells.zomehub.mere_memory_api.calculate_hash( zome_manifest.bytes );
 	    const expected_hash		= dna_asset.dna_entry.asset_hashes.integrity[ zome_manifest.name ];
 
 	    if ( hash !== expected_hash )
@@ -85,18 +85,9 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	}
 
 	for ( let zome_manifest of manifest.coordinator.zomes ) {
-	    delete zome_manifest.zome_hrl;
-
-	    const compressed_bytes	= new Uint8Array(
+	    const hash			= await this.cells.zomehub.mere_memory_api.calculate_hash(
 		dna_asset.zome_assets[ zome_manifest.name ].bytes
 	    );
-
-	    zome_manifest.bytes		= await this.cells.zomehub.mere_memory_api.gzip_uncompress(
-		compressed_bytes
-	    );
-
-	    // Verify asset hash
-	    const hash			= await this.cells.zomehub.mere_memory_api.calculate_hash( zome_manifest.bytes );
 	    const expected_hash		= dna_asset.dna_entry.asset_hashes.coordinator[ zome_manifest.name ];
 
 	    if ( hash !== expected_hash )
@@ -226,6 +217,33 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	return bundle.toBytes();
     },
+    async bundle_from_dna_asset ( dna_asset ) {
+	const manifest			= { ...dna_asset.dna_entry.manifest };
+
+	// Copy objects so the original input is not mutated
+	manifest.integrity		= { ...manifest.integrity };
+	manifest.coordinator		= { ...manifest.coordinator };
+	manifest.integrity.zomes	= manifest.integrity.zomes.slice();
+	manifest.coordinator.zomes	= manifest.coordinator.zomes.slice();
+
+	for ( let i in manifest.integrity.zomes ) {
+	    const zome_manifest		= manifest.integrity.zomes[i] = {
+		...manifest.integrity.zomes[i]
+	    };
+	    delete zome_manifest.zome_hrl;
+	    zome_manifest.bytes		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
+	}
+
+	for ( let i in manifest.coordinator.zomes ) {
+	    const zome_manifest		= manifest.coordinator.zomes[i] = {
+		...manifest.coordinator.zomes[i]
+	    };
+	    delete zome_manifest.zome_hrl;
+	    zome_manifest.bytes		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
+	}
+
+	return Bundle.createDna( manifest );
+    },
 }, {
     "cells": {
 	"zomehub": ZomeHubCell,
@@ -244,11 +262,7 @@ export const DnaHubCell			= new CellZomelets({
 });
 
 
-export  {
-    ZomeHubCSRZomelet,
-    MereMemoryZomelet,
-    ZomeHubCell,
-}					from '@holochain/zomehub-zomelets';
+export *				from '@holochain/zomehub-zomelets';
 export *				from './types.js';
 
 export default {

@@ -26,6 +26,7 @@ use apphub_sdk::{
     LinkBase,
     WebAppEntryInput,
     CreateWebAppInput,
+    WebAppAsset,
 };
 
 
@@ -66,6 +67,12 @@ pub fn get_webapp_entry(addr: AnyDhtHash) -> ExternResult<Entity<WebAppEntry>> {
 	    content: content,
         }
     )
+}
+
+
+#[hdk_extern]
+fn get_webapp_asset(addr: EntryHash) -> ExternResult<WebAppAsset> {
+    Ok( addr.try_into()? )
 }
 
 

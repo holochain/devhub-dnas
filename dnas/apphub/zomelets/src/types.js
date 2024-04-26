@@ -9,6 +9,7 @@ import {
 import {
     DnaTokenStruct,
     DnaAssetStruct,
+    MemoryStruct,
 }					from '@holochain/dnahub-zomelets';
 import {
     ScopedEntity,
@@ -275,11 +276,23 @@ export function AppAsset ( entry ) {
 
 export const UiAssetStruct = {
     "ui_entry":			UiStruct,
+    "memory_entry":		MemoryStruct,
     "bytes":			Bytes,
 };
 
 export function UiAsset ( entry ) {
     return intoStruct( entry, UiAssetStruct );
+}
+
+
+export const WebAppAssetStruct = {
+    "webapp_entry":		WebAppStruct,
+    "app_asset":		AppAssetStruct,
+    "ui_asset":			UiAssetStruct,
+};
+
+export function WebAppAsset ( entry ) {
+    return intoStruct( entry, WebAppAssetStruct );
 }
 
 
@@ -307,4 +320,7 @@ export default {
 
     UiAssetStruct,
     UiAsset,
+
+    WebAppAssetStruct,
+    WebAppAsset,
 };

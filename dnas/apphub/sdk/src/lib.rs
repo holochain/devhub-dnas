@@ -360,6 +360,41 @@ impl TryInto<AppAsset> for EntryHash {
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WebAppAsset {
+    pub webapp_entry: WebAppEntry,
+    pub app_asset: AppAsset,
+    pub ui_asset: UiAsset,
+}
+
+impl TryInto<WebAppAsset> for EntryHash {
+    type Error = WasmError;
+    fn try_into(self) -> ExternResult<WebAppAsset> {
+        let webapp_entry : WebAppEntry = must_get( &self )?.try_into()?;
+        let app_asset : AppAsset = call_zome(
+            "apphub_csr",
+            "get_app_asset",
+            webapp_entry.manifest.happ_manifest.app_entry.clone(),
+            (),
+        )?;
+        let ui_asset : UiAsset = call_zome(
+            "apphub_csr",
+            "get_ui_asset",
+            webapp_entry.manifest.ui.ui_entry.clone(),
+            (),
+        )?;
+
+        Ok(
+            WebAppAsset {
+                webapp_entry,
+                app_asset,
+                ui_asset,
+            }
+        )
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MemoryWithBytes(
     MemoryEntry,
     Vec<u8>
@@ -368,6 +403,7 @@ pub struct MemoryWithBytes(
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct UiAsset {
     pub ui_entry: UiEntry,
+    pub memory_entry: MemoryEntry,
     pub bytes: Vec<u8>,
 }
 
@@ -386,6 +422,7 @@ impl TryInto<UiAsset> for EntryHash {
         Ok(
             UiAsset {
                 ui_entry: ui_entry,
+                memory_entry: memory_with_bytes.0,
                 bytes: memory_with_bytes.1.to_vec(),
             }
         )

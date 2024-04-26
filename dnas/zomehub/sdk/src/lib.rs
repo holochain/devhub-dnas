@@ -26,6 +26,7 @@ pub struct MemoryWithBytes(
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ZomeAsset {
     pub zome_entry: ZomeEntry,
+    pub memory_entry: MemoryEntry,
     pub bytes: Vec<u8>,
 }
 
@@ -44,6 +45,7 @@ impl TryInto<ZomeAsset> for EntryHash {
         Ok(
             ZomeAsset {
                 zome_entry: zome_entry,
+                memory_entry: memory_with_bytes.0,
                 bytes: memory_with_bytes.1.to_vec(),
             }
         )

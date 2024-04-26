@@ -4,6 +4,7 @@ import {
     AgentPubKey, HoloHash,
     ActionHash, EntryHash
 }					from '@spartan-hc/holo-hash';
+import { MemoryStruct }			from '@spartan-hc/mere-memory-zomelets';
 import {
     ScopedEntity,
     intoStruct,
@@ -30,6 +31,7 @@ export class Zome extends ScopedEntity {
 
 export const ZomeAssetStruct = {
     "zome_entry":		ZomeStruct,
+    "memory_entry":		MemoryStruct,
     "bytes":			Bytes,
 };
 

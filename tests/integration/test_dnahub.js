@@ -149,7 +149,7 @@ function basic_tests () {
 
 	const bundle1			= Bundle.createDna( TEST_DNA_CONFIG );
 	const bundle1_bytes		= bundle1.toBytes();
-	const bundle2			= Bundle.createDna( dna_asset.dna_entry.manifest );
+	const bundle2			= await dnahub_csr.bundle_from_dna_asset( dna_asset );
 	const bundle2_bytes		= bundle2.toBytes();
 
 	log.normal("Bundle original: %s", json.debug(bundle1) );

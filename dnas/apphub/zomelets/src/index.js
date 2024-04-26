@@ -32,6 +32,7 @@ import {
     WebAppPackageVersion,
     AppAsset,
     UiAsset,
+    WebAppAsset,
 }					from './types.js';
 
 
@@ -79,25 +80,25 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const app_asset			= AppAsset( result );
 	const manifest			= app_asset.app_entry.manifest;
 
-	for ( let role_manifest of manifest.roles ) {
-	    delete role_manifest.dna.dna_hrl;
+	// Run potential decompression
+	for ( let dna_asset of Object.values( app_asset.dna_assets ) ) {
+	    for ( let zome_asset of Object.values( dna_asset.zome_assets ) ) {
+		zome_asset.bytes	= await this.zomes.mere_memory_api.decompress_memory([
+		    zome_asset.memory_entry,
+		    new Uint8Array( zome_asset.bytes ),
+		]);
+	    }
+	}
 
+	// Verify asset hashes
+	for ( let role_manifest of manifest.roles ) {
 	    const dna_asset		= app_asset.dna_assets[ role_manifest.name ];
 	    const dna_manifest		= dna_asset.dna_entry.manifest;
 
 	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
-		delete zome_manifest.zome_hrl;
-
-		const compressed_bytes	= new Uint8Array(
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
 		    dna_asset.zome_assets[ zome_manifest.name ].bytes
 		);
-
-		zome_manifest.bytes		= await this.zomes.mere_memory_api.gzip_uncompress(
-		    compressed_bytes
-		);
-
-		// Verify asset hash
-		const hash			= await this.zomes.mere_memory_api.calculate_hash( zome_manifest.bytes );
 		const expected_hash		= dna_asset.dna_entry.asset_hashes.integrity[ zome_manifest.name ];
 
 		if ( hash !== expected_hash )
@@ -105,28 +106,14 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    }
 
 	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
-		delete zome_manifest.zome_hrl;
-
-		const compressed_bytes	= new Uint8Array(
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
 		    dna_asset.zome_assets[ zome_manifest.name ].bytes
 		);
-
-		zome_manifest.bytes		= await this.zomes.mere_memory_api.gzip_uncompress(
-		    compressed_bytes
-		);
-
-		// Verify asset hash
-		const hash			= await this.zomes.mere_memory_api.calculate_hash( zome_manifest.bytes );
 		const expected_hash		= dna_asset.dna_entry.asset_hashes.coordinator[ zome_manifest.name ];
 
 		if ( hash !== expected_hash )
 		    throw new Error(`Asset hash for coordinator zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
 	    }
-
-	    const dna_bundle		= Bundle.createDna( dna_manifest );
-	    const dna_bundle_bytes	= dna_bundle.toBytes();
-
-	    role_manifest.dna.bytes	= dna_bundle_bytes;
 	}
 
 	return app_asset;
@@ -163,6 +150,12 @@ export const AppHubCSRZomelet		= new Zomelet({
     },
     async get_ui_asset ( input ) {
 	const result			= await this.call( new EntryHash( input ) );
+
+	// Run potential decompression
+	result.bytes			= await this.zomes.mere_memory_api.decompress_memory([
+	    result.memory_entry,
+	    new Uint8Array( result.bytes ),
+	]);
 
 	return UiAsset( result );
     },
@@ -208,6 +201,55 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const result			= await this.call( new AnyDhtHash( input ) );
 
 	return new WebApp( result, this );
+    },
+    async get_webapp_asset ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+	const webapp_asset		= WebAppAsset( result );
+	const manifest			= webapp_asset.webapp_entry.manifest;
+	const app_manifest		= webapp_asset.app_asset.app_entry.manifest;
+
+	// Run potential decompression
+	for ( let dna_asset of Object.values( webapp_asset.app_asset.dna_assets ) ) {
+	    for ( let zome_asset of Object.values( dna_asset.zome_assets ) ) {
+		zome_asset.bytes	= await this.zomes.mere_memory_api.decompress_memory([
+		    zome_asset.memory_entry,
+		    new Uint8Array( zome_asset.bytes ),
+		]);
+	    }
+	}
+
+	webapp_asset.ui_asset.bytes	= await this.zomes.mere_memory_api.decompress_memory([
+	    webapp_asset.ui_asset.memory_entry,
+	    new Uint8Array( webapp_asset.ui_asset.bytes ),
+	]);
+
+	// Verify asset hashes
+	for ( let role_manifest of app_manifest.roles ) {
+	    const dna_asset		= webapp_asset.app_asset.dna_assets[ role_manifest.name ];
+	    const dna_manifest		= dna_asset.dna_entry.manifest;
+
+	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.integrity[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for integrity zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+
+	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.coordinator[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for coordinator zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+	}
+
+	return webapp_asset;
     },
     async get_webapp_entries_for_agent ( input ) {
 	const agent_id			= input ? new AgentPubKey( input ) : input;
@@ -496,6 +538,45 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const bundle			= Bundle.createWebhapp( manifest );
 
 	return bundle.toBytes();
+    },
+    async bundle_from_app_asset ( app_asset ) {
+	const manifest			= { ...app_asset.app_entry.manifest };
+
+	// Copy objects so the original input is not mutated
+	manifest.roles			= manifest.roles.slice();
+
+	for ( let i in manifest.roles ) {
+	    const role_manifest		= manifest.roles[i] = {
+		...manifest.roles[i]
+	    };
+	    delete role_manifest.dna_hrl;
+
+	    const dna_bundle		= await this.cells.dnahub.dnahub_csr.bundle_from_dna_asset(
+		app_asset.dna_assets[ role_manifest.name ]
+	    );
+	    role_manifest.dna.bytes	= dna_bundle.toBytes();
+	}
+
+	return Bundle.createHapp( manifest );
+    },
+    async bundle_from_webapp_asset ( webapp_asset ) {
+	// Copy objects so the original input is not mutated
+	const manifest			= { ...webapp_asset.webapp_entry.manifest };
+
+	const app_bundle		= await this.functions.bundle_from_app_asset(
+	    webapp_asset.app_asset
+	);
+	manifest.happ_manifest		= {
+	    ...manifest.happ_manifest,
+	    "bytes":		app_bundle.toBytes(),
+	};
+
+	manifest.ui			= {
+	    ...manifest.ui,
+	    "bytes":		webapp_asset.ui_asset.bytes,
+	};
+
+	return Bundle.createWebhapp( manifest );
     },
 }, {
     "zomes": {
