@@ -39,6 +39,7 @@ const MAIN_ZOME				= "zomehub_csr";
 const MERE_ZOME				= "mere_memory_api";
 
 let app_port;
+let installations;
 
 
 describe("ZomeHub", function () {
@@ -50,7 +51,7 @@ describe("ZomeHub", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	    "bobby",
 	], [
@@ -88,7 +89,9 @@ function basic_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const app_token			= installations.alice.test.auth.token;
+	app_client			= await client.app( app_token );
 
 	({
 	    zomehub,
@@ -160,7 +163,8 @@ function basic_tests () {
 	it("should fail to delete zome entry because author", async function () {
 	    let zome			= await zomehub_csr.save_integrity( zome1_bytes );
 
-	    const bobby_client		= await client.app( "test-bobby" );
+	    const app_token		= installations.bobby.test.auth.token;
+	    const bobby_client		= await client.app( app_token );
 	    const bobby_zomehub_csr	= bobby_client
 		  .createCellInterface( ZOMEHUB_DNA_NAME, ZomeHubCell )
 		  .zomes.zomehub_csr.functions;

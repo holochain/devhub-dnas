@@ -41,6 +41,7 @@ const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
 
 let app_port;
+let installations;
 
 
 describe("DnaHub", function () {
@@ -52,7 +53,7 @@ describe("DnaHub", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	    "bobby",
 	], [
@@ -94,7 +95,9 @@ function basic_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const app_token			= installations.alice.test.auth.token;
+	app_client			= await client.app( app_token );
 
 	({
 	    zomehub,
@@ -214,7 +217,8 @@ function basic_tests () {
 
 	    let dna			= await dnahub_csr.save_dna( dna_bytes );
 
-	    const bobby_client		= await client.app( "test-bobby" );
+	    const app_token		= installations.bobby.test.auth.token;
+	    const bobby_client		= await client.app( app_token );
 	    const bobby_dnahub_csr	= bobby_client
 		  .createCellInterface( "dnahub", DnaHubCell )
 		  .zomes.dnahub_csr.functions;

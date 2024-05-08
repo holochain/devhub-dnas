@@ -50,6 +50,7 @@ const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
 
 let app_port;
+let installations;
 
 
 describe("AppHub", function () {
@@ -61,7 +62,7 @@ describe("AppHub", function () {
     before(async function () {
 	this.timeout( 120_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	    "bobby",
 	], [
@@ -116,7 +117,9 @@ function basic_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const app_token			= installations.alice.test.auth.token;
+	app_client			= await client.app( app_token );
 
 	({
 	    zomehub,
@@ -260,6 +263,7 @@ function basic_tests () {
 
     function common_args_plus( args ) {
 	return Object.assign({
+	    installations,
 	    client,
 	    app_client,
 	    zomehub,

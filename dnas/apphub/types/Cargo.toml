@@ -14,10 +14,10 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_dnahub_types = { versions = "0.2", path = "../../dnahub/types" }
-holochain_zome_types = { version = "0.3.0-beta-dev.33", features = [ "properties" ] }
-mere_memory_types = "0.93.0"
+holochain_zome_types = { version = "0.4.0-dev.1", features = [ "properties" ] }
+mere_memory_types = "0.95.0"
 rmp-serde = "1.1"
 rmpv = { version = "1.0.0", features = ["with-serde"] }
 serde = "1"
 sha2 = "0.10"
-whi_hdi_extensions = "0.7"
+whi_hdi_extensions = "0.9"

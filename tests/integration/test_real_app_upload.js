@@ -44,6 +44,7 @@ const DNAHUB_DNA_NAME			= "dnahub";
 const ZOMEHUB_DNA_NAME			= "zomehub";
 
 let app_port;
+let installations;
 
 
 describe("AppHub - Real", function () {
@@ -55,7 +56,7 @@ describe("AppHub - Real", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	], [
 	    {
@@ -96,7 +97,9 @@ function real_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const app_token			= installations.alice.test.auth.token;
+	app_client			= await client.app( app_token );
 
 	({
 	    zomehub,

@@ -165,7 +165,7 @@ export class WebApp extends ScopedEntity {
 //
 // WebAppPackageEntry Handling
 //
-export const MaintainerType	= Object;
+export const MaintainerType	= String;
 
 export const WebAppPackageStruct = {
     "title":			String,

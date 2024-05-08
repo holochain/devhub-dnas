@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 apphub = { path = "../apphub" }
 hc_apphub_sdk = { version = "0.2", path = "../../dnas/apphub/sdk" }
 hc_dnahub_types = { version = "0.2", path = "../../dnas/dnahub/types" }
-hc_portal_sdk = "0.4"
+hc_portal_sdk = "0.6"
 lazy_static = "1.4"
 rmpv = { version = "1.0.0", features = ["with-serde"] }
 serde = "1"

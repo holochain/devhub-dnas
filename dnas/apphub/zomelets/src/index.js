@@ -549,7 +549,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    const role_manifest		= manifest.roles[i] = {
 		...manifest.roles[i]
 	    };
-	    delete role_manifest.dna_hrl;
+	    delete role_manifest.dna.dna_hrl;
 
 	    const dna_bundle		= await this.cells.dnahub.dnahub_csr.bundle_from_dna_asset(
 		app_asset.dna_assets[ role_manifest.name ]

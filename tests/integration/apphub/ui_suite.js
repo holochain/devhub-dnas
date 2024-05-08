@@ -20,6 +20,7 @@ const UI_BYTES				= new Uint8Array( Array( 1_000 ).fill( 1 ) );
 
 
 export default function ( args_fn ) {
+    let installations;
     let client;
     let app_client;
     let zomehub;
@@ -32,6 +33,7 @@ export default function ( args_fn ) {
 
     before(async function () {
 	({
+	    installations,
 	    client,
 	    app_client,
 	    zomehub,
@@ -80,7 +82,8 @@ export default function ( args_fn ) {
 	it("should fail to delete UI entry because author", async function () {
 	    let ui			= await apphub_csr.save_ui( UI_BYTES );
 
-	    const bobby_client		= await client.app( "test-bobby" );
+	    const app_token		= installations.bobby.test.auth.token;
+	    const bobby_client		= await client.app( app_token );
 	    const bobby_apphub_csr	= bobby_client
 		  .createCellInterface( "apphub", AppHubCell )
 		  .zomes.apphub_csr.functions;

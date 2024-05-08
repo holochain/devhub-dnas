@@ -17,6 +17,7 @@ import {
 
 
 export default function ( args_fn ) {
+    let installations;
     let client;
     let app_client;
     let zomehub;
@@ -34,6 +35,7 @@ export default function ( args_fn ) {
 
     before(async function () {
 	({
+	    installations,
 	    client,
 	    app_client,
 	    zomehub,
@@ -53,7 +55,8 @@ export default function ( args_fn ) {
 	    "source_code_uri": faker.internet.url(),
 	});
 
-	bobby_client			= await client.app( "test-bobby" );
+	const app_token			= installations.bobby.test.auth.token;
+	bobby_client			= await client.app( app_token );
 	bobby_apphub_csr		= bobby_client
 	      .createCellInterface( "apphub", AppHubCell )
 	      .zomes.apphub_csr.functions;
