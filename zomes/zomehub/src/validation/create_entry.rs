@@ -32,6 +32,13 @@ pub fn validation(
                 ))
             }
 
+            if zome_entry.hash != memory.hash {
+                invalid!(format!(
+                    "ZomeEntry hash does not match memory hash: {} != {}",
+                    zome_entry.hash, memory.hash
+                ))
+            }
+
             valid!()
         },
         // _ => invalid!(format!("Create validation not implemented for entry type: {:#?}", create.entry_type )),

@@ -158,6 +158,11 @@ npm-use-backdrop-local:
 npm-use-backdrop-%:
 	NPM_PACKAGE=@spartan-hc/holochain-backdrop LOCAL_PATH=../../node-backdrop make npm-reinstall-$*
 
+npm-use-bundles-public:
+npm-use-bundles-local:
+npm-use-bundles-%:
+	NPM_PACKAGE=@spartan-hc/bundles LOCAL_PATH=../../bundles-js make npm-reinstall-$*
+
 
 
 #
