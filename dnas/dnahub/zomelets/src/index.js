@@ -125,14 +125,12 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    const zome			= await this.cells.zomehub.zomehub_csr.save_integrity( zome_bytes );
 	    this.log.info("Created new (integrity) Zome entry: %s", zome.$addr );
 
-	    zome_manifest.zome_hrl	= {
+	    bundle.resources[ rpath ]	= {
 		"dna": this.zome.cells.zomehub.dna,
 		"target": zome.$addr,
 	    };
 
 	    dna_asset_hashes.integrity[ zome_manifest.name ] = zome.hash;
-
-	    delete zome_manifest.bundled;
 	}
 
 	for ( let zome_manifest of bundle.manifest.coordinator.zomes ) {
@@ -143,18 +141,17 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    const zome			= await this.cells.zomehub.zomehub_csr.save_coordinator( zome_bytes );
 	    this.log.info("Created new (coordinator) Zome entry: %s", zome.$addr );
 
-	    zome_manifest.zome_hrl	= {
+	    bundle.resources[ rpath ]	= {
 		"dna": this.zome.cells.zomehub.dna,
 		"target": zome.$addr,
 	    };
 
 	    dna_asset_hashes.coordinator[ zome_manifest.name ] = zome.hash;
-
-	    delete zome_manifest.bundled;
 	}
 
 	return await this.functions.create_dna({
 	    "manifest": bundle.manifest,
+	    "resources": bundle.resources,
 	    claimed_file_size,
 	    "asset_hashes": dna_asset_hashes,
 	});
@@ -170,7 +167,7 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	if ( !zome_manifest )
 	    throw new Error(`DNA entry (${input.dna_entry}) does not have an integrity zome named '${input.name}'`);
 
-	const zome_hrl			= zome_manifest.zome_hrl;
+	const zome_hrl			= dna_entry.resources[ zome_manifest.bundled ];
 	const zomehub			= this.getCellInterface( "zomehub", zome_hrl.dna );
 
 	return await zomehub.zomehub_csr.get_zome( zome_hrl.target );
@@ -184,7 +181,7 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	if ( !zome_manifest )
 	    throw new Error(`DNA entry (${input.dna_entry}) does not have an coordinator zome named '${input.name}'`);
 
-	const zome_hrl			= zome_manifest.zome_hrl;
+	const zome_hrl			= dna_entry.resources[ zome_manifest.bundled ];
 	const zomehub			= this.getCellInterface( "zomehub", zome_hrl.dna );
 
 	return await zomehub.zomehub_csr.get_zome( zome_hrl.target );
@@ -194,23 +191,19 @@ export const DnaHubCSRZomelet		= new Zomelet({
 
 	this.log.normal("Fetch assests for DNA manifest:", dna_entry.manifest );
 	for ( let zome_manifest of dna_entry.manifest.integrity.zomes ) {
-	    const zome_hrl		= zome_manifest.zome_hrl;
+	    const zome_hrl		= dna_entry.resources[ zome_manifest.bundled ];
 	    const zomehub		= this.getCellInterface( "zomehub", zome_hrl.dna );
 
 	    const zome			= await zomehub.zomehub_csr.get_zome( zome_hrl.target );
 	    zome_manifest.bytes		= zome.bytes;
-
-	    delete zome_manifest.zome_hrl;
 	}
 
 	for ( let zome_manifest of dna_entry.manifest.coordinator.zomes ) {
-	    const zome_hrl		= zome_manifest.zome_hrl;
+	    const zome_hrl		= dna_entry.resources[ zome_manifest.bundled ];
 	    const zomehub		= this.getCellInterface( "zomehub", zome_hrl.dna );
 
 	    const zome			= await zomehub.zomehub_csr.get_zome( zome_hrl.target );
 	    zome_manifest.bytes		= zome.bytes;
-
-	    delete zome_manifest.zome_hrl;
 	}
 
 	const bundle			= Bundle.createDna( dna_entry.manifest );
@@ -230,7 +223,6 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    const zome_manifest		= manifest.integrity.zomes[i] = {
 		...manifest.integrity.zomes[i]
 	    };
-	    delete zome_manifest.zome_hrl;
 	    zome_manifest.bytes		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
 	}
 
@@ -238,7 +230,6 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    const zome_manifest		= manifest.coordinator.zomes[i] = {
 		...manifest.coordinator.zomes[i]
 	    };
-	    delete zome_manifest.zome_hrl;
 	    zome_manifest.bytes		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
 	}
 

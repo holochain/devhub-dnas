@@ -5,6 +5,7 @@ pub use crate::{
     IntegritiesToken,
     CoordinatorsToken,
     AssetHashes,
+    ResourcesMap,
     holochain_types::{
         DnaManifestV1,
     },
@@ -27,6 +28,7 @@ pub struct DnaAssetHashes {
 #[derive(Clone)]
 pub struct DnaEntry {
     pub manifest: DnaManifestV1,
+    pub resources: ResourcesMap,
     pub dna_token: DnaToken,
     pub integrities_token: IntegritiesToken,
     pub coordinators_token: CoordinatorsToken,

@@ -15,13 +15,6 @@ use holochain_zome_types::properties::YamlProperties;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct HRL {
-    pub dna: DnaHash,
-    pub target: AnyDhtHash,
-}
-
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub struct DnaManifestV1 {
     pub name: String,
@@ -99,7 +92,7 @@ pub struct CoordinatorManifest {
 pub struct IntegrityZomeManifest {
     pub name: ZomeName,
     pub hash: Option<WasmHashB64>,
-    pub zome_hrl: HRL,
+    pub bundled: String,
     #[serde(default)]
     pub dylib: Option<PathBuf>,
 }
@@ -109,7 +102,7 @@ pub struct IntegrityZomeManifest {
 pub struct CoordinatorZomeManifest {
     pub name: ZomeName,
     pub hash: Option<WasmHashB64>,
-    pub zome_hrl: HRL,
+    pub bundled: String,
     pub dependencies: Option<Vec<ZomeDependency>>,
     #[serde(default)]
     pub dylib: Option<PathBuf>,

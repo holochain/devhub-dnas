@@ -20,7 +20,15 @@ use sha2::{ Digest, Sha256 };
 pub type IntegritiesToken = Vec<(String, Vec<u8>)>;
 pub type CoordinatorsToken = Vec<(String, Vec<u8>)>;
 pub type AssetHashes = BTreeMap<String, String>;
+pub type ResourcesMap = BTreeMap<String, HRL>;
 
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HRL {
+    pub dna: DnaHash,
+    pub target: AnyDhtHash,
+}
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
