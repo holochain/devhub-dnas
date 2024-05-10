@@ -448,27 +448,28 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	{
 	    const happ_manifest		= bundle.manifest.happ_manifest;
-	    const happ_bytes		= bundle.resources[ happ_manifest.bundled ];
-	    this.log.debug("Save hApp resource '%s' (%s bytes)", happ_manifest.bundled, happ_bytes.length );
+	    const rpath			= happ_manifest.bundled;
+	    const happ_bytes		= bundle.resources[ rpath ];
+	    this.log.debug("Save hApp resource '%s' (%s bytes)", rpath, happ_bytes.length );
 
 	    let app			= await this.functions.save_app( happ_bytes );
 
-	    happ_manifest.app_entry	= app.$addr;
-	    delete happ_manifest.bundled;
+	    bundle.resources[ rpath ]	= app.$addr;;
 	}
 	{
 	    const ui_manifest		= bundle.manifest.ui;
-	    const ui_bytes		= bundle.resources[ ui_manifest.bundled ];
-	    this.log.debug("Save UI resource '%s' (%s bytes)", ui_manifest.bundled, ui_bytes.length );
+	    const rpath			= ui_manifest.bundled;
+	    const ui_bytes		= bundle.resources[ rpath ];
+	    this.log.debug("Save UI resource '%s' (%s bytes)", rpath, ui_bytes.length );
 
 	    let ui			= await this.functions.save_ui( ui_bytes );
 
-	    ui_manifest.ui_entry	= ui.$addr;
-	    delete ui_manifest.bundled;
+	    bundle.resources[ rpath ]	= ui.$addr;;
 	}
 
 	return await this.functions.create_webapp({
 	    "manifest": bundle.manifest,
+	    "resources": bundle.resources,
 	});
     },
     async get_webapp_package_versions_sorted ( input ) {
@@ -528,33 +529,38 @@ export const AppHubCSRZomelet		= new Zomelet({
     async get_webhapp_bundle ( input ) {
 	const webapp_entry		= await this.functions.get_webapp_entry( input );
 	const manifest			= webapp_entry.manifest;
+	const resources			= {};
 	this.log.info("Fetch assets for WebApp manifest:", manifest );
 
-	manifest.ui.bytes		= await this.functions.get_ui_entry_memory(
-	    manifest.ui.ui_entry
-	);
-	delete manifest.ui.ui_entry;
+	{
+	    const rpath			= manifest.ui.bundled;
+	    resources[ rpath ]		= await this.functions.get_ui_entry_memory(
+		webapp_entry.resources[ rpath ]
+	    );
+	}
 
-	manifest.happ_manifest.bytes	= await this.functions.get_happ_bundle(
-	    manifest.happ_manifest.app_entry
-	);
-	delete manifest.happ_manifest.app_entry;
+	{
+	    const rpath			= manifest.happ_manifest.bundled;
+	    resources[ rpath ]		= await this.functions.get_happ_bundle(
+		webapp_entry.resources[ rpath ]
+	    );
+	}
 
-	const bundle			= Bundle.createWebhapp( manifest );
+	const bundle			= new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "webhapp");
 
 	return bundle.toBytes();
     },
     async bundle_from_app_asset ( app_asset ) {
-	const manifest			= { ...app_asset.app_entry.manifest };
+	const manifest			= app_asset.app_entry.manifest;
 	const resources			= {};
 
-	// Copy objects so the original input is not mutated
-	manifest.roles			= manifest.roles.slice();
-
-	for ( let i in manifest.roles ) {
-	    const role_manifest		= manifest.roles[i] = {
-		...manifest.roles[i]
-	    };
+	for ( let role_manifest of manifest.roles ) {
 	    const rpath			= role_manifest.dna.bundled;
 	    const dna_bundle		= await this.cells.dnahub.dnahub_csr.bundle_from_dna_asset(
 		app_asset.dna_assets[ role_manifest.name ]
@@ -571,23 +577,29 @@ export const AppHubCSRZomelet		= new Zomelet({
 	}, "happ");
     },
     async bundle_from_webapp_asset ( webapp_asset ) {
-	// Copy objects so the original input is not mutated
-	const manifest			= { ...webapp_asset.webapp_entry.manifest };
+	const manifest			= webapp_asset.webapp_entry.manifest;
+	const resources			= {};
 
-	const app_bundle		= await this.functions.bundle_from_app_asset(
-	    webapp_asset.app_asset
-	);
-	manifest.happ_manifest		= {
-	    ...manifest.happ_manifest,
-	    "bytes":		app_bundle.toBytes(),
-	};
+	{
+	    const app_bundle		= await this.functions.bundle_from_app_asset(
+		webapp_asset.app_asset
+	    );
+	    const rpath			= manifest.happ_manifest.bundled;
+	    resources[ rpath ]		= app_bundle.toBytes();
+	}
 
-	manifest.ui			= {
-	    ...manifest.ui,
-	    "bytes":		webapp_asset.ui_asset.bytes,
-	};
+	{
+	    const rpath			= manifest.ui.bundled;
+	    resources[ rpath ]		= new Uint8Array( webapp_asset.ui_asset.bytes );
+	}
 
-	return Bundle.createWebhapp( manifest );
+	return new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "webhapp");
     },
 }, {
     "zomes": {

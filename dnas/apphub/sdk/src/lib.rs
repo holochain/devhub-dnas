@@ -19,6 +19,7 @@ use apphub_types::{
     DeprecationNotice,
     RmpvValue,
     ResourcesMap,
+    WebAppResourcesMap,
 
     RoleToken,
     AppManifestV1,
@@ -184,6 +185,7 @@ impl From<WebAppTokenInput> for WebAppToken {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebAppEntryInput {
     pub manifest: WebAppManifestV1,
+    pub resources: WebAppResourcesMap,
 
     pub webapp_token: WebAppTokenInput,
 }
@@ -192,6 +194,7 @@ impl From<WebAppEntryInput> for WebAppEntry {
     fn from(input: WebAppEntryInput) -> Self {
         Self {
             manifest: input.manifest,
+            resources: input.resources,
             webapp_token: input.webapp_token.into(),
         }
     }
@@ -201,13 +204,14 @@ impl From<WebAppEntryInput> for WebAppEntry {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateWebAppInput {
     pub manifest: WebAppManifestV1,
+    pub resources: WebAppResourcesMap,
 }
 
 impl TryFrom<CreateWebAppInput> for WebAppEntry {
     type Error = WasmError;
 
     fn try_from(input: CreateWebAppInput) -> ExternResult<Self> {
-        Self::new( input.manifest )
+        Self::new( input.manifest, input.resources )
     }
 }
 
@@ -352,7 +356,7 @@ impl TryInto<AppAsset> for EntryHash {
         for role_manifest in app_entry.manifest.roles.iter() {
             let hrl = app_entry.resources.get( &role_manifest.dna.bundled )
                 .ok_or(guest_error!(format!(
-                    "DnaEntry does not have resources with path '{}'",
+                    "DnaEntry does not have resource for path '{}'",
                     role_manifest.dna.bundled,
                 )))?;
             let dna_asset : DnaAsset = call_cell(
@@ -387,16 +391,18 @@ impl TryInto<WebAppAsset> for EntryHash {
     type Error = WasmError;
     fn try_into(self) -> ExternResult<WebAppAsset> {
         let webapp_entry : WebAppEntry = must_get( &self )?.try_into()?;
+
         let app_asset : AppAsset = call_zome(
             "apphub_csr",
             "get_app_asset",
-            webapp_entry.manifest.happ_manifest.app_entry.clone(),
+            webapp_entry.app_entry_addr()?,
             (),
         )?;
+
         let ui_asset : UiAsset = call_zome(
             "apphub_csr",
             "get_ui_asset",
-            webapp_entry.manifest.ui.ui_entry.clone(),
+            webapp_entry.ui_entry_addr()?,
             (),
         )?;
 

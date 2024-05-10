@@ -133,11 +133,11 @@ pub struct WebAppManifestV1 {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebUI {
-    pub ui_entry: EntryHash,
+    pub bundled: String,
 }
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppManifestLocation {
-    pub app_entry: EntryHash,
+    pub bundled: String,
 }

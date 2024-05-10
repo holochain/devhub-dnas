@@ -220,27 +220,15 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	return bundle.toBytes();
     },
     async bundle_from_dna_asset ( dna_asset ) {
-	const manifest			= { ...dna_asset.dna_entry.manifest };
+	const manifest			= dna_asset.dna_entry.manifest;
 	const resources			= {};
 
-	// Copy objects so the original input is not mutated
-	manifest.integrity		= { ...manifest.integrity };
-	manifest.coordinator		= { ...manifest.coordinator };
-	manifest.integrity.zomes	= manifest.integrity.zomes.slice();
-	manifest.coordinator.zomes	= manifest.coordinator.zomes.slice();
-
-	for ( let i in manifest.integrity.zomes ) {
-	    const zome_manifest		= manifest.integrity.zomes[i] = {
-		...manifest.integrity.zomes[i]
-	    };
+	for ( let zome_manifest of manifest.integrity.zomes ) {
 	    const rpath			= zome_manifest.bundled;
 	    resources[ rpath ]		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
 	}
 
-	for ( let i in manifest.coordinator.zomes ) {
-	    const zome_manifest		= manifest.coordinator.zomes[i] = {
-		...manifest.coordinator.zomes[i]
-	    };
+	for ( let zome_manifest of manifest.coordinator.zomes ) {
 	    const rpath			= zome_manifest.bundled;
 	    resources[ rpath ]		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
 	}

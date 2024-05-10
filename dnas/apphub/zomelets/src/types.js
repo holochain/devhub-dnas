@@ -145,12 +145,13 @@ export const WebAppStruct = {
     "manifest": {
 	"name":			String,
 	"ui": {
-	    "ui_entry":		EntryHash,
+	    "bundled":		String,
 	},
 	"happ_manifest": {
-	    "app_entry":	EntryHash,
+	    "bundled":		String,
 	},
     },
+    "resources":		MapType( String, EntryHash ),
     "webapp_token":		WebAppTokenStruct,
 };
 
