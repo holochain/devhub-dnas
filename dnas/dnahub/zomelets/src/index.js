@@ -188,30 +188,40 @@ export const DnaHubCSRZomelet		= new Zomelet({
     },
     async get_dna_bundle ( input ) {
 	const dna_entry			= await this.functions.get_dna_entry( input );
+	const resources			= {};
 
 	this.log.normal("Fetch assests for DNA manifest:", dna_entry.manifest );
 	for ( let zome_manifest of dna_entry.manifest.integrity.zomes ) {
-	    const zome_hrl		= dna_entry.resources[ zome_manifest.bundled ];
+	    const rpath			= zome_manifest.bundled;
+	    const zome_hrl		= dna_entry.resources[ rpath ];
 	    const zomehub		= this.getCellInterface( "zomehub", zome_hrl.dna );
 
 	    const zome			= await zomehub.zomehub_csr.get_zome( zome_hrl.target );
-	    zome_manifest.bytes		= zome.bytes;
+	    resources[ rpath ]		= zome.bytes;
 	}
 
 	for ( let zome_manifest of dna_entry.manifest.coordinator.zomes ) {
-	    const zome_hrl		= dna_entry.resources[ zome_manifest.bundled ];
+	    const rpath			= zome_manifest.bundled;
+	    const zome_hrl		= dna_entry.resources[ rpath ];
 	    const zomehub		= this.getCellInterface( "zomehub", zome_hrl.dna );
 
 	    const zome			= await zomehub.zomehub_csr.get_zome( zome_hrl.target );
-	    zome_manifest.bytes		= zome.bytes;
+	    resources[ rpath ]		= zome.bytes;
 	}
 
-	const bundle			= Bundle.createDna( dna_entry.manifest );
+	const bundle			= new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...dna_entry.manifest,
+	    },
+	    resources,
+	}, "dna");
 
 	return bundle.toBytes();
     },
     async bundle_from_dna_asset ( dna_asset ) {
 	const manifest			= { ...dna_asset.dna_entry.manifest };
+	const resources			= {};
 
 	// Copy objects so the original input is not mutated
 	manifest.integrity		= { ...manifest.integrity };
@@ -223,17 +233,25 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    const zome_manifest		= manifest.integrity.zomes[i] = {
 		...manifest.integrity.zomes[i]
 	    };
-	    zome_manifest.bytes		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
+	    const rpath			= zome_manifest.bundled;
+	    resources[ rpath ]		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
 	}
 
 	for ( let i in manifest.coordinator.zomes ) {
 	    const zome_manifest		= manifest.coordinator.zomes[i] = {
 		...manifest.coordinator.zomes[i]
 	    };
-	    zome_manifest.bytes		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
+	    const rpath			= zome_manifest.bundled;
+	    resources[ rpath ]		= dna_asset.zome_assets[ zome_manifest.name ].bytes;
 	}
 
-	return Bundle.createDna( manifest );
+	return new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "dna");
     },
 }, {
     "cells": {

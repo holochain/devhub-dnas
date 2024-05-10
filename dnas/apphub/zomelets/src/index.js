@@ -421,18 +421,17 @@ export const AppHubCSRZomelet		= new Zomelet({
 		dna.$id, name,
 	    ]);
 
-	    role.dna.dna_hrl		= {
+	    bundle.resources[ rpath ]	= {
 		"dna": this.zome.cells.dnahub.dna,
 		"target": dna.$addr,
 	    };
-
-	    delete role.dna.bundled;
 
 	    roles_dna_tokens[ name ]	= dna.dna_token;
 	}
 
 	return await this.functions.create_app({
 	    "manifest": bundle.manifest,
+	    "resources": bundle.resources,
 	    roles_dna_tokens,
 	    claimed_file_size,
 	});
@@ -495,7 +494,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	if ( !role_manifest )
 	    throw new Error(`App entry (${input.app_entry}) does not have a role named '${input.name}'`);
 
-	const dna_hrl			= role_manifest.dna.dna_hrl;
+	const dna_hrl			= app_entry.resources[ role_manifest.dna.bundled ];
 	const dnahub			= this.getCellInterface( "dnahub", dna_hrl.dna );
 
 	return await dnahub.dnahub_csr.get_dna_entry( dna_hrl.target );
@@ -504,18 +503,24 @@ export const AppHubCSRZomelet		= new Zomelet({
     async get_happ_bundle ( input ) {
 	const app_entry			= await this.functions.get_app_entry( input );
 	const manifest			= app_entry.manifest;
+	const resources			= {};
 
 	this.log.info("Fetch assets for App manifest:", manifest );
 	for ( let role_manifest of manifest.roles ) {
-	    const dna_hrl		= role_manifest.dna.dna_hrl;
+	    const rpath			= role_manifest.dna.bundled;
+	    const dna_hrl		= app_entry.resources[ rpath ];
 	    const dnahub		= this.getCellInterface( "dnahub", dna_hrl.dna );
 
-	    role_manifest.dna.bytes	= await dnahub.dnahub_csr.get_dna_bundle( dna_hrl.target );
-
-	    delete role_manifest.dna.dna_hrl;
+	    resources[ rpath ]		= await dnahub.dnahub_csr.get_dna_bundle( dna_hrl.target );
 	}
 
-	const bundle			= Bundle.createHapp( manifest );
+	const bundle			= new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "happ");
 
 	return bundle.toBytes();
     },
@@ -541,6 +546,7 @@ export const AppHubCSRZomelet		= new Zomelet({
     },
     async bundle_from_app_asset ( app_asset ) {
 	const manifest			= { ...app_asset.app_entry.manifest };
+	const resources			= {};
 
 	// Copy objects so the original input is not mutated
 	manifest.roles			= manifest.roles.slice();
@@ -549,15 +555,20 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    const role_manifest		= manifest.roles[i] = {
 		...manifest.roles[i]
 	    };
-	    delete role_manifest.dna.dna_hrl;
-
+	    const rpath			= role_manifest.dna.bundled;
 	    const dna_bundle		= await this.cells.dnahub.dnahub_csr.bundle_from_dna_asset(
 		app_asset.dna_assets[ role_manifest.name ]
 	    );
-	    role_manifest.dna.bytes	= dna_bundle.toBytes();
+	    resources[ rpath ]		= dna_bundle.toBytes();
 	}
 
-	return Bundle.createHapp( manifest );
+	return new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "happ");
     },
     async bundle_from_webapp_asset ( webapp_asset ) {
 	// Copy objects so the original input is not mutated

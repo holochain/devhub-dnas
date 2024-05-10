@@ -86,7 +86,7 @@ export const AppStruct = {
 	    "name":		String,
 	    "provisioning":	OptionType( Object ),
 	    "dna": {
-		"dna_hrl":		HRLStruct,
+		"bundled":	String,
 		"modifiers": {
 		    "network_seed":	OptionType( AnyType ),
 		    "properties":	OptionType( AnyType ),
@@ -98,6 +98,7 @@ export const AppStruct = {
 	    }
 	}),
     },
+    "resources":		MapType( String, HRLStruct ),
     "app_token":		AppTokenStruct,
     "claimed_file_size":	Number,
 };

@@ -45,6 +45,15 @@ pub type EntityId = ActionHash;
 pub type BundleAddr = EntryHash;
 pub type MemoryAddr = EntryHash;
 pub type RmpvValue = rmpv::Value;
+pub type ResourcesMap = BTreeMap<String, HRL>;
+
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HRL {
+    pub dna: DnaHash,
+    pub target: AnyDhtHash,
+}
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]

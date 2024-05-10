@@ -7,6 +7,9 @@ use hdk::prelude::*;
 use hdk_extensions::{
     agent_id,
     must_get,
+    hdi_extensions::{
+        guest_error,
+    },
 };
 use serde_bytes::ByteBuf;
 use apphub_types::{
@@ -15,6 +18,7 @@ use apphub_types::{
     BundleAddr,
     DeprecationNotice,
     RmpvValue,
+    ResourcesMap,
 
     RoleToken,
     AppManifestV1,
@@ -122,6 +126,7 @@ impl From<AppTokenInput> for AppToken {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppEntryInput {
     pub manifest: AppManifestV1,
+    pub resources: ResourcesMap,
     pub app_token: AppTokenInput,
     pub claimed_file_size: u64,
 }
@@ -130,6 +135,7 @@ impl From<AppEntryInput> for AppEntry {
     fn from(input: AppEntryInput) -> Self {
         Self {
             manifest: input.manifest,
+            resources: input.resources,
             app_token: input.app_token.into(),
             claimed_file_size: input.claimed_file_size,
         }
@@ -140,6 +146,7 @@ impl From<AppEntryInput> for AppEntry {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateAppInput {
     pub manifest: AppManifestV1,
+    pub resources: ResourcesMap,
     pub roles_dna_tokens: RolesDnaTokensInput,
     pub claimed_file_size: u64,
 }
@@ -148,7 +155,12 @@ impl TryFrom<CreateAppInput> for AppEntry {
     type Error = WasmError;
 
     fn try_from(input: CreateAppInput) -> ExternResult<Self> {
-        Self::new( input.manifest, input.roles_dna_tokens.into(), input.claimed_file_size )
+        Self::new(
+            input.manifest,
+            input.resources,
+            input.roles_dna_tokens.into(),
+            input.claimed_file_size
+        )
     }
 }
 
@@ -338,11 +350,16 @@ impl TryInto<AppAsset> for EntryHash {
         let mut dna_assets = BTreeMap::new();
 
         for role_manifest in app_entry.manifest.roles.iter() {
+            let hrl = app_entry.resources.get( &role_manifest.dna.bundled )
+                .ok_or(guest_error!(format!(
+                    "DnaEntry does not have resources with path '{}'",
+                    role_manifest.dna.bundled,
+                )))?;
             let dna_asset : DnaAsset = call_cell(
-                role_manifest.dna.dna_hrl.dna.clone(),
+                hrl.dna.clone(),
                 "dnahub_csr",
                 "get_dna_asset",
-                role_manifest.dna.dna_hrl.target.clone(),
+                hrl.target.clone(),
                 (),
             )?;
 
