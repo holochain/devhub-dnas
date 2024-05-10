@@ -9,7 +9,6 @@ import {
     CellZomelets,
 }					from '@spartan-hc/zomelets'; // approx. 7kb
 import { Bundle }			from '@spartan-hc/bundles'; // approx. 39kb
-import { Entity }			from '@spartan-hc/caps-entities'; // approx. 19kb
 import { // Relative import is causing duplicates (holo-hash, zomelets, bundles)
     DnaHubCSRZomelet,
     ZomeHubCSRZomelet,
@@ -31,6 +30,9 @@ import {
     WebApp,
     WebAppPackage,
     WebAppPackageVersion,
+    AppAsset,
+    UiAsset,
+    WebAppAsset,
 }					from './types.js';
 
 
@@ -73,6 +75,49 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	return new App( result, this );
     },
+    async get_app_asset ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+	const app_asset			= AppAsset( result );
+	const manifest			= app_asset.app_entry.manifest;
+
+	// Run potential decompression
+	for ( let dna_asset of Object.values( app_asset.dna_assets ) ) {
+	    for ( let zome_asset of Object.values( dna_asset.zome_assets ) ) {
+		zome_asset.bytes	= await this.zomes.mere_memory_api.decompress_memory([
+		    zome_asset.memory_entry,
+		    new Uint8Array( zome_asset.bytes ),
+		]);
+	    }
+	}
+
+	// Verify asset hashes
+	for ( let role_manifest of manifest.roles ) {
+	    const dna_asset		= app_asset.dna_assets[ role_manifest.name ];
+	    const dna_manifest		= dna_asset.dna_entry.manifest;
+
+	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.integrity[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for integrity zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+
+	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.coordinator[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for coordinator zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+	}
+
+	return app_asset;
+    },
     async get_app_entries_for_agent ( input ) {
 	const agent_id			= input ? new AgentPubKey( input ) : input;
 	const entries			= await this.call( agent_id );
@@ -102,6 +147,17 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const result			= await this.call( new EntryHash( input ) );
 
 	return new Ui( result, this );
+    },
+    async get_ui_asset ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+
+	// Run potential decompression
+	result.bytes			= await this.zomes.mere_memory_api.decompress_memory([
+	    result.memory_entry,
+	    new Uint8Array( result.bytes ),
+	]);
+
+	return UiAsset( result );
     },
     async get_ui ( input ) {
 	const ui_entry			= await this.functions.get_ui_entry( input );
@@ -145,6 +201,55 @@ export const AppHubCSRZomelet		= new Zomelet({
 	const result			= await this.call( new AnyDhtHash( input ) );
 
 	return new WebApp( result, this );
+    },
+    async get_webapp_asset ( input ) {
+	const result			= await this.call( new EntryHash( input ) );
+	const webapp_asset		= WebAppAsset( result );
+	const manifest			= webapp_asset.webapp_entry.manifest;
+	const app_manifest		= webapp_asset.app_asset.app_entry.manifest;
+
+	// Run potential decompression
+	for ( let dna_asset of Object.values( webapp_asset.app_asset.dna_assets ) ) {
+	    for ( let zome_asset of Object.values( dna_asset.zome_assets ) ) {
+		zome_asset.bytes	= await this.zomes.mere_memory_api.decompress_memory([
+		    zome_asset.memory_entry,
+		    new Uint8Array( zome_asset.bytes ),
+		]);
+	    }
+	}
+
+	webapp_asset.ui_asset.bytes	= await this.zomes.mere_memory_api.decompress_memory([
+	    webapp_asset.ui_asset.memory_entry,
+	    new Uint8Array( webapp_asset.ui_asset.bytes ),
+	]);
+
+	// Verify asset hashes
+	for ( let role_manifest of app_manifest.roles ) {
+	    const dna_asset		= webapp_asset.app_asset.dna_assets[ role_manifest.name ];
+	    const dna_manifest		= dna_asset.dna_entry.manifest;
+
+	    for ( let zome_manifest of dna_manifest.integrity.zomes ) {
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.integrity[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for integrity zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+
+	    for ( let zome_manifest of dna_manifest.coordinator.zomes ) {
+		const hash			= await this.zomes.mere_memory_api.calculate_hash(
+		    dna_asset.zome_assets[ zome_manifest.name ].bytes
+		);
+		const expected_hash		= dna_asset.dna_entry.asset_hashes.coordinator[ zome_manifest.name ];
+
+		if ( hash !== expected_hash )
+		    throw new Error(`Asset hash for coordinator zome '${zome_manifest.name}' is invalid; ${hash} !== ${expected_hash} (expected)`);
+	    }
+	}
+
+	return webapp_asset;
     },
     async get_webapp_entries_for_agent ( input ) {
 	const agent_id			= input ? new AgentPubKey( input ) : input;
@@ -299,6 +404,7 @@ export const AppHubCSRZomelet		= new Zomelet({
     // Virtual functions
     //
     async save_app ( bytes ) {
+	const claimed_file_size		= bytes.length;
 	const bundle			= new Bundle( bytes, "happ" );
 	const roles_dna_tokens		= {};
 
@@ -315,19 +421,19 @@ export const AppHubCSRZomelet		= new Zomelet({
 		dna.$id, name,
 	    ]);
 
-	    role.dna.dna_hrl		= {
+	    bundle.resources[ rpath ]	= {
 		"dna": this.zome.cells.dnahub.dna,
 		"target": dna.$addr,
 	    };
-
-	    delete role.dna.bundled;
 
 	    roles_dna_tokens[ name ]	= dna.dna_token;
 	}
 
 	return await this.functions.create_app({
 	    "manifest": bundle.manifest,
+	    "resources": bundle.resources,
 	    roles_dna_tokens,
+	    claimed_file_size,
 	});
     },
     async save_ui ( bytes ) {
@@ -342,27 +448,28 @@ export const AppHubCSRZomelet		= new Zomelet({
 
 	{
 	    const happ_manifest		= bundle.manifest.happ_manifest;
-	    const happ_bytes		= bundle.resources[ happ_manifest.bundled ];
-	    this.log.debug("Save hApp resource '%s' (%s bytes)", happ_manifest.bundled, happ_bytes.length );
+	    const rpath			= happ_manifest.bundled;
+	    const happ_bytes		= bundle.resources[ rpath ];
+	    this.log.debug("Save hApp resource '%s' (%s bytes)", rpath, happ_bytes.length );
 
 	    let app			= await this.functions.save_app( happ_bytes );
 
-	    happ_manifest.app_entry	= app.$addr;
-	    delete happ_manifest.bundled;
+	    bundle.resources[ rpath ]	= app.$addr;;
 	}
 	{
 	    const ui_manifest		= bundle.manifest.ui;
-	    const ui_bytes		= bundle.resources[ ui_manifest.bundled ];
-	    this.log.debug("Save UI resource '%s' (%s bytes)", ui_manifest.bundled, ui_bytes.length );
+	    const rpath			= ui_manifest.bundled;
+	    const ui_bytes		= bundle.resources[ rpath ];
+	    this.log.debug("Save UI resource '%s' (%s bytes)", rpath, ui_bytes.length );
 
 	    let ui			= await this.functions.save_ui( ui_bytes );
 
-	    ui_manifest.ui_entry	= ui.$addr;
-	    delete ui_manifest.bundled;
+	    bundle.resources[ rpath ]	= ui.$addr;;
 	}
 
 	return await this.functions.create_webapp({
 	    "manifest": bundle.manifest,
+	    "resources": bundle.resources,
 	});
     },
     async get_webapp_package_versions_sorted ( input ) {
@@ -388,7 +495,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	if ( !role_manifest )
 	    throw new Error(`App entry (${input.app_entry}) does not have a role named '${input.name}'`);
 
-	const dna_hrl			= role_manifest.dna.dna_hrl;
+	const dna_hrl			= app_entry.resources[ role_manifest.dna.bundled ];
 	const dnahub			= this.getCellInterface( "dnahub", dna_hrl.dna );
 
 	return await dnahub.dnahub_csr.get_dna_entry( dna_hrl.target );
@@ -397,18 +504,24 @@ export const AppHubCSRZomelet		= new Zomelet({
     async get_happ_bundle ( input ) {
 	const app_entry			= await this.functions.get_app_entry( input );
 	const manifest			= app_entry.manifest;
+	const resources			= {};
 
 	this.log.info("Fetch assets for App manifest:", manifest );
 	for ( let role_manifest of manifest.roles ) {
-	    const dna_hrl		= role_manifest.dna.dna_hrl;
+	    const rpath			= role_manifest.dna.bundled;
+	    const dna_hrl		= app_entry.resources[ rpath ];
 	    const dnahub		= this.getCellInterface( "dnahub", dna_hrl.dna );
 
-	    role_manifest.dna.bytes	= await dnahub.dnahub_csr.get_dna_bundle( dna_hrl.target );
-
-	    delete role_manifest.dna.dna_hrl;
+	    resources[ rpath ]		= await dnahub.dnahub_csr.get_dna_bundle( dna_hrl.target );
 	}
 
-	const bundle			= Bundle.createHapp( manifest );
+	const bundle			= new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "happ");
 
 	return bundle.toBytes();
     },
@@ -416,21 +529,77 @@ export const AppHubCSRZomelet		= new Zomelet({
     async get_webhapp_bundle ( input ) {
 	const webapp_entry		= await this.functions.get_webapp_entry( input );
 	const manifest			= webapp_entry.manifest;
+	const resources			= {};
 	this.log.info("Fetch assets for WebApp manifest:", manifest );
 
-	manifest.ui.bytes		= await this.functions.get_ui_entry_memory(
-	    manifest.ui.ui_entry
-	);
-	delete manifest.ui.ui_entry;
+	{
+	    const rpath			= manifest.ui.bundled;
+	    resources[ rpath ]		= await this.functions.get_ui_entry_memory(
+		webapp_entry.resources[ rpath ]
+	    );
+	}
 
-	manifest.happ_manifest.bytes	= await this.functions.get_happ_bundle(
-	    manifest.happ_manifest.app_entry
-	);
-	delete manifest.happ_manifest.app_entry;
+	{
+	    const rpath			= manifest.happ_manifest.bundled;
+	    resources[ rpath ]		= await this.functions.get_happ_bundle(
+		webapp_entry.resources[ rpath ]
+	    );
+	}
 
-	const bundle			= Bundle.createWebhapp( manifest );
+	const bundle			= new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "webhapp");
 
 	return bundle.toBytes();
+    },
+    async bundle_from_app_asset ( app_asset ) {
+	const manifest			= app_asset.app_entry.manifest;
+	const resources			= {};
+
+	for ( let role_manifest of manifest.roles ) {
+	    const rpath			= role_manifest.dna.bundled;
+	    const dna_bundle		= await this.cells.dnahub.dnahub_csr.bundle_from_dna_asset(
+		app_asset.dna_assets[ role_manifest.name ]
+	    );
+	    resources[ rpath ]		= dna_bundle.toBytes();
+	}
+
+	return new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "happ");
+    },
+    async bundle_from_webapp_asset ( webapp_asset ) {
+	const manifest			= webapp_asset.webapp_entry.manifest;
+	const resources			= {};
+
+	{
+	    const app_bundle		= await this.functions.bundle_from_app_asset(
+		webapp_asset.app_asset
+	    );
+	    const rpath			= manifest.happ_manifest.bundled;
+	    resources[ rpath ]		= app_bundle.toBytes();
+	}
+
+	{
+	    const rpath			= manifest.ui.bundled;
+	    resources[ rpath ]		= new Uint8Array( webapp_asset.ui_asset.bytes );
+	}
+
+	return new Bundle({
+	    "manifest":		{
+		"manifest_version": "1",
+		...manifest,
+	    },
+	    resources,
+	}, "webhapp");
     },
 }, {
     "zomes": {

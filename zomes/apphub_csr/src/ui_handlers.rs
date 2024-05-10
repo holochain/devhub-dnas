@@ -23,7 +23,8 @@ use apphub::{
     },
 };
 use apphub_sdk::{
-    create_link_input,
+    LinkBase,
+    UiAsset,
 };
 
 
@@ -75,18 +76,22 @@ pub fn get_ui_entry(addr: AnyDhtHash) -> ExternResult<Entity<UiEntry>> {
 
 
 #[hdk_extern]
-pub fn get_ui_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) -> ExternResult<Vec<Entity<UiEntry>>> {
+fn get_ui_asset(addr: EntryHash) -> ExternResult<UiAsset> {
+    Ok( addr.try_into()? )
+}
+
+
+#[hdk_extern]
+pub fn get_ui_entries_for_agent(
+    maybe_agent_id: Option<AgentPubKey>
+) -> ExternResult<Vec<Entity<UiEntry>>> {
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,
     };
-    let uis = get_links(
-        create_link_input(
-            &agent_id,
-            &LinkTypes::Ui,
-            &None::<()>,
-        )?
-    )?.into_iter()
+    let agent_anchor = LinkBase::new( agent_id, LinkTypes::AgentToUi );
+
+    let uis = agent_anchor.get_links( None )?.into_iter()
         .filter_map(|link| {
             let addr = link.target.into_entry_hash()?;
             get_ui_entry( addr.into() ).ok()

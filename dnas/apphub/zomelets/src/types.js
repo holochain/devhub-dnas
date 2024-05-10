@@ -8,13 +8,15 @@ import {
 }					from '@spartan-hc/holo-hash';
 import {
     DnaTokenStruct,
+    DnaAssetStruct,
+    MemoryStruct,
 }					from '@holochain/dnahub-zomelets';
 import {
     ScopedEntity,
     intoStruct,
     AnyType, OptionType,
     VecType, MapType,
-}					from '@spartan-hc/caps-entities';
+}					from '@spartan-hc/entities';
 
 
 
@@ -84,7 +86,7 @@ export const AppStruct = {
 	    "name":		String,
 	    "provisioning":	OptionType( Object ),
 	    "dna": {
-		"dna_hrl":		HRLStruct,
+		"bundled":	String,
 		"modifiers": {
 		    "network_seed":	OptionType( AnyType ),
 		    "properties":	OptionType( AnyType ),
@@ -96,7 +98,9 @@ export const AppStruct = {
 	    }
 	}),
     },
+    "resources":		MapType( String, HRLStruct ),
     "app_token":		AppTokenStruct,
+    "claimed_file_size":	Number,
 };
 
 export function AppEntry ( entry ) {
@@ -141,12 +145,13 @@ export const WebAppStruct = {
     "manifest": {
 	"name":			String,
 	"ui": {
-	    "ui_entry":		EntryHash,
+	    "bundled":		String,
 	},
 	"happ_manifest": {
-	    "app_entry":	EntryHash,
+	    "bundled":		String,
 	},
     },
+    "resources":		MapType( String, EntryHash ),
     "webapp_token":		WebAppTokenStruct,
 };
 
@@ -162,7 +167,7 @@ export class WebApp extends ScopedEntity {
 //
 // WebAppPackageEntry Handling
 //
-export const MaintainerType	= Object;
+export const MaintainerType	= String;
 
 export const WebAppPackageStruct = {
     "title":			String,
@@ -261,6 +266,38 @@ export class WebAppPackageVersion extends ScopedEntity {
 }
 
 
+export const AppAssetStruct = {
+    "app_entry":		AppStruct,
+    "dna_assets":		MapType( String, DnaAssetStruct ),
+};
+
+export function AppAsset ( entry ) {
+    return intoStruct( entry, AppAssetStruct );
+}
+
+
+export const UiAssetStruct = {
+    "ui_entry":			UiStruct,
+    "memory_entry":		MemoryStruct,
+    "bytes":			Bytes,
+};
+
+export function UiAsset ( entry ) {
+    return intoStruct( entry, UiAssetStruct );
+}
+
+
+export const WebAppAssetStruct = {
+    "webapp_entry":		WebAppStruct,
+    "app_asset":		AppAssetStruct,
+    "ui_asset":			UiAssetStruct,
+};
+
+export function WebAppAsset ( entry ) {
+    return intoStruct( entry, WebAppAssetStruct );
+}
+
+
 
 export default {
     LinkStruct,
@@ -279,4 +316,13 @@ export default {
     WebAppPackageVersionStruct,
     WebAppPackageVersionEntry,
     WebAppPackageVersion,
+
+    AppAssetStruct,
+    AppAsset,
+
+    UiAssetStruct,
+    UiAsset,
+
+    WebAppAssetStruct,
+    WebAppAsset,
 };

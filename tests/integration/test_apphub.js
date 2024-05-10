@@ -35,8 +35,10 @@ import {
     dnaConfig,
     happConfig,
     webhappConfig,
+    sha256,
 }					from '../utils.js';
 import apps_suite			from './apphub/apps_suite.js';
+import ui_suite				from './apphub/ui_suite.js';
 import webapps_suite			from './apphub/webapps_suite.js';
 import webapp_packages_suite		from './apphub/webapp_packages_suite.js';
 import webapp_package_versions_suite	from './apphub/webapp_package_versions_suite.js';
@@ -48,6 +50,7 @@ const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
 
 let app_port;
+let installations;
 
 
 describe("AppHub", function () {
@@ -57,9 +60,9 @@ describe("AppHub", function () {
     });
 
     before(async function () {
-	this.timeout( 60_000 );
+	this.timeout( 120_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	    "bobby",
 	], [
@@ -114,7 +117,9 @@ function basic_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const app_token			= installations.alice.test.auth.token;
+	app_client			= await client.app( app_token );
 
 	({
 	    zomehub,
@@ -166,6 +171,29 @@ function basic_tests () {
 	log.normal("hApp bundle: %s", json.debug(bundle) );
     });
 
+    it("should get app asset", async function () {
+	const app_asset			= await apphub_csr.get_app_asset( app1.$addr );
+
+	log.normal("App bundle package: %s", json.debug(app_asset) );
+
+	const bundle1			= Bundle.createHapp( TEST_HAPP_CONFIG );
+	const bundle1_bytes		= bundle1.toBytes();
+	const bundle2			= await apphub_csr.bundle_from_app_asset( app_asset );
+	const bundle2_bytes		= bundle2.toBytes();
+
+	log.normal("Bundle original: %s", json.debug(bundle1) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2) );
+
+	log.normal("Bundle original: %s", json.debug(bundle1_bytes) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2_bytes) );
+
+	log.normal(
+	    "Bundle hashes: %s === %s",
+	    sha256(bundle1_bytes),
+	    sha256(bundle2_bytes),
+	);
+    });
+
     it("should upload the same App bundle", async function () {
 	const bundle			= Bundle.createHapp( TEST_HAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
@@ -176,6 +204,8 @@ function basic_tests () {
     });
 
     it("should upload WebApp bundle", async function () {
+	this.timeout( 5_000 );
+
 	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
@@ -197,7 +227,32 @@ function basic_tests () {
 	log.normal("Webhapp bundle: %s", json.debug(bundle) );
     });
 
+    it("should get webapp asset", async function () {
+	const webapp_asset			= await apphub_csr.get_webapp_asset( webapp1.$addr );
+
+	log.normal("WebApp bundle package: %s", json.debug(webapp_asset) );
+
+	const bundle1			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
+	const bundle1_bytes		= bundle1.toBytes();
+	const bundle2			= await apphub_csr.bundle_from_webapp_asset( webapp_asset );
+	const bundle2_bytes		= bundle2.toBytes();
+
+	log.normal("Bundle original: %s", json.debug(bundle1) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2) );
+
+	log.normal("Bundle original: %s", json.debug(bundle1_bytes) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2_bytes) );
+
+	log.normal(
+	    "Bundle hashes: %s === %s",
+	    sha256(bundle1_bytes),
+	    sha256(bundle2_bytes),
+	);
+    });
+
     it("should upload the same WebApp bundle", async function () {
+	this.timeout( 5_000 );
+
 	const bundle			= Bundle.createWebhapp( TEST_WEBHAPP_CONFIG );
 	const bundle_bytes		= bundle.toBytes();
 
@@ -208,6 +263,7 @@ function basic_tests () {
 
     function common_args_plus( args ) {
 	return Object.assign({
+	    installations,
 	    client,
 	    app_client,
 	    zomehub,
@@ -220,6 +276,7 @@ function basic_tests () {
     }
 
     linearSuite("Apps", apps_suite, () => common_args_plus() );
+    linearSuite("UIs", ui_suite, () => common_args_plus() );
     linearSuite("WebApps", webapps_suite, () => common_args_plus() );
 
     linearSuite("WebApp Packages", webapp_packages_suite, () => common_args_plus({

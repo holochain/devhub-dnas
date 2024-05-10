@@ -26,6 +26,7 @@ use apphub_sdk::{
     LinkBase,
     AppEntryInput,
     CreateAppInput,
+    AppAsset,
 };
 
 
@@ -70,9 +71,15 @@ pub fn get_app_entry(addr: AnyDhtHash) -> ExternResult<Entity<AppEntry>> {
 
 
 #[hdk_extern]
-pub fn get_app_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
-    ExternResult<Vec<Entity<AppEntry>>>
-{
+fn get_app_asset(addr: EntryHash) -> ExternResult<AppAsset> {
+    Ok( addr.try_into()? )
+}
+
+
+#[hdk_extern]
+pub fn get_app_entries_for_agent(
+    maybe_agent_id: Option<AgentPubKey>
+) -> ExternResult<Vec<Entity<AppEntry>>> {
     let agent_id = match maybe_agent_id {
         Some(agent_id) => agent_id,
         None => hdk_extensions::agent_id()?,

@@ -3,12 +3,12 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.96.0
+MERE_MEMORY_VERSION	= 0.98.0
 MERE_MEMORY_WASM	= zomes/mere_memory.wasm
 MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.12.0
+PORTAL_VERSION		= 0.14.0
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -105,26 +105,26 @@ reset-mere-memory:
 	rm -f zomes/mere_memory*.wasm
 	make $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
 
-PRE_MM_VERSION = mere_memory_types = "0.91.0"
-NEW_MM_VERSION = mere_memory_types = "0.93.0"
+PRE_MM_VERSION = mere_memory_types = "0.93.0"
+NEW_MM_VERSION = mere_memory_types = "0.95.0"
 
-PRE_CRUD_VERSION = hc_crud_caps = "0.12"
-NEW_CRUD_VERSION = hc_crud_caps = "0.13"
+PRE_CRUD_VERSION = hc_crud_caps = "0.13"
+NEW_CRUD_VERSION = hc_crud_caps = "0.15"
 
-PRE_HDIE_VERSION = whi_hdi_extensions = "0.6"
-NEW_HDIE_VERSION = whi_hdi_extensions = "0.7"
+PRE_HDIE_VERSION = whi_hdi_extensions = "0.7"
+NEW_HDIE_VERSION = whi_hdi_extensions = "0.9"
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.6"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.7"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.7"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.9"
 
-PRE_PSDK_VERSION = hc_portal_sdk = "0.3"
-NEW_PSDK_VERSION = hc_portal_sdk = "0.4"
+PRE_PSDK_VERSION = hc_portal_sdk = "0.4"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.6"
 
-PRE_HIT_VERSION = holochain_integrity_types = "0.3.0-beta-dev.28"
-NEW_HIT_VERSION = holochain_integrity_types = "0.3.0-beta-dev.31"
+PRE_HIT_VERSION = holochain_integrity_types = "0.3.0-beta-dev.31"
+NEW_HIT_VERSION = holochain_integrity_types = "0.4.0-dev.1"
 
-PRE_HZT_VERSION = holochain_zome_types = { version = "0.3.0-beta-dev.30"
-NEW_HZT_VERSION = holochain_zome_types = { version = "0.3.0-beta-dev.33"
+PRE_HZT_VERSION = holochain_zome_types = { version = "0.3.0-beta-dev.33"
+NEW_HZT_VERSION = holochain_zome_types = { version = "0.4.0-dev.1"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
@@ -156,7 +156,12 @@ npm-use-app-interface-client-%:
 npm-use-backdrop-public:
 npm-use-backdrop-local:
 npm-use-backdrop-%:
-	NPM_PACKAGE=@spartan-hc/holochain-backdrop LOCAL_PATH=../../node-holochain-backdrop make npm-reinstall-$*
+	NPM_PACKAGE=@spartan-hc/holochain-backdrop LOCAL_PATH=../../node-backdrop make npm-reinstall-$*
+
+npm-use-bundles-public:
+npm-use-bundles-local:
+npm-use-bundles-%:
+	NPM_PACKAGE=@spartan-hc/bundles LOCAL_PATH=../../bundles-js make npm-reinstall-$*
 
 
 
@@ -212,7 +217,7 @@ test-zome-unit-%:
 # Integration tests
 DEBUG_LEVEL	       ?= warn
 TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)
-MOCHA_OPTS		= -n enable-source-maps
+MOCHA_OPTS		= -n enable-source-maps -t 5000
 
 test-integration:
 	make test-zomehub

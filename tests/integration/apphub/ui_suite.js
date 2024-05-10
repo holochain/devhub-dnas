@@ -20,6 +20,7 @@ const UI_BYTES				= new Uint8Array( Array( 1_000 ).fill( 1 ) );
 
 
 export default function ( args_fn ) {
+    let installations;
     let client;
     let app_client;
     let zomehub;
@@ -32,6 +33,7 @@ export default function ( args_fn ) {
 
     before(async function () {
 	({
+	    installations,
 	    client,
 	    app_client,
 	    zomehub,
@@ -57,9 +59,16 @@ export default function ( args_fn ) {
 	expect( uis			).to.have.length( 1 );
     });
 
+    it("should get UI asset", async function () {
+	const ui_asset			= await apphub_csr.get_ui_asset( ui1.$addr );
+	log.normal("%s", json.debug(ui_asset) );
+
+	expect( ui_asset		).to.have.any.keys( "bytes" );
+    });
+
     linearSuite("Errors", function () {
 
-	it("should fail to create wasm entry because of wrong file size", async function () {
+	it("should fail to create zome entry because of wrong file size", async function () {
 	    await expect_reject(async () => {
 		await apphub_csr.create_ui_entry({
 		    "mere_memory_addr": ui1.mere_memory_addr,
@@ -73,7 +82,8 @@ export default function ( args_fn ) {
 	it("should fail to delete UI entry because author", async function () {
 	    let ui			= await apphub_csr.save_ui( UI_BYTES );
 
-	    const bobby_client		= await client.app( "test-bobby" );
+	    const app_token		= installations.bobby.test.auth.token;
+	    const bobby_client		= await client.app( app_token );
 	    const bobby_apphub_csr	= bobby_client
 		  .createCellInterface( "apphub", AppHubCell )
 		  .zomes.apphub_csr.functions;

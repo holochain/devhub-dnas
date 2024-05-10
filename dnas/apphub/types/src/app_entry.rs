@@ -4,6 +4,7 @@ use crate::{
     AppToken,
     RolesToken,
     RolesDnaTokens,
+    ResourcesMap,
     holochain_types::{
         AppManifestV1,
     },
@@ -19,21 +20,30 @@ use hdi::prelude::*;
 #[derive(Clone)]
 pub struct AppEntry {
     pub manifest: AppManifestV1,
+    pub resources: ResourcesMap,
 
     // This cannot be used for validation as it is solely provided by the client-side and cannot be
     // proven to belong to the corresponding `DnaEntry`
     pub app_token: AppToken,
+    pub claimed_file_size: u64,
 }
 
 impl AppEntry {
-    pub fn new(manifest: AppManifestV1, roles_dna_tokens: RolesDnaTokens) -> ExternResult<Self> {
+    pub fn new(
+        manifest: AppManifestV1,
+        resources: ResourcesMap,
+        roles_dna_tokens: RolesDnaTokens,
+        claimed_file_size: u64,
+    ) -> ExternResult<Self> {
         // This manifest method will ensure all DNA tokens are present
         let roles_token = manifest.roles_token( roles_dna_tokens )?;
 
         Ok(
             Self {
                 manifest,
+                resources,
                 app_token: AppEntry::create_app_token( &roles_token )?,
+                claimed_file_size,
             }
         )
     }

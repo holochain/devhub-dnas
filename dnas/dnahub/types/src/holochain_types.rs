@@ -15,13 +15,6 @@ use holochain_zome_types::properties::YamlProperties;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct HRL {
-    pub dna: DnaHash,
-    pub target: AnyDhtHash,
-}
-
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub struct DnaManifestV1 {
     pub name: String,
@@ -31,13 +24,6 @@ pub struct DnaManifestV1 {
 }
 
 impl DnaManifestV1 {
-    pub fn all_zomes(&self) -> impl Iterator<Item = &ZomeManifest> {
-        self.integrity
-            .zomes
-            .iter()
-            .chain(self.coordinator.zomes.iter())
-    }
-
     pub fn integrity_hash(&self) -> ExternResult<Vec<u8>> {
         hash( &self.integrity )
     }
@@ -92,21 +78,31 @@ pub struct IntegrityManifest {
     pub network_seed: Option<String>,
     pub properties: Option<YamlProperties>,
     pub origin_time: HumanTimestamp,
-    pub zomes: Vec<ZomeManifest>,
+    pub zomes: Vec<IntegrityZomeManifest>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "snake_case")]
 pub struct CoordinatorManifest {
-    pub zomes: Vec<ZomeManifest>,
+    pub zomes: Vec<CoordinatorZomeManifest>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
-pub struct ZomeManifest {
+pub struct IntegrityZomeManifest {
     pub name: ZomeName,
     pub hash: Option<WasmHashB64>,
-    pub wasm_hrl: HRL,
+    pub bundled: String,
+    #[serde(default)]
+    pub dylib: Option<PathBuf>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct CoordinatorZomeManifest {
+    pub name: ZomeName,
+    pub hash: Option<WasmHashB64>,
+    pub bundled: String,
     pub dependencies: Option<Vec<ZomeDependency>>,
     #[serde(default)]
     pub dylib: Option<PathBuf>,

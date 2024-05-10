@@ -12,35 +12,35 @@ use serde::{
 
 
 #[derive(Debug, Clone)]
-pub enum WasmType {
+pub enum ZomeType {
     Integrity,
     Coordinator,
 }
 
-impl From<WasmType> for String {
-    fn from(wasm_type: WasmType) -> Self {
-        match wasm_type {
-            WasmType::Integrity => "integrity",
-            WasmType::Coordinator => "coordinator",
+impl From<ZomeType> for String {
+    fn from(zome_type: ZomeType) -> Self {
+        match zome_type {
+            ZomeType::Integrity => "integrity",
+            ZomeType::Coordinator => "coordinator",
         }.to_string()
     }
 }
 
-impl TryFrom<String> for WasmType {
+impl TryFrom<String> for ZomeType {
     type Error = WasmError;
 
     fn try_from(name: String) -> Result<Self, Self::Error> {
         Ok(
             match (&name).to_lowercase().as_str() {
-                "integrity" => WasmType::Integrity,
-                "coordinator" => WasmType::Coordinator,
-                _ => return Err(guest_error!(format!("Unknown WasmType variant: {}", name ))),
+                "integrity" => ZomeType::Integrity,
+                "coordinator" => ZomeType::Coordinator,
+                _ => return Err(guest_error!(format!("Unknown ZomeType variant: {}", name ))),
             }
         )
     }
 }
 
-impl Serialize for WasmType {
+impl Serialize for ZomeType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -49,14 +49,14 @@ impl Serialize for WasmType {
     }
 }
 
-impl<'de> Deserialize<'de> for WasmType {
+impl<'de> Deserialize<'de> for ZomeType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s: String = Deserialize::deserialize(deserializer)?;
         Ok(
-            WasmType::try_from( s.clone() )
+            ZomeType::try_from( s.clone() )
                 .map_err( |err| serde::de::Error::custom(format!("{:?}", err )) )?
         )
     }
@@ -65,34 +65,36 @@ impl<'de> Deserialize<'de> for WasmType {
 
 
 //
-// Wasm Entry
+// Zome Entry
 //
 #[hdk_entry_helper]
 #[derive(Clone)]
-pub struct WasmEntry {
-    pub wasm_type: WasmType,
+pub struct ZomeEntry {
+    pub zome_type: ZomeType,
     pub mere_memory_addr: EntryHash,
     pub file_size: u64,
+    pub hash: String,
 }
 
-impl WasmEntry {
-    pub fn new( wtype: WasmType, addr: EntryHash ) -> ExternResult<Self> {
+impl ZomeEntry {
+    pub fn new( wtype: ZomeType, addr: EntryHash ) -> ExternResult<Self> {
         let memory : MemoryEntry = must_get_entry( addr.clone() )?.content.try_into()?;
-        let entry = WasmEntry {
-            wasm_type: wtype,
+        let entry = ZomeEntry {
+            zome_type: wtype,
             mere_memory_addr: addr,
             file_size: memory.uncompressed_size
                 .unwrap_or( memory.memory_size ),
+            hash: memory.hash,
         };
 
         Ok( entry )
     }
 
     pub fn new_integrity( addr: EntryHash ) -> ExternResult<Self> {
-        Self::new( WasmType::Integrity, addr )
+        Self::new( ZomeType::Integrity, addr )
     }
 
     pub fn new_coordinator( addr: EntryHash ) -> ExternResult<Self> {
-        Self::new( WasmType::Coordinator, addr )
+        Self::new( ZomeType::Coordinator, addr )
     }
 }

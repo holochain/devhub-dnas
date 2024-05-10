@@ -11,7 +11,10 @@ import {
     intoStruct,
     AnyType, OptionType,
     VecType, MapType,
-}					from '@spartan-hc/caps-entities';
+}					from '@spartan-hc/entities';
+import {
+    ZomeAssetStruct,
+}					from '@holochain/zomehub-zomelets';
 
 
 
@@ -41,7 +44,7 @@ export const DnaStruct = {
 	    "zomes": VecType({
 		"name":		String,
 		"hash":		OptionType( AnyType ),
-		"wasm_hrl":	HRLStruct,
+		"bundled":	String,
 		"dylib":	OptionType( AnyType ),
 	    }),
 	},
@@ -49,7 +52,7 @@ export const DnaStruct = {
 	    "zomes": VecType({
 		"name":		String,
 		"hash":		OptionType( AnyType ),
-		"wasm_hrl":	HRLStruct,
+		"bundled":	String,
 		"dependencies": VecType({
 		    "name":	String,
 		}),
@@ -57,6 +60,7 @@ export const DnaStruct = {
 	    }),
 	},
     },
+    "resources":		MapType( String, HRLStruct ),
     "dna_token":		DnaTokenStruct,
     "integrities_token":	VecType([
 	String, Bytes,
@@ -64,6 +68,11 @@ export const DnaStruct = {
     "coordinators_token":	VecType([
 	String, Bytes,
     ]),
+    "claimed_file_size":	Number,
+    "asset_hashes": {
+	"integrity":		MapType( String, String ),
+	"coordinator":		MapType( String, String ),
+    },
 };
 
 export function DnaEntry ( entry ) {
@@ -75,9 +84,22 @@ export class Dna extends ScopedEntity {
 }
 
 
+export const DnaAssetStruct = {
+    "dna_entry":		DnaStruct,
+    "zome_assets":		MapType( String, ZomeAssetStruct ),
+};
+
+export function DnaAsset ( entry ) {
+    return intoStruct( entry, DnaAssetStruct );
+}
+
+
 export default {
     DnaTokenStruct,
     DnaStruct,
     DnaEntry,
     Dna,
+
+    DnaAssetStruct,
+    DnaAsset,
 };

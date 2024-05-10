@@ -32,6 +32,7 @@ import {
     expect_reject,
     linearSuite,
     dnaConfig,
+    sha256,
 }					from '../utils.js';
 
 
@@ -40,6 +41,7 @@ const DNAHUB_DNA_PATH			= path.join( __dirname, "../../dnas/dnahub.dna" );
 const ZOMEHUB_DNA_PATH			= path.join( __dirname, "../../dnas/zomehub.dna" );
 
 let app_port;
+let installations;
 
 
 describe("DnaHub", function () {
@@ -51,7 +53,7 @@ describe("DnaHub", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	    "bobby",
 	], [
@@ -93,7 +95,9 @@ function basic_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const app_token			= installations.alice.test.auth.token;
+	app_client			= await client.app( app_token );
 
 	({
 	    zomehub,
@@ -125,13 +129,13 @@ function basic_tests () {
 	log.normal("DNA entry: %s", json.debug(dna) );
     });
 
-    it("should get some wasm (with bytes)", async function () {
-	const wasm			= await dnahub_csr.get_integrity_wasm({
+    it("should get some zome (with bytes)", async function () {
+	const zome			= await dnahub_csr.get_integrity_zome({
 	    "dna_entry": dna1.$addr,
-	    "name": "fake-wasm-1",
+	    "name": "fake-zome-1",
 	});
 
-	log.normal("WASM [fake-wasm-1]: %s", json.debug(wasm) );
+	log.normal("ZOME [fake-zome-1]: %s", json.debug(zome) );
     });
 
     it("should get DNA bundle", async function () {
@@ -139,6 +143,29 @@ function basic_tests () {
 	const bundle			= new Bundle( bundle_bytes, "dna" );
 
 	log.normal("DNA bundle: %s", json.debug(bundle) );
+    });
+
+    it("should get DNA asset", async function () {
+	const dna_asset			= await dnahub_csr.get_dna_asset( dna1.$addr );
+
+	log.normal("DNA asset: %s", json.debug(dna_asset) );
+
+	const bundle1			= Bundle.createDna( TEST_DNA_CONFIG );
+	const bundle1_bytes		= bundle1.toBytes();
+	const bundle2			= await dnahub_csr.bundle_from_dna_asset( dna_asset );
+	const bundle2_bytes		= bundle2.toBytes();
+
+	log.normal("Bundle original: %s", json.debug(bundle1) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2) );
+
+	log.normal("Bundle original: %s", json.debug(bundle1_bytes) );
+	log.normal("Bundle packaged: %s", json.debug(bundle2_bytes) );
+
+	log.normal(
+	    "Bundle hashes: %s === %s",
+	    sha256(bundle1_bytes),
+	    sha256(bundle2_bytes),
+	);
     });
 
     it("should upload the same DNA bundle", async function () {
@@ -190,7 +217,8 @@ function basic_tests () {
 
 	    let dna			= await dnahub_csr.save_dna( dna_bytes );
 
-	    const bobby_client		= await client.app( "test-bobby" );
+	    const app_token		= installations.bobby.test.auth.token;
+	    const bobby_client		= await client.app( app_token );
 	    const bobby_dnahub_csr	= bobby_client
 		  .createCellInterface( "dnahub", DnaHubCell )
 		  .zomes.dnahub_csr.functions;

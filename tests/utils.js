@@ -1,4 +1,5 @@
 
+import crypto				from 'crypto';
 import { expect }			from 'chai';
 
 
@@ -34,16 +35,16 @@ export function dnaConfig () {
 	"integrity": {
 	    "origin_time": "2023-01-01T00:00:00Z",
 	    "zomes": [{
-		"name": "fake-wasm-1",
+		"name": "fake-zome-1",
 		"bytes": new Uint8Array( Array( 1_000 ).fill( 1 ) ),
 	    }],
 	},
 	"coordinator": {
 	    "zomes": [{
-		"name": "fake-wasm-2",
+		"name": "fake-zome-2",
 		"bytes": new Uint8Array( Array( 1_000 ).fill( 1 ) ),
 		"dependencies": [
-		    "fake-wasm-1",
+		    "fake-zome-1",
 		],
 	    }],
 	},
@@ -70,6 +71,14 @@ export function webhappConfig ( happ_manifest ) {
     };
 }
 
+export function sha256 ( bytes ) {
+    const hash				= crypto.createHash("sha256");
+
+    hash.update( bytes );
+
+    return hash.digest("hex");
+}
+
 
 export default {
     expect_reject,
@@ -77,4 +86,5 @@ export default {
     dnaConfig,
     happConfig,
     webhappConfig,
+    sha256,
 };

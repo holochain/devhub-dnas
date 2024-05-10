@@ -7,6 +7,9 @@ use hdk::prelude::*;
 use hdk_extensions::{
     agent_id,
     must_get,
+    hdi_extensions::{
+        guest_error,
+    },
 };
 use serde_bytes::ByteBuf;
 use apphub_types::{
@@ -15,6 +18,8 @@ use apphub_types::{
     BundleAddr,
     DeprecationNotice,
     RmpvValue,
+    ResourcesMap,
+    WebAppResourcesMap,
 
     RoleToken,
     AppManifestV1,
@@ -29,9 +34,16 @@ use apphub_types::{
 
     WebAppPackageEntry,
     WebAppPackageVersionEntry,
+
+    UiEntry,
+    mere_memory_types,
+};
+use mere_memory_types::{
+    MemoryEntry,
 };
 use dnahub_sdk::{
     DnaTokenInput,
+    DnaAsset,
 };
 use hc_crud::{
     Entity, EntityId,
@@ -115,14 +127,18 @@ impl From<AppTokenInput> for AppToken {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppEntryInput {
     pub manifest: AppManifestV1,
+    pub resources: ResourcesMap,
     pub app_token: AppTokenInput,
+    pub claimed_file_size: u64,
 }
 
 impl From<AppEntryInput> for AppEntry {
     fn from(input: AppEntryInput) -> Self {
         Self {
             manifest: input.manifest,
+            resources: input.resources,
             app_token: input.app_token.into(),
+            claimed_file_size: input.claimed_file_size,
         }
     }
 }
@@ -131,14 +147,21 @@ impl From<AppEntryInput> for AppEntry {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateAppInput {
     pub manifest: AppManifestV1,
+    pub resources: ResourcesMap,
     pub roles_dna_tokens: RolesDnaTokensInput,
+    pub claimed_file_size: u64,
 }
 
 impl TryFrom<CreateAppInput> for AppEntry {
     type Error = WasmError;
 
     fn try_from(input: CreateAppInput) -> ExternResult<Self> {
-        Self::new( input.manifest, input.roles_dna_tokens.into() )
+        Self::new(
+            input.manifest,
+            input.resources,
+            input.roles_dna_tokens.into(),
+            input.claimed_file_size
+        )
     }
 }
 
@@ -162,6 +185,7 @@ impl From<WebAppTokenInput> for WebAppToken {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebAppEntryInput {
     pub manifest: WebAppManifestV1,
+    pub resources: WebAppResourcesMap,
 
     pub webapp_token: WebAppTokenInput,
 }
@@ -170,6 +194,7 @@ impl From<WebAppEntryInput> for WebAppEntry {
     fn from(input: WebAppEntryInput) -> Self {
         Self {
             manifest: input.manifest,
+            resources: input.resources,
             webapp_token: input.webapp_token.into(),
         }
     }
@@ -179,13 +204,14 @@ impl From<WebAppEntryInput> for WebAppEntry {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateWebAppInput {
     pub manifest: WebAppManifestV1,
+    pub resources: WebAppResourcesMap,
 }
 
 impl TryFrom<CreateWebAppInput> for WebAppEntry {
     type Error = WasmError;
 
     fn try_from(input: CreateWebAppInput) -> ExternResult<Self> {
-        Self::new( input.manifest )
+        Self::new( input.manifest, input.resources )
     }
 }
 
@@ -309,6 +335,118 @@ impl TryFrom<CreateWebAppPackageVersionInput> for WebAppPackageVersionEntry {
                     .unwrap_or( agent_id()?.into() ),
                 source_code_revision_uri: input.source_code_revision_uri,
                 metadata: input.metadata,
+            }
+        )
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AppAsset {
+    pub app_entry: AppEntry,
+    pub dna_assets: BTreeMap<RoleName, DnaAsset>,
+}
+
+impl TryInto<AppAsset> for EntryHash {
+    type Error = WasmError;
+    fn try_into(self) -> ExternResult<AppAsset> {
+        let app_entry : AppEntry = must_get( &self )?.try_into()?;
+        let mut dna_assets = BTreeMap::new();
+
+        for role_manifest in app_entry.manifest.roles.iter() {
+            let hrl = app_entry.resources.get( &role_manifest.dna.bundled )
+                .ok_or(guest_error!(format!(
+                    "DnaEntry does not have resource for path '{}'",
+                    role_manifest.dna.bundled,
+                )))?;
+            let dna_asset : DnaAsset = call_cell(
+                hrl.dna.clone(),
+                "dnahub_csr",
+                "get_dna_asset",
+                hrl.target.clone(),
+                (),
+            )?;
+
+            dna_assets.insert( role_manifest.name.clone(), dna_asset );
+        }
+
+        Ok(
+            AppAsset {
+                app_entry,
+                dna_assets,
+            }
+        )
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WebAppAsset {
+    pub webapp_entry: WebAppEntry,
+    pub app_asset: AppAsset,
+    pub ui_asset: UiAsset,
+}
+
+impl TryInto<WebAppAsset> for EntryHash {
+    type Error = WasmError;
+    fn try_into(self) -> ExternResult<WebAppAsset> {
+        let webapp_entry : WebAppEntry = must_get( &self )?.try_into()?;
+
+        let app_asset : AppAsset = call_zome(
+            "apphub_csr",
+            "get_app_asset",
+            webapp_entry.app_entry_addr()?,
+            (),
+        )?;
+
+        let ui_asset : UiAsset = call_zome(
+            "apphub_csr",
+            "get_ui_asset",
+            webapp_entry.ui_entry_addr()?,
+            (),
+        )?;
+
+        Ok(
+            WebAppAsset {
+                webapp_entry,
+                app_asset,
+                ui_asset,
+            }
+        )
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MemoryWithBytes(
+    MemoryEntry,
+    Vec<u8>
+);
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UiAsset {
+    pub ui_entry: UiEntry,
+    pub memory_entry: MemoryEntry,
+    pub bytes: Vec<u8>,
+}
+
+impl TryInto<UiAsset> for EntryHash {
+    type Error = WasmError;
+    fn try_into(self) -> ExternResult<UiAsset> {
+        let ui_entry : UiEntry = must_get( &self )?.try_into()?;
+
+        let memory_with_bytes : MemoryWithBytes = call_zome(
+            "mere_memory_api",
+            "get_memory_with_bytes",
+            ui_entry.mere_memory_addr.clone(),
+            (),
+        )?;
+
+        Ok(
+            UiAsset {
+                ui_entry: ui_entry,
+                memory_entry: memory_with_bytes.0,
+                bytes: memory_with_bytes.1.to_vec(),
             }
         )
     }

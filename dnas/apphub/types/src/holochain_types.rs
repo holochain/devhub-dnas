@@ -25,13 +25,6 @@ pub type RoleName = String;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct HRL {
-    pub dna: DnaHash,
-    pub target: AnyDhtHash,
-}
-
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub struct AppManifestV1 {
     pub name: String,
@@ -105,7 +98,7 @@ pub struct AppRoleManifest {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppRoleDnaManifest {
-    pub dna_hrl: HRL,
+    pub bundled: String,
     #[serde(default)]
     pub modifiers: DnaModifiersOpt<YamlProperties>,
     #[serde(default)]
@@ -140,11 +133,11 @@ pub struct WebAppManifestV1 {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebUI {
-    pub ui_entry: EntryHash,
+    pub bundled: String,
 }
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppManifestLocation {
-    pub app_entry: EntryHash,
+    pub bundled: String,
 }

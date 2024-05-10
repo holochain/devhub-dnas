@@ -48,6 +48,8 @@ const zomehub_spec			= new CellZomelets({
 
 let agents				= {};
 let app_port;
+let installations;
+
 
 describe("ZomeHub - Real", function () {
     const holochain			= new Holochain({
@@ -58,7 +60,7 @@ describe("ZomeHub - Real", function () {
     before(async function () {
 	this.timeout( 60_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	], [
 	    {
@@ -85,7 +87,7 @@ function real_tests () {
     let app_client;
     let zomehub;
     let zomehub_csr;
-    let wasm1_addr, wasm1;
+    let zome1_addr, zome1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -93,7 +95,9 @@ function real_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "normal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const app_token			= installations.alice.test.auth.token;
+	app_client			= await client.app( app_token );
 
 	({
 	    zomehub,
@@ -106,23 +110,23 @@ function real_tests () {
 	await zomehub_csr.whoami();
     });
 
-    it("should create wasm entry", async function () {
+    it("should create zome entry", async function () {
 	this.timeout( 10_000 );
 
-	const WASM_PATH			= path.join( __dirname, "../../zomes/zomehub.wasm" );
-	const wasm_bytes		= await fs.readFile( WASM_PATH );
+	const ZOME_PATH			= path.join( __dirname, "../../zomes/zomehub.wasm" );
+	const zome_bytes		= await fs.readFile( ZOME_PATH );
 
-	wasm1				= await zomehub_csr.save_integrity( wasm_bytes );
-	wasm1_addr			= wasm1.$addr;
+	zome1				= await zomehub_csr.save_integrity( zome_bytes );
+	zome1_addr			= zome1.$addr;
 
-	expect( wasm1_addr		).to.be.a("EntryHash");
+	expect( zome1_addr		).to.be.a("EntryHash");
     });
 
-    it("should get wasm entry", async function () {
-	const wasm			= await zomehub_csr.get_wasm_entry( wasm1_addr );
-	log.trace("%s", json.debug(wasm) );
+    it("should get zome entry", async function () {
+	const zome			= await zomehub_csr.get_zome_entry( zome1_addr );
+	log.trace("%s", json.debug(zome) );
 
-	expect( wasm			).to.have.any.keys( "mere_memory_addr" );
+	expect( zome			).to.have.any.keys( "mere_memory_addr" );
     });
 
     after(async function () {
