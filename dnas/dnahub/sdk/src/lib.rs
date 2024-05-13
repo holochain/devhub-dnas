@@ -1,4 +1,6 @@
 pub use dnahub_types;
+pub use zomehub_sdk;
+pub use zomehub_sdk::zomehub_types;
 pub use devhub_sdk;
 pub use devhub_sdk::*;
 
