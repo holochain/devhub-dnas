@@ -10,6 +10,7 @@ import crypto				from 'crypto';
 import { expect }			from 'chai';
 
 import json				from '@whi/json';
+import { Bundle }			from '@spartan-hc/bundles';
 import {
     HoloHash,
     DnaHash, AgentPubKey,
@@ -29,6 +30,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    sha256,
 }					from '../utils.js';
 
 
@@ -120,6 +122,8 @@ function real_tests () {
 	await apphub_csr.whoami();
     });
 
+    let src_bundle;
+
     it("should create App entry", async function () {
 	this.timeout( 30_000 );
 
@@ -128,12 +132,54 @@ function real_tests () {
 	app1				= await apphub_csr.save_app( app_bytes );
 
 	expect( app1.$addr		).to.be.a("EntryHash");
+
+	// Setup source bundle for comparison later
+	{
+	    src_bundle			= new Bundle( app_bytes, "happ" );
+
+	    src_bundle.dnas().forEach( (dna_bundle, i) => {
+		const role_manifest		= src_bundle.manifest.roles[i];
+		const rpath			= role_manifest.dna.bundled;
+
+		// Replace DNA bytes with deterministic bytes
+		src_bundle.resources[ rpath ]	= dna_bundle.toBytes({ sortKeys: true });
+	    });
+	}
     });
 
     it("should get App entry", async function () {
 	const app			= await apphub_csr.get_app_entry( app1.$addr );
 
 	log.normal("%s", json.debug(app) );
+    });
+
+    it("should get hApp bundle", async function () {
+	this.timeout( 30_000 );
+
+	const bundle_bytes		= await apphub_csr.get_happ_bundle( app1.$addr );
+	const bundle			= new Bundle( bundle_bytes, "happ" );
+
+	bundle.dnas().forEach( (dna_bundle, i) => {
+	    const role_manifest		= bundle.manifest.roles[i];
+	    const rpath			= role_manifest.dna.bundled;
+
+	    // Add integrity's 'dependencies' field back in for comparing against source bundle;
+	    // which has the field because `hc` bundler adds it.
+	    for ( let zome_manifest of dna_bundle.manifest.integrity.zomes ) {
+		zome_manifest.dependencies	= null;
+	    }
+
+	    bundle.resources[ rpath ]	= dna_bundle.toBytes({ sortKeys: true });
+	});
+
+	const src_msgpack_hash		= sha256( src_bundle.toEncoded({ sortKeys: true }) );
+	const src_manifest		= src_bundle.manifest.source;
+
+	const new_manifest		= bundle.manifest.toJSON();
+	const new_msgpack_hash		= sha256( bundle.toEncoded({ sortKeys: true }) );
+
+	expect( src_manifest		).to.deep.equal( new_manifest );
+	expect( src_msgpack_hash	).to.deep.equal( new_msgpack_hash );
     });
 
     after(async function () {

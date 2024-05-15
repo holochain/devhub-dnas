@@ -147,6 +147,10 @@ npm-reinstall-local:
 	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)
 npm-reinstall-public:
 	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(NPM_PACKAGE)
+npm-reinstall-%-zomelets-local:
+	cd dnas/$*/zomelets; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)
+npm-reinstall-%-zomelets-public:
+	cd dnas/$*/zomelets; npm uninstall $(NPM_PACKAGE); npm i --save $(NPM_PACKAGE)
 
 npm-use-app-interface-client-public:
 npm-use-app-interface-client-local:
@@ -162,6 +166,9 @@ npm-use-bundles-public:
 npm-use-bundles-local:
 npm-use-bundles-%:
 	NPM_PACKAGE=@spartan-hc/bundles LOCAL_PATH=../../bundles-js make npm-reinstall-$*
+	NPM_PACKAGE=@spartan-hc/bundles LOCAL_PATH=../../../../bundles-js make npm-reinstall-zomehub-zomelets-$*
+	NPM_PACKAGE=@spartan-hc/bundles LOCAL_PATH=../../../../bundles-js make npm-reinstall-dnahub-zomelets-$*
+	NPM_PACKAGE=@spartan-hc/bundles LOCAL_PATH=../../../../bundles-js make npm-reinstall-apphub-zomelets-$*
 
 
 

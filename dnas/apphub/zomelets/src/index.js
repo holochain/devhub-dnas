@@ -523,7 +523,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    resources,
 	}, "happ");
 
-	return bundle.toBytes();
+	return bundle.toBytes({ sortKeys: true });
     },
     // "get_webapp_bundle":		"get_webhapp_bundle",
     async get_webhapp_bundle ( input ) {
@@ -554,7 +554,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    resources,
 	}, "webhapp");
 
-	return bundle.toBytes();
+	return bundle.toBytes({ sortKeys: true });
     },
     async bundle_from_app_asset ( app_asset ) {
 	const manifest			= app_asset.app_entry.manifest;
@@ -565,7 +565,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 	    const dna_bundle		= await this.cells.dnahub.dnahub_csr.bundle_from_dna_asset(
 		app_asset.dna_assets[ role_manifest.name ]
 	    );
-	    resources[ rpath ]		= dna_bundle.toBytes();
+	    resources[ rpath ]		= dna_bundle.toBytes({ sortKeys: true });
 	}
 
 	return new Bundle({
@@ -585,7 +585,7 @@ export const AppHubCSRZomelet		= new Zomelet({
 		webapp_asset.app_asset
 	    );
 	    const rpath			= manifest.happ_manifest.bundled;
-	    resources[ rpath ]		= app_bundle.toBytes();
+	    resources[ rpath ]		= app_bundle.toBytes({ sortKeys: true });
 	}
 
 	{

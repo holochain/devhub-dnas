@@ -23,9 +23,9 @@
   },
   "dependencies": {
     "@holochain/zomehub-zomelets": "file:../../zomehub/zomelets",
-    "@spartan-hc/bundles": "^0.2.2",
+    "@spartan-hc/bundles": "^0.2.5",
     "@spartan-hc/entities": "^0.1.1",
-    "@spartan-hc/holo-hash": "^0.6.1",
+    "@spartan-hc/holo-hash": "^0.7.0",
     "@spartan-hc/zomelets": "^0.2.0",
     "@whi/bytes-class": "^0.1.0"
   },

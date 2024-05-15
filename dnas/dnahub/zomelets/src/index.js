@@ -217,7 +217,7 @@ export const DnaHubCSRZomelet		= new Zomelet({
 	    resources,
 	}, "dna");
 
-	return bundle.toBytes();
+	return bundle.toBytes({ sortKeys: true });
     },
     async bundle_from_dna_asset ( dna_asset ) {
 	const manifest			= dna_asset.dna_entry.manifest;

@@ -10,6 +10,7 @@ import crypto				from 'crypto';
 import { expect }			from 'chai';
 
 import json				from '@whi/json';
+import { Bundle }			from '@spartan-hc/bundles';
 import {
     HoloHash,
     DnaHash, AgentPubKey,
@@ -28,6 +29,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    sha256,
 }					from '../utils.js';
 
 
@@ -81,7 +83,7 @@ function real_tests () {
     let zomehub_csr;
     let dnahub;
     let dnahub_csr;
-    let dna1_addr, dna1;
+    let dna1;
 
     before(async function () {
 	this.timeout( 30_000 );
@@ -113,14 +115,16 @@ function real_tests () {
 
 	const dna_bytes			= await fs.readFile( ZOMEHUB_DNA_PATH );
 
+	src_bundle			= new Bundle( dna_bytes, "dna" );
 	dna1				= await dnahub_csr.save_dna( dna_bytes );
-	dna1_addr			= dna1.$addr;
 
-	expect( dna1_addr		).to.be.a("EntryHash");
+	expect( dna1.$addr		).to.be.a("EntryHash");
     });
 
+    let src_bundle;
+
     it("should get DNA entry", async function () {
-	const dna			= await dnahub_csr.get_dna_entry( dna1_addr );
+	const dna			= await dnahub_csr.get_dna_entry( dna1.$addr );
 	log.normal("%s", json.debug(dna) );
 
 	expect( dna			).to.have.any.keys(
@@ -129,6 +133,26 @@ function real_tests () {
 	    "integrities_token",
 	    "coordinators_token",
 	);
+    });
+
+    it("should get DNA bundle", async function () {
+	this.timeout( 30_000 );
+
+	const bundle_bytes		= await dnahub_csr.get_dna_bundle( dna1.$addr );
+	const bundle			= new Bundle( bundle_bytes, "dna" );
+
+	const src_msgpack_hash		= sha256( bundle.toEncoded({ sortKeys: true }) );
+	const src_manifest		= src_bundle.manifest.source;
+	const src_resources		= src_bundle.resources;
+	const new_manifest		= bundle.manifest.toJSON();
+
+	for ( let zome_manifest of new_manifest.integrity.zomes ) {
+	    zome_manifest.dependencies	= null;
+	}
+
+	expect( src_manifest		).to.deep.equal( new_manifest );
+	expect( src_resources		).to.deep.equal( bundle.resources );
+	expect( src_msgpack_hash	).to.deep.equal( sha256( bundle.msgpack_source ) );
     });
 
     after(async function () {
