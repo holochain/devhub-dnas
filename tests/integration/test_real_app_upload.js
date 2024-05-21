@@ -160,26 +160,26 @@ function real_tests () {
 	const bundle			= new Bundle( bundle_bytes, "happ" );
 
 	bundle.dnas().forEach( (dna_bundle, i) => {
-	    const role_manifest		= bundle.manifest.roles[i];
-	    const rpath			= role_manifest.dna.bundled;
-
 	    // Add integrity's 'dependencies' field back in for comparing against source bundle;
 	    // which has the field because `hc` bundler adds it.
 	    for ( let zome_manifest of dna_bundle.manifest.integrity.zomes ) {
 		zome_manifest.dependencies	= null;
 	    }
 
+	    const role_manifest		= bundle.manifest.roles[i];
+	    const rpath			= role_manifest.dna.bundled;
+
 	    bundle.resources[ rpath ]	= dna_bundle.toBytes({ sortKeys: true });
 	});
 
+	const src_manifest		= src_bundle.manifest.toJSON();
 	const src_msgpack_hash		= sha256( src_bundle.toEncoded({ sortKeys: true }) );
-	const src_manifest		= src_bundle.manifest.source;
 
 	const new_manifest		= bundle.manifest.toJSON();
 	const new_msgpack_hash		= sha256( bundle.toEncoded({ sortKeys: true }) );
 
 	expect( src_manifest		).to.deep.equal( new_manifest );
-	expect( src_msgpack_hash	).to.deep.equal( new_msgpack_hash );
+	expect( src_msgpack_hash	).to.equal( new_msgpack_hash );
     });
 
     after(async function () {
