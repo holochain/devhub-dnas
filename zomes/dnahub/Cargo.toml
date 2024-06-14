@@ -10,5 +10,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_dnahub_types = { version = "0.2", path = "../../dnas/dnahub/types" }
-hc_crud_caps = "0.15"
+hc_crud_caps = "0.14.1"
 serde = "1"
