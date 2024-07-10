@@ -57,19 +57,19 @@ fn create_dna(input: CreateDnaInput) -> ExternResult<Entity<DnaEntry>> {
 
 #[hdk_extern]
 fn derive_dna_token(input: CreateDnaInput) -> ExternResult<DnaToken> {
-    input.manifest.dna_token()
+    input.deserialized_manifest()?.dna_token( &input.asset_hashes )
 }
 
 
 #[hdk_extern]
 fn derive_integrities_token(input: CreateDnaInput) -> ExternResult<IntegritiesToken> {
-    input.manifest.integrities_token()
+    input.deserialized_manifest()?.integrities_token( &input.asset_hashes )
 }
 
 
 #[hdk_extern]
 fn derive_coordinators_token(input: CreateDnaInput) -> ExternResult<CoordinatorsToken> {
-    input.manifest.coordinators_token()
+    input.deserialized_manifest()?.coordinators_token()
 }
 
 

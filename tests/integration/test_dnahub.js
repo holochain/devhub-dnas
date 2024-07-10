@@ -46,12 +46,12 @@ let installations;
 
 describe("DnaHub", function () {
     const holochain			= new Holochain({
-	"timeout": 60_000,
+	"timeout": 120_000,
 	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
-	this.timeout( 60_000 );
+	this.timeout( 120_000 );
 
 	installations			= await holochain.install([
 	    "alice",

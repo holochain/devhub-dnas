@@ -21,6 +21,7 @@ pub type IntegritiesToken = Vec<(String, Vec<u8>)>;
 pub type CoordinatorsToken = Vec<(String, Vec<u8>)>;
 pub type AssetHashes = BTreeMap<String, String>;
 pub type ResourcesMap = BTreeMap<String, HRL>;
+pub type RmpvValue = rmpv::Value;
 
 
 

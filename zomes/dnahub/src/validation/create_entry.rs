@@ -16,9 +16,9 @@ pub fn validation(
 ) -> ExternResult<ValidateCallbackResult> {
     match app_entry {
         EntryTypes::Dna(dna_entry) => {
-            let dna_token = dna_entry.manifest.dna_token()?;
-            let integrities_token = dna_entry.manifest.integrities_token()?;
-            let coordinators_token = dna_entry.manifest.coordinators_token()?;
+            let dna_token = dna_entry.calc_dna_token()?;
+            let integrities_token = dna_entry.calc_integrities_token()?;
+            let coordinators_token = dna_entry.calc_coordinators_token()?;
 
             if dna_entry.dna_token != dna_token {
                 invalid!(format!("Invalid DNA Token; expected {:?}", dna_token ))

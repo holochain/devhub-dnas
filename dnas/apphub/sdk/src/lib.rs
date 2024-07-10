@@ -26,13 +26,11 @@ use apphub_types::{
     WebAppResourcesMap,
 
     RoleToken,
-    AppManifestV1,
     AppToken,
     AppEntry,
 
     RolesToken,
     RolesDnaTokens,
-    WebAppManifestV1,
     WebAppToken,
     WebAppEntry,
 
@@ -130,7 +128,7 @@ impl From<AppTokenInput> for AppToken {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AppEntryInput {
-    pub manifest: AppManifestV1,
+    pub manifest: RmpvValue,
     pub resources: ResourcesMap,
     pub app_token: AppTokenInput,
     pub claimed_file_size: u64,
@@ -150,7 +148,7 @@ impl From<AppEntryInput> for AppEntry {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateAppInput {
-    pub manifest: AppManifestV1,
+    pub manifest: RmpvValue,
     pub resources: ResourcesMap,
     pub roles_dna_tokens: RolesDnaTokensInput,
     pub claimed_file_size: u64,
@@ -188,7 +186,7 @@ impl From<WebAppTokenInput> for WebAppToken {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WebAppEntryInput {
-    pub manifest: WebAppManifestV1,
+    pub manifest: RmpvValue,
     pub resources: WebAppResourcesMap,
 
     pub webapp_token: WebAppTokenInput,
@@ -207,7 +205,7 @@ impl From<WebAppEntryInput> for WebAppEntry {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateWebAppInput {
-    pub manifest: WebAppManifestV1,
+    pub manifest: RmpvValue,
     pub resources: WebAppResourcesMap,
 }
 
@@ -357,7 +355,7 @@ impl TryInto<AppAsset> for EntryHash {
         let app_entry : AppEntry = must_get( &self )?.try_into()?;
         let mut dna_assets = BTreeMap::new();
 
-        for role_manifest in app_entry.manifest.roles.iter() {
+        for role_manifest in app_entry.deserialized_manifest()?.roles.iter() {
             let hrl = app_entry.resources.get( &role_manifest.dna.bundled )
                 .ok_or(guest_error!(format!(
                     "DnaEntry does not have resource for path '{}'",

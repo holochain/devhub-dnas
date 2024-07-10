@@ -10,7 +10,11 @@ use crate::{
     },
 };
 
+use std::io::Cursor;
 use hdi::prelude::*;
+use hdi_extensions::{
+    guest_error,
+};
 
 
 //
@@ -19,7 +23,7 @@ use hdi::prelude::*;
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct AppEntry {
-    pub manifest: AppManifestV1,
+    pub manifest: rmpv::Value,
     pub resources: ResourcesMap,
 
     // This cannot be used for validation as it is solely provided by the client-side and cannot be
@@ -30,13 +34,14 @@ pub struct AppEntry {
 
 impl AppEntry {
     pub fn new(
-        manifest: AppManifestV1,
+        manifest: rmpv::Value,
         resources: ResourcesMap,
         roles_dna_tokens: RolesDnaTokens,
         claimed_file_size: u64,
     ) -> ExternResult<Self> {
         // This manifest method will ensure all DNA tokens are present
-        let roles_token = manifest.roles_token( roles_dna_tokens )?;
+        let app_manifest = AppEntry::deserialize_manifest( &manifest )?;
+        let roles_token = app_manifest.roles_token( roles_dna_tokens )?;
 
         Ok(
             Self {
@@ -46,6 +51,24 @@ impl AppEntry {
                 claimed_file_size,
             }
         )
+    }
+
+    pub fn deserialize_manifest(manifest: &rmpv::Value) -> ExternResult<AppManifestV1> {
+        let mut buf = Vec::new();
+        rmpv::encode::write_value(&mut buf, manifest)
+            .map_err(|e| guest_error!(format!(
+                "Failed to encode manifest value: {:?}", e
+            )))?;
+
+        let cursor = Cursor::new(buf);
+        rmp_serde::from_read(cursor)
+            .map_err(|e| guest_error!(format!(
+                "Failed to deserialize manifest: {:?}", e
+            )))
+    }
+
+    pub fn deserialized_manifest(&self) -> ExternResult<AppManifestV1> {
+        AppEntry::deserialize_manifest( &self.manifest )
     }
 
     pub fn create_integrity_hash(roles_token: &RolesToken) -> ExternResult<Vec<u8>> {
@@ -87,6 +110,6 @@ impl AppEntry {
     }
 
     pub fn validate_roles_token(&self) -> ExternResult<()> {
-        self.manifest.validate_roles_token( &self.app_token.roles_token )
+        self.deserialized_manifest()?.validate_roles_token( &self.app_token.roles_token )
     }
 }
