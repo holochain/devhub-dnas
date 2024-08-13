@@ -35,31 +35,7 @@ export const DnaTokenStruct = {
 };
 
 export const DnaStruct = {
-    "manifest": {
-	"name":			String,
-	"integrity": {
-	    "network_seed":	OptionType( AnyType ),
-	    "properties":	OptionType( AnyType ),
-	    "origin_time":	AnyType,
-	    "zomes": VecType({
-		"name":		String,
-		"hash":		OptionType( AnyType ),
-		"bundled":	String,
-		"dylib":	OptionType( AnyType ),
-	    }),
-	},
-	"coordinator": {
-	    "zomes": VecType({
-		"name":		String,
-		"hash":		OptionType( AnyType ),
-		"bundled":	String,
-		"dependencies": VecType({
-		    "name":	String,
-		}),
-		"dylib":	OptionType( AnyType ),
-	    }),
-	},
-    },
+    "manifest":                 AnyType,
     "resources":		MapType( String, HRLStruct ),
     "dna_token":		DnaTokenStruct,
     "integrities_token":	VecType([

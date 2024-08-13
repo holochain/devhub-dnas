@@ -28,6 +28,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    delay,
 }					from '../utils.js';
 
 
@@ -168,6 +169,8 @@ function basic_tests () {
 	    const bobby_zomehub_csr	= bobby_client
 		  .createCellInterface( ZOMEHUB_DNA_NAME, ZomeHubCell )
 		  .zomes.zomehub_csr.functions;
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_zomehub_csr.delete_zome( zome.$id );

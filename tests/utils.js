@@ -80,6 +80,11 @@ export function sha256 ( bytes ) {
 }
 
 
+export function delay ( n = 1 ) {
+    return new Promise( f => setTimeout(f, n * 1_000) );
+}
+
+
 export default {
     expect_reject,
     linearSuite,
@@ -87,4 +92,5 @@ export default {
     happConfig,
     webhappConfig,
     sha256,
+    delay,
 };

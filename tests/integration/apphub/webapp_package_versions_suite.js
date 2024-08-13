@@ -13,6 +13,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    delay,
 }					from '../../utils.js';
 
 
@@ -104,6 +105,8 @@ export default function ( args_fn ) {
     }
 
     it("should get WebApp Package versions (sorted with semver)", async function () {
+        this.timeout( 30_000 );
+
 	moved_version			= await create_version("0.2.0");
 	await create_version("0.1.0-beta-rc.0");
 	await create_version("0.1.0-beta-rc.1");
@@ -132,6 +135,8 @@ export default function ( args_fn ) {
     });
 
     it("should update a WebApp Package Version's parent package", async function () {
+        this.timeout( 10_000 );
+
 	const pack			= await apphub_csr.create_webapp_package({
 	    "title": faker.commerce.productName(),
 	    "subtitle": faker.lorem.sentence(),
@@ -204,12 +209,16 @@ export default function ( args_fn ) {
 	});
 
 	it("should fail to delete WebApp Package Version entry because author", async function () {
+            this.timeout( 10_000 );
+
 	    const version		= await apphub_csr.create_webapp_package_version({
 		"version": "1.0.0",
 		"for_package": pack1.$id,
 		"webapp": webapp1_addr,
 		"source_code_revision_uri": faker.internet.url(),
 	    });
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_apphub_csr.delete_webapp_package_version( version.$id );

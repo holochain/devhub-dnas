@@ -2,7 +2,7 @@
 name = "hc_devhub_sdk"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
-edition = "2018"
+edition = "2021"
 license = "CAL-1.0"
 repository = "https://github.com/holochain/devhub-dnas"
 description = "Base SDK used by the DevHub DNA's SDKs"
@@ -13,6 +13,6 @@ name = "devhub_sdk"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_crud_caps = "0.15"
+hc_crud_caps = "0.16"
 serde = "1"
-whi_hdk_extensions = "0.9"
+whi_hdk_extensions = "0.10"

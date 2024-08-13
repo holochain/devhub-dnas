@@ -12,7 +12,7 @@
     "@holochain/apphub-zomelets": "file:../dnas/apphub/zomelets",
     "@holochain/dnahub-zomelets": "file:../dnas/dnahub/zomelets",
     "@holochain/zomehub-zomelets": "file:../dnas/zomehub/zomelets",
-    "@spartan-hc/app-interface-client": "^0.7.1",
+    "@spartan-hc/app-interface-client": "^0.7.2",
     "@spartan-hc/bundles": "^0.2.5",
     "@spartan-hc/holo-hash": "^0.6.1",
     "@spartan-hc/holochain-backdrop": "^4.4.1",

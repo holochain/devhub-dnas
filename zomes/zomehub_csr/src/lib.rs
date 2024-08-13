@@ -147,3 +147,14 @@ fn get_zome_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
 fn delete_zome(addr: ActionHash) -> ExternResult<ActionHash> {
     Ok( delete_entity::<ZomeEntry,EntryTypes>( &addr )? )
 }
+
+
+#[hdk_extern]
+pub fn query_whole_chain() -> ExternResult<Vec<Record>> {
+    Ok(
+        query(
+            ChainQueryFilter::new()
+                .include_entries(true)
+        )?
+    )
+}

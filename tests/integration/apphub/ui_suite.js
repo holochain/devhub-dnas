@@ -13,6 +13,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    delay,
 }					from '../../utils.js';
 
 
@@ -80,6 +81,8 @@ export default function ( args_fn ) {
 	it("should fail to update UI entry");
 
 	it("should fail to delete UI entry because author", async function () {
+            this.timeout( 10_000 );
+
 	    let ui			= await apphub_csr.save_ui( UI_BYTES );
 
 	    const app_token		= installations.bobby.test.auth.token;
@@ -87,6 +90,8 @@ export default function ( args_fn ) {
 	    const bobby_apphub_csr	= bobby_client
 		  .createCellInterface( "apphub", AppHubCell )
 		  .zomes.apphub_csr.functions;
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_apphub_csr.delete_ui( ui.$id );

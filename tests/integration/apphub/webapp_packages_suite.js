@@ -13,6 +13,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    delay,
 }					from '../../utils.js';
 
 
@@ -136,6 +137,8 @@ export default function ( args_fn ) {
 	});
 
 	it("should fail to delete WebApp Package entry because author", async function () {
+            this.timeout( 10_000 );
+
 	    const pack			= await apphub_csr.create_webapp_package({
 		"title": faker.commerce.productName(),
 		"subtitle": faker.lorem.sentence(),
@@ -143,6 +146,8 @@ export default function ( args_fn ) {
 		"icon": crypto.randomBytes( 1_000 ),
 		"source_code_uri": faker.internet.url(),
 	    });
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_apphub_csr.delete_webapp_package( pack.$id );

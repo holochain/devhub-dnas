@@ -33,6 +33,7 @@ import {
     linearSuite,
     dnaConfig,
     sha256,
+    delay,
 }					from '../utils.js';
 
 
@@ -222,6 +223,8 @@ function basic_tests () {
 	    const bobby_dnahub_csr	= bobby_client
 		  .createCellInterface( "dnahub", DnaHubCell )
 		  .zomes.dnahub_csr.functions;
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_dnahub_csr.delete_dna( dna.$id );

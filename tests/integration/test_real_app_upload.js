@@ -154,7 +154,7 @@ function real_tests () {
     });
 
     it("should get hApp bundle", async function () {
-	this.timeout( 30_000 );
+	this.timeout( 60_000 );
 
 	const bundle_bytes		= await apphub_csr.get_happ_bundle( app1.$addr );
 	const bundle			= new Bundle( bundle_bytes, "happ" );

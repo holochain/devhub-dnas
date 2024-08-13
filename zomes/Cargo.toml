@@ -7,3 +7,4 @@ members = [
   "apphub",
   "apphub_csr",
 ]
+resolver = "2"
