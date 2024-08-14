@@ -124,15 +124,7 @@ export const WebAppTokenStruct = {
 // WebAppEntry Handling
 //
 export const WebAppStruct = {
-    "manifest": {
-	"name":			String,
-	"ui": {
-	    "bundled":		String,
-	},
-	"happ_manifest": {
-	    "bundled":		String,
-	},
-    },
+    "manifest":                 AnyType,
     "resources":		MapType( String, EntryHash ),
     "webapp_token":		WebAppTokenStruct,
 };
