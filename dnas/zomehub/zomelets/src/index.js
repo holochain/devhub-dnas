@@ -9,6 +9,13 @@ import {
 }					from '@spartan-hc/zomelets'; // approx. 7kb
 import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets'; // approx. 33kb
 import {
+    rsort as semverReverseSort
+}					from 'semver'; // approx. 32kb
+import {
+    Link,
+    ZomePackageVersionEntry,
+
+    // Entity Classes
     Zome,
     ZomeAsset,
     ZomePackage,
@@ -78,7 +85,15 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     async get_zome_entries_for_agent ( input ) {
 	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
 
-	return entries.map( entry => new Zome( entry, this ) );
+	return Object.fromEntries(
+	    entries.map( entry => {
+		const zome		= new Zome( entry, this );
+		return [
+		    zome.$addr,
+		    zome,
+		];
+	    })
+	);
     },
     async delete_zome ( input ) {
 	return new ActionHash( await this.call( new ActionHash( input ) ) );
@@ -97,6 +112,106 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	const result			= await this.call( input );
 
 	return new ZomePackage( result, this );
+    },
+    async get_zome_package ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return new ZomePackage( result, this );
+    },
+    async get_zome_package_entry ( input ) {
+	const result			= await this.call( new AnyDhtHash( input ) );
+
+	return new ZomePackage( result, this );
+    },
+    async get_zome_packages_for_agent ( input ) {
+	const entries			= await this.call( input ? new AgentPubKey( input ) : input );
+
+	return Object.fromEntries(
+	    entries.map( entry => {
+		const zome_pack		= new ZomePackage( entry, this );
+		return [
+		    zome_pack.$id,
+		    zome_pack,
+		];
+	    })
+	);
+    },
+    async get_zome_package_versions ( input ) {
+	const version_map		= await this.call( input );
+
+	for ( let [vtag, pack_version] of Object.entries(version_map) ) {
+	    version_map[ vtag ]		= new ZomePackageVersion( pack_version, this );
+	    version_map[ vtag ].version	= vtag;
+	}
+
+	return version_map;
+    },
+
+    // Zome Package Links
+    async create_zome_package_link_to_version ( input ) {
+	return new ActionHash( await this.call( input ) );
+    },
+    async delete_zome_package_links_to_version ( input ) {
+	let deleted_links		= await this.call( input );
+
+	return deleted_links.map( addr => new ActionHash( addr ) );
+    },
+    async get_zome_package_version_links ( input ) {
+	const link_map			= await this.call( input );
+
+	for ( let [key, value] of Object.entries( link_map ) ) {
+	    link_map[ key ]		= new Link( value );
+	}
+
+	return link_map;
+    },
+    async get_zome_package_version_targets ( input ) {
+	const link_map			= await this.call( input );
+	const version_names		= Object.keys( link_map );
+
+	for ( let [key, value] of Object.entries( link_map ) ) {
+	    link_map[ key ]		= new ActionHash( value );
+	}
+
+	this.log.info("Found %s versions for Zome Package (%s): %s", () => [
+	    version_names.length, input, version_names.join(", ") ]);
+
+	return link_map;
+    },
+
+
+    //
+    // Zome package Version entry
+    //
+    async create_zome_package_version ( input ) {
+	if ( typeof input.version !== "string" )
+	    throw new TypeError(`Missing 'version' input`);
+
+	const version_link_map		= await this.functions.get_zome_package_version_targets( input.for_package );
+
+	if ( input.version in version_link_map )
+	    throw new Error(`Version '${input.version}' already exists for package ${input.for_package}`);
+
+	const result			= await this.call( input );
+
+	result.content.version		= input.version;
+
+	return new ZomePackageVersion( result, this );
+    },
+    async create_zome_package_version_entry ( input ) {
+	const result			= await this.call( input );
+
+	return new ZomePackageVersion( result, this );
+    },
+    async get_zome_package_version_entry ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return ZomePackageVersionEntry( result );
+    },
+    async get_zome_package_version ( input ) {
+	const result			= await this.call( new ActionHash( input ) );
+
+	return new ZomePackageVersion( result, this );
     },
 
 
@@ -132,6 +247,18 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	const zome_entry		= await this.functions.get_zome_entry( input );
 
 	return await this.zomes.mere_memory_api.remember( zome_entry.mere_memory_addr );
+    },
+    async get_zome_package_versions_sorted ( input ) {
+	const version_map		= await this.functions.get_zome_package_versions( input );
+	const versions			= [];
+
+	semverReverseSort(
+	    Object.keys( version_map )
+	).forEach( vtag => {
+	    versions.push( version_map[ vtag ] );
+	});
+
+	return versions;
     },
 }, {
     "zomes": {

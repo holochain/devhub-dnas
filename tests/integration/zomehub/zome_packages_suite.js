@@ -24,8 +24,6 @@ export default function ( args_fn ) {
     let zomehub_csr;
     let zome1_addr, zome1;
 
-    let bobby_client, bobby_zomehub_csr;
-
     let pack1;
 
     before(async function () {
@@ -38,12 +36,6 @@ export default function ( args_fn ) {
 	    zome1_addr,
 	    zome1,
 	}				= args_fn());
-
-	const app_token			= installations.bobby.test.auth.token;
-	bobby_client			= await client.app( app_token );
-	bobby_zomehub_csr	= bobby_client
-	      .createCellInterface( "zomehub", ZomeHubCell )
-	      .zomes.zomehub_csr.functions;
     });
 
     it("should create Zome Package entry", async function () {
@@ -56,6 +48,23 @@ export default function ( args_fn ) {
 	log.normal("Create Zome package: %s", json.debug(pack1) );
 
 	expect( pack1			).to.be.a("ZomePackage");
+    });
+
+    it("should get Zome Package entry", async function () {
+	const zome_package		= await zomehub_csr.get_zome_package_entry( pack1.$id );
+
+	log.normal("Get Zome package: %s", json.debug(zome_package) );
+
+	expect( zome_package		).to.be.a("ZomePackage");
+    });
+
+    it("should get my Zome Packages", async function () {
+	const zome_packages		= await zomehub_csr.get_zome_packages_for_agent();
+	const package_list		= Object.values( zome_packages );
+
+	log.normal("Get Zome packages: %s", json.debug(zome_packages) );
+
+	expect( package_list		).to.have.length( 1 );
     });
 
     linearSuite("Errors", function () {

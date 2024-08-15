@@ -27,7 +27,8 @@
     "@spartan-hc/holo-hash": "^0.7.0",
     "@spartan-hc/mere-memory-zomelets": "^0.5.1",
     "@spartan-hc/zomelets": "^0.2.0",
-    "@whi/bytes-class": "^0.1.0"
+    "@whi/bytes-class": "^0.1.0",
+    "semver": "^7.6.2"
   },
   "devDependencies": {
     "webpack": "^5.88.2",

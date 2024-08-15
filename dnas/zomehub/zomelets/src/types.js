@@ -1,7 +1,9 @@
 
 import { Bytes }			from '@whi/bytes-class';
 import {
-    AgentPubKey, HoloHash,
+    HoloHash,
+    AnyLinkableHash, AnyDhtHash,
+    AgentPubKey, DnaHash,
     ActionHash, EntryHash
 }					from '@spartan-hc/holo-hash';
 import { MemoryStruct }			from '@spartan-hc/mere-memory-zomelets';
@@ -69,6 +71,51 @@ export function ZomePackageEntry ( entry ) {
 
 export class ZomePackage extends ScopedEntity {
     static STRUCT		= ZomePackageStruct;
+
+    async $versions () {
+	return await this.zome.get_zome_package_versions_sorted( this.$id );
+    }
+}
+
+
+
+//
+// Common Structs
+//
+export const HRLStruct = {
+    "dna":			DnaHash,
+    "target":			AnyDhtHash,
+}
+
+export const LinkStruct = {
+    "author":			AgentPubKey,
+    "target":			AnyLinkableHash,
+    "timestamp":		Number,
+    "zome_index":		Number,
+    "link_type":		Number,
+    "tag":			Uint8Array,
+    "create_link_hash":		ActionHash,
+}
+
+export class Link {
+    constructor ( data ) {
+	Object.assign( this, intoStruct( data, LinkStruct ) );
+    }
+
+    tagString () {
+	return this.tag;
+    }
+
+    toJSON () {
+	const decoder		= new TextDecoder();
+	const data		= Object.assign( {}, this );
+	try {
+	    data.tag		= decoder.decode( data.tag );
+	} catch (_) {
+	    // Tag doesn't need to be a string
+	}
+	return data;
+    }
 }
 
 
@@ -76,8 +123,15 @@ export class ZomePackage extends ScopedEntity {
 // ZomePackageVersionEntry Handling
 //
 export const ZomePackageVersionStruct = {
+    // The version value comes from the link tag (not the entry) so it will only be present when
+    // fetched in the context of a 'get_links'
+    "version":			OptionType( String ),
+
     "for_package":		ActionHash,
     "zome_entry":		EntryHash,
+    "changelog":		OptionType( String ),
+    "source_code_revision_uri":	OptionType( String ),
+    "metadata":			Object,
 };
 
 export function ZomePackageVersionEntry ( entry ) {
@@ -86,6 +140,10 @@ export function ZomePackageVersionEntry ( entry ) {
 
 export class ZomePackageVersion extends ScopedEntity {
     static STRUCT		= ZomePackageVersionStruct;
+
+    async $getZomePackage () {
+	return await this.zome.get_zome_package( this.for_package );
+    }
 }
 
 

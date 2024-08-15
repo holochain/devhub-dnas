@@ -15,13 +15,24 @@ use zomehub_types::{
     ZomeType,
     ZomeEntry,
     ZomePackageEntry,
-    // ZomePackageVersionEntry,
+    ZomePackageVersionEntry,
 
     mere_memory_types,
 };
 use mere_memory_types::{
     MemoryEntry,
 };
+use hc_crud::{
+    Entity, EntityId,
+};
+
+
+pub type EntityMap<T> = BTreeMap<String, Entity<T>>;
+pub type EntityPointerMap = BTreeMap<String, EntityId>;
+
+pub type ZomeMap = EntityMap<ZomeEntry>;
+pub type ZomePackageMap = EntityMap<ZomePackageEntry>;
+pub type ZomePackageVersionMap = EntityMap<ZomePackageVersionEntry>;
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -92,6 +103,39 @@ impl TryFrom<CreateZomePackageInput> for ZomePackageEntry {
 
                 // optional
                 tags: input.tags,
+            }
+        )
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CreateZomePackageVersionInput {
+    pub for_package: EntityId,
+    pub version: String,
+    pub zome_entry: EntryHash,
+
+    // optional
+    pub changelog: Option<String>,
+    pub source_code_revision_uri: Option<String>,
+
+    // Common fields
+    #[serde(default)]
+    pub metadata: BTreeMap<String, RmpvValue>,
+}
+
+impl TryFrom<CreateZomePackageVersionInput> for ZomePackageVersionEntry {
+    type Error = WasmError;
+
+    fn try_from(input: CreateZomePackageVersionInput) -> ExternResult<Self> {
+        Ok(
+            Self {
+                for_package: input.for_package,
+                zome_entry: input.zome_entry,
+
+                changelog: input.changelog,
+                source_code_revision_uri: input.source_code_revision_uri,
+                metadata: input.metadata,
             }
         )
     }

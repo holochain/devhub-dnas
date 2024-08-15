@@ -56,6 +56,9 @@ entry_model!( EntryTypes::ZomePackageVersion( ZomePackageVersionEntry ) );
 pub enum LinkTypes {
     AgentToZome,
     AgentToZomePackage,
+    AgentToZomePackageVersion,
+
+    ZomePackageToZomePackageVersion,
 }
 
 impl TryFrom<String> for LinkTypes {
@@ -66,6 +69,10 @@ impl TryFrom<String> for LinkTypes {
             match name.as_str() {
                 "AgentToZome" => LinkTypes::AgentToZome,
                 "AgentToZomePackage" => LinkTypes::AgentToZomePackage,
+                "AgentToZomePackageVersion" => LinkTypes::AgentToZomePackageVersion,
+
+                "ZomePackageToZomePackageVersion" => LinkTypes::ZomePackageToZomePackageVersion,
+
                 _ => return Err(guest_error!(format!("Unknown LinkTypes variant: {}", name ))),
             }
         )

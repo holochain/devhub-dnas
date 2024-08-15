@@ -1,8 +1,14 @@
 mod zome_handlers;
 mod zome_package_handlers;
+mod zome_package_version_handlers;
+mod zome_package_base;
 
-use zomehub_sdk::hdk;
-use zomehub_sdk::hdk_extensions;
+pub use zomehub::hdi;
+pub use zomehub::hdi_extensions;
+pub use zomehub::hc_crud;
+pub use zomehub_sdk::hdk;
+pub use zomehub_sdk::hdk_extensions;
+pub use zome_package_base::*;
 
 use lazy_static::lazy_static;
 use hdk::prelude::*;
