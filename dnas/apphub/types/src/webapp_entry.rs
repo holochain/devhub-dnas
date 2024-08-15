@@ -5,16 +5,16 @@ use crate::{
     AppEntry,
     WebAppToken,
     WebAppResourcesMap,
+    holochain_types::{
+        WebAppManifestV1,
+    },
 };
 
+use std::io::Cursor;
 use hdi::prelude::*;
 use hdi_extensions::{
     guest_error,
 };
-pub use crate::holochain_types::{
-    WebAppManifestV1,
-};
-
 
 
 //
@@ -23,7 +23,7 @@ pub use crate::holochain_types::{
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct WebAppEntry {
-    pub manifest: WebAppManifestV1,
+    pub manifest: rmpv::Value,
     pub resources: WebAppResourcesMap,
 
     pub webapp_token: WebAppToken,
@@ -31,18 +31,19 @@ pub struct WebAppEntry {
 
 impl WebAppEntry {
     pub fn new(
-        manifest: WebAppManifestV1,
+        manifest: rmpv::Value,
         resources: WebAppResourcesMap,
     ) -> ExternResult<Self> {
-        let app_entry_addr = resources.get( &manifest.happ_manifest.bundled )
+        let webapp_manifest = WebAppEntry::deserialize_manifest( &manifest )?;
+        let app_entry_addr = resources.get( &webapp_manifest.happ_manifest.bundled )
             .ok_or(guest_error!(format!(
                 "WebAppEntry does not have resource for path '{}'",
-                manifest.happ_manifest.bundled,
+                webapp_manifest.happ_manifest.bundled,
             )))?;
-        let ui_entry_addr = resources.get( &manifest.ui.bundled )
+        let ui_entry_addr = resources.get( &webapp_manifest.ui.bundled )
             .ok_or(guest_error!(format!(
                 "WebAppEntry does not have resource for path '{}'",
-                manifest.ui.bundled,
+                webapp_manifest.ui.bundled,
             )))?;
 
         let webapp_token = Self::create_webapp_token( &app_entry_addr, &ui_entry_addr )?;
@@ -56,23 +57,45 @@ impl WebAppEntry {
         )
     }
 
+    pub fn deserialize_manifest(manifest: &rmpv::Value) -> ExternResult<WebAppManifestV1> {
+        let mut buf = Vec::new();
+        rmpv::encode::write_value(&mut buf, manifest)
+            .map_err(|e| guest_error!(format!(
+                "Failed to encode manifest value: {:?}", e
+            )))?;
+
+        let cursor = Cursor::new(buf);
+        rmp_serde::from_read(cursor)
+            .map_err(|e| guest_error!(format!(
+                "Failed to deserialize manifest: {:?}", e
+            )))
+    }
+
+    pub fn deserialized_manifest(&self) -> ExternResult<WebAppManifestV1> {
+        WebAppEntry::deserialize_manifest( &self.manifest )
+    }
+
     pub fn app_entry_addr(&self) -> ExternResult<EntryHash> {
+        let manifest = self.deserialized_manifest()?;
+
         Ok(
-            self.resources.get( &self.manifest.happ_manifest.bundled )
+            self.resources.get( &manifest.happ_manifest.bundled )
                 .ok_or(guest_error!(format!(
                     "WebAppEntry does not have resource for path '{}'",
-                    self.manifest.happ_manifest.bundled,
+                    manifest.happ_manifest.bundled,
                 )))?
                 .to_owned()
         )
     }
 
     pub fn ui_entry_addr(&self) -> ExternResult<EntryHash> {
+        let manifest = self.deserialized_manifest()?;
+
         Ok(
-            self.resources.get( &self.manifest.ui.bundled )
+            self.resources.get( &manifest.ui.bundled )
                 .ok_or(guest_error!(format!(
                     "WebAppEntry does not have resource for path '{}'",
-                    self.manifest.ui.bundled,
+                    manifest.ui.bundled,
                 )))?
                 .to_owned()
         )

@@ -1,13 +1,18 @@
 use crate::{
     hdi,
+    hdi_extensions,
     hash,
     IntegritiesToken,
     CoordinatorsToken,
     DnaToken,
+    DnaAssetHashes,
 };
 
 use std::path::PathBuf;
 use hdi::prelude::*;
+use hdi_extensions::{
+    guest_error,
+};
 use holo_hash::WasmHashB64;
 use holochain_integrity_types::ZomeName;
 use holochain_zome_types::properties::YamlProperties;
@@ -28,12 +33,21 @@ impl DnaManifestV1 {
         hash( &self.integrity )
     }
 
-    pub fn integrities_token(&self) -> ExternResult<IntegritiesToken> {
+    pub fn integrities_token(&self, asset_hashes: &DnaAssetHashes) ->
+        ExternResult<IntegritiesToken>
+    {
         let integrities_token = self.integrity.zomes.iter()
             .map( |zome_manifest| {
+                let name = zome_manifest.name.0.clone().to_string();
+                let asset_hash = asset_hashes.integrity.get( &name )
+                    .ok_or(guest_error!(format!(
+                        "Missing asset hash for '{}'",
+                        name,
+                    )))?;
+
                 Ok((
-                    zome_manifest.name.0.clone().into(),
-                    hash( &zome_manifest )?,
+                    name,
+                    hash( &( zome_manifest, asset_hash ) )?,
                 ))
             })
             .collect::<ExternResult<IntegritiesToken>>()?;
@@ -41,8 +55,8 @@ impl DnaManifestV1 {
         Ok( integrities_token )
     }
 
-    pub fn integrities_token_hash(&self) -> ExternResult<Vec<u8>> {
-        hash( &self.integrities_token()? )
+    pub fn integrities_token_hash(&self, asset_hashes: &DnaAssetHashes) -> ExternResult<Vec<u8>> {
+        hash( &self.integrities_token( asset_hashes )? )
     }
 
     pub fn coordinators_token(&self) -> ExternResult<CoordinatorsToken> {
@@ -62,11 +76,11 @@ impl DnaManifestV1 {
         hash( &self.coordinators_token()? )
     }
 
-    pub fn dna_token(&self) -> ExternResult<DnaToken> {
+    pub fn dna_token(&self, asset_hashes: &DnaAssetHashes) -> ExternResult<DnaToken> {
         Ok(
             DnaToken {
                 integrity_hash: self.integrity_hash()?,
-                integrities_token_hash: self.integrities_token_hash()?,
+                integrities_token_hash: self.integrities_token_hash( asset_hashes )?,
                 coordinators_token_hash: self.coordinators_token_hash()?,
             }
         )

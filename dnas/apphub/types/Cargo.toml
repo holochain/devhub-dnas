@@ -2,7 +2,7 @@
 name = "hc_apphub_types"
 version = "0.2.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
-edition = "2018"
+edition = "2021"
 license = "CAL-1.0"
 repository = "https://github.com/holochain/devhub-dnas"
 description = "Definitions used by the AppHub DNA Zomes"
@@ -14,10 +14,10 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_dnahub_types = { versions = "0.2", path = "../../dnahub/types" }
-holochain_zome_types = { version = "0.4.0-dev.1", features = [ "properties" ] }
-mere_memory_types = "0.95.0"
+holochain_zome_types = { version = "=0.4.0-dev.11", features = [ "properties" ] }
+mere_memory_types = "0.96.0"
 rmp-serde = "1.1"
 rmpv = { version = "1", features = ["with-serde"] }
 serde = "1"
 sha2 = "0.10"
-whi_hdi_extensions = "0.9"
+whi_hdi_extensions = "0.10"

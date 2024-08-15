@@ -79,25 +79,7 @@ export const AppTokenStruct = {
 // AppEntry Handling
 //
 export const AppStruct = {
-    "manifest": {
-	"name":			String,
-	"description":		String,
-	"roles": VecType({
-	    "name":		String,
-	    "provisioning":	OptionType( Object ),
-	    "dna": {
-		"bundled":	String,
-		"modifiers": {
-		    "network_seed":	OptionType( AnyType ),
-		    "properties":	OptionType( AnyType ),
-		    "origin_time":	OptionType( AnyType ),
-		    "quantum_time":	OptionType( AnyType ),
-		},
-		"installed_hash":	OptionType( AnyType ),
-		"clone_limit":		Number,
-	    }
-	}),
-    },
+    "manifest":                 AnyType,
     "resources":		MapType( String, HRLStruct ),
     "app_token":		AppTokenStruct,
     "claimed_file_size":	Number,
@@ -142,15 +124,7 @@ export const WebAppTokenStruct = {
 // WebAppEntry Handling
 //
 export const WebAppStruct = {
-    "manifest": {
-	"name":			String,
-	"ui": {
-	    "bundled":		String,
-	},
-	"happ_manifest": {
-	    "bundled":		String,
-	},
-    },
+    "manifest":                 AnyType,
     "resources":		MapType( String, EntryHash ),
     "webapp_token":		WebAppTokenStruct,
 };

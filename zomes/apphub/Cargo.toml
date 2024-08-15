@@ -2,7 +2,7 @@
 name = "apphub"
 version = "0.0.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "apphub"
@@ -10,5 +10,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_apphub_types = { version = "0.2", path = "../../dnas/apphub/types" }
-hc_crud_caps = "0.15"
+hc_crud_caps = "0.16"
 serde = "1"

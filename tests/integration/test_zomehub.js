@@ -28,6 +28,7 @@ import {
 import {
     expect_reject,
     linearSuite,
+    delay,
 }					from '../utils.js';
 import zome_packages_suite		from './zomehub/zome_packages_suite.js';
 import zome_package_versions_suite	from './zomehub/zome_package_versions_suite.js';
@@ -46,12 +47,12 @@ let installations;
 
 describe("ZomeHub", function () {
     const holochain			= new Holochain({
-	"timeout": 60_000,
+	"timeout": 120_000,
 	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
-	this.timeout( 60_000 );
+	this.timeout( 120_000 );
 
 	installations			= await holochain.install([
 	    "alice",
@@ -172,6 +173,8 @@ function basic_tests () {
 	    const bobby_zomehub_csr	= bobby_client
 		  .createCellInterface( ZOMEHUB_DNA_NAME, ZomeHubCell )
 		  .zomes.zomehub_csr.functions;
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_zomehub_csr.delete_zome( zome.$id );

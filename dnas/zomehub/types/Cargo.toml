@@ -2,7 +2,7 @@
 name = "hc_zomehub_types"
 version = "0.1.0"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
-edition = "2018"
+edition = "2021"
 license = "CAL-1.0"
 repository = "https://github.com/holochain/devhub-dnas"
 description = "Definitions used by the ZomeHub DNA Zomes"
@@ -13,7 +13,7 @@ name = "zomehub_types"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mere_memory_types = "0.95.0"
+mere_memory_types = "0.96.0"
 rmpv = { version = "1", features = ["with-serde"] }
 serde = "1"
-whi_hdi_extensions = "0.9"
+whi_hdi_extensions = "0.10"

@@ -33,6 +33,7 @@ import {
     linearSuite,
     dnaConfig,
     sha256,
+    delay,
 }					from '../utils.js';
 
 
@@ -46,12 +47,12 @@ let installations;
 
 describe("DnaHub", function () {
     const holochain			= new Holochain({
-	"timeout": 60_000,
+	"timeout": 120_000,
 	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
-	this.timeout( 60_000 );
+	this.timeout( 120_000 );
 
 	installations			= await holochain.install([
 	    "alice",
@@ -222,6 +223,8 @@ function basic_tests () {
 	    const bobby_dnahub_csr	= bobby_client
 		  .createCellInterface( "dnahub", DnaHubCell )
 		  .zomes.dnahub_csr.functions;
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_dnahub_csr.delete_dna( dna.$id );

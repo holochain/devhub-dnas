@@ -18,6 +18,7 @@ import {
     linearSuite,
     dnaConfig,
     happConfig,
+    delay,
 }					from '../../utils.js';
 
 
@@ -108,6 +109,8 @@ export default function ( args_fn ) {
 	it("should fail to update App entry");
 
 	it("should fail to delete App entry because author", async function () {
+            this.timeout( 10_000 );
+
 	    const bundle		= Bundle.createHapp( TEST_HAPP_CONFIG );
 	    const app_bytes		= bundle.toBytes();
 
@@ -118,6 +121,8 @@ export default function ( args_fn ) {
 	    const bobby_apphub_csr	= bobby_client
 		  .createCellInterface( "apphub", AppHubCell )
 		  .zomes.apphub_csr.functions;
+
+            await delay();
 
 	    await expect_reject(async () => {
 		await bobby_apphub_csr.delete_app( app.$id );

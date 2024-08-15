@@ -17,6 +17,7 @@ use zomehub_sdk::{
     ZomeAsset,
 };
 use dnahub_types::{
+    RmpvValue,
     DnaEntry,
     DnaToken,
     DnaManifestV1,
@@ -49,7 +50,7 @@ impl From<DnaTokenInput> for DnaToken {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DnaEntryInput {
-    pub manifest: DnaManifestV1,
+    pub manifest: RmpvValue,
     pub resources: ResourcesMap,
     pub dna_token: DnaTokenInput,
     pub integrities_token: IntegritiesTokenInput,
@@ -79,19 +80,27 @@ impl From<DnaEntryInput> for DnaEntry {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CreateDnaInput {
-    pub manifest: DnaManifestV1,
+    pub manifest: RmpvValue,
     pub resources: ResourcesMap,
     pub claimed_file_size: u64,
     pub asset_hashes: DnaAssetHashes,
+}
+
+impl CreateDnaInput {
+    pub fn deserialized_manifest(&self) -> ExternResult<DnaManifestV1> {
+        DnaEntry::deserialize_manifest( &self.manifest )
+    }
 }
 
 impl TryFrom<CreateDnaInput> for DnaEntry {
     type Error = WasmError;
 
     fn try_from(create_dna_input: CreateDnaInput) -> ExternResult<Self> {
-        let dna_token = create_dna_input.manifest.dna_token()?;
-        let integrities_token = create_dna_input.manifest.integrities_token()?;
-        let coordinators_token = create_dna_input.manifest.coordinators_token()?;
+        let manifest = create_dna_input.deserialized_manifest()?;
+
+        let dna_token = manifest.dna_token( &create_dna_input.asset_hashes )?;
+        let integrities_token = manifest.integrities_token( &create_dna_input.asset_hashes )?;
+        let coordinators_token = manifest.coordinators_token()?;
 
         Ok(
             Self {
@@ -122,7 +131,7 @@ impl TryInto<DnaAsset> for EntryHash {
         let dna_entry : DnaEntry = must_get( &self )?.try_into()?;
         let mut zome_assets = BTreeMap::new();
 
-        for zome_manifest in dna_entry.manifest.integrity.zomes.iter() {
+        for zome_manifest in dna_entry.deserialized_manifest()?.integrity.zomes.iter() {
             let hrl = dna_entry.resources.get( &zome_manifest.bundled )
                 .ok_or(guest_error!(format!(
                     "DnaEntry does not have resources with path '{}'",
@@ -139,7 +148,7 @@ impl TryInto<DnaAsset> for EntryHash {
             zome_assets.insert( zome_manifest.name.clone(), zome_asset );
         }
 
-        for zome_manifest in dna_entry.manifest.coordinator.zomes.iter() {
+        for zome_manifest in dna_entry.deserialized_manifest()?.coordinator.zomes.iter() {
             let hrl = dna_entry.resources.get( &zome_manifest.bundled )
                 .ok_or(guest_error!(format!(
                     "DnaEntry does not have resources with path '{}'",

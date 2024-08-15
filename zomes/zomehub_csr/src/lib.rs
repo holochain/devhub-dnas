@@ -67,3 +67,14 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 fn whoami(_: ()) -> ExternResult<AgentInfo> {
     Ok( agent_info()? )
 }
+
+
+#[hdk_extern]
+pub fn query_whole_chain() -> ExternResult<Vec<Record>> {
+    Ok(
+        query(
+            ChainQueryFilter::new()
+                .include_entries(true)
+        )?
+    )
+}
