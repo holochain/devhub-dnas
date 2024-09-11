@@ -7,7 +7,9 @@ use hdk::prelude::*;
 use hdk_extensions::{
     must_get,
     hdi_extensions::{
+        guest_error,
         ScopedTypeConnector,
+        AnyLinkableHashTransformer,
     },
 };
 use zomehub::{
@@ -34,6 +36,9 @@ fn create_zome_package_entry(input: ZomePackageEntry) -> ExternResult<Entity<Zom
     MY_ZOME_PACKS_ANCHOR.create_link_if_not_exists( &entity.address, () )?;
 
     // TODO: Link from package name
+    let anchor_path = Path::from( vec![ Component::from(input.name.as_bytes().to_vec()) ] ).path_entry_hash()?;
+    let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );
+    name_anchor.create_link_if_not_exists( &entity.id, () )?;
 
     Ok( entity )
 }
@@ -68,6 +73,20 @@ fn get_zome_package_entry(addr: AnyDhtHash) -> ExternResult<Entity<ZomePackageEn
 #[hdk_extern]
 pub fn get_zome_package(addr: EntityId) -> ExternResult<Entity<ZomePackageEntry>> {
     Ok( get_entity( &addr )? )
+}
+
+
+#[hdk_extern]
+pub fn get_zome_package_by_name(name: String) -> ExternResult<Entity<ZomePackageEntry>> {
+    let anchor_path = Path::from( vec![ Component::from(name.as_bytes().to_vec()) ] ).path_entry_hash()?;
+    let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );
+    let package_link = name_anchor.get_links( None )?.first()
+        .ok_or(guest_error!(format!(
+            "No package found for name '{}'",
+            name
+        )))?.to_owned();
+
+    Ok( get_entity( &package_link.target.must_be_action_hash()? )? )
 }
 
 

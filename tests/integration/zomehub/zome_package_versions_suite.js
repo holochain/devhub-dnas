@@ -26,6 +26,7 @@ export default function ( args_fn ) {
 
     let pack1;
     let pack1_v1;
+    let pack1_name;
 
     before(async function () {
 	({
@@ -38,8 +39,12 @@ export default function ( args_fn ) {
 	    zome1,
 	}				= args_fn());
 
+        const title                     = faker.commerce.productName();
+        pack1_name                      = title.toLowerCase(/\s/g, '-');
+
 	pack1				= await zomehub_csr.create_zome_package({
-	    "name": faker.commerce.productName(),
+	    "name": pack1_name,
+	    title,
 	    "description": faker.lorem.paragraphs( 2 ),
 	    "zome_type": "integrity",
 	});
@@ -51,6 +56,13 @@ export default function ( args_fn ) {
 	    "for_package": pack1.$id,
 	    "zome_entry": zome1_addr,
 	    "source_code_revision_uri": faker.internet.url(),
+            "api_compatibility": {
+                "build_with": {
+                    "hdi_version": faker.system.semver(),
+                    "hdk_version": faker.system.semver(),
+                },
+                "tested_with": faker.system.semver(),
+            },
 	});
 
 	log.normal("Create Zome package version: %s", json.debug(pack1_v1) );
@@ -70,6 +82,13 @@ export default function ( args_fn ) {
 	    "for_package": pack1.$id,
 	    "zome_entry": zome1_addr,
 	    "source_code_revision_uri": faker.internet.url(),
+            "api_compatibility": {
+                "build_with": {
+                    "hdi_version": faker.system.semver(),
+                    "hdk_version": null,
+                },
+                "tested_with": faker.system.semver(),
+            },
 	});
     }
 
@@ -99,6 +118,12 @@ export default function ( args_fn ) {
 	const version_links		= await zomehub_csr.get_zome_package_version_links( pack1.$id );
 
 	log.normal("Version links: %s", json.debug(version_links) );
+    });
+
+    it("should download latest version", async function () {
+	const latest_version		= await zomehub_csr.download_zome_package( pack1_name );
+
+	log.normal("Latest package version: %s", json.debug(latest_version) );
     });
 
     linearSuite("Errors", function () {

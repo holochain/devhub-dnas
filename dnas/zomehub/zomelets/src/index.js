@@ -118,6 +118,11 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	return new ZomePackage( result, this );
     },
+    async get_zome_package_by_name ( input ) {
+	const result			= await this.call( input );
+
+	return new ZomePackage( result, this );
+    },
     async get_zome_package_entry ( input ) {
 	const result			= await this.call( new AnyDhtHash( input ) );
 
@@ -218,6 +223,14 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     //
     // Virtual functions
     //
+    async form_zome_entry ( bytes ) {
+        return {
+	    "zome_type":        ZOME_TYPES.INTEGRITY,
+	    "mere_memory_addr": new EntryHash( input.mere_memory_addr ),
+            "file_size":        bytes.length,
+            "hash":             await this.zomes.mere_memory_api.calculate_hash( bytes ),
+	};
+    },
     async save_integrity ( bytes ) {
 	const addr			= await this.zomes.mere_memory_api.save( bytes );
 
@@ -259,6 +272,18 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	});
 
 	return versions;
+    },
+    async download_zome_package ( input ) {
+	const zome_package		= await this.functions.get_zome_package_by_name( input );
+	const versions			= await this.functions.get_zome_package_versions_sorted( zome_package.$id );
+        const latest_version            = versions[0];
+        const zome                      = await this.functions.get_zome( latest_version.zome_entry );
+
+	return [
+            zome_package,
+            latest_version,
+            zome,
+        ];
     },
 }, {
     "zomes": {

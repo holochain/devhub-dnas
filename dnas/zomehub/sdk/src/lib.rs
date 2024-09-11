@@ -16,6 +16,7 @@ use zomehub_types::{
     ZomeEntry,
     ZomePackageEntry,
     ZomePackageVersionEntry,
+    ApiCompatibility,
 
     mere_memory_types,
 };
@@ -76,6 +77,7 @@ impl TryInto<ZomeAsset> for EntryHash {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateZomePackageInput {
     pub name: String,
+    pub title: String,
     pub description: String,
     pub zome_type: ZomeType,
 
@@ -95,6 +97,7 @@ impl TryFrom<CreateZomePackageInput> for ZomePackageEntry {
         Ok(
             Self {
                 name: input.name,
+                title: input.title,
                 description: input.description,
                 zome_type: input.zome_type,
                 maintainer: input.maintainer
@@ -118,6 +121,7 @@ pub struct CreateZomePackageVersionInput {
     // optional
     pub changelog: Option<String>,
     pub source_code_revision_uri: Option<String>,
+    pub api_compatibility: ApiCompatibility,
 
     // Common fields
     #[serde(default)]
@@ -135,6 +139,7 @@ impl TryFrom<CreateZomePackageVersionInput> for ZomePackageVersionEntry {
 
                 changelog: input.changelog,
                 source_code_revision_uri: input.source_code_revision_uri,
+                api_compatibility: input.api_compatibility,
                 metadata: input.metadata,
             }
         )

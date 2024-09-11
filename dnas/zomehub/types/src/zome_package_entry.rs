@@ -15,6 +15,7 @@ use hdi::prelude::*;
 #[derive(Clone)]
 pub struct ZomePackageEntry {
     pub name: String,
+    pub title: String,
     pub description: String,
     pub zome_type: ZomeType,
     pub maintainer: Authority,

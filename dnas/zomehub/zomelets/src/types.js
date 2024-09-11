@@ -55,6 +55,7 @@ export const MaintainerType	= String;
 
 export const ZomePackageStruct = {
     "name":			String,
+    "title":			String,
     "description":		String,
     "zome_type":		String,
     "maintainer": {
@@ -131,6 +132,13 @@ export const ZomePackageVersionStruct = {
     "zome_entry":		EntryHash,
     "changelog":		OptionType( String ),
     "source_code_revision_uri":	OptionType( String ),
+    "api_compatibility": {
+        "build_with": {
+            "hdi_version":      String,
+            "hdk_version":      OptionType( String ),
+        },
+        "tested_with":          String,
+    },
     "metadata":			Object,
 };
 

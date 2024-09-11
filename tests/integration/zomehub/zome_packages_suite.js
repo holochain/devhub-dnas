@@ -24,7 +24,8 @@ export default function ( args_fn ) {
     let zomehub_csr;
     let zome1_addr, zome1;
 
-    let pack1;
+    let pack1
+    let pack1_name;
 
     before(async function () {
 	({
@@ -39,8 +40,12 @@ export default function ( args_fn ) {
     });
 
     it("should create Zome Package entry", async function () {
+        const title                     = faker.commerce.productName();
+        pack1_name                      = title.toLowerCase(/\s/g, '-');
+
 	pack1				= await zomehub_csr.create_zome_package({
-	    "name": faker.commerce.productName(),
+	    "name": pack1_name,
+	    title,
 	    "description": faker.lorem.paragraphs( 2 ),
 	    "zome_type": "integrity",
 	});
@@ -65,6 +70,12 @@ export default function ( args_fn ) {
 	log.normal("Get Zome packages: %s", json.debug(zome_packages) );
 
 	expect( package_list		).to.have.length( 1 );
+    });
+
+    it("should get Zome Package by name", async function () {
+	const zome_package              = await zomehub_csr.get_zome_package_by_name( pack1_name );
+
+	log.normal("Get Zome package: %s", json.debug(zome_package) );
     });
 
     linearSuite("Errors", function () {
