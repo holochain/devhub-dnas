@@ -1,5 +1,7 @@
 /.cargo
-target
+/.rustup
+/target
+/zomes/target
 /zomes/*.wasm
 /dnas/*.dna
 /dnas/*/zomelets/dist
