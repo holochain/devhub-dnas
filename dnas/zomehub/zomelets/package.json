@@ -1,6 +1,6 @@
 {
   "name": "@holochain/zomehub-zomelets",
-  "version": "0.1.1",
+  "version": "0.2.0-dev.0",
   "description": "Zomelets for DevHub's ZomeHub DNA",
   "type": "module",
   "main": "src/index.js",
