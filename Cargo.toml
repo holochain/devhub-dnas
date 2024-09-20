@@ -1,0 +1,16 @@
+[workspace]
+members = [
+  "dnas/zomehub/types",
+  "dnas/zomehub/sdk",
+  "dnas/dnahub/types",
+  "dnas/dnahub/sdk",
+  "dnas/apphub/types",
+  "dnas/apphub/sdk",
+  "zomes/*"
+]
+resolver = "2"
+
+[workspace.dependencies]
+serde = "1"
+hdi = { version = "=0.5.0-dev.12" }
+hdk = { version = "=0.4.0-dev.14" }

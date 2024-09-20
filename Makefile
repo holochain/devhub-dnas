@@ -31,7 +31,7 @@ DNAHUB_CSR_WASM		= zomes/dnahub_csr.wasm
 APPHUB_CSR_WASM		= zomes/apphub_csr.wasm
 
 TARGET			= release
-TARGET_DIR		= zomes/target/wasm32-unknown-unknown/release
+TARGET_DIR		= target/wasm32-unknown-unknown/release
 COMMON_SOURCE_FILES	= Makefile zomes/Cargo.toml
 INT_SOURCE_FILES	= $(COMMON_SOURCE_FILES) \
 				dnas/%/types/Cargo.toml dnas/%/types/src/*.rs \
@@ -49,7 +49,7 @@ CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
 clean:
 	rm -rf \
 	    tests/node_modules \
-	    .cargo target dnas/target \
+	    .cargo target \
 	    $(DEVHUB_HAPP) \
 	    $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) \
 	    $(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) \
@@ -79,7 +79,6 @@ zomes/%.wasm:			$(TARGET_DIR)/%.wasm
 $(TARGET_DIR)/%.wasm:		$(INT_SOURCE_FILES)
 	rm -f zomes/$*.wasm
 	@echo -e "\x1b[37mBuilding zome '$*' -> $@\x1b[0m";
-	cd zomes; \
 	RUST_BACKTRACE=1 cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*
@@ -87,7 +86,6 @@ $(TARGET_DIR)/%.wasm:		$(INT_SOURCE_FILES)
 $(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 	rm -f zomes/$*_csr.wasm
 	@echo -e "\x1b[37mBuilding zome '$*_csr' -> $@\x1b[0m";
-	cd zomes; \
 	RUST_BACKTRACE=1 cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*_csr
@@ -211,20 +209,12 @@ test:
 CRATE_DEBUG_LEVELS	= normal info debug trace
 test-crate:
 	@if [[ "$(CRATE_DEBUG_LEVELS)" == *"$(DEBUG_LEVEL)"* ]]; then \
-		cd $(SRC); RUST_BACKTRACE=1 CARGO_TARGET_DIR=../target cargo test -- --nocapture --show-output; \
+		RUST_BACKTRACE=1 cargo test -- --nocapture --show-output; \
 	else \
-		cd $(SRC); CARGO_TARGET_DIR=../target cargo test --quiet --tests; \
+		cargo test --quiet --tests; \
 	fi
 test-unit:
-	SRC=zomes make test-crate
-	make test-zomehub-unit
-	make test-dnahub-unit
-	make test-apphub-unit
-
-test-%hub-unit:
-	SRC=dnas/$*hub make test-crate
-test-zome-unit-%:
-	cd zomes; cargo test -p $* --quiet
+	make test-crate
 
 # Integration tests
 DEBUG_LEVEL	       ?= warn
@@ -312,9 +302,9 @@ preview-apphub-packages:
 #
 # Publishing Types Packages
 #
-preview-%-types-crate:		 test-%-unit test-% .cargo/credentials
+preview-%-types-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make preview-types-crate
-publish-%-types-crate:		 test-%-unit test-% .cargo/credentials
+publish-%-types-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make publish-types-crate
 
 preview-zomehub-types-crate:
@@ -331,9 +321,9 @@ publish-apphub-types-crate:
 #
 # Publishing SDK Packages
 #
-preview-%-sdk-crate:		 test-%-unit test-% .cargo/credentials
+preview-%-sdk-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make preview-sdk-crate
-publish-%-sdk-crate:		 test-%-unit test-% .cargo/credentials
+publish-%-sdk-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make publish-sdk-crate
 
 preview-zomehub-sdk-crate:
@@ -352,11 +342,11 @@ publish-apphub-sdk-crate:
 #
 prepare-%-zomelets-package:	zomelets/node_modules
 	cd dnas/$*; make prepare-zomelets-package
-preview-%-zomelets-package:	clean-files test-%-unit test-%
+preview-%-zomelets-package:	clean-files test-unit test-%
 	cd dnas/$*; make preview-zomelets-package
-create-%-zomelets-package:	clean-files test-%-unit test-%
+create-%-zomelets-package:	clean-files test-unit test-%
 	cd dnas/$*; make create-zomelets-package
-publish-%-zomelets-package:	clean-files test-%-unit test-%
+publish-%-zomelets-package:	clean-files test-unit test-%
 	cd dnas/$*; make publish-zomelets-package
 
 prepare-zomehub-zomelets-package:
