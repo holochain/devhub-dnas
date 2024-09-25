@@ -1072,6 +1072,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "hc_coop_content_sdk"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "196402fe24edfab9513b5d6586ea062b9c34b5c4b512f20e2b455b70f7151d6d"
+dependencies = [
+ "hc_coop_content_types",
+ "serde",
+ "whi_hdk_extensions",
+]
+
+[[package]]
+name = "hc_coop_content_types"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74b0eeb9acb6325259e14430bd2ad71b76127f773bbf47335f93e9be596aeaab"
+dependencies = [
+ "rmpv",
+ "serde",
+ "whi_hdi_extensions",
+]
+
+[[package]]
 name = "hc_crud_caps"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3483,6 +3505,7 @@ checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
 name = "zomehub"
 version = "0.0.0"
 dependencies = [
+ "hc_coop_content_types",
  "hc_crud_caps",
  "hc_zomehub_types",
  "serde",
@@ -3492,6 +3515,7 @@ dependencies = [
 name = "zomehub_csr"
 version = "0.0.0"
 dependencies = [
+ "hc_coop_content_sdk",
  "hc_portal_sdk",
  "hc_zomehub_sdk",
  "lazy_static",

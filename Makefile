@@ -4,8 +4,12 @@ NAME			= devhub
 
 # External WASM dependencies
 MERE_MEMORY_VERSION	= 0.100.0
-MERE_MEMORY_WASM	= zomes/mere_memory.wasm
-MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
+MERE_MEMORY_WASM	= .devhub/zomes/mere_memory-$(MERE_MEMORY_VERSION).wasm
+MERE_MEMORY_API_WASM	= .devhub/zomes/mere_memory_csr-$(MERE_MEMORY_VERSION).wasm
+
+COOP_CONTENT_VERSION	= 0.7.0
+COOP_CONTENT_WASM	= .devhub/zomes/coop_content-$(COOP_CONTENT_VERSION).wasm
+COOP_CONTENT_CSR_WASM	= .devhub/zomes/coop_content_csr-$(COOP_CONTENT_VERSION).wasm
 
 # External DNA dependencies
 PORTAL_VERSION		= 0.16.0
@@ -55,7 +59,8 @@ clean:
 	    $(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) \
 	    $(DNAHUB_WASM) $(DNAHUB_CSR_WASM) \
 	    $(APPHUB_WASM) $(APPHUB_CSR_WASM) \
-	    $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
+	    $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM) \
+	    $(COOP_CONTENT_WASM) $(COOP_CONTENT_CSR_WASM)
 
 rebuild:			clean build
 build:				$(DEVHUB_HAPP)
@@ -64,7 +69,9 @@ build:				$(DEVHUB_HAPP)
 $(DEVHUB_HAPP):			$(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) $(PORTAL_DNA) happ/happ.yaml
 	hc app pack -o $@ ./happ/
 
-$(ZOMEHUB_DNA):			$(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
+$(ZOMEHUB_DNA):			$(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM)		\
+				$(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)	\
+				$(COOP_CONTENT_WASM) $(COOP_CONTENT_CSR_WASM)
 $(DNAHUB_DNA):			$(DNAHUB_WASM) $(DNAHUB_CSR_WASM)
 $(APPHUB_DNA):			$(APPHUB_WASM) $(APPHUB_CSR_WASM)
 
@@ -236,6 +243,9 @@ test-apphub:				test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA)
 	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_apphub.js
 test-webapp-upload:			test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
 	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_webapp_upload.js
+
+test-integration-zomehub-group-management:	test-setup $(ZOMEHUB_DNA)
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_zomehub_group_management.js
 
 # Real-input tests
 test-real-uploads:

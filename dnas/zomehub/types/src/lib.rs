@@ -23,12 +23,18 @@ pub type RmpvValue = rmpv::Value;
 #[serde(tag = "type", content = "content")]
 #[serde(rename_all = "snake_case")]
 pub enum Authority {
-    // Group(ActionHash, ActionHash),
+    Group(ActionHash, ActionHash),
     Agent(AgentPubKey),
 }
 
 impl From<AgentPubKey> for Authority {
     fn from(agent_pub_key: AgentPubKey) -> Self {
         Authority::Agent(agent_pub_key)
+    }
+}
+
+impl From<(ActionHash, ActionHash)> for Authority {
+    fn from((group_id, group_addr): (ActionHash, ActionHash)) -> Self {
+        Authority::Group(group_id, group_addr)
     }
 }

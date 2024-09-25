@@ -7,6 +7,7 @@ import {
     Zomelet,
     CellZomelets,
 }					from '@spartan-hc/zomelets'; // approx. 7kb
+import { CoopContentZomelet }		from '@spartan-hc/coop-content-zomelets';
 import { MereMemoryZomelet }		from '@spartan-hc/mere-memory-zomelets'; // approx. 33kb
 import {
     rsort as semverReverseSort
@@ -105,13 +106,37 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     //
     async create_zome_package_entry ( input ) {
 	const result			= await this.call( input );
+        const zome_package              = new ZomePackage( result, this );
 
-	return new ZomePackage( result, this );
+	return zome_package;
     },
     async create_zome_package ( input ) {
 	const result			= await this.call( input );
+        const zome_package              = new ZomePackage( result, this );
 
-	return new ZomePackage( result, this );
+        if ( zome_package.maintainer.type === "group" ) {
+            await this.zomes.coop_content_csr.create_content_link({
+                "group_id": zome_package.maintainer.content[0],
+                "content_target": zome_package.$id,
+            });
+        }
+
+	return zome_package;
+    },
+    async update_zome_package ( input ) {
+	const result			= await this.call( input );
+        const zome_package              = new ZomePackage( result, this );
+
+        if ( zome_package.maintainer.type === "group" ) {
+            await this.zomes.coop_content_csr.create_content_update_link({
+                "group_id": zome_package.maintainer.content[0],
+                "content_id": zome_package.$id,
+                "content_prev": input.base,
+                "content_next": zome_package.$action,
+            });
+        }
+
+	return zome_package;
     },
     async get_zome_package ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
@@ -288,6 +313,7 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 }, {
     "zomes": {
 	"mere_memory_api": MereMemoryZomelet,
+        "coop_content_csr": CoopContentZomelet,
     },
 });
 
@@ -295,10 +321,12 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 export const ZomeHubCell		= new CellZomelets({
     "zomehub_csr": ZomeHubCSRZomelet,
     "mere_memory_api": MereMemoryZomelet,
+    "coop_content_csr": CoopContentZomelet,
 });
 
 
 export *				from '@spartan-hc/mere-memory-zomelets';
+export *				from '@spartan-hc/coop-content-zomelets';
 export *				from './types.js';
 
 export default {
@@ -308,6 +336,7 @@ export default {
     // Zomelets
     ZomeHubCSRZomelet,
     MereMemoryZomelet,
+    CoopContentZomelet,
 
     // CellZomelets
     ZomeHubCell,

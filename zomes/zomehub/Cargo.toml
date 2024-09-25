@@ -9,6 +9,7 @@ name = "zomehub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+hc_coop_content_types = "0.6"
 hc_crud_caps = "0.17"
 hc_zomehub_types = { version = "0.1", path = "../../dnas/zomehub/types" }
 serde = "1"

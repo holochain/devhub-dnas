@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@spartan-hc/bundles": "^0.2.5",
+    "@spartan-hc/coop-content-zomelets": "file:../../../../hc-cooperative-content/zomelets",
     "@spartan-hc/entities": "^0.1.1",
     "@spartan-hc/holo-hash": "^0.7.0",
     "@spartan-hc/mere-memory-zomelets": "^0.5.1",

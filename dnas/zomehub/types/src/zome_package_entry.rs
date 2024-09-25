@@ -2,6 +2,7 @@ use crate::{
     hdi,
     ZomeType,
     Authority,
+    RmpvValue,
 };
 use std::collections::BTreeMap;
 use hdi::prelude::*;
@@ -24,5 +25,5 @@ pub struct ZomePackageEntry {
     pub tags: Option<Vec<String>>,
 
     // Common fields
-    pub metadata: BTreeMap<String, rmpv::Value>,
+    pub metadata: BTreeMap<String, RmpvValue>,
 }

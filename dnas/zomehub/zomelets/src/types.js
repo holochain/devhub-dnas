@@ -48,20 +48,24 @@ export function ZomeAsset ( entry ) {
 }
 
 
+export function Authority ( data ) {
+    if ( data.type === "agent" )
+        data.content            = new AgentPubKey( data );
+    else if ( data.type === "group" )
+        data.content            = intoStruct( data.content, [ ActionHash, ActionHash ] );
+
+    return data;
+}
+
 //
 // ZomePackageEntry Handling
 //
-export const MaintainerType	= String;
-
 export const ZomePackageStruct = {
     "name":			String,
     "title":			String,
     "description":		String,
     "zome_type":		String,
-    "maintainer": {
-	"type":			MaintainerType,
-	"content":		AgentPubKey,
-    },
+    "maintainer":               Authority,
     "tags":			OptionType( VecType( String ) ),
     "metadata":			Object,
 };

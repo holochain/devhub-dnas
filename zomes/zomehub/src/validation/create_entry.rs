@@ -42,6 +42,7 @@ pub fn validation(
             valid!()
         },
         EntryTypes::ZomePackage(_entry) => {
+            // TODO: if the maintainer is a group, ensure the create author is in the group
             valid!()
         },
         EntryTypes::ZomePackageVersion(_entry) => {

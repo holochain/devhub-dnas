@@ -3,6 +3,8 @@ use crate::{
     hdk_extensions,
     MY_ZOME_PACKS_ANCHOR,
 };
+
+use std::collections::BTreeMap;
 use hdk::prelude::*;
 use hdk_extensions::{
     must_get,
@@ -14,12 +16,15 @@ use hdk_extensions::{
 };
 use zomehub::{
     LinkTypes,
+    RmpvValue,
+    Authority,
 
     ZomePackageEntry,
     hc_crud::{
         Entity, EntityId,
         EntryModel,
-        create_entity, get_entity,
+        create_entity, get_entity, update_entity,
+        UpdateEntityInput,
     },
 };
 use zomehub_sdk::{
@@ -49,6 +54,50 @@ fn create_zome_package(input: CreateZomePackageInput) -> ExternResult<Entity<Zom
     let entry : ZomePackageEntry = input.try_into()?;
 
     create_zome_package_entry( entry )
+}
+
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct UpdateProperties {
+    pub name: Option<String>,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub maintainer: Option<Authority>,
+    pub tags: Option<Vec<String>>,
+    pub metadata: Option<BTreeMap<String, RmpvValue>>,
+}
+pub type UpdateInput = UpdateEntityInput<UpdateProperties>;
+
+#[hdk_extern]
+pub fn update_zome_package(input: UpdateInput) -> ExternResult<Entity<ZomePackageEntry>> {
+    debug!("Updating zome package: {}", input.base );
+    let props = input.properties.clone();
+
+    let entity = update_entity(
+	&input.base,
+	|mut current : ZomePackageEntry, _| {
+	    current.name = props.name
+		.unwrap_or( current.name );
+	    current.title = props.title
+		.unwrap_or( current.title );
+	    current.description = props.description
+		.unwrap_or( current.description );
+	    current.maintainer = props.maintainer
+		.unwrap_or( current.maintainer );
+	    current.tags = props.tags
+		.or( current.tags );
+	    current.metadata = props.metadata
+		.unwrap_or( current.metadata );
+
+	    Ok( current )
+	})?;
+
+    // register_content_update_to_group!({
+    //     entry: entity.content.clone(),
+    //     target: entity.action.clone(),
+    // })?;
+
+    Ok( entity )
 }
 
 
