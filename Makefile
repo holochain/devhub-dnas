@@ -3,16 +3,16 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.100.0
+MERE_MEMORY_VERSION	= 0.101.0
 MERE_MEMORY_WASM	= .devhub/zomes/mere_memory-$(MERE_MEMORY_VERSION).wasm
 MERE_MEMORY_API_WASM	= .devhub/zomes/mere_memory_csr-$(MERE_MEMORY_VERSION).wasm
 
-COOP_CONTENT_VERSION	= 0.7.0
+COOP_CONTENT_VERSION	= 0.8.0-dev.0
 COOP_CONTENT_WASM	= .devhub/zomes/coop_content-$(COOP_CONTENT_VERSION).wasm
 COOP_CONTENT_CSR_WASM	= .devhub/zomes/coop_content_csr-$(COOP_CONTENT_VERSION).wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.16.0
+PORTAL_VERSION		= 0.17.0
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -101,10 +101,10 @@ $(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 $(PORTAL_DNA):
 	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
 
-$(MERE_MEMORY_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory.wasm" --output $@
-$(MERE_MEMORY_API_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory_api.wasm" --output $@
+# $(MERE_MEMORY_WASM):
+# 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory.wasm" --output $@
+# $(MERE_MEMORY_API_WASM):
+# 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory_api.wasm" --output $@
 
 reset-mere-memory:
 	rm -f zomes/mere_memory*.wasm
@@ -113,30 +113,30 @@ reset-portal:
 	rm -f dnas/portal.dna
 	make $(PORTAL_DNA)
 
-PRE_MM_VERSION = mere_memory_types = "0.96.0"
-NEW_MM_VERSION = mere_memory_types = "0.97.0"
+PRE_MM_VERSION = mere_memory_types = "0.97.0"
+NEW_MM_VERSION = mere_memory_types = "0.98.0"
 
-PRE_CRUD_VERSION = hc_crud_caps = "0.16"
-NEW_CRUD_VERSION = hc_crud_caps = "0.17"
+PRE_CRUD_VERSION = hc_crud_caps = "0.17"
+NEW_CRUD_VERSION = hc_crud_caps = "0.18"
 
-PRE_HDIE_VERSION = whi_hdi_extensions = "0.10"
-NEW_HDIE_VERSION = whi_hdi_extensions = "0.12"
+PRE_HDIE_VERSION = whi_hdi_extensions = "0.12"
+NEW_HDIE_VERSION = whi_hdi_extensions = "0.13"
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.10"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.12"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.12"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.13"
 
-PRE_PSDK_VERSION = hc_portal_sdk = "0.7"
-NEW_PSDK_VERSION = hc_portal_sdk = "0.8"
+PRE_PSDK_VERSION = hc_portal_sdk = "0.8"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.9"
 
-PRE_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.10"
-NEW_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.12"
+PRE_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.12"
+NEW_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.15"
 
-PRE_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.11"
-NEW_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.14"
+PRE_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.14"
+NEW_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.18"
 
-GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
+GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
-update-mere-memory-version:	reset-mere-memory
+update-mere-memory-version:
 	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
 update-crud-version:
 	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'

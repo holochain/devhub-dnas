@@ -50,7 +50,7 @@ export function ZomeAsset ( entry ) {
 
 export function Authority ( data ) {
     if ( data.type === "agent" )
-        data.content            = new AgentPubKey( data );
+        data.content            = new AgentPubKey( data.content );
     else if ( data.type === "group" )
         data.content            = intoStruct( data.content, [ ActionHash, ActionHash ] );
 

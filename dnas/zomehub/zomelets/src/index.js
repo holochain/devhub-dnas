@@ -118,6 +118,7 @@ export const ZomeHubCSRZomelet		= new Zomelet({
             await this.zomes.coop_content_csr.create_content_link({
                 "group_id": zome_package.maintainer.content[0],
                 "content_target": zome_package.$id,
+                "content_type": "zome_package",
             });
         }
 
@@ -309,6 +310,18 @@ export const ZomeHubCSRZomelet		= new Zomelet({
             latest_version,
             zome,
         ];
+    },
+    async get_zome_packages_for_group ( group_id ) {
+        const targets                   = await this.zomes.coop_content_csr.get_all_group_content_targets({
+            group_id,
+            "content_type":     "zome_package",
+        });
+
+        return await Promise.all(
+            targets.map( async ([ _id, latest ]) => {
+                return await this.functions.get_zome_package_entry( latest );
+            })
+        );
     },
 }, {
     "zomes": {

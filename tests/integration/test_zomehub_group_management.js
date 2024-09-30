@@ -3,6 +3,7 @@ const log                               = new Logger("test-zomehub-basic", proce
 
 // import why                           from 'why-is-node-running';
 
+import fs				from 'node:fs/promises';
 import path                             from 'path';
 import crypto                           from 'crypto';
 import { faker }                        from '@faker-js/faker';
@@ -29,6 +30,7 @@ import {
 
 const __dirname                         = path.dirname( new URL(import.meta.url).pathname );
 const ZOMEHUB_DNA_PATH                  = path.join( __dirname, "../../dnas/zomehub.dna" );
+const ZOMEHUB_WASM_PATH                 = path.join( __dirname, "../../zomes/zomehub.wasm" );
 
 const ZOMEHUB_DNA_NAME                  = "zomehub";
 const MAIN_ZOME                         = "zomehub_csr";
@@ -65,9 +67,13 @@ describe("ZomeHub", function () {
         });
     });
 
-    linearSuite("Basic", basic_tests );
+    setup_tests();
 
-    after(async () => {
+    linearSuite("Phase 1 - Zome Package", phase1_tests );
+    linearSuite("Phase 2 - Zome Package Version", phase2_tests );
+
+    after(async function () {
+        await client.close();
         await holochain.destroy();
     });
 });
@@ -93,10 +99,7 @@ let bobby_mere_memory;
 let alice_coop_content;
 let bobby_coop_content;
 
-let group1;
-let pack1;
-
-function basic_tests () {
+function setup_tests () {
 
     before(async function () {
         this.timeout( 30_000 );
@@ -114,6 +117,9 @@ function basic_tests () {
             alice_zomehub               = zomehub.zomes.zomehub_csr.functions;
             alice_mere_memory           = zomehub.zomes.mere_memory_api.functions;
             alice_coop_content          = zomehub.zomes.coop_content_csr.functions;
+
+	    const hash_path = await alice_mere_memory.make_hash_path( "hash.path" );
+            log.normal("Alice mere_memory", { hash_path });
         }
 
         {
@@ -129,10 +135,25 @@ function basic_tests () {
             bobby_zomehub               = zomehub.zomes.zomehub_csr.functions;
             bobby_mere_memory           = zomehub.zomes.mere_memory_api.functions;
             bobby_coop_content          = zomehub.zomes.coop_content_csr.functions;
+
+	    const hash_path = await alice_mere_memory.make_hash_path( "hash.path" );
+            log.normal("Bobby mere_memory", { hash_path });
         }
 
         await alice_zomehub.whoami();
         await bobby_zomehub.whoami();
+    });
+
+}
+
+
+let group1;
+let pack1;
+
+function phase1_tests () {
+    beforeEach(async function () {
+	const hash_path = await alice_mere_memory.make_hash_path( "hash.path" );
+        log.normal("Alice mere_memory", { hash_path });
     });
 
     it("(alice) should create organization", async function () {
@@ -211,9 +232,44 @@ function basic_tests () {
         });
 
         log.normal("Latest group content link: %s", json.debug(latest) );
+
+        expect( latest                  ).to.deep.equal( pack1.$action );
     });
 
-    after(async function () {
-        await client.close();
+    it("(alice) should get zome packages for group", async function () {
+        const zome_packages             = await alice_zomehub.get_zome_packages_for_group( group1.$id );
+
+        log.normal("Group zome packages: %s", json.debug(zome_packages) );
     });
+}
+
+let zomehub_wasm_bytes                  = await fs.readFile( ZOMEHUB_WASM_PATH );
+let zome1;
+let pack1_v1;
+
+function phase2_tests () {
+
+    it("(bobby) should create zome package version", async function () {
+        this.timeout( 120_000 );
+
+	zome1				= await bobby_zomehub.save_integrity( zomehub_wasm_bytes );
+        log.normal("New zome: %s", json.debug(zome1) );
+
+	pack1_v1			= await bobby_zomehub.create_zome_package_version({
+	    "version": "0.1.0",
+	    "for_package": pack1.$id,
+	    "zome_entry": zome1.$addr,
+	    "source_code_revision_uri": faker.internet.url(),
+            "api_compatibility": {
+                "build_with": {
+                    "hdi_version": faker.system.semver(),
+                    "hdk_version": faker.system.semver(),
+                },
+                "tested_with": faker.system.semver(),
+            },
+	});
+
+        log.normal("New zome package version: %s", json.debug(pack1_v1) );
+    });
+
 }

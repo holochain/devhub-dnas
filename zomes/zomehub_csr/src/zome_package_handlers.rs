@@ -92,11 +92,6 @@ pub fn update_zome_package(input: UpdateInput) -> ExternResult<Entity<ZomePackag
 	    Ok( current )
 	})?;
 
-    // register_content_update_to_group!({
-    //     entry: entity.content.clone(),
-    //     target: entity.action.clone(),
-    // })?;
-
     Ok( entity )
 }
 
