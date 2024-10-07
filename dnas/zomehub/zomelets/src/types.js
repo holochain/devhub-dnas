@@ -134,6 +134,7 @@ export const ZomePackageVersionStruct = {
 
     "for_package":		ActionHash,
     "zome_entry":		EntryHash,
+    "maintainer":               Authority,
     "changelog":		OptionType( String ),
     "source_code_revision_uri":	OptionType( String ),
     "api_compatibility": {

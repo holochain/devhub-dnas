@@ -3,6 +3,8 @@ use crate::{
     hdk_extensions,
     ZomePackageBase,
 };
+use std::collections::BTreeMap;
+
 use hdk::prelude::*;
 use hdk_extensions::{
     must_get,
@@ -12,12 +14,16 @@ use hdk_extensions::{
 };
 use zomehub::{
     // LinkTypes,
+    RmpvValue,
+    Authority,
+    ApiCompatibility,
 
     ZomePackageVersionEntry,
     hc_crud::{
         Entity, EntityId,
         EntryModel,
-        create_entity,
+        create_entity, update_entity,
+        UpdateEntityInput,
     },
 };
 use zomehub_sdk::{
@@ -45,7 +51,9 @@ fn create_zome_package_version_entry(input: ZomePackageVersionEntry) ->
 fn create_zome_package_version(input: CreateZomePackageVersionInput) ->
     ExternResult<Entity<ZomePackageVersionEntry>>
 {
-    let entity = create_zome_package_version_entry( input.clone().try_into()? )?;
+    let entry : ZomePackageVersionEntry = input.clone().try_into()?;
+
+    let entity = create_zome_package_version_entry( entry )?;
 
     create_zome_package_link_to_version(CreateLinkZomePackageVersionInput {
 	version: input.version,
@@ -122,4 +130,43 @@ fn get_zome_package_version_entry(addr: AnyDhtHash) ->
 	    content: content,
         }
     )
+}
+
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct UpdateProperties {
+    pub for_package: Option<EntityId>,
+    pub maintainer: Option<Authority>,
+    pub changelog: Option<String>,
+    pub source_code_revision_uri: Option<String>,
+    pub api_compatibility: Option<ApiCompatibility>,
+    pub metadata: Option<BTreeMap<String, RmpvValue>>,
+}
+pub type UpdateInput = UpdateEntityInput<UpdateProperties>;
+
+#[hdk_extern]
+pub fn update_zome_package_version(input: UpdateInput) -> ExternResult<Entity<ZomePackageVersionEntry>> {
+    debug!("Updating zome package: {}", input.base );
+    let props = input.properties.clone();
+
+    let entity = update_entity(
+	&input.base,
+	|mut current : ZomePackageVersionEntry, _| {
+	    current.for_package = props.for_package
+		.unwrap_or( current.for_package );
+	    current.maintainer = props.maintainer
+		.unwrap_or( current.maintainer );
+	    current.changelog = props.changelog
+		.or( current.changelog );
+	    current.source_code_revision_uri = props.source_code_revision_uri
+		.or( current.source_code_revision_uri );
+	    current.api_compatibility = props.api_compatibility
+		.unwrap_or( current.api_compatibility );
+	    current.metadata = props.metadata
+		.unwrap_or( current.metadata );
+
+	    Ok( current )
+	})?;
+
+    Ok( entity )
 }

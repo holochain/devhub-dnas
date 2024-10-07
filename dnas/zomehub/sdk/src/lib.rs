@@ -119,6 +119,7 @@ pub struct CreateZomePackageVersionInput {
     pub zome_entry: EntryHash,
 
     // optional
+    pub maintainer: Option<Authority>,
     pub changelog: Option<String>,
     pub source_code_revision_uri: Option<String>,
     pub api_compatibility: ApiCompatibility,
@@ -134,8 +135,16 @@ impl TryFrom<CreateZomePackageVersionInput> for ZomePackageVersionEntry {
     fn try_from(input: CreateZomePackageVersionInput) -> ExternResult<Self> {
         Ok(
             Self {
-                for_package: input.for_package,
+                for_package: input.for_package.clone(),
                 zome_entry: input.zome_entry,
+                maintainer: match input.maintainer {
+                    None => {
+                        let zome_package : ZomePackageEntry = must_get( &input.for_package )?.try_into()?;
+
+                        zome_package.maintainer
+                    },
+                    Some(auth) => auth,
+                },
 
                 changelog: input.changelog,
                 source_code_revision_uri: input.source_code_revision_uri,

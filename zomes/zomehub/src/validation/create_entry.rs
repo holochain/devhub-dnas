@@ -3,10 +3,14 @@ use crate::{
     hdi_extensions,
     mere_memory_types,
     EntryTypes,
+    Authority,
+    ZomePackageEntry,
 };
 
 use hdi::prelude::*;
 use hdi_extensions::{
+    trace_origin_root,
+
     // Macros
     valid, invalid,
 };
@@ -45,7 +49,51 @@ pub fn validation(
             // TODO: if the maintainer is a group, ensure the create author is in the group
             valid!()
         },
-        EntryTypes::ZomePackageVersion(_entry) => {
+        EntryTypes::ZomePackageVersion(entry) => {
+            let zome_package : ZomePackageEntry = must_get_valid_record( entry.for_package )?.try_into()?;
+
+            match &zome_package.maintainer {
+                Authority::Agent(expected_agent) => {
+                    if let Authority::Agent(agent) = &entry.maintainer {
+                        if expected_agent != agent {
+                            invalid!(format!(
+                                "Maintainer agent must match parent package: {} != {}",
+                                expected_agent, agent,
+                            ))
+                        }
+                    }
+                    else {
+                        invalid!(format!(
+                            "Maintainer type must match parent package: {:?} != {:?}",
+                            entry.maintainer, zome_package.maintainer,
+                        ))
+                    }
+                },
+                Authority::Group(expected_group_id, _) => {
+                    if let Authority::Group(group_id, group_rev) = &entry.maintainer {
+                        if expected_group_id != group_id {
+                            invalid!(format!(
+                                "Maintainer group must match parent package: {} != {}",
+                                expected_group_id, group_id,
+                            ))
+                        }
+
+                        if trace_origin_root( &group_rev )?.0 != *group_id {
+                            invalid!(format!(
+                                "Maintainer group revision ({}) must be an evolution of group ID ({})",
+                                group_rev, group_id,
+                            ))
+                        }
+                    }
+                    else {
+                        invalid!(format!(
+                            "Maintainer type must match parent package: {:?} != {:?}",
+                            entry.maintainer, zome_package.maintainer,
+                        ))
+                    }
+                },
+            }
+
             valid!()
         },
         // _ => invalid!(format!("Create validation not implemented for entry type: {:#?}", create.entry_type )),

@@ -85,6 +85,10 @@ describe("ZomeHub", function () {
 //   - Alice adds Bobby to the collaborators list
 //   - Bobby makes an update to the package
 //   - Alice sees the update
+//   - Bobby creates a package version
+//   - Alice removes bobby from group
+//   - Alice updates package version
+//   - Bobby cannot update package version
 //
 
 let alice_client;
@@ -98,6 +102,8 @@ let bobby_mere_memory;
 
 let alice_coop_content;
 let bobby_coop_content;
+
+let group1_addr_with_bobby;
 
 function setup_tests () {
 
@@ -205,6 +211,7 @@ function phase1_tests () {
                 "last_updated":     Date.now(),
             }),
         });
+        group1_addr_with_bobby          = group1.$action;
 
         log.normal("Updated organization group: %s", json.debug(group1) );
     });
@@ -270,6 +277,57 @@ function phase2_tests () {
 	});
 
         log.normal("New zome package version: %s", json.debug(pack1_v1) );
+    });
+
+    it("(alice) should remove bobby from organization", async function () {
+        group1                          = await alice_coop_content.update_group({
+            "base": group1.$action,
+            "entry": Object.assign( {}, group1, {
+                "members":          [],
+                "last_updated":     Date.now(),
+            }),
+        });
+
+        log.normal("Updated organization group: %s", json.debug(group1) );
+    });
+
+    it("(bobby) should fail to create zome package version", async function () {
+        await expect_reject(async () => {
+	    await bobby_zomehub.update_zome_package_version({
+                "base": pack1_v1.$action,
+                "properties": {
+                    "changelog": faker.lorem.paragraphs( 5 ),
+	            "source_code_revision_uri": faker.internet.url(),
+                    "api_compatibility": {
+                        "build_with": {
+                            "hdi_version": faker.system.semver(),
+                            "hdk_version": faker.system.semver(),
+                        },
+                        "tested_with": faker.system.semver(),
+                    },
+                },
+	    });
+        }, "not authorized in group" );
+    });
+
+    it("should not get bobby's forced update", async function () {
+	const bobbys_update             = await bobby_zomehub.update_zome_package_version({
+            "base": pack1_v1.$action,
+            "properties": {
+                "maintainer": {
+                    "type": "group",
+                    "content": [ group1.$id, group1_addr_with_bobby ],
+                },
+                "changelog": faker.lorem.paragraphs( 5 ),
+            },
+	});
+
+        const latest                    = await alice_coop_content.get_group_content_latest({
+            "group_id": group1.$id,
+            "content_id": pack1_v1.$id,
+        });
+
+        expect( bobbys_update.$action   ).to.not.deep.equal( latest );
     });
 
 }

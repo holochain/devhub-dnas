@@ -227,6 +227,16 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	result.content.version		= input.version;
 
+        const zome_package              = await this.functions.get_zome_package( result.content.for_package );
+
+        if ( zome_package.maintainer.type === "group" ) {
+            await this.zomes.coop_content_csr.create_content_link({
+                "group_id": zome_package.maintainer.content[0],
+                "content_target": result.id,
+                "content_type": "zome_package_version",
+            });
+        }
+
 	return new ZomePackageVersion( result, this );
     },
     async create_zome_package_version_entry ( input ) {
@@ -237,12 +247,40 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     async get_zome_package_version_entry ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
 
-	return ZomePackageVersionEntry( result );
+	return new ZomePackageVersion( result, this );
     },
     async get_zome_package_version ( input ) {
 	const result			= await this.call( new ActionHash( input ) );
 
 	return new ZomePackageVersion( result, this );
+    },
+    async update_zome_package_version ( input ) {
+        if ( input.properties.maintainer === undefined ) {
+            const prev_zome_pack_vers   = await this.functions.get_zome_package_version_entry( input.base );
+            const zome_package          = await this.functions.get_zome_package( prev_zome_pack_vers.for_package );
+            input.properties.maintainer = zome_package.maintainer;
+
+            if ( input.properties.maintainer.type === "group" ) {
+                const group             = await this.zomes.coop_content_csr.get_group( input.properties.maintainer.content[0] );
+                input.properties.maintainer.content[1] = group.$action;
+            }
+        }
+
+	const result			= await this.call( input );
+
+        const zome_pack_version         = new ZomePackageVersion( result, this );
+        const zome_package              = await this.functions.get_zome_package( zome_pack_version.for_package );
+
+        if ( zome_package.maintainer.type === "group" ) {
+            await this.zomes.coop_content_csr.create_content_update_link({
+                "group_id": zome_package.maintainer.content[0],
+                "content_id": zome_pack_version.$id,
+                "content_prev": input.base,
+                "content_next": zome_pack_version.$action,
+            });
+        }
+
+	return zome_package;
     },
 
 

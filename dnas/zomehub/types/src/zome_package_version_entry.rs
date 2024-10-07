@@ -1,6 +1,7 @@
 use crate::{
     hdi,
     EntityId,
+    Authority,
 };
 
 use std::collections::BTreeMap;
@@ -28,6 +29,10 @@ pub struct ApiCompatibility {
 pub struct ZomePackageVersionEntry {
     pub for_package: EntityId,
     pub zome_entry: EntryHash,
+
+    // Technically we only need to track the maintainer when it is a group.  But it does save us a
+    // lookup to mirror an agent maintainer.
+    pub maintainer: Authority,
 
     // Optional
     pub changelog: Option<String>,
