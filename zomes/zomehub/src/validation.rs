@@ -9,12 +9,20 @@ use crate::{
     hdi_extensions,
     EntryTypes,
     LinkTypes,
+
+    Authority,
 };
 
 use hdi::prelude::*;
 use hdi_extensions::{
+    trace_origin_root,
+    summon_app_entry,
+
     // Macros
     valid, invalid,
+};
+use coop_content_types::{
+    GroupEntry,
 };
 
 
@@ -61,4 +69,41 @@ fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     }
 
     result
+}
+
+
+pub fn check_authority(
+    authority: &Authority,
+    agent_pubkey: &AgentPubKey,
+) -> ExternResult<ValidateCallbackResult> {
+    match authority {
+        Authority::Agent(authority_agent) => {
+            if agent_pubkey != authority_agent {
+                invalid!(format!(
+                    "{} is not the maintainer ({})",
+                    agent_pubkey, authority_agent,
+                ))
+            }
+        },
+        Authority::Group(group_id, group_rev) => {
+            let group : GroupEntry = summon_app_entry( &group_rev.to_owned().into() )?;
+
+            if !group.is_contributor( &agent_pubkey ) {
+                invalid!(format!(
+                    "{} is not authorized in group {}",
+                    agent_pubkey, group_id,
+                ))
+            }
+
+            // Check that group_rev belongs to group_id
+            if *group_id != trace_origin_root( group_rev )?.0 {
+                invalid!(format!(
+                    "Group rev {} is not a descendant of group ID {}",
+                    group_rev, group_id,
+                ))
+            }
+        },
+    }
+
+    valid!()
 }

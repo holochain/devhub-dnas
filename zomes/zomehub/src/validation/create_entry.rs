@@ -1,10 +1,14 @@
 use crate::{
     hdi,
     hdi_extensions,
-    mere_memory_types,
+    mere_memory_types, // from zomehub_types
     EntryTypes,
+
     Authority,
     ZomePackageEntry,
+    validation::{
+        check_authority,
+    },
 };
 
 use hdi::prelude::*;
@@ -21,7 +25,7 @@ use mere_memory_types::{
 
 pub fn validation(
     app_entry: EntryTypes,
-    _create: Create
+    create: Create
 ) -> ExternResult<ValidateCallbackResult> {
     match app_entry {
         EntryTypes::Zome(zome_entry) => {
@@ -45,53 +49,72 @@ pub fn validation(
 
             valid!()
         },
-        EntryTypes::ZomePackage(_entry) => {
-            // TODO: if the maintainer is a group, ensure the create author is in the group
+        EntryTypes::ZomePackage(entry) => {
+            //
+            // Check if create author is authorized
+            //
+            if let ValidateCallbackResult::Invalid(msg) = check_authority( &entry.maintainer, &create.author )? {
+                invalid!(msg)
+            }
+
             valid!()
         },
         EntryTypes::ZomePackageVersion(entry) => {
             let zome_package : ZomePackageEntry = must_get_valid_record( entry.for_package )?.try_into()?;
 
-            match &zome_package.maintainer {
-                Authority::Agent(expected_agent) => {
-                    if let Authority::Agent(agent) = &entry.maintainer {
-                        if expected_agent != agent {
-                            invalid!(format!(
-                                "Maintainer agent must match parent package: {} != {}",
-                                expected_agent, agent,
-                            ))
-                        }
-                    }
-                    else {
-                        invalid!(format!(
-                            "Maintainer type must match parent package: {:?} != {:?}",
-                            entry.maintainer, zome_package.maintainer,
-                        ))
-                    }
-                },
-                Authority::Group(expected_group_id, _) => {
-                    if let Authority::Group(group_id, group_rev) = &entry.maintainer {
-                        if expected_group_id != group_id {
-                            invalid!(format!(
-                                "Maintainer group must match parent package: {} != {}",
-                                expected_group_id, group_id,
-                            ))
-                        }
+            //
+            // Check parent maintainer settings
+            //
+            match ( &zome_package.maintainer, &entry.maintainer ) {
 
-                        if trace_origin_root( &group_rev )?.0 != *group_id {
-                            invalid!(format!(
-                                "Maintainer group revision ({}) must be an evolution of group ID ({})",
-                                group_rev, group_id,
-                            ))
-                        }
-                    }
-                    else {
+                // Should have matching agent authority
+                (
+                    Authority::Agent(expected_agent),
+                    Authority::Agent(agent)
+                ) => {
+                    if expected_agent != agent {
                         invalid!(format!(
-                            "Maintainer type must match parent package: {:?} != {:?}",
-                            entry.maintainer, zome_package.maintainer,
+                            "Maintainer agent must match parent package: {} != {}",
+                            expected_agent, agent,
                         ))
                     }
                 },
+
+                // Should have matching group ID
+                (
+                    Authority::Group(expected_group_id, _),
+                    Authority::Group(group_id, group_rev)
+                ) => {
+                    // Ensure same group ID
+                    if expected_group_id != group_id {
+                        invalid!(format!(
+                            "Maintainer group must match parent package: {} != {}",
+                            expected_group_id, group_id,
+                        ))
+                    }
+
+                    // Ensure group rev is related to group ID
+                    if trace_origin_root( &group_rev )?.0 != *group_id {
+                        invalid!(format!(
+                            "Maintainer group revision ({}) must be an evolution of group ID ({})",
+                            group_rev, group_id,
+                        ))
+                    }
+                },
+
+                (expected_maintainer, maintainer) => {
+                    invalid!(format!(
+                        "Maintainer type must match parent package: {:?} != {:?}",
+                        maintainer, expected_maintainer,
+                    ))
+                },
+            }
+
+            //
+            // Check if create author is authorized
+            //
+            if let ValidateCallbackResult::Invalid(msg) = check_authority( &entry.maintainer, &create.author )? {
+                invalid!(msg);
             }
 
             valid!()

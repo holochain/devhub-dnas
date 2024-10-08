@@ -6,11 +6,13 @@ use crate::{
     Authority,
     ZomePackageEntry,
     ZomePackageVersionEntry,
+    validation::{
+        check_authority,
+    },
 };
 
 use hdi::prelude::*;
 use hdi_extensions::{
-    trace_origin_root,
     summon_app_entry,
 
     // Macros
@@ -37,57 +39,34 @@ pub fn validation(
                 .try_into()?;
 
             //
-            // Check if update author is authorized
+            // Check if new maintainer is valid
             //
-            match previous_entry.maintainer {
-                Authority::Agent(agent_pubkey) => {
-                    if update.author != agent_pubkey {
+            if let Authority::Group(prev_group_id, prev_group_rev) = previous_entry.maintainer {
+                let group : GroupEntry = summon_app_entry( &prev_group_rev.into() )?;
+
+                // Check if group ID changed
+                if let Authority::Group(group_id, _) = entry.maintainer.clone() {
+                    if prev_group_id != group_id && !group.is_admin( &update.author ) {
                         invalid!(format!(
-                            "{} is not the maintainer",
-                            update.author,
+                            "Admin authority is required to change the maintainer group",
                         ))
                     }
-                },
-                Authority::Group(prev_group_id, prev_group_ref) => {
-                    let group : GroupEntry = summon_app_entry( &prev_group_ref.into() )?;
-
-                    // Check if group ID changed
-                    if let Authority::Group(group_id, _) = entry.maintainer.clone() {
-                        if prev_group_id != group_id && !group.is_admin( &update.author ) {
-                            invalid!(format!(
-                                "Admin authority is required to change the maintainer group",
-                            ))
-                        }
+                }
+                // Authority changed from Group to Agent
+                else {
+                    if !group.is_admin( &update.author ) {
+                        invalid!(format!(
+                            "Admin authority is required to change the maintainer group",
+                        ))
                     }
-                    // Authority changed from Group to Agent
-                    else {
-                        if !group.is_admin( &update.author ) {
-                            invalid!(format!(
-                                "Admin authority is required to change the maintainer group",
-                            ))
-                        }
-                    }
-                },
+                }
             }
 
-            // If authority is group, check author is in the group
-            if let Authority::Group(group_id, group_ref) = entry.maintainer.clone() {
-                let group : GroupEntry = summon_app_entry( &group_ref.clone().into() )?;
-
-                if !group.is_contributor( &update.author ) {
-                    invalid!(format!(
-                        "{} is not authorized in group {}",
-                        update.author, group_id,
-                    ))
-                }
-
-                // Check that group_ref belongs to group_id
-                if group_id != trace_origin_root( &group_ref )?.0 {
-                    invalid!(format!(
-                        "Group ref {} is not a descendant of group ID {}",
-                        group_ref, group_id,
-                    ))
-                }
+            //
+            // Check if update author is authorized
+            //
+            if let ValidateCallbackResult::Invalid(msg) = check_authority( &entry.maintainer, &update.author )? {
+                invalid!(msg)
             }
 
             valid!()
@@ -97,57 +76,34 @@ pub fn validation(
                 .try_into()?;
 
             //
-            // Check if update author is authorized
+            // Check if new maintainer is valid
             //
-            match previous_entry.maintainer {
-                Authority::Agent(agent_pubkey) => {
-                    if update.author != agent_pubkey {
+            if let Authority::Group(prev_group_id, prev_group_rev) = previous_entry.maintainer {
+                let group : GroupEntry = summon_app_entry( &prev_group_rev.into() )?;
+
+                // Check if group ID changed
+                if let Authority::Group(group_id, _) = entry.maintainer.clone() {
+                    if prev_group_id != group_id && !group.is_admin( &update.author ) {
                         invalid!(format!(
-                            "{} is not the maintainer",
-                            update.author,
+                            "Admin authority is required to change the maintainer group",
                         ))
                     }
-                },
-                Authority::Group(prev_group_id, prev_group_ref) => {
-                    let group : GroupEntry = summon_app_entry( &prev_group_ref.into() )?;
-
-                    // Check if group ID changed
-                    if let Authority::Group(group_id, _) = entry.maintainer.clone() {
-                        if prev_group_id != group_id && !group.is_admin( &update.author ) {
-                            invalid!(format!(
-                                "Admin authority is required to change the maintainer group",
-                            ))
-                        }
+                }
+                // Authority changed from Group to Agent
+                else {
+                    if !group.is_admin( &update.author ) {
+                        invalid!(format!(
+                            "Admin authority is required to change the maintainer group",
+                        ))
                     }
-                    // Authority changed from Group to Agent
-                    else {
-                        if !group.is_admin( &update.author ) {
-                            invalid!(format!(
-                                "Admin authority is required to change the maintainer group",
-                            ))
-                        }
-                    }
-                },
+                }
             }
 
-            // If authority is group, check author is in the group
-            if let Authority::Group(group_id, group_ref) = entry.maintainer.clone() {
-                let group : GroupEntry = summon_app_entry( &group_ref.clone().into() )?;
-
-                if !group.is_contributor( &update.author ) {
-                    invalid!(format!(
-                        "{} is not authorized in group {}",
-                        update.author, group_id,
-                    ))
-                }
-
-                // Check that group_ref belongs to group_id
-                if group_id != trace_origin_root( &group_ref )?.0 {
-                    invalid!(format!(
-                        "Group ref {} is not a descendant of group ID {}",
-                        group_ref, group_id,
-                    ))
-                }
+            //
+            // Check if update author is authorized
+            //
+            if let ValidateCallbackResult::Invalid(msg) = check_authority( &entry.maintainer, &update.author )? {
+                invalid!(msg)
             }
 
             valid!()

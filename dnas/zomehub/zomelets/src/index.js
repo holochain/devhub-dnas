@@ -125,6 +125,16 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	return zome_package;
     },
     async update_zome_package ( input ) {
+        if ( input.properties.maintainer === undefined ) {
+            const prev_zome_pack        = await this.functions.get_zome_package_entry( input.base );
+            input.properties.maintainer = prev_zome_pack.maintainer;
+
+            if ( input.properties.maintainer.type === "group" ) {
+                const group             = await this.zomes.coop_content_csr.get_group( input.properties.maintainer.content[0] );
+                input.properties.maintainer.content[1] = group.$action;
+            }
+        }
+
 	const result			= await this.call( input );
         const zome_package              = new ZomePackage( result, this );
 
@@ -222,6 +232,16 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	if ( input.version in version_link_map )
 	    throw new Error(`Version '${input.version}' already exists for package ${input.for_package}`);
+
+        if ( input.maintainer === undefined ) {
+            const zome_package          = await this.functions.get_zome_package( input.for_package );
+            input.maintainer            = zome_package.maintainer;
+
+            if ( input.maintainer.type === "group" ) {
+                const group             = await this.zomes.coop_content_csr.get_group( input.maintainer.content[0] );
+                input.maintainer.content[1] = group.$action;
+            }
+        }
 
 	const result			= await this.call( input );
 

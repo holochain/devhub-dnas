@@ -27,11 +27,29 @@ pub struct ApiCompatibility {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct ZomePackageVersionEntry {
+    /// A pointer to the Package ID that this version is related to.
+    ///
+    /// Create
+    ///   - Any [`ActionHash`] that is a Create for ZomePackageEntry
+    /// Update
+    ///   - Cannot be updated
     pub for_package: EntityId,
+
+    /// A pointer to the WASM for this version.
+    ///
+    /// Create
+    ///   - Any [`EntryHash`] that is a Create for ZomeEntry
+    /// Update
+    ///   - Cannot be updated
     pub zome_entry: EntryHash,
 
     // Technically we only need to track the maintainer when it is a group.  But it does save us a
     // lookup to mirror an agent maintainer.
+    /// Declares the [Authority] with update permissions for this entry.
+    ///
+    /// Create / Update
+    ///   - Must match the `for_package` ZomePackageEntry's maintainer setting but the group
+    ///     revision pointer should be the latest known group revision.
     pub maintainer: Authority,
 
     // Optional
