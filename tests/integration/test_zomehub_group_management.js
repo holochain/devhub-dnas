@@ -173,6 +173,11 @@ function phase1_tests () {
         });
 
         log.normal("New organization group: %s", json.debug(group1) );
+
+        await alice_zomehub.create_named_group_link([ "abc_devs", group1.$id ]);
+
+        const group_links               = await alice_zomehub.get_my_group_links();
+        log.normal("My group links: %s", json.debug(group_links) );
     });
 
     it("(alice) should create zome package", async function () {
@@ -222,10 +227,6 @@ function phase1_tests () {
             "properties": {
                 "title":            faker.commerce.productName(),
                 "description":      faker.lorem.paragraphs( 2 ),
-                "maintainer": {
-                    "type":         "group",
-                    "content":      [ group1.$id, group1.$action ],
-                },
             },
         });
 

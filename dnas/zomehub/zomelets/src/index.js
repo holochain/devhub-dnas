@@ -50,6 +50,21 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     },
 
     //
+    // Group links
+    //
+    async create_named_group_link ( input ) {
+	const result			= await this.call( input );
+
+	return new ActionHash(result);
+    },
+    async get_my_group_links ( input ) {
+	const result			= await this.call( input );
+
+        return result.map( data => new Link(data) );
+    },
+
+
+    //
     // Zome entry
     //
     async create_zome_entry ( input ) {

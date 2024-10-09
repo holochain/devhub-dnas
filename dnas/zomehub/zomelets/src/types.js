@@ -102,20 +102,24 @@ export const LinkStruct = {
     "create_link_hash":		ActionHash,
 }
 
+const decoder		        = new TextDecoder();
+function decode_tag ( tag ) {
+    return decoder.decode( tag );
+}
+
 export class Link {
     constructor ( data ) {
 	Object.assign( this, intoStruct( data, LinkStruct ) );
     }
 
     tagString () {
-	return this.tag;
+	return decode_tag( this.tag );
     }
 
     toJSON () {
-	const decoder		= new TextDecoder();
 	const data		= Object.assign( {}, this );
 	try {
-	    data.tag		= decoder.decode( data.tag );
+	    data.tag		= decode_tag( data.tag );
 	} catch (_) {
 	    // Tag doesn't need to be a string
 	}

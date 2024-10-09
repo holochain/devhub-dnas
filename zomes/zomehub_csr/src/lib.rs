@@ -1,3 +1,4 @@
+mod group_link_handlers;
 mod zome_handlers;
 mod zome_package_handlers;
 mod zome_package_version_handlers;
