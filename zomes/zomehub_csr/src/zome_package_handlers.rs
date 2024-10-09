@@ -10,6 +10,7 @@ use hdk_extensions::{
     must_get,
     hdi_extensions::{
         guest_error,
+        trace_origin_root,
         ScopedTypeConnector,
         AnyLinkableHashTransformer,
     },
@@ -31,7 +32,9 @@ use zomehub_sdk::{
     LinkBase,
     CreateZomePackageInput,
 };
-
+use coop_content_sdk::{
+    get_group_content_latest,
+};
 
 
 #[hdk_extern]
@@ -116,7 +119,33 @@ fn get_zome_package_entry(addr: AnyDhtHash) -> ExternResult<Entity<ZomePackageEn
 
 #[hdk_extern]
 pub fn get_zome_package(addr: EntityId) -> ExternResult<Entity<ZomePackageEntry>> {
-    Ok( get_entity( &addr )? )
+    let addr = trace_origin_root( &addr )?.0;
+    let record = must_get( &addr )?;
+    let zome_package_entry = ZomePackageEntry::try_from_record( &record )?;
+
+    Ok(match zome_package_entry.maintainer {
+        Authority::Agent(_) => {
+            get_entity( &addr )?
+        },
+        Authority::Group(group_id, _) => {
+            let latest_addr = get_group_content_latest!({
+                group_id: group_id,
+                content_id: addr.clone().into(),
+            })?;
+            let record = must_get( &latest_addr )?;
+            let content = ZomePackageEntry::try_from_record( &record )?;
+            let id = record.action_address().to_owned();
+            let hash = hash_entry( content.clone() )?;
+
+            Entity {
+                id: addr,
+                action: id,
+	        address: hash,
+	        ctype: content.get_type(),
+	        content: content,
+            }
+        },
+    })
 }
 
 

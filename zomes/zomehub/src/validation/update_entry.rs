@@ -13,14 +13,8 @@ use crate::{
 
 use hdi::prelude::*;
 use hdi_extensions::{
-    summon_app_entry,
-
     // Macros
     valid, invalid,
-};
-
-use coop_content_types::{
-    GroupEntry,
 };
 
 
@@ -41,25 +35,35 @@ pub fn validation(
             //
             // Check if new maintainer is valid
             //
-            if let Authority::Group(prev_group_id, prev_group_rev) = previous_entry.maintainer {
-                let group : GroupEntry = summon_app_entry( &prev_group_rev.into() )?;
-
-                // Check if group ID changed
-                if let Authority::Group(group_id, _) = entry.maintainer.clone() {
-                    if prev_group_id != group_id && !group.is_admin( &update.author ) {
+            match ( &previous_entry.maintainer, &entry.maintainer ) {
+                (
+                    Authority::Group(prev_group_id, _),
+                    Authority::Group(group_id, _),
+                ) => {
+                    if prev_group_id != group_id {
                         invalid!(format!(
-                            "Admin authority is required to change the maintainer group",
+                            "The maintainer group cannot be changed: {} => {}",
+                            prev_group_id, group_id,
                         ))
                     }
-                }
-                // Authority changed from Group to Agent
-                else {
-                    if !group.is_admin( &update.author ) {
+                },
+                (
+                    Authority::Agent(prev_agent_pubkey),
+                    Authority::Agent(agent_pubkey),
+                ) => {
+                    if prev_agent_pubkey != agent_pubkey {
                         invalid!(format!(
-                            "Admin authority is required to change the maintainer group",
+                            "The maintainer agent cannot be changed: {} => {}",
+                            prev_agent_pubkey, agent_pubkey,
                         ))
                     }
-                }
+                },
+                (expected_maintainer, maintainer) => {
+                    invalid!(format!(
+                        "Maintainer type cannot be changed: {:?} => {:?}",
+                        expected_maintainer, maintainer,
+                    ))
+                },
             }
 
             //
@@ -78,25 +82,35 @@ pub fn validation(
             //
             // Check if new maintainer is valid
             //
-            if let Authority::Group(prev_group_id, prev_group_rev) = previous_entry.maintainer {
-                let group : GroupEntry = summon_app_entry( &prev_group_rev.into() )?;
-
-                // Check if group ID changed
-                if let Authority::Group(group_id, _) = entry.maintainer.clone() {
-                    if prev_group_id != group_id && !group.is_admin( &update.author ) {
+            match ( &previous_entry.maintainer, &entry.maintainer ) {
+                (
+                    Authority::Group(prev_group_id, _),
+                    Authority::Group(group_id, _),
+                ) => {
+                    if prev_group_id != group_id {
                         invalid!(format!(
-                            "Admin authority is required to change the maintainer group",
+                            "The maintainer group cannot be changed: {} => {}",
+                            prev_group_id, group_id,
                         ))
                     }
-                }
-                // Authority changed from Group to Agent
-                else {
-                    if !group.is_admin( &update.author ) {
+                },
+                (
+                    Authority::Agent(prev_agent_pubkey),
+                    Authority::Agent(agent_pubkey),
+                ) => {
+                    if prev_agent_pubkey != agent_pubkey {
                         invalid!(format!(
-                            "Admin authority is required to change the maintainer group",
+                            "The maintainer agent cannot be changed: {} => {}",
+                            prev_agent_pubkey, agent_pubkey,
                         ))
                     }
-                }
+                },
+                (expected_maintainer, maintainer) => {
+                    invalid!(format!(
+                        "Maintainer type cannot be changed: {:?} => {:?}",
+                        expected_maintainer, maintainer,
+                    ))
+                },
             }
 
             //

@@ -232,6 +232,13 @@ function phase1_tests () {
         log.normal("Updated zome package: %s", json.debug(pack1) );
     });
 
+    it("(bobby) should update zome package", async function () {
+        const zome_package              = await bobby_zomehub.get_zome_package( pack1.$id );
+        log.normal("Fetched zome package (%s): %s", pack1.$id, json.debug(zome_package) );
+
+        expect( zome_package.$action    ).to.deep.equal( pack1.$action );
+    });
+
     it("(alice) should get latest package", async function () {
         const latest                    = await alice_coop_content.get_group_content_latest({
             "group_id": group1.$id,
@@ -310,7 +317,7 @@ function phase2_tests () {
         }, "not authorized in group" );
     });
 
-    it("should not get bobby's forced update", async function () {
+    it("should not get bobby's forced zome package version update", async function () {
 	const bobbys_update             = await bobby_zomehub.update_zome_package_version({
             "base": pack1_v1.$action,
             "properties": {
@@ -321,6 +328,7 @@ function phase2_tests () {
                 "changelog": faker.lorem.paragraphs( 5 ),
             },
 	});
+        log.normal("Forced update (%s): %s", bobbys_update.$action, json.debug(bobbys_update) );
 
         const latest                    = await alice_coop_content.get_group_content_latest({
             "group_id": group1.$id,
@@ -328,6 +336,40 @@ function phase2_tests () {
         });
 
         expect( bobbys_update.$action   ).to.not.deep.equal( latest );
+
+        const zome_pack_vers            = await alice_zomehub.get_zome_package_version( pack1_v1.$id );
+        log.normal("Fetched zome package version (%s): %s", pack1_v1.$id, json.debug(zome_pack_vers) );
+
+        expect( zome_pack_vers.$action  ).to.not.deep.equal( bobbys_update.$action );
+        expect( zome_pack_vers.$action  ).to.deep.equal( latest );
+    });
+
+    it("should not get bobby's forced zome package update", async function () {
+        const bobbys_update             = await bobby_zomehub.update_zome_package({
+            "base": pack1.$action,
+            "properties": {
+                "title":            faker.commerce.productName(),
+                "description":      faker.lorem.paragraphs( 2 ),
+                "maintainer": {
+                    "type": "group",
+                    "content": [ group1.$id, group1_addr_with_bobby ],
+                },
+            },
+        });
+        log.normal("Forced update (%s): %s", bobbys_update.$action, json.debug(bobbys_update) );
+
+        const latest                    = await alice_coop_content.get_group_content_latest({
+            "group_id": group1.$id,
+            "content_id": pack1.$id,
+        });
+
+        expect( bobbys_update.$action   ).to.not.deep.equal( latest );
+
+        const zome_package              = await alice_zomehub.get_zome_package( pack1.$id );
+        log.normal("Fetched zome package (%s): %s", pack1.$id, json.debug(zome_package) );
+
+        expect( zome_package.$action    ).to.not.deep.equal( bobbys_update.$action );
+        expect( zome_package.$action    ).to.deep.equal( latest );
     });
 
 }
