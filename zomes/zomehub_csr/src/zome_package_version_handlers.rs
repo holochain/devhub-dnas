@@ -170,7 +170,6 @@ pub fn get_zome_package_version(addr: EntityId) -> ExternResult<Entity<ZomePacka
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct UpdateProperties {
-    pub for_package: Option<EntityId>,
     pub maintainer: Option<Authority>,
     pub changelog: Option<String>,
     pub source_code_revision_uri: Option<String>,
@@ -187,8 +186,6 @@ pub fn update_zome_package_version(input: UpdateInput) -> ExternResult<Entity<Zo
     let entity = update_entity(
 	&input.base,
 	|mut current : ZomePackageVersionEntry, _| {
-	    current.for_package = props.for_package
-		.unwrap_or( current.for_package );
 	    current.maintainer = props.maintainer
 		.unwrap_or( current.maintainer );
 	    current.changelog = props.changelog
@@ -204,4 +201,15 @@ pub fn update_zome_package_version(input: UpdateInput) -> ExternResult<Entity<Zo
 	})?;
 
     Ok( entity )
+}
+
+
+#[hdk_extern]
+pub fn delete_zome_package_version(id: EntityId) -> ExternResult<bool> {
+    let package_version = get_zome_package_version( id.clone() )?.content;
+    let zome_base = ZomePackageBase::new( &package_version.for_package );
+
+    zome_base.version_link_base().delete_all_my_links_to_target( &id, None )?;
+
+    Ok(true)
 }

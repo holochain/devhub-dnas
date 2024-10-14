@@ -48,6 +48,11 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 	    };
 	},
     },
+    async list_all_agents () {
+	const result			= await this.call();
+
+	return result.map( agent => new AgentPubKey(agent) );
+    },
 
     //
     // Group links
@@ -202,6 +207,9 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	return version_map;
     },
+    async delete_zome_package ( input ) {
+	return await this.call( input );
+    },
 
     // Zome Package Links
     async create_zome_package_link_to_version ( input ) {
@@ -316,6 +324,9 @@ export const ZomeHubCSRZomelet		= new Zomelet({
         }
 
 	return zome_package;
+    },
+    async delete_zome_package_version ( input ) {
+	return await this.call( input );
     },
 
 

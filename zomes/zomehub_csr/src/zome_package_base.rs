@@ -8,7 +8,6 @@ use hdk::prelude::*;
 use zomehub::{
     LinkTypes,
     hc_crud::{
-        get_entity,
         EntityId,
     },
 };
@@ -36,10 +35,6 @@ impl ZomePackageBase {
     pub fn version_link_base(&self) -> LinkBase<LinkTypes> {
         LinkBase::new( self.id(), LinkTypes::ZomePackageToZomePackageVersion )
     }
-
-    // pub fn package(&self) -> ExternResult<Entity<ZomePackageEntry>> {
-    //     Ok( get_entity( &self.id() )? )
-    // }
 
     pub fn create_version_link(&self, version_id: &ActionHash, version_name: &str ) -> ExternResult<ActionHash> {
         let tag = version_name.as_bytes().to_vec();
@@ -115,10 +110,10 @@ impl ZomePackageBase {
 
         for (vname, version_id) in version_targets.into_iter() {
             debug!("Get Zome package version: {}", version_id );
-            let version = match get_entity( &version_id ) {
+            let version = match crate::zome_package_version_handlers::get_zome_package_version( version_id ) {
                 Ok(value) => value,
                 Err(err) => {
-                    debug!("Dropping version '{}' because of failure to get version entry: {:#?}", vname, err );
+                    debug!("Dropping version '{}' because of failure to get version info: {:#?}", vname, err );
                     continue;
                 },
             };

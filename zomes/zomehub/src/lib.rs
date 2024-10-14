@@ -61,6 +61,8 @@ pub enum LinkTypes {
     NameToGroup,
     NameToZomePackage,
 
+    AllAgentsToAgent,
+
     ZomePackageToZomePackageVersion,
 }
 
@@ -76,6 +78,8 @@ impl TryFrom<String> for LinkTypes {
 
                 "NameToGroup" => LinkTypes::NameToGroup,
                 "NameToZomePackage" => LinkTypes::NameToZomePackage,
+
+                "AllAgentsToAgent" => LinkTypes::AllAgentsToAgent,
 
                 "ZomePackageToZomePackageVersion" => LinkTypes::ZomePackageToZomePackageVersion,
 

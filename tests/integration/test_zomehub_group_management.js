@@ -148,6 +148,9 @@ function setup_tests () {
 
         await alice_zomehub.whoami();
         await bobby_zomehub.whoami();
+
+        const agents                    = await alice_zomehub.list_all_agents();
+        expect( agents                  ).to.have.length( 2 );
     });
 
 }

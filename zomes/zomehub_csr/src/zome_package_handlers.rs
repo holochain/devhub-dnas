@@ -41,9 +41,8 @@ use coop_content_sdk::{
 fn create_zome_package_entry(input: ZomePackageEntry) -> ExternResult<Entity<ZomePackageEntry>> {
     let entity = create_entity( &input )?;
 
-    MY_ZOME_PACKS_ANCHOR.create_link_if_not_exists( &entity.address, () )?;
+    MY_ZOME_PACKS_ANCHOR.create_link_if_not_exists( &entity.id, () )?;
 
-    // TODO: Link from package name
     let anchor_path = Path::from( vec![ Component::from(input.name.as_bytes().to_vec()) ] ).path_entry_hash()?;
     let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );
     name_anchor.create_link_if_not_exists( &entity.id, () )?;
@@ -62,7 +61,6 @@ fn create_zome_package(input: CreateZomePackageInput) -> ExternResult<Entity<Zom
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct UpdateProperties {
-    pub name: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
     pub maintainer: Option<Authority>,
@@ -79,8 +77,6 @@ pub fn update_zome_package(input: UpdateInput) -> ExternResult<Entity<ZomePackag
     let entity = update_entity(
 	&input.base,
 	|mut current : ZomePackageEntry, _| {
-	    current.name = props.name
-		.unwrap_or( current.name );
 	    current.title = props.title
 		.unwrap_or( current.title );
 	    current.description = props.description
@@ -159,7 +155,7 @@ pub fn get_zome_package_by_name(name: String) -> ExternResult<Entity<ZomePackage
             name
         )))?.to_owned();
 
-    Ok( get_entity( &package_link.target.must_be_action_hash()? )? )
+    Ok( get_zome_package( package_link.target.must_be_action_hash()? )? )
 }
 
 
@@ -175,10 +171,24 @@ fn get_zome_packages_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
 
     let zome_packages = agent_anchor.get_links( None )?.into_iter()
         .filter_map(|link| {
-            let addr = link.target.into_entry_hash()?;
-            get_zome_package_entry( addr.into() ).ok()
+            let id = link.target.into_action_hash()?;
+            get_zome_package( id.into() ).ok()
         })
         .collect();
 
     Ok( zome_packages )
+}
+
+
+#[hdk_extern]
+pub fn delete_zome_package(id: EntityId) -> ExternResult<bool> {
+    let zome_package = get_zome_package( id.clone() )?.content;
+
+    MY_ZOME_PACKS_ANCHOR.delete_all_my_links_to_target( &id, None )?;
+
+    let anchor_path = Path::from( vec![ Component::from(zome_package.name.as_bytes().to_vec()) ] ).path_entry_hash()?;
+    let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );
+    name_anchor.delete_all_my_links_to_target( &id, None )?;
+
+    Ok(true)
 }

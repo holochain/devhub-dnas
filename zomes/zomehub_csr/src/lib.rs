@@ -29,6 +29,10 @@ pub type TypedLinkBase = LinkBase<LinkTypes>;
 lazy_static! {
     pub static ref AGENT_ID : AgentPubKey = agent_id().expect("Unable to obtain current Agent context");
 
+    pub static ref ALL_AGENTS_ANCHOR_HASH : EntryHash = Path::from( vec![ Component::from("all_agents".as_bytes().to_vec()) ] )
+        .path_entry_hash()
+        .expect("Unable to derive all_agents anchor");
+    pub static ref ALL_AGENTS_ANCHOR : TypedLinkBase = LinkBase::new( ALL_AGENTS_ANCHOR_HASH.clone(), LinkTypes::AllAgentsToAgent );
     pub static ref MY_ZOMES_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToZome );
     pub static ref MY_ZOME_PACKS_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToZomePackage );
 }
@@ -60,6 +64,8 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
             .into_iter().flatten().collect(),
     })?;
 
+    ALL_AGENTS_ANCHOR.create_link_if_not_exists( &agent_info()?.agent_initial_pubkey, () )?;
+
     Ok(InitCallbackResult::Pass)
 }
 
@@ -78,4 +84,16 @@ pub fn query_whole_chain() -> ExternResult<Vec<Record>> {
                 .include_entries(true)
         )?
     )
+}
+
+
+#[hdk_extern]
+pub fn list_all_agents() -> ExternResult<Vec<AgentPubKey>> {
+    let agents = ALL_AGENTS_ANCHOR.get_links( None )?.into_iter()
+        .filter_map(|link| {
+            link.target.into_agent_pub_key()
+        })
+        .collect();
+
+    Ok(agents)
 }

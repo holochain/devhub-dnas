@@ -126,6 +126,38 @@ export default function ( args_fn ) {
 	log.normal("Latest package version: %s", json.debug(latest_version) );
     });
 
+    it("should delete package version", async function () {
+        {
+	    const version_links		= await zomehub_csr.get_zome_package_version_links( pack1.$id );
+	    expect( version_links       ).to.have.length( 6 );
+        }
+
+	await zomehub_csr.delete_zome_package_version( pack1_v1.$id );
+
+        {
+	    const version_links		= await zomehub_csr.get_zome_package_version_links( pack1.$id );
+	    expect( version_links       ).to.have.length( 5 );
+        }
+    });
+
+    it("should delete package", async function () {
+        {
+	    const zome_packages         = Object.values( await zomehub_csr.get_zome_packages_for_agent() );
+	    expect( zome_packages       ).to.have.length( 2 );
+        }
+
+	await zomehub_csr.delete_zome_package( pack1.$id );
+
+        {
+	    const zome_packages         = Object.values( await zomehub_csr.get_zome_packages_for_agent() );
+	    expect( zome_packages       ).to.have.length( 1 );
+        }
+
+        await expect_reject(async () => {
+	    await zomehub_csr.get_zome_package_by_name( pack1_name );
+        }, "No package found for name" );
+    });
+
     linearSuite("Errors", function () {
 
     });
