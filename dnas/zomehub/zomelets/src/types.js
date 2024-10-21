@@ -139,6 +139,7 @@ export const ZomePackageVersionStruct = {
     "for_package":		ActionHash,
     "zome_entry":		EntryHash,
     "maintainer":               Authority,
+    "readme":		        OptionType( EntryHash ),
     "changelog":		OptionType( String ),
     "source_code_revision_uri":	OptionType( String ),
     "api_compatibility": {
@@ -148,6 +149,7 @@ export const ZomePackageVersionStruct = {
         },
         "tested_with":          String,
     },
+    "dependencies":	        OptionType( VecType([ String, ActionHash, String, String ]) ),
     "metadata":			Object,
 };
 

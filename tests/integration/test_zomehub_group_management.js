@@ -187,7 +187,7 @@ function phase1_tests () {
         const title                     = faker.commerce.productName();
 
         pack1                           = await alice_zomehub.create_zome_package({
-            "name":             title.toLowerCase(/\s/g, '-'),
+            "name":             "@abc_devs/" + title.toLowerCase(/\s/g, '-'),
             title,
             "description":      faker.lorem.paragraphs( 2 ),
             "zome_type":        "integrity",
@@ -258,6 +258,14 @@ function phase1_tests () {
         const zome_packages             = await alice_zomehub.get_zome_packages_for_group( group1.$id );
 
         log.normal("Group zome packages: %s", json.debug(zome_packages) );
+        expect( zome_packages           ).to.have.length( 1 );
+    });
+
+    it("(alice) should get zome packages for org", async function () {
+        const zome_packages             = await alice_zomehub.get_zome_packages_for_org( "@abc_devs" );
+
+        log.normal("Org zome packages: %s", json.debug(zome_packages) );
+        expect( zome_packages           ).to.have.length( 1 );
     });
 }
 

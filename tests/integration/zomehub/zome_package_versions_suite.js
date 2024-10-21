@@ -25,6 +25,7 @@ export default function ( args_fn ) {
     let zome1_addr, zome1;
 
     let pack1;
+    let pack1_dup;
     let pack1_v1;
     let pack1_name;
 
@@ -43,6 +44,13 @@ export default function ( args_fn ) {
         pack1_name                      = title.toLowerCase(/\s/g, '-');
 
 	pack1				= await zomehub_csr.create_zome_package({
+	    "name": pack1_name,
+	    title,
+	    "description": faker.lorem.paragraphs( 2 ),
+	    "zome_type": "integrity",
+	});
+
+	pack1_dup			= await zomehub_csr.create_zome_package({
 	    "name": pack1_name,
 	    title,
 	    "description": faker.lorem.paragraphs( 2 ),
@@ -121,7 +129,13 @@ export default function ( args_fn ) {
     });
 
     it("should download latest version", async function () {
-	const latest_version		= await zomehub_csr.download_zome_package( pack1_name );
+	const [
+            zome_package,
+            latest_version,
+            zome,
+	]                               = await zomehub_csr.download_zome_package( pack1_name );
+
+	expect( zome_package.$id        ).to.deep.equal( pack1.$id );
 
 	log.normal("Latest package version: %s", json.debug(latest_version) );
     });
@@ -143,19 +157,19 @@ export default function ( args_fn ) {
     it("should delete package", async function () {
         {
 	    const zome_packages         = Object.values( await zomehub_csr.get_zome_packages_for_agent() );
-	    expect( zome_packages       ).to.have.length( 2 );
+	    expect( zome_packages       ).to.have.length( 3 );
         }
 
 	await zomehub_csr.delete_zome_package( pack1.$id );
 
         {
 	    const zome_packages         = Object.values( await zomehub_csr.get_zome_packages_for_agent() );
-	    expect( zome_packages       ).to.have.length( 1 );
+	    expect( zome_packages       ).to.have.length( 2 );
         }
 
-        await expect_reject(async () => {
-	    await zomehub_csr.get_zome_package_by_name( pack1_name );
-        }, "No package found for name" );
+	const zome_package              = await zomehub_csr.get_zome_package_by_name( pack1_name );
+
+	expect( zome_package.$id        ).to.deep.equal( pack1_dup.$id );
     });
 
     linearSuite("Errors", function () {

@@ -53,9 +53,13 @@ pub struct ZomePackageVersionEntry {
     pub maintainer: Authority,
 
     // Optional
+    pub readme: Option<EntryHash>, // Mere memory addr for README.md
     pub changelog: Option<String>,
     pub source_code_revision_uri: Option<String>,
     pub api_compatibility: ApiCompatibility,
+    /// Used by coordinator zomes to indicate integrity or the expected peer coordinators that are
+    /// called.
+    pub dependencies: Option<Vec<(String, ActionHash, String, String)>>, // (name, id, version, hash)
 
     // Common fields
     pub metadata: BTreeMap<String, rmpv::Value>,

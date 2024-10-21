@@ -57,12 +57,26 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     //
     // Group links
     //
-    async create_named_group_link ( input ) {
-	const result			= await this.call( input );
+    async create_named_group_link ([ name, group_id ]) {
+        if ( name.startsWith("@") )
+            name                        = name.slice(1);
 
-	return new ActionHash(result);
+	const result			= await this.call([ name, group_id ]);
+
+	return [
+            new ActionHash(result[0]),
+            result[1] ?? new ActionHash(result[1]),
+        ];
     },
     async get_my_group_links ( input ) {
+	const result			= await this.call( input );
+
+        return result.map( data => new Link(data) );
+    },
+    async get_org_group_links ( input ) {
+        if ( input.startsWith("@") )
+            input                       = input.slice(1);
+
 	const result			= await this.call( input );
 
         return result.map( data => new Link(data) );
@@ -398,6 +412,20 @@ export const ZomeHubCSRZomelet		= new Zomelet({
     async get_zome_packages_for_group ( group_id ) {
         const targets                   = await this.zomes.coop_content_csr.get_all_group_content_targets({
             group_id,
+            "content_type":     "zome_package",
+        });
+
+        return await Promise.all(
+            targets.map( async ([ _id, latest ]) => {
+                return await this.functions.get_zome_package_entry( latest );
+            })
+        );
+    },
+    async get_zome_packages_for_org ( org_name ) {
+        const links                     = await this.functions.get_org_group_links( org_name );
+        console.log( links );
+        const targets                   = await this.zomes.coop_content_csr.get_all_group_content_targets({
+            "group_id":         new ActionHash( links[0].target ),
             "content_type":     "zome_package",
         });
 

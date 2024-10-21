@@ -119,10 +119,12 @@ pub struct CreateZomePackageVersionInput {
     pub zome_entry: EntryHash,
 
     // optional
+    pub readme: Option<EntryHash>,
     pub maintainer: Option<Authority>,
     pub changelog: Option<String>,
     pub source_code_revision_uri: Option<String>,
     pub api_compatibility: ApiCompatibility,
+    pub dependencies: Option<Vec<(String, ActionHash, String, String)>>,
 
     // Common fields
     #[serde(default)]
@@ -146,9 +148,11 @@ impl TryFrom<CreateZomePackageVersionInput> for ZomePackageVersionEntry {
                     Some(auth) => auth,
                 },
 
+                readme: input.readme,
                 changelog: input.changelog,
                 source_code_revision_uri: input.source_code_revision_uri,
                 api_compatibility: input.api_compatibility,
+                dependencies: input.dependencies,
                 metadata: input.metadata,
             }
         )

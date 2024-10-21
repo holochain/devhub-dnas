@@ -149,7 +149,10 @@ pub fn get_zome_package(addr: EntityId) -> ExternResult<Entity<ZomePackageEntry>
 pub fn get_zome_package_by_name(name: String) -> ExternResult<Entity<ZomePackageEntry>> {
     let anchor_path = Path::from( vec![ Component::from(name.as_bytes().to_vec()) ] ).path_entry_hash()?;
     let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );
-    let package_link = name_anchor.get_links( None )?.first()
+    let mut all_links = name_anchor.get_links( None )?;
+    all_links.sort_by_key( |link| link.timestamp ); // Ascending timestamp order
+
+    let package_link = all_links.first() // Select oldest timestamp
         .ok_or(guest_error!(format!(
             "No package found for name '{}'",
             name
