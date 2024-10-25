@@ -1,5 +1,8 @@
 {
     "version": 1,
+    "networks": {
+        "zomehub": "uhC0k-_-oVxEPupXtcX8gZnTpMtHlRSENBsB7P38X6DRUEQhKzRie"
+    },
     "zomes": {
         "mere_memory": {
             "0.101.0": {
@@ -39,39 +42,39 @@
                 "dev_dependencies": {}
             }
         },
-        "coop_content": {
+        "@spartan-hc/coop_content_csr": {
             "0.8.0-dev.0": {
-                "zome_type": "integrity",
-                "checksum": "7504bcf66a9de7ecb31df12ee2cc8a51c712cd0bb1672f15d3b88ce669f68413",
+                "zome_type": "coordinator",
+                "checksum": "59a5fc724b95981f459f4c2de70aacd2e9427d1e43953c05b8510620aa7457d1",
                 "devhub_source": {
-                    "zome_package_id": "uhCkkpe6L0lsnWBFeKeriW9TGd_e3uSFJ5Rocg7RM0eEjVmCCeTn9",
-                    "zome_package_version_id": "uhCkk-VOWE8MpBnGGJFlcf-kIb9ZGL822mTw8zhb6ETWftNnZh2XY",
-                    "zome_wasm_addr": "uhCEkr4X6fsBCcqOnyHL0og6PhmiMns7xJdKhNelXG9nsnZwOsGjE",
-                    "mere_memory_addr": "uhCEkzPadWLosjaE_0iZ8ySsATpBx4iRKHlF7EwbKaZHGhxXjvHhH"
+                    "zome_package_id": "uhCkkzVqO7tQ8DoMEVc29CUv8PipEJw1Q9g2citRlBqiGpG-M-eYJ",
+                    "zome_package_version_id": "uhCkkYH172E6Q_zFEcA09dEiyC9btyeJ0wEmC92jiEXJ_kkLwL68Z",
+                    "zome_wasm_addr": "uhCEkA4jC3xj8H5seUXLTnUZFM6k6hyrC5Q5YLs5OexaS1VOuzWPv",
+                    "mere_memory_addr": "uhCEkUg67qWlvOC8uyuQ5MvE1IgalgbNiH2txWwl8ddYWaSltTZPE"
                 },
                 "local_source": {
-                    "wasm_filepath": ".devhub/wasms/7504bcf66a9de7ecb31df12ee2cc8a51c712cd0bb1672f15d3b88ce669f68413.wasm",
-                    "zome_filepath": ".devhub/zomes/coop_content-0.8.0-dev.0.wasm",
-                    "file_size": 2775496
+                    "wasm_filepath": ".devhub/wasms/59a5fc724b95981f459f4c2de70aacd2e9427d1e43953c05b8510620aa7457d1.wasm",
+                    "zome_filepath": ".devhub/zomes/@spartan-hc/coop_content_csr-0.8.0-dev.0.wasm",
+                    "file_size": 5475972
                 },
                 "dependencies": {},
                 "dev_dependencies": {}
             }
         },
-        "coop_content_csr": {
+        "@spartan-hc/coop_content": {
             "0.8.0-dev.0": {
-                "zome_type": "coordinator",
-                "checksum": "3fc87dd5e1977a8953d31fb28abbf33b80b152d273c44b3d73333112bc7ec1f0",
+                "zome_type": "integrity",
+                "checksum": "1145cb4c61b8ec6d931f86f308d17208d6e4951df6db316e321be2d0b6a23511",
                 "devhub_source": {
-                    "zome_package_id": "uhCkkMlUQOIBL5vQL_7jjFtrFd7r4MjQG8YykicjjsNI1bUi2Cr-L",
-                    "zome_package_version_id": "uhCkk4pb2PcjTCW_Vxk2aelEi7rjUQsua1A3cD89QPtlla8XhFOzF",
-                    "zome_wasm_addr": "uhCEkmgQOqRXdU4iyf3sRN6230ff6Crd09RuLNfL5FBzrgbvkzvHA",
-                    "mere_memory_addr": "uhCEkpagZAKN7y9b8SFim28mdDLq0QuXdDhTEKoWOrnRuWytOQNNJ"
+                    "zome_package_id": "uhCkkwbiMQbltAaWXySg2wx1ULt6M5alg7sSmPEqNib6zSDf9oAJK",
+                    "zome_package_version_id": "uhCkkaoJ6xSpX5IzgoxvxEO87nddZZ-TCB8QHGeRomyuJzWzU6hZR",
+                    "zome_wasm_addr": "uhCEkAiS1ly_-fnZISW_7U1VZdjnc-xnuUK8xJyBBlVnPQUAiy-gl",
+                    "mere_memory_addr": "uhCEkf_0qa62Prd9XCoV39qiF1XsQlzANc3Ym66EIITDBGvNHHez2"
                 },
                 "local_source": {
-                    "wasm_filepath": ".devhub/wasms/3fc87dd5e1977a8953d31fb28abbf33b80b152d273c44b3d73333112bc7ec1f0.wasm",
-                    "zome_filepath": ".devhub/zomes/coop_content_csr-0.8.0-dev.0.wasm",
-                    "file_size": 5480625
+                    "wasm_filepath": ".devhub/wasms/1145cb4c61b8ec6d931f86f308d17208d6e4951df6db316e321be2d0b6a23511.wasm",
+                    "zome_filepath": ".devhub/zomes/@spartan-hc/coop_content-0.8.0-dev.0.wasm",
+                    "file_size": 2773392
                 },
                 "dependencies": {},
                 "dev_dependencies": {}

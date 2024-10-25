@@ -267,6 +267,13 @@ function phase1_tests () {
         log.normal("Org zome packages: %s", json.debug(zome_packages) );
         expect( zome_packages           ).to.have.length( 1 );
     });
+
+    it("(alice) should get all zome package links", async function () {
+        const zome_package_links        = await alice_zomehub.get_all_zome_package_links();
+
+        log.normal("All zome package links: %s", json.debug(zome_package_links) );
+        expect( zome_package_links      ).to.have.length( 1 );
+    });
 }
 
 let zomehub_wasm_bytes                  = await fs.readFile( ZOMEHUB_WASM_PATH );

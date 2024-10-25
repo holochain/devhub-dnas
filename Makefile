@@ -8,8 +8,8 @@ MERE_MEMORY_WASM	= .devhub/zomes/mere_memory-$(MERE_MEMORY_VERSION).wasm
 MERE_MEMORY_API_WASM	= .devhub/zomes/mere_memory_csr-$(MERE_MEMORY_VERSION).wasm
 
 COOP_CONTENT_VERSION	= 0.8.0-dev.0
-COOP_CONTENT_WASM	= .devhub/zomes/coop_content-$(COOP_CONTENT_VERSION).wasm
-COOP_CONTENT_CSR_WASM	= .devhub/zomes/coop_content_csr-$(COOP_CONTENT_VERSION).wasm
+COOP_CONTENT_WASM	= .devhub/zomes/@spartan-hc/coop_content-$(COOP_CONTENT_VERSION).wasm
+COOP_CONTENT_CSR_WASM	= .devhub/zomes/@spartan-hc/coop_content_csr-$(COOP_CONTENT_VERSION).wasm
 
 # External DNA dependencies
 PORTAL_VERSION		= 0.17.0

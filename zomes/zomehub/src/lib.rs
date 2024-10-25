@@ -54,6 +54,8 @@ entry_model!( EntryTypes::ZomePackageVersion( ZomePackageVersionEntry ) );
 /// The link types defined for this integrity zome
 #[hdk_link_types]
 pub enum LinkTypes {
+    ZomePackage,
+
     AgentToZome,
     AgentToZomePackage,
     AgentToZomePackageVersion,
@@ -72,6 +74,8 @@ impl TryFrom<String> for LinkTypes {
     fn try_from(name: String) -> Result<Self, Self::Error> {
         Ok(
             match name.as_str() {
+                "ZomePackage" => LinkTypes::ZomePackage,
+
                 "AgentToZome" => LinkTypes::AgentToZome,
                 "AgentToZomePackage" => LinkTypes::AgentToZomePackage,
                 "AgentToZomePackageVersion" => LinkTypes::AgentToZomePackageVersion,

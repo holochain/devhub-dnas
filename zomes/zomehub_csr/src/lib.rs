@@ -33,6 +33,12 @@ lazy_static! {
         .path_entry_hash()
         .expect("Unable to derive all_agents anchor");
     pub static ref ALL_AGENTS_ANCHOR : TypedLinkBase = LinkBase::new( ALL_AGENTS_ANCHOR_HASH.clone(), LinkTypes::AllAgentsToAgent );
+
+    pub static ref ALL_ZOME_PACKS_ANCHOR_HASH : EntryHash = Path::from( vec![ Component::from("all_zome_packages".as_bytes().to_vec()) ] )
+        .path_entry_hash()
+        .expect("Unable to derive all_agents anchor");
+    pub static ref ALL_ZOME_PACKS_ANCHOR : TypedLinkBase = LinkBase::new( ALL_ZOME_PACKS_ANCHOR_HASH.clone(), LinkTypes::ZomePackage );
+
     pub static ref MY_ZOMES_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToZome );
     pub static ref MY_ZOME_PACKS_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToZomePackage );
 }

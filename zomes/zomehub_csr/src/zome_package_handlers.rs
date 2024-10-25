@@ -2,6 +2,7 @@ use crate::{
     hdk,
     hdk_extensions,
     MY_ZOME_PACKS_ANCHOR,
+    ALL_ZOME_PACKS_ANCHOR,
 };
 
 use std::collections::BTreeMap;
@@ -42,6 +43,7 @@ fn create_zome_package_entry(input: ZomePackageEntry) -> ExternResult<Entity<Zom
     let entity = create_entity( &input )?;
 
     MY_ZOME_PACKS_ANCHOR.create_link_if_not_exists( &entity.id, () )?;
+    ALL_ZOME_PACKS_ANCHOR.create_link_if_not_exists( &entity.id, input.name.clone() )?;
 
     let anchor_path = Path::from( vec![ Component::from(input.name.as_bytes().to_vec()) ] ).path_entry_hash()?;
     let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );
@@ -146,6 +148,14 @@ pub fn get_zome_package(addr: EntityId) -> ExternResult<Entity<ZomePackageEntry>
 
 
 #[hdk_extern]
+fn get_all_zome_package_links() ->
+    ExternResult<Vec<Link>>
+{
+    Ok(ALL_ZOME_PACKS_ANCHOR.get_links( None )?)
+}
+
+
+#[hdk_extern]
 pub fn get_zome_package_by_name(name: String) -> ExternResult<Entity<ZomePackageEntry>> {
     let anchor_path = Path::from( vec![ Component::from(name.as_bytes().to_vec()) ] ).path_entry_hash()?;
     let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );
@@ -187,7 +197,15 @@ fn get_zome_packages_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
 pub fn delete_zome_package(id: EntityId) -> ExternResult<bool> {
     let zome_package = get_zome_package( id.clone() )?.content;
 
-    MY_ZOME_PACKS_ANCHOR.delete_all_my_links_to_target( &id, None )?;
+    {
+        let deleted_links = MY_ZOME_PACKS_ANCHOR.delete_all_my_links_to_target( &id, None )?;
+        debug!("Deleted 'my' zome links: {:?}", deleted_links );
+    }
+
+    {
+        let deleted_links = ALL_ZOME_PACKS_ANCHOR.delete_all_my_links_to_target( &id, None )?;
+        debug!("Deleted 'all' zome links: {:?}", deleted_links );
+    }
 
     let anchor_path = Path::from( vec![ Component::from(zome_package.name.as_bytes().to_vec()) ] ).path_entry_hash()?;
     let name_anchor = LinkBase::new( anchor_path, LinkTypes::NameToZomePackage );

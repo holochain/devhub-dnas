@@ -133,7 +133,9 @@ export default function ( args_fn ) {
             zome_package,
             latest_version,
             zome,
-	]                               = await zomehub_csr.download_zome_package( pack1_name );
+	]                               = await zomehub_csr.download_zome_package({
+            "name": pack1_name,
+        });
 
 	expect( zome_package.$id        ).to.deep.equal( pack1.$id );
 
@@ -152,6 +154,7 @@ export default function ( args_fn ) {
 	    const version_links		= await zomehub_csr.get_zome_package_version_links( pack1.$id );
 	    expect( version_links       ).to.have.length( 5 );
         }
+
     });
 
     it("should delete package", async function () {
@@ -165,6 +168,11 @@ export default function ( args_fn ) {
         {
 	    const zome_packages         = Object.values( await zomehub_csr.get_zome_packages_for_agent() );
 	    expect( zome_packages       ).to.have.length( 2 );
+        }
+
+        {
+	    const zome_package_links    = Object.values( await zomehub_csr.get_all_zome_package_links() );
+	    expect( zome_package_links  ).to.have.length( 2 );
         }
 
 	const zome_package              = await zomehub_csr.get_zome_package_by_name( pack1_name );
