@@ -200,6 +200,12 @@ function phase1_tests () {
         log.normal("New zome package: %s", json.debug(pack1) );
     });
 
+    it("(bobby) should get all orgs", async function () {
+        const org_links                 = await bobby_zomehub.get_all_org_group_links();
+
+        expect( org_links               ).to.have.length( 1 );
+    });
+
     it("(bobby) should fail to update zome package", async function () {
         await expect_reject(async () => {
             await bobby_zomehub.update_zome_package({
@@ -225,6 +231,13 @@ function phase1_tests () {
     });
 
     it("(bobby) should update zome package", async function () {
+        await bobby_zomehub.accept_invitation_to_group( "abc_devs" );
+
+        {
+            const group_links           = await bobby_zomehub.get_my_group_links();
+            expect( group_links         ).to.have.length( 1 );
+        }
+
         pack1                           = await bobby_zomehub.update_zome_package({
             "base": pack1.$action,
             "properties": {
@@ -234,6 +247,14 @@ function phase1_tests () {
         });
 
         log.normal("Updated zome package: %s", json.debug(pack1) );
+
+        {
+            const removed               = await bobby_zomehub.remove_named_group_link( "abc_devs" );
+            console.log("Removed org links: %s", json.debug(removed) );
+
+            const group_links           = await bobby_zomehub.get_my_group_links();
+            expect( group_links         ).to.have.length( 0 );
+        }
     });
 
     it("(bobby) should update zome package", async function () {

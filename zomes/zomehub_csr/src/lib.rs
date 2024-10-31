@@ -29,6 +29,11 @@ pub type TypedLinkBase = LinkBase<LinkTypes>;
 lazy_static! {
     pub static ref AGENT_ID : AgentPubKey = agent_id().expect("Unable to obtain current Agent context");
 
+    pub static ref ALL_ORGS_ANCHOR_HASH : EntryHash = Path::from( vec![ Component::from("all_orgs".as_bytes().to_vec()) ] )
+        .path_entry_hash()
+        .expect("Unable to derive all_orgs anchor");
+    pub static ref ALL_ORGS_ANCHOR : TypedLinkBase = LinkBase::new( ALL_ORGS_ANCHOR_HASH.clone(), LinkTypes::AllOrgsToGroup );
+
     pub static ref ALL_AGENTS_ANCHOR_HASH : EntryHash = Path::from( vec![ Component::from("all_agents".as_bytes().to_vec()) ] )
         .path_entry_hash()
         .expect("Unable to derive all_agents anchor");

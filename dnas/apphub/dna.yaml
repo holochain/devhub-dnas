@@ -8,7 +8,7 @@ integrity:
     - name: apphub
       bundled: ../../zomes/apphub.wasm
     - name: mere_memory
-      bundled: ../../.devhub/zomes/mere_memory-0.101.0.wasm
+      bundled: ../../.devhub/zomes/@spartan-hc/mere_memory.wasm
 coordinator:
   zomes:
     - name: apphub_csr
@@ -16,6 +16,6 @@ coordinator:
       dependencies:
         - name: apphub
     - name: mere_memory_api
-      bundled: ../../.devhub/zomes/mere_memory_csr-0.101.0.wasm
+      bundled: ../../.devhub/zomes/@spartan-hc/mere_memory_csr.wasm
       dependencies:
         - name: mere_memory

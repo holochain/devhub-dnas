@@ -3,13 +3,11 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.101.0
-MERE_MEMORY_WASM	= .devhub/zomes/mere_memory-$(MERE_MEMORY_VERSION).wasm
-MERE_MEMORY_API_WASM	= .devhub/zomes/mere_memory_csr-$(MERE_MEMORY_VERSION).wasm
+MERE_MEMORY_WASM	= .devhub/zomes/@spartan-hc/mere_memory.wasm
+MERE_MEMORY_API_WASM	= .devhub/zomes/@spartan-hc/mere_memory_csr.wasm
 
-COOP_CONTENT_VERSION	= 0.8.0-dev.0
-COOP_CONTENT_WASM	= .devhub/zomes/@spartan-hc/coop_content-$(COOP_CONTENT_VERSION).wasm
-COOP_CONTENT_CSR_WASM	= .devhub/zomes/@spartan-hc/coop_content_csr-$(COOP_CONTENT_VERSION).wasm
+COOP_CONTENT_WASM	= .devhub/zomes/@spartan-hc/coop_content.wasm
+COOP_CONTENT_CSR_WASM	= .devhub/zomes/@spartan-hc/coop_content_csr.wasm
 
 # External DNA dependencies
 PORTAL_VERSION		= 0.17.0
@@ -79,6 +77,17 @@ dnas/%.dna:			dnas/%/dna.yaml
 	@echo "Packaging '$*': $@"
 	@hc dna pack -o $@ dnas/$*
 
+$(MERE_MEMORY_WASM):
+$(MERE_MEMORY_API_WASM):
+$(COOP_CONTENT_WASM):
+$(COOP_CONTENT_CSR_WASM):
+.devhub/zomes/%.wasm:
+	@if [[ -e "$@" ]]; then \
+		touch $@;	\
+	else			\
+		echo -e "\x1b[32;2mInstall WASM dependency '$*' using devhub (https://github.com/holochain/devhub-cli)\x1b[0m"; \
+		exit 1;		\
+	fi
 zomes/%.wasm:			$(TARGET_DIR)/%.wasm
 	@echo -e "\x1b[38;2mCopying WASM ($<) to 'zomes' directory: $@\x1b[0m"; \
 	cp $< $@
@@ -100,11 +109,6 @@ $(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 
 $(PORTAL_DNA):
 	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
-
-# $(MERE_MEMORY_WASM):
-# 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory.wasm" --output $@
-# $(MERE_MEMORY_API_WASM):
-# 	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory_api.wasm" --output $@
 
 reset-mere-memory:
 	rm -f zomes/mere_memory*.wasm

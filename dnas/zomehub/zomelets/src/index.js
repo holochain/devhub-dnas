@@ -65,8 +65,18 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
 	return [
             new ActionHash(result[0]),
-            result[1] ?? new ActionHash(result[1]),
+            result[1]
+                ? new ActionHash( result[1] )
+                : null,
         ];
+    },
+    async remove_named_group_link ( name ) {
+        if ( name.startsWith("@") )
+            name                        = name.slice(1);
+
+	const result			= await this.call( name );
+
+        return result.map( addr => new ActionHash( addr ) );
     },
     async get_my_group_links () {
 	const result			= await this.call();
@@ -78,6 +88,11 @@ export const ZomeHubCSRZomelet		= new Zomelet({
             input                       = input.slice(1);
 
 	const result			= await this.call( input );
+
+        return result.map( data => new Link(data) );
+    },
+    async get_all_org_group_links () {
+	const result			= await this.call();
 
         return result.map( data => new Link(data) );
     },
@@ -400,12 +415,17 @@ export const ZomeHubCSRZomelet		= new Zomelet({
 
     // Virtual functions related to zome packages
     async get_existing_zome_package ( input ) {
-	const package_list              = Object.values( await this.functions.get_zome_packages_for_agent() );
-	const existing_package          = package_list.find( zome_pack => {
-	    return zome_pack.name === input.name;
+        const all_links                 = await this.functions.get_all_zome_package_links();
+	const existing_link             = all_links.find( link => {
+	    return link.tagString() === input.name;
 	});
 
-        if ( existing_package && existing_package.zome_type !== input.zome_type )
+        if ( !existing_link )
+            return null;
+
+        const existing_package          = await this.functions.get_zome_package( existing_link.target );
+
+        if ( existing_package.zome_type !== input.zome_type )
             throw new TypeError(`Existing zome package for '${input.name}' has a different zome type; found '${existing_package?.zome_type}' but expected '${input.zome_type}'`);
 
         return existing_package;
@@ -513,6 +533,49 @@ export const ZomeHubCSRZomelet		= new Zomelet({
             })
         );
     },
+    async get_my_org_invites () {
+        const invites                   = await this.zomes.coop_content_csr.get_my_invites();
+        const all_org_group_links       = await this.functions.get_all_org_group_links();
+        all_org_group_links.reverse();
+        const org_name_map              = {};
+
+        for ( let org_link of all_org_group_links ) {
+            const group_id              = String( org_link.target );
+            org_name_map[ group_id ]    = org_link.tagString();
+        }
+
+        // Map invite group ID to an org name
+        return invites.map( ({ link, group }) => {
+            return {
+                "name":     org_name_map[ group.$id ],
+                "invite":   {
+                    "link":     new Link( link ),
+                    group,
+                },
+            };
+        });
+    },
+    async accept_invitation_to_group ( org_name ) {
+        if ( !org_name.startsWith("@") )
+            org_name            = `@${org_name}`;
+
+        const orgs              = await this.functions.get_my_org_invites();
+        const org_invite        = orgs.find( org => org.name === org_name.slice(1) );
+
+        if ( !org_invite )
+            throw new Error(`You have no invites from org '${org_name}'`);
+
+        const group_id          = org_invite.invite.group.$id;
+
+        const accepted          = await this.zomes.coop_content_csr.accept_invitation_to_group( group_id );
+
+        // Add to my orgs
+        await this.functions.create_named_group_link([
+            org_name, group_id
+        ]);
+
+        return accepted;
+    },
     async get_my_groups ( input ) {
         const org_group_links           = await this.functions.get_my_group_links();
 
@@ -547,17 +610,20 @@ export const ZomeHubCSRZomelet		= new Zomelet({
                     return await this.functions.get_zome_package_entry( latest );
                 } catch (err) {
 	            this.log.warn("Failed to fetch zome package %s: %s", latest, String(err) );
-	            // console.warn("Failed to fetch zome package %s: %s", latest, String(err) );
                 }
             })
         )).filter(Boolean);
     },
-    async get_zome_packages_for_org ( org_name ) {
+    async get_zome_package_targets_for_org ( org_name ) {
         const links                     = await this.functions.get_org_group_links( org_name );
-        const targets                   = await this.zomes.coop_content_csr.get_all_group_content_targets({
+
+        return await this.zomes.coop_content_csr.get_all_group_content_targets({
             "group_id":         new ActionHash( links[0].target ),
             "content_type":     "zome_package",
         });
+    },
+    async get_zome_packages_for_org ( org_name ) {
+        const targets                   = await this.functions.get_zome_package_targets_for_org( org_name );
 
         return await Promise.all(
             targets.map( async ([ _id, latest ]) => {
