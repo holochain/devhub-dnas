@@ -129,9 +129,14 @@ where
         let mut deleted_links = vec![];
 
         for link in self.get_links( tag.clone() )? {
+            debug!(
+                "Comparing link: {} == {} && {:?} == {:?} && {} == {}",
+                link.target, target,
+                link.tag, tag,
+                link.author, agent_id,
+            );
             if link.target == target
-                && ( tag == None
-                     || Some(link.tag) == tag )
+                && ( tag.is_none() || Some(link.tag) == tag ) // Maybe this should match the same way get links does
                 && link.author == agent_id
             {
                 debug!("Deleting link ({}): {} => {}", link.create_link_hash, self.hash(), target );

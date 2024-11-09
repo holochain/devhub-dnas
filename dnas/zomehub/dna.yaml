@@ -8,7 +8,9 @@ integrity:
     - name: zomehub
       bundled: ../../zomes/zomehub.wasm
     - name: mere_memory
-      bundled: ../../zomes/mere_memory.wasm
+      bundled: ../../.devhub/zomes/@spartan-hc/mere_memory.wasm
+    - name: coop_content
+      bundled: ../../.devhub/zomes/@spartan-hc/coop_content.wasm
 coordinator:
   zomes:
     - name: zomehub_csr
@@ -16,6 +18,10 @@ coordinator:
       dependencies:
         - name: zomehub
     - name: mere_memory_api
-      bundled: ../../zomes/mere_memory_api.wasm
+      bundled: ../../.devhub/zomes/@spartan-hc/mere_memory_csr.wasm
       dependencies:
         - name: mere_memory
+    - name: coop_content_csr
+      bundled: ../../.devhub/zomes/@spartan-hc/coop_content_csr.wasm
+      dependencies:
+        - name: coop_content

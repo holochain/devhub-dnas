@@ -3,12 +3,14 @@ SHELL			= bash
 NAME			= devhub
 
 # External WASM dependencies
-MERE_MEMORY_VERSION	= 0.99.0
-MERE_MEMORY_WASM	= zomes/mere_memory.wasm
-MERE_MEMORY_API_WASM	= zomes/mere_memory_api.wasm
+MERE_MEMORY_WASM	= .devhub/zomes/@spartan-hc/mere_memory.wasm
+MERE_MEMORY_API_WASM	= .devhub/zomes/@spartan-hc/mere_memory_csr.wasm
+
+COOP_CONTENT_WASM	= .devhub/zomes/@spartan-hc/coop_content.wasm
+COOP_CONTENT_CSR_WASM	= .devhub/zomes/@spartan-hc/coop_content_csr.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.15.0
+PORTAL_VERSION		= 0.17.0
 PORTAL_DNA		= dnas/portal.dna
 
 
@@ -31,7 +33,7 @@ DNAHUB_CSR_WASM		= zomes/dnahub_csr.wasm
 APPHUB_CSR_WASM		= zomes/apphub_csr.wasm
 
 TARGET			= release
-TARGET_DIR		= zomes/target/wasm32-unknown-unknown/release
+TARGET_DIR		= target/wasm32-unknown-unknown/release
 COMMON_SOURCE_FILES	= Makefile zomes/Cargo.toml
 INT_SOURCE_FILES	= $(COMMON_SOURCE_FILES) \
 				dnas/%/types/Cargo.toml dnas/%/types/src/*.rs \
@@ -49,13 +51,14 @@ CSR_SOURCE_FILES	= $(COMMON_SOURCE_FILES) $(INT_SOURCE_FILES) \
 clean:
 	rm -rf \
 	    tests/node_modules \
-	    .cargo target dnas/target \
+	    .cargo target \
 	    $(DEVHUB_HAPP) \
 	    $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) \
 	    $(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) \
 	    $(DNAHUB_WASM) $(DNAHUB_CSR_WASM) \
 	    $(APPHUB_WASM) $(APPHUB_CSR_WASM) \
-	    $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
+	    $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM) \
+	    $(COOP_CONTENT_WASM) $(COOP_CONTENT_CSR_WASM)
 
 rebuild:			clean build
 build:				$(DEVHUB_HAPP)
@@ -64,7 +67,9 @@ build:				$(DEVHUB_HAPP)
 $(DEVHUB_HAPP):			$(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA) $(PORTAL_DNA) happ/happ.yaml
 	hc app pack -o $@ ./happ/
 
-$(ZOMEHUB_DNA):			$(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM) $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
+$(ZOMEHUB_DNA):			$(ZOMEHUB_WASM) $(ZOMEHUB_CSR_WASM)		\
+				$(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)	\
+				$(COOP_CONTENT_WASM) $(COOP_CONTENT_CSR_WASM)
 $(DNAHUB_DNA):			$(DNAHUB_WASM) $(DNAHUB_CSR_WASM)
 $(APPHUB_DNA):			$(APPHUB_WASM) $(APPHUB_CSR_WASM)
 
@@ -72,6 +77,17 @@ dnas/%.dna:			dnas/%/dna.yaml
 	@echo "Packaging '$*': $@"
 	@hc dna pack -o $@ dnas/$*
 
+$(MERE_MEMORY_WASM):
+$(MERE_MEMORY_API_WASM):
+$(COOP_CONTENT_WASM):
+$(COOP_CONTENT_CSR_WASM):
+.devhub/zomes/%.wasm:
+	@if [[ -e "$@" ]]; then \
+		touch $@;	\
+	else			\
+		echo -e "\x1b[32;2mInstall WASM dependency '$*' using devhub (https://github.com/holochain/devhub-cli)\x1b[0m"; \
+		exit 1;		\
+	fi
 zomes/%.wasm:			$(TARGET_DIR)/%.wasm
 	@echo -e "\x1b[38;2mCopying WASM ($<) to 'zomes' directory: $@\x1b[0m"; \
 	cp $< $@
@@ -79,7 +95,6 @@ zomes/%.wasm:			$(TARGET_DIR)/%.wasm
 $(TARGET_DIR)/%.wasm:		$(INT_SOURCE_FILES)
 	rm -f zomes/$*.wasm
 	@echo -e "\x1b[37mBuilding zome '$*' -> $@\x1b[0m";
-	cd zomes; \
 	RUST_BACKTRACE=1 cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*
@@ -87,7 +102,6 @@ $(TARGET_DIR)/%.wasm:		$(INT_SOURCE_FILES)
 $(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 	rm -f zomes/$*_csr.wasm
 	@echo -e "\x1b[37mBuilding zome '$*_csr' -> $@\x1b[0m";
-	cd zomes; \
 	RUST_BACKTRACE=1 cargo build --release \
 	    --target wasm32-unknown-unknown \
 	    --package $*_csr
@@ -96,42 +110,37 @@ $(TARGET_DIR)/%_csr.wasm:	$(CSR_SOURCE_FILES)
 $(PORTAL_DNA):
 	wget -O $@ "https://github.com/holochain/portal-dna/releases/download/v$(PORTAL_VERSION)/portal.dna" || rm -f $(PORTAL_DNA)
 
-$(MERE_MEMORY_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory.wasm" --output $@
-$(MERE_MEMORY_API_WASM):
-	curl --fail -L "https://github.com/mjbrisebois/hc-zome-mere-memory/releases/download/v$(MERE_MEMORY_VERSION)/mere_memory_api.wasm" --output $@
-
 reset-mere-memory:
 	rm -f zomes/mere_memory*.wasm
 	make $(MERE_MEMORY_WASM) $(MERE_MEMORY_API_WASM)
+reset-portal:
+	rm -f dnas/portal.dna
+	make $(PORTAL_DNA)
 
-PRE_EDITION = edition = "2018"
-NEW_EDITION = edition = "2021"
+PRE_MM_VERSION = mere_memory_types = "0.97.0"
+NEW_MM_VERSION = mere_memory_types = "0.98.0"
 
-PRE_MM_VERSION = mere_memory_types = "0.95.0"
-NEW_MM_VERSION = mere_memory_types = "0.96.0"
+PRE_CRUD_VERSION = hc_crud_caps = "0.17"
+NEW_CRUD_VERSION = hc_crud_caps = "0.18"
 
-PRE_CRUD_VERSION = hc_crud_caps = "0.15"
-NEW_CRUD_VERSION = hc_crud_caps = "0.16"
+PRE_HDIE_VERSION = whi_hdi_extensions = "0.12"
+NEW_HDIE_VERSION = whi_hdi_extensions = "0.13"
 
-PRE_HDIE_VERSION = whi_hdi_extensions = "0.9"
-NEW_HDIE_VERSION = whi_hdi_extensions = "0.10"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.12"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.13"
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.9"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.10"
+PRE_PSDK_VERSION = hc_portal_sdk = "0.8"
+NEW_PSDK_VERSION = hc_portal_sdk = "0.9"
 
-PRE_PSDK_VERSION = hc_portal_sdk = "0.6"
-NEW_PSDK_VERSION = hc_portal_sdk = "0.7"
+PRE_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.12"
+NEW_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.15"
 
-PRE_HIT_VERSION = holochain_integrity_types = "0.4.0-dev.1"
-NEW_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.10"
+PRE_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.14"
+NEW_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.18"
 
-PRE_HZT_VERSION = holochain_zome_types = { version = "0.4.0-dev.1"
-NEW_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.11"
+GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
-GG_REPLACE_LOCATIONS = ':(exclude)*.lock' devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
-
-update-mere-memory-version:	reset-mere-memory
+update-mere-memory-version:
 	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
 update-crud-version:
 	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'
@@ -139,7 +148,7 @@ update-hdk-extensions-version:
 	git grep -l '$(PRE_HDKE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDKE_VERSION)|$(NEW_HDKE_VERSION)|g'
 update-hdi-extensions-version:
 	git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIE_VERSION)|$(NEW_HDIE_VERSION)|g'
-update-portal-sdk-version:
+update-portal-sdk-version:	reset-portal
 	git grep -l '$(PRE_PSDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_PSDK_VERSION)|$(NEW_PSDK_VERSION)|g'
 update-integrity-types-version:
 	git grep -l '$(PRE_HIT_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HIT_VERSION)|$(NEW_HIT_VERSION)|g'
@@ -211,25 +220,17 @@ test:
 CRATE_DEBUG_LEVELS	= normal info debug trace
 test-crate:
 	@if [[ "$(CRATE_DEBUG_LEVELS)" == *"$(DEBUG_LEVEL)"* ]]; then \
-		cd $(SRC); RUST_BACKTRACE=1 CARGO_TARGET_DIR=../target cargo test -- --nocapture --show-output; \
+		RUST_BACKTRACE=1 cargo test -- --nocapture --show-output; \
 	else \
-		cd $(SRC); CARGO_TARGET_DIR=../target cargo test --quiet --tests; \
+		cargo test --quiet --tests; \
 	fi
 test-unit:
-	SRC=zomes make test-crate
-	make test-zomehub-unit
-	make test-dnahub-unit
-	make test-apphub-unit
-
-test-%hub-unit:
-	SRC=dnas/$*hub make test-crate
-test-zome-unit-%:
-	cd zomes; cargo test -p $* --quiet
+	make test-crate
 
 # Integration tests
 DEBUG_LEVEL	       ?= warn
 TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)
-MOCHA_OPTS		= -n enable-source-maps -t 5000
+MOCHA_OPTS		= -n enable-source-maps -t 10000
 
 test-integration:
 	make test-zomehub
@@ -246,6 +247,9 @@ test-apphub:				test-setup $(ZOMEHUB_DNA) $(DNAHUB_DNA) $(APPHUB_DNA)
 	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_apphub.js
 test-webapp-upload:			test-setup $(TEST_WEBHAPP) $(DEVHUB_HAPP)
 	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_webapp_upload.js
+
+test-integration-zomehub-group-management:	test-setup $(ZOMEHUB_DNA)
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) ./integration/test_zomehub_group_management.js
 
 # Real-input tests
 test-real-uploads:
@@ -312,9 +316,9 @@ preview-apphub-packages:
 #
 # Publishing Types Packages
 #
-preview-%-types-crate:		 test-%-unit test-% .cargo/credentials
+preview-%-types-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make preview-types-crate
-publish-%-types-crate:		 test-%-unit test-% .cargo/credentials
+publish-%-types-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make publish-types-crate
 
 preview-zomehub-types-crate:
@@ -331,9 +335,9 @@ publish-apphub-types-crate:
 #
 # Publishing SDK Packages
 #
-preview-%-sdk-crate:		 test-%-unit test-% .cargo/credentials
+preview-%-sdk-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make preview-sdk-crate
-publish-%-sdk-crate:		 test-%-unit test-% .cargo/credentials
+publish-%-sdk-crate:		 test-unit test-% .cargo/credentials
 	cd dnas/$*; make publish-sdk-crate
 
 preview-zomehub-sdk-crate:
@@ -352,11 +356,11 @@ publish-apphub-sdk-crate:
 #
 prepare-%-zomelets-package:	zomelets/node_modules
 	cd dnas/$*; make prepare-zomelets-package
-preview-%-zomelets-package:	clean-files test-%-unit test-%
+preview-%-zomelets-package:	clean-files test-unit test-%
 	cd dnas/$*; make preview-zomelets-package
-create-%-zomelets-package:	clean-files test-%-unit test-%
+create-%-zomelets-package:	clean-files test-unit test-%
 	cd dnas/$*; make create-zomelets-package
-publish-%-zomelets-package:	clean-files test-%-unit test-%
+publish-%-zomelets-package:	clean-files test-unit test-%
 	cd dnas/$*; make publish-zomelets-package
 
 prepare-zomehub-zomelets-package:

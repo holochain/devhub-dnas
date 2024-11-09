@@ -31,6 +31,12 @@ pub fn validation(
 
             valid!()
         },
+        EntryTypesUnit::ZomePackage => {
+            valid!()
+        },
+        EntryTypesUnit::ZomePackageVersion => {
+            valid!()
+        },
         // entry_type_unit => invalid!(format!("Delete validation not implemented for entry type: {:?}", entry_type_unit )),
     }
 }

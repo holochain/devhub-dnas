@@ -30,6 +30,8 @@ import {
     linearSuite,
     delay,
 }					from '../utils.js';
+import zome_packages_suite		from './zomehub/zome_packages_suite.js';
+import zome_package_versions_suite	from './zomehub/zome_package_versions_suite.js';
 
 
 const __dirname				= path.dirname( new URL(import.meta.url).pathname );
@@ -129,9 +131,11 @@ function basic_tests () {
 
     it("should get all zome entries for agent", async function () {
 	const zome_entries		= await zomehub_csr.get_zome_entries_for_agent();
+	const zome_list			= Object.values( zome_entries );
+
 	log.trace("%s", json.debug(zome_entries) );
 
-	expect( zome_entries		).to.have.length( 1 );
+	expect( zome_list		).to.have.length( 1 );
     });
 
     it("should upload the same zome", async function () {
@@ -178,6 +182,25 @@ function basic_tests () {
 	});
 
     });
+
+    function common_args_plus( args ) {
+	return Object.assign({
+	    installations,
+	    client,
+	    app_client,
+	    zomehub,
+	    zomehub_csr,
+	}, args );
+    }
+
+    linearSuite("Zome Packages", zome_packages_suite, () => common_args_plus({
+	zome1_addr,
+	zome1,
+    }) );
+    linearSuite("Zome Package Versions ", zome_package_versions_suite, () => common_args_plus({
+	zome1_addr,
+	zome1,
+    }) );
 
     after(async function () {
 	await client.close();

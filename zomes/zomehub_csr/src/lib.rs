@@ -1,30 +1,26 @@
-use zomehub_sdk::hdk;
-use zomehub_sdk::hdk_extensions;
+mod group_link_handlers;
+mod zome_handlers;
+mod zome_package_handlers;
+mod zome_package_version_handlers;
+mod zome_package_base;
+
+pub use zomehub::hdi;
+pub use zomehub::hdi_extensions;
+pub use zomehub::hc_crud;
+pub use zomehub_sdk::hdk;
+pub use zomehub_sdk::hdk_extensions;
+pub use zome_package_base::*;
 
 use lazy_static::lazy_static;
 use hdk::prelude::*;
 use hdk_extensions::{
     agent_id,
-    must_get,
-    hdi_extensions::{
-        guest_error,
-        ScopedTypeConnector,
-    },
 };
 use zomehub::{
-    EntryTypes,
     LinkTypes,
-    ZomeEntry,
-    ZomeType,
-    hc_crud::{
-        Entity,
-        EntryModel,
-        create_entity, delete_entity,
-    },
 };
 use zomehub_sdk::{
     LinkBase,
-    ZomeAsset,
 };
 
 
@@ -33,7 +29,23 @@ pub type TypedLinkBase = LinkBase<LinkTypes>;
 lazy_static! {
     pub static ref AGENT_ID : AgentPubKey = agent_id().expect("Unable to obtain current Agent context");
 
-    pub static ref MY_ZOMES_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::Zome );
+    pub static ref ALL_ORGS_ANCHOR_HASH : EntryHash = Path::from( vec![ Component::from("all_orgs".as_bytes().to_vec()) ] )
+        .path_entry_hash()
+        .expect("Unable to derive all_orgs anchor");
+    pub static ref ALL_ORGS_ANCHOR : TypedLinkBase = LinkBase::new( ALL_ORGS_ANCHOR_HASH.clone(), LinkTypes::AllOrgsToGroup );
+
+    pub static ref ALL_AGENTS_ANCHOR_HASH : EntryHash = Path::from( vec![ Component::from("all_agents".as_bytes().to_vec()) ] )
+        .path_entry_hash()
+        .expect("Unable to derive all_agents anchor");
+    pub static ref ALL_AGENTS_ANCHOR : TypedLinkBase = LinkBase::new( ALL_AGENTS_ANCHOR_HASH.clone(), LinkTypes::AllAgentsToAgent );
+
+    pub static ref ALL_ZOME_PACKS_ANCHOR_HASH : EntryHash = Path::from( vec![ Component::from("all_zome_packages".as_bytes().to_vec()) ] )
+        .path_entry_hash()
+        .expect("Unable to derive all_agents anchor");
+    pub static ref ALL_ZOME_PACKS_ANCHOR : TypedLinkBase = LinkBase::new( ALL_ZOME_PACKS_ANCHOR_HASH.clone(), LinkTypes::ZomePackage );
+
+    pub static ref MY_ZOMES_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToZome );
+    pub static ref MY_ZOME_PACKS_ANCHOR : TypedLinkBase = LinkBase::new( AGENT_ID.clone(), LinkTypes::AgentToZomePackage );
 }
 
 
@@ -63,6 +75,8 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
             .into_iter().flatten().collect(),
     })?;
 
+    ALL_AGENTS_ANCHOR.create_link_if_not_exists( &agent_info()?.agent_initial_pubkey, () )?;
+
     Ok(InitCallbackResult::Pass)
 }
 
@@ -74,82 +88,6 @@ fn whoami(_: ()) -> ExternResult<AgentInfo> {
 
 
 #[hdk_extern]
-fn create_zome_entry(input: ZomeEntry) -> ExternResult<Entity<ZomeEntry>> {
-    let entity = create_entity( &input )?;
-
-    MY_ZOMES_ANCHOR.create_link_if_not_exists( &entity.address, () )?;
-
-    Ok( entity )
-}
-
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CreateZomeEntryInput {
-    pub zome_type: ZomeType,
-    pub mere_memory_addr: EntryHash,
-}
-
-#[hdk_extern]
-fn create_zome(input: CreateZomeEntryInput) -> ExternResult<Entity<ZomeEntry>> {
-    let entry = ZomeEntry::new( input.zome_type, input.mere_memory_addr )?;
-
-    create_zome_entry( entry )
-}
-
-
-#[hdk_extern]
-fn get_zome_entry(addr: AnyDhtHash) -> ExternResult<Entity<ZomeEntry>> {
-    let record = must_get( &addr )?;
-    let content = ZomeEntry::try_from_record( &record )?;
-    let id = record.action_address().to_owned();
-    let addr = hash_entry( content.clone() )?;
-
-    Ok(
-        Entity {
-            id: id.clone(),
-            action: id,
-	    address: addr,
-	    ctype: content.get_type(),
-	    content: content,
-        }
-    )
-}
-
-
-#[hdk_extern]
-fn get_zome_asset(addr: EntryHash) -> ExternResult<ZomeAsset> {
-    Ok( addr.try_into()? )
-}
-
-
-#[hdk_extern]
-fn get_zome_entries_for_agent(maybe_agent_id: Option<AgentPubKey>) ->
-    ExternResult<Vec<Entity<ZomeEntry>>>
-{
-    let agent_id = match maybe_agent_id {
-        Some(agent_id) => agent_id,
-        None => hdk_extensions::agent_id()?,
-    };
-    let agent_anchor = LinkBase::new( agent_id, LinkTypes::Zome );
-
-    let zomes = agent_anchor.get_links( None )?.into_iter()
-        .filter_map(|link| {
-            let addr = link.target.into_entry_hash()?;
-            get_zome_entry( addr.into() ).ok()
-        })
-        .collect();
-
-    Ok( zomes )
-}
-
-
-#[hdk_extern]
-fn delete_zome(addr: ActionHash) -> ExternResult<ActionHash> {
-    Ok( delete_entity::<ZomeEntry,EntryTypes>( &addr )? )
-}
-
-
-#[hdk_extern]
 pub fn query_whole_chain() -> ExternResult<Vec<Record>> {
     Ok(
         query(
@@ -157,4 +95,16 @@ pub fn query_whole_chain() -> ExternResult<Vec<Record>> {
                 .include_entries(true)
         )?
     )
+}
+
+
+#[hdk_extern]
+pub fn list_all_agents() -> ExternResult<Vec<AgentPubKey>> {
+    let agents = ALL_AGENTS_ANCHOR.get_links( None )?.into_iter()
+        .filter_map(|link| {
+            link.target.into_agent_pub_key()
+        })
+        .collect();
+
+    Ok(agents)
 }
