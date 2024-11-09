@@ -30,6 +30,7 @@ export const ZOME_TYPES			= {
 };
 export const ZOME_TYPE_NAMES		= Object.values( ZOME_TYPES );
 
+const encoder                           = new TextEncoder();
 
 export const ZomeHubCSRZomelet		= new Zomelet({
     "whoami": {
@@ -295,6 +296,14 @@ export const ZomeHubCSRZomelet		= new Zomelet({
             }
         }
 
+        // Convert readme contents to memory hash
+        if ( input.readme && input.readme.length !== 39 )
+	    input.readme		= await this.zomes.mere_memory_api.save( input.readme );
+
+        // Convert changelog contents to memory hash
+        if ( input.changelog && input.changelog.length !== 39 )
+	    input.changelog		= await this.zomes.mere_memory_api.save( input.changelog );
+
 	const result			= await this.call( input );
 
 	result.content.version		= input.version;
@@ -337,6 +346,19 @@ export const ZomeHubCSRZomelet		= new Zomelet({
                 input.properties.maintainer.content[1] = group.$action;
             }
         }
+
+        if ( typeof input.properties.readme === "string" )
+            input.properties.readme     = encoder.encode( input.properties.readme );
+        if ( typeof input.properties.changelog === "string" )
+            input.properties.changelog     = encoder.encode( input.properties.changelog );
+
+        // Convert readme contents to memory hash
+        if ( input.properties.readme && input.properties.readme.length !== 39 )
+	    input.properties.readme     = await this.zomes.mere_memory_api.save( input.properties.readme );
+
+        // Convert changelog contents to memory hash
+        if ( input.properties.changelog && input.properties.changelog.length !== 39 )
+	    input.properties.changelog  = await this.zomes.mere_memory_api.save( input.properties.changelog );
 
 	const result			= await this.call( input );
 
@@ -630,6 +652,11 @@ export const ZomeHubCSRZomelet		= new Zomelet({
                 return await this.functions.get_zome_package_entry( latest );
             })
         );
+    },
+
+    // Virtual functions related to Mere Memory
+    async remember_memory ( input, options ) {
+        return await this.zomes.mere_memory_api.remember( input, options );
     },
 }, {
     "zomes": {

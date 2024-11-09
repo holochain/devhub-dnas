@@ -140,7 +140,7 @@ export const ZomePackageVersionStruct = {
     "zome_entry":		EntryHash,
     "maintainer":               Authority,
     "readme":		        OptionType( EntryHash ),
-    "changelog":		OptionType( String ),
+    "changelog":		OptionType( EntryHash ),
     "source_code_revision_uri":	OptionType( String ),
     "api_compatibility": {
         "build_with": {
@@ -162,6 +162,15 @@ export class ZomePackageVersion extends ScopedEntity {
 
     async $getZomePackage () {
 	return await this.zome.get_zome_package( this.for_package );
+    }
+
+    async $fetchReadme () {
+        if ( !this.readme )
+            return null;
+
+	this.readme             = decoder.decode(
+            await this.zome.remember_memory( this.readme )
+        );
     }
 }
 

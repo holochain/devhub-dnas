@@ -121,7 +121,7 @@ pub struct CreateZomePackageVersionInput {
     // optional
     pub readme: Option<EntryHash>,
     pub maintainer: Option<Authority>,
-    pub changelog: Option<String>,
+    pub changelog: Option<EntryHash>,
     pub source_code_revision_uri: Option<String>,
     pub api_compatibility: ApiCompatibility,
     pub dependencies: Option<Vec<(String, ActionHash, String, String)>>,

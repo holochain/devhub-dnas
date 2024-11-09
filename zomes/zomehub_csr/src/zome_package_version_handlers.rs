@@ -171,7 +171,8 @@ pub fn get_zome_package_version(addr: EntityId) -> ExternResult<Entity<ZomePacka
 #[derive(Debug, Deserialize, Clone)]
 pub struct UpdateProperties {
     pub maintainer: Option<Authority>,
-    pub changelog: Option<String>,
+    pub readme: Option<EntryHash>,
+    pub changelog: Option<EntryHash>,
     pub source_code_revision_uri: Option<String>,
     pub api_compatibility: Option<ApiCompatibility>,
     pub metadata: Option<BTreeMap<String, RmpvValue>>,
@@ -188,6 +189,8 @@ pub fn update_zome_package_version(input: UpdateInput) -> ExternResult<Entity<Zo
 	|mut current : ZomePackageVersionEntry, _| {
 	    current.maintainer = props.maintainer
 		.unwrap_or( current.maintainer );
+	    current.readme = props.readme
+		.or( current.readme );
 	    current.changelog = props.changelog
 		.or( current.changelog );
 	    current.source_code_revision_uri = props.source_code_revision_uri
