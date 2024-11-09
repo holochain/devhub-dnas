@@ -1,0 +1,27 @@
+manifest_version: "1"
+name: zomehub
+integrity:
+  origin_time: 2023-08-01T00:00:00.000000Z
+  network_seed: ~
+  properties: ~
+  zomes:
+    - name: zomehub
+      bundled: ../../zomes/zomehub.wasm
+    - name: mere_memory
+      bundled: ../../.devhub/zomes/@spartan-hc/mere_memory.wasm
+    - name: coop_content
+      bundled: ../../.devhub/zomes/@spartan-hc/coop_content.wasm
+coordinator:
+  zomes:
+    - name: zomehub_csr
+      bundled: ../../zomes/zomehub_csr.wasm
+      dependencies:
+        - name: zomehub
+    - name: mere_memory_api
+      bundled: ../../.devhub/zomes/@spartan-hc/mere_memory_csr.wasm
+      dependencies:
+        - name: mere_memory
+    - name: coop_content_csr
+      bundled: ../../.devhub/zomes/@spartan-hc/coop_content_csr.wasm
+      dependencies:
+        - name: coop_content

@@ -1,0 +1,7 @@
+manifest_version: "1"
+name: test-happ
+description: simple happ
+roles:
+  - name: zomehub
+    dna:
+      bundled: ../../dnas/zomehub.dna

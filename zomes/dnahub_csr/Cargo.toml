@@ -1,0 +1,17 @@
+[package]
+name = "dnahub_csr"
+version = "0.0.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2021"
+
+[lib]
+name = "dnahub_csr"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+dnahub = { path = "../dnahub" }
+hc_devhub_sdk = { version = "0.1", path = "../../devhub_sdk" }
+hc_dnahub_sdk = { version = "0.2", path = "../../dnas/dnahub/sdk" }
+hc_portal_sdk = "0.9"
+lazy_static = "1.4"
+serde = "1"

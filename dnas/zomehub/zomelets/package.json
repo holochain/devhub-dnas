@@ -1,0 +1,38 @@
+{
+  "name": "@holochain/zomehub-zomelets",
+  "version": "0.2.0-dev.3",
+  "description": "Zomelets for DevHub's ZomeHub DNA",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "browser": "dist/zomehub-zomelets.js",
+  "files": [
+    "README.md",
+    "src/index.js",
+    "src/types.js",
+    "dist/**"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Brisebois <matthew.brisebois@holo.host>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holochain/devhub-dnas/"
+  },
+  "dependencies": {
+    "@spartan-hc/bundles": "^0.2.5",
+    "@spartan-hc/coop-content-zomelets": "^0.2.0-dev.3",
+    "@spartan-hc/entities": "^0.1.1",
+    "@spartan-hc/holo-hash": "^0.7.0",
+    "@spartan-hc/mere-memory-zomelets": "^0.5.2",
+    "@spartan-hc/zomelets": "^0.2.0",
+    "@whi/bytes-class": "^0.1.0",
+    "semver": "^7.6.2"
+  },
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  }
+}

@@ -1,0 +1,19 @@
+[package]
+name = "hc_dnahub_sdk"
+version = "0.2.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2021"
+license = "CAL-1.0"
+repository = "https://github.com/holochain/devhub-dnas"
+description = "SDK for the DnaHub DNA Zomes"
+readme = "README.md"
+
+[lib]
+name = "dnahub_sdk"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hc_dnahub_types = { version = "0.2", path = "../types" }
+hc_devhub_sdk = { version = "0.1", path = "../../../devhub_sdk" }
+hc_zomehub_sdk = { version = "0.1", path = "../../zomehub/sdk" }
+serde = "1"

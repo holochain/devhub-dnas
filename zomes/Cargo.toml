@@ -1,11 +1,10 @@
 [workspace]
 members = [
-  # "dnarepo_core",
-  # "happs_core",
-  # "web_assets_core",
-
-  "dna_library",
-  "happ_library",
-  "web_assets",
-  "reviews",
+  "zomehub",
+  "zomehub_csr",
+  "dnahub",
+  "dnahub_csr",
+  "apphub",
+  "apphub_csr",
 ]
+resolver = "2"

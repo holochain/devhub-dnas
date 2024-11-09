@@ -1,0 +1,18 @@
+[package]
+name = "apphub_csr"
+version = "0.0.0"
+authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
+edition = "2021"
+
+[lib]
+name = "apphub_csr"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+apphub = { path = "../apphub" }
+hc_apphub_sdk = { version = "0.2", path = "../../dnas/apphub/sdk" }
+hc_dnahub_types = { version = "0.2", path = "../../dnas/dnahub/types" }
+hc_portal_sdk = "0.9"
+lazy_static = "1.4"
+rmpv = { version = "1.0.0", features = ["with-serde"] }
+serde = "1"
