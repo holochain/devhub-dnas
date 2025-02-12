@@ -120,42 +120,60 @@ reset-portal:
 PRE_MM_VERSION = mere_memory_types = "0.97.0"
 NEW_MM_VERSION = mere_memory_types = "0.98.0"
 
-PRE_CRUD_VERSION = hc_crud_caps = "0.17"
-NEW_CRUD_VERSION = hc_crud_caps = "0.18"
+PRE_CRUD_VERSION = hc_crud_caps = "0.18"
+NEW_CRUD_VERSION = hc_crud_caps = "0.19"
 
-PRE_HDIE_VERSION = whi_hdi_extensions = "0.12"
-NEW_HDIE_VERSION = whi_hdi_extensions = "0.13"
+PRE_HDIE_VERSION = whi_hdi_extensions = "0.13"
+NEW_HDIE_VERSION = whi_hdi_extensions = "0.14"
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.12"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.13"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.13"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.14"
 
 PRE_PSDK_VERSION = hc_portal_sdk = "0.8"
 NEW_PSDK_VERSION = hc_portal_sdk = "0.9"
 
-PRE_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.12"
-NEW_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.15"
+PRE_HIT_VERSION = holochain_integrity_types = "=0.4.0-dev.15"
+NEW_HIT_VERSION = holochain_integrity_types = "=0.4.1"
 
-PRE_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.14"
-NEW_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.18"
+PRE_HZT_VERSION = holochain_zome_types = { version = "=0.4.0-dev.18"
+NEW_HZT_VERSION = holochain_zome_types = { version = "=0.4.1"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml devhub_sdk/Cargo.toml dnas/*/types/Cargo.toml dnas/*/sdk/Cargo.toml zomes/*/Cargo.toml
 
+# Detect OS for sed compatibility
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+   SED_INPLACE := sed -i ''
+else
+   SED_INPLACE := sed -i
+endif
+
+update-all-version:
+	rm -fr target;
+	make -s update-mere-memory-version
+	make -s update-crud-version
+	make -s update-hdk-extensions-version
+	make -s update-hdi-extensions-version
+	make -s update-portal-sdk-version
+	make -s update-integrity-types-version
+	make -s update-zome-types-version
+
 update-mere-memory-version:
-	git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_MM_VERSION)|$(NEW_MM_VERSION)|g'
+  git grep -l '$(PRE_MM_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_MM_VERSION)/$(NEW_MM_VERSION)/g'
 update-crud-version:
-	git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_CRUD_VERSION)|$(NEW_CRUD_VERSION)|g'
+  git grep -l '$(PRE_CRUD_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_CRUD_VERSION)/$(NEW_CRUD_VERSION)/g'
 update-hdk-extensions-version:
-	git grep -l '$(PRE_HDKE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDKE_VERSION)|$(NEW_HDKE_VERSION)|g'
+  git grep -l '$(PRE_HDKE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_HDKE_VERSION)/$(NEW_HDKE_VERSION)/g'
 update-hdi-extensions-version:
-	git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDIE_VERSION)|$(NEW_HDIE_VERSION)|g'
+  git grep -l '$(PRE_HDIE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_HDIE_VERSION)/$(NEW_HDIE_VERSION)/g'
 update-portal-sdk-version:	reset-portal
-	git grep -l '$(PRE_PSDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_PSDK_VERSION)|$(NEW_PSDK_VERSION)|g'
+  git grep -l '$(PRE_PSDK_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_PSDK_VERSION)/$(NEW_PSDK_VERSION)/g'
 update-integrity-types-version:
-	git grep -l '$(PRE_HIT_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HIT_VERSION)|$(NEW_HIT_VERSION)|g'
+  git grep -l '$(PRE_HIT_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_HIT_VERSION)/$(NEW_HIT_VERSION)/g'
 update-zome-types-version:
-	git grep -l '$(PRE_HZT_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HZT_VERSION)|$(NEW_HZT_VERSION)|g'
+  git grep -l '$(PRE_HZT_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_HZT_VERSION)/$(NEW_HZT_VERSION)/g'
 update-edition:
-	git grep -l '$(PRE_EDITION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's/$(PRE_EDITION)/$(NEW_EDITION)/g'
+  git grep -l '$(PRE_EDITION)' -- $(GG_REPLACE_LOCATIONS) | xargs $(SED_INPLACE) 's/$(PRE_EDITION)/$(NEW_EDITION)/g'
 
 npm-reinstall-local:
 	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)
