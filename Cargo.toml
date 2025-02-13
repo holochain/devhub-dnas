@@ -13,7 +13,7 @@ resolver = "2"
 [workspace.dependencies]
 hc_coop_content_types = "0.7.0-dev.0"
 hc_coop_content_sdk = "0.8.0-dev.0"
-hc_crud_caps = "0.18"
+hc_crud_caps = "0.19"
 hc_portal_sdk = "0.9"
 hc_zomehub_types = { version = "0.1", path = "dnas/zomehub/types" }
 hc_zomehub_sdk = { version = "0.1", path = "dnas/zomehub/sdk" }
