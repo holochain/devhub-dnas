@@ -69,7 +69,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         ( "mere_memory_api", "get_memory_with_bytes" ),
     ];
 
-    portal_sdk::register_if_exists!({
+    hc_portal_sdk::register_if_exists!({
         dna: dna_info()?.hash,
         granted_functions: vec![ main_functions, mere_memory_functions ]
             .into_iter().flatten().collect(),
