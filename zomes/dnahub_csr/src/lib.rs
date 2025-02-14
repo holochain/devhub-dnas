@@ -40,7 +40,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
         })
         .collect();
 
-    portal_sdk::register_if_exists!({
+    hc_portal_sdk::register_if_exists!({
         dna: dna_info()?.hash,
         granted_functions,
     })?;
