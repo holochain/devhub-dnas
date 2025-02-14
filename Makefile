@@ -10,7 +10,7 @@ COOP_CONTENT_WASM	= .devhub/zomes/@spartan-hc/coop_content.wasm
 COOP_CONTENT_CSR_WASM	= .devhub/zomes/@spartan-hc/coop_content_csr.wasm
 
 # External DNA dependencies
-PORTAL_VERSION		= 0.17.0
+PORTAL_VERSION		= 0.18.0
 PORTAL_DNA		= dnas/portal.dna
 
 
