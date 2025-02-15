@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 apphub = { path = "../apphub" }
 hc_apphub_sdk = { version = "0.2", path = "../../dnas/apphub/sdk" }
 hc_dnahub_types = { version = "0.2", path = "../../dnas/dnahub/types" }
-hc_portal_sdk = { git = "https://github.com/holochain/portal-dna.git", package = "hc_portal_sdk" }
+hc_portal_sdk = { git = "https://github.com/holochain/portal-dna.git", package = "hc_portal_sdk", branch = "holochain-0.4.1" }
 lazy_static = "1.4"
 rmpv = { version = "1.0.0", features = ["with-serde"] }
 serde = "1"

@@ -14,11 +14,11 @@ resolver = "2"
 hc_coop_content_types = { git = "https://github.com/holochain/hc-cooperative-content.git", package = "hc_coop_content_types" }
 hc_coop_content_sdk = { git = "https://github.com/holochain/hc-cooperative-content.git", package = "hc_coop_content_sdk" }
 hc_crud_caps = "0.19"
-hc_portal_sdk = { git = "https://github.com/holochain/portal-dna.git", package = "hc_portal_sdk" }
+hc_portal_sdk = { git = "https://github.com/holochain/portal-dna.git", package = "hc_portal_sdk", branch = "holochain-0.4.1" }
 hc_zomehub_types = { version = "0.1", path = "dnas/zomehub/types" }
 hc_zomehub_sdk = { version = "0.1", path = "dnas/zomehub/sdk" }
-hdi = "=0.5.0-dev.17"
-hdk = "=0.4.0-dev.19"
+hdi = "=0.5.1"
+hdk = "=0.4.1"
 lazy_static = "1.4"
 serde = "1"
 zomehub = { path = "zomes/zomehub" }
