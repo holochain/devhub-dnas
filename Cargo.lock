@@ -603,7 +603,7 @@ dependencies = [
 [[package]]
 name = "hc_portal_sdk"
 version = "0.9.1"
-source = "git+https://github.com/holochain/portal-dna.git#4718cb152d39a22ae3f9b62442241ece57a64781"
+source = "git+https://github.com/holochain/portal-dna.git?branch=holochain-0.4.1#4718cb152d39a22ae3f9b62442241ece57a64781"
 dependencies = [
  "hc_crud_caps",
  "hc_portal_types",
@@ -615,7 +615,7 @@ dependencies = [
 [[package]]
 name = "hc_portal_types"
 version = "0.17.0"
-source = "git+https://github.com/holochain/portal-dna.git#4718cb152d39a22ae3f9b62442241ece57a64781"
+source = "git+https://github.com/holochain/portal-dna.git?branch=holochain-0.4.1#4718cb152d39a22ae3f9b62442241ece57a64781"
 dependencies = [
  "rmpv",
  "serde",
