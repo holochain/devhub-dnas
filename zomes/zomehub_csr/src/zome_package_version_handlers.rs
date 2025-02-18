@@ -33,7 +33,7 @@ use zomehub_sdk::{
     ZomePackageVersionMap,
     CreateZomePackageVersionInput,
 };
-use hc_coop_content_sdk::{
+use coop_content_sdk::{
     get_group_content_latest,
 };
 

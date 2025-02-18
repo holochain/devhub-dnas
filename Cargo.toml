@@ -11,8 +11,8 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-hc_coop_content_types = { git = "https://github.com/holochain/hc-cooperative-content.git", package = "hc_coop_content_types" }
-hc_coop_content_sdk = { git = "https://github.com/holochain/hc-cooperative-content.git", package = "hc_coop_content_sdk" }
+coop_content_types = { git = "https://github.com/holochain/hc-cooperative-content.git", package = "coop_content_types" }
+coop_content_sdk = { git = "https://github.com/holochain/hc-cooperative-content.git", package = "coop_content_sdk" }
 hc_crud_caps = "0.19"
 portal_sdk = { git = "https://github.com/holochain/portal-dna.git", package = "hc_portal_sdk", branch = "holochain-0.4.1" }
 hc_zomehub_types = { version = "0.1", path = "dnas/zomehub/types" }

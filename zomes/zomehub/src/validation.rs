@@ -21,7 +21,7 @@ use hdi_extensions::{
     // Macros
     valid, invalid,
 };
-use hc_coop_content_types::{
+use coop_content_types::{
     GroupEntry,
 };
 
