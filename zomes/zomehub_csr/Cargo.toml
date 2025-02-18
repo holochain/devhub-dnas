@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 hc_coop_content_sdk = { workspace = true }
-hc_portal_sdk = { workspace = true }
+portal_sdk = { workspace = true }
 hc_zomehub_sdk = { workspace = true }
 lazy_static = { workspace = true }
 serde = { workspace = true }
