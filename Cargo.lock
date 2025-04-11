@@ -540,8 +540,9 @@ dependencies = [
 
 [[package]]
 name = "hc_coop_content_sdk"
-version = "0.8.0"
-source = "git+https://github.com/holochain/hc-cooperative-content.git#2f0a53ff3704b788b82d8e27a3cf6a6e829a137f"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a48e809c9baffc9848ba9ce921044310ca90a20df51dbddde656aa7821d6f56"
 dependencies = [
  "hc_coop_content_types",
  "serde",
@@ -550,8 +551,9 @@ dependencies = [
 
 [[package]]
 name = "hc_coop_content_types"
-version = "0.7.0"
-source = "git+https://github.com/holochain/hc-cooperative-content.git#2f0a53ff3704b788b82d8e27a3cf6a6e829a137f"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a75fc96d8da491e393a933cd9255cb8b7ec7a78d9d5df91a4208f72c85fb73dc"
 dependencies = [
  "rmpv",
  "serde",

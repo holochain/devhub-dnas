@@ -9,7 +9,7 @@ name = "zomehub"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-coop_content_types = { workspace = true }
+hc_coop_content_types = { workspace = true }
 hc_crud_caps = { workspace = true }
 hc_zomehub_types = { workspace = true }
 serde = { workspace = true }
