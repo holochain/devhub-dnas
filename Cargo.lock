@@ -603,7 +603,8 @@ dependencies = [
 [[package]]
 name = "hc_portal_sdk"
 version = "0.9.1"
-source = "git+https://github.com/holochain/portal-dna.git?branch=holochain-0.4.1#4718cb152d39a22ae3f9b62442241ece57a64781"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d77f3f52767e7e50bd79aea8719b54e391b1726be5308c9da0f510a62d5fbf34"
 dependencies = [
  "hc_crud_caps",
  "hc_portal_types",
@@ -614,8 +615,9 @@ dependencies = [
 
 [[package]]
 name = "hc_portal_types"
-version = "0.17.0"
-source = "git+https://github.com/holochain/portal-dna.git?branch=holochain-0.4.1#4718cb152d39a22ae3f9b62442241ece57a64781"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebaccdb5a5027696ca3d29f61e0c80a9af9284400ec9a9cef658c3bff77af3e8"
 dependencies = [
  "rmpv",
  "serde",
