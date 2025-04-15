@@ -13,6 +13,6 @@ name = "devhub_sdk"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hc_crud_caps = "0.18"
+hc_crud_caps = "0.19"
 serde = "1"
-whi_hdk_extensions = "0.13"
+whi_hdk_extensions = "0.14"

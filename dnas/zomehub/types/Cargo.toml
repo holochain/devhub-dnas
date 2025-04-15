@@ -16,4 +16,4 @@ crate-type = ["cdylib", "rlib"]
 mere_memory_types = "0.98.0"
 rmpv = { version = "1", features = ["with-serde"] }
 serde = "1"
-whi_hdi_extensions = "0.13"
+whi_hdi_extensions = "0.14"
